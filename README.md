@@ -1,92 +1,19 @@
 # Yuzuha
 
-Framework para bots do Fluxer: a ergonomia que falta no Fluxer.js, com comandos
-tipados, guards, estado, moderação, agendamentos e testes offline. Function mode
-(scripts no estilo ForgeScript) é opcional. Versão **0.1.5**.
+Framework TypeScript para bots do [Fluxer](https://fluxer.app), com comandos
+tipados em JavaScript/TypeScript e um modo de scripts inspirado no ForgeScript.
+Os dois modos compartilham permissões, moderação, estado e recursos.
 
-```ts
-import { arg, defineCommand, Yuzuha } from 'yuzuha';
+O Yuzuha usa **Fluxer.js 3.3.0**. Você continua tendo acesso ao client original
+por `bot.client` e aos exports do SDK em `yuzuha/sdk`.
 
-const bot = new Yuzuha({ name: 'meu-bot', prefix: '!' });
+[npm 0.1.5](https://www.npmjs.com/package/yuzuha/v/0.1.5) · Node **22.13+** · ESM · [MIT](LICENSE)
 
-bot.command(defineCommand({
-  name: 'ban',
-  description: 'Bane um membro e registra um caso.',
-  args: {
-    membro: arg.user().required(),
-    motivo: arg.text().rest(),
-  },
-  async run(ctx) {
-    const caso = await ctx.mod.ban(ctx.args.get('membro'), {
-      reason: ctx.args.get('motivo') ?? '',
-    });
-    await ctx.reply(`Membro banido. Caso #${caso.id}.`);
-  },
-}));
+[Começar](#começar) · [Comandos](#escrever-comandos) · [Recursos](#recursos) · [Testes](#testar-sem-token) · [Documentação](#documentação)
 
-await bot.login();
-```
+## Começar
 
-Uso: `!ban @membro spam no chat`. `ctx.mod.ban` verifica permissões e hierarquia,
-executa o banimento e registra o caso. O token vem de `FLUXER_BOT_TOKEN`.
-`bot.client` continua sendo o client real do Fluxer.js.
-
-## O que o Yuzuha adiciona ao Fluxer.js
-
-- Comandos com prefixos, subcomandos, flags e argumentos tipados, cooldowns e permissões.
-- Ajuda com uso, escolhas e exemplos a partir das definições dos comandos.
-- Guards, middleware, plugins, eventos tipados e recarga de comandos sem reiniciar.
-- Moderação compartilhada (ban, kick, timeout, unban) com casos por servidor.
-- Recursos prontos: usuários, cargos, canais, mensagens, convites, webhooks,
-  emojis, stickers, threads e fóruns, incluindo reações, membros de threads,
-  posição de cargos/canais e categorias.
-- Estado em memória, JSON ou SQLite, com transações e variáveis por escopo.
-- Agendamentos persistentes com cron, fuso IANA, concorrência e retry com jitter.
-- HTTP textual/binário, streaming e multipart, com limites e políticas por comando.
-- `createTestBot`, relógio controlável, `MockTransport` e stores isolados para testar sem token.
-- Transações entre chaves, agendamentos editáveis com pausa/retry e apelidos com autorização compartilhada.
-- Limpeza de expirados, estatísticas e backup/restauração versionados com simulação.
-- `doctor`, lint JSON, cenários offline, catálogos de plugins e extensão VS Code.
-- SDK `@fluxerjs/core` **3.3.0** reexportado em `yuzuha/sdk`, sem esconder o original.
-
-Não é um fork do Fluxer.js nem um wrapper de todos os métodos do SDK. O que não
-estiver no framework continua acessível por `bot.client` e pelos tipos originais.
-
-## Function mode (opcional)
-
-Quem preferir a sintaxe curta do ForgeScript pode usar `yuzuha/functions`. O
-runtime é ativado quando um comando com `code` ou um evento de script é registrado.
-
-```ts
-import { script } from 'yuzuha/functions';
-import { Yuzuha } from 'yuzuha';
-
-const bot = new Yuzuha({ prefix: '!' });
-
-bot.command(script({
-  name: 'ban',
-  code: '$modBan[$mentioned[1];$messageSlice[1]]$reply[Membro banido. Caso #$caseID.]',
-}));
-```
-
-Os dois modos compartilham guards, estado, moderação e recursos. São
-**288 funções** com referência gerada, ou use `bot.enableFunctions()` para
-pré-carregar o runtime.
-
-`bot.scriptEvent()` registra scripts para entrada/saída de membros, edição/exclusão
-de mensagens e reações. O contexto preserva os dados disponíveis do evento e exige
-um canal real para enviar respostas. Veja [eventos](docs/EVENTS.md).
-
-## Instalar pelo npm
-
-Requer Node **22.13 ou mais recente**. O pacote é ESM; use `"type": "module"`
-no `package.json` do seu projeto.
-
-```sh
-npm install yuzuha@0.1.5
-```
-
-Para gerar um bot novo:
+### Criar um bot
 
 ```sh
 npx yuzuha@0.1.5 init ./meu-bot --ts
@@ -98,62 +25,165 @@ npm test
 cp .env.example .env
 ```
 
-`init` declara a dependência npm e gera um teste offline. O projeto pode ser
-movido e compartilhado sem depender do caminho da instalação que o criou.
-Para JavaScript, use `--js` e omita `typecheck`.
-Para acrescentar um exemplo de script, use `--functions`.
-
-Preencha `FLUXER_BOT_TOKEN` no `.env` e execute `npm run dev`.
-
-## Desenvolver a biblioteca localmente
+Preencha `FLUXER_BOT_TOKEN` no `.env` e inicie o bot:
 
 ```sh
-cd ~/Projects/yuzuha
-npm ci
-npm run build
-node dist/cli.js init ~/Projects/meu-bot --ts --local
-cd ~/Projects/meu-bot
-npm install
-npm run check
-npm run typecheck
-cp .env.example .env
+npm run dev
 ```
 
-O scaffold desse fluxo usa a biblioteca local. O
-[guia inicial](docs/QUICKSTART.md) explica instalação e configuração.
+O projeto inclui três comandos, configuração e um teste offline. Para JavaScript,
+troque `--ts` por `--js` e omita `typecheck`. Acrescente `--functions` ao `init`
+para incluir um comando de exemplo com scripts.
 
-## Experimentar sem token
+`npm run check`, `npm run typecheck` e `npm test` validam o projeto sem conectar o bot.
+`npm run dev` conecta e recarrega os arquivos de comando ao editar;
+`npm start` executa sem recarga automática.
+
+### Usar em um projeto existente
+
+```sh
+npm install yuzuha@0.1.5
+```
+
+Use `"type": "module"` no `package.json`. O [guia inicial](docs/QUICKSTART.md)
+mostra como configurar o bot e carregar comandos.
+
+## Escrever comandos
+
+Salve **uma das versões** abaixo em `commands/eco.ts` (`.js` para JavaScript).
+Ambas respondem a `!eco Olá, Yuzuha!` com `Olá, Yuzuha!`.
+
+### JavaScript / TypeScript
+
+```ts
+import { arg, defineCommand } from 'yuzuha';
+
+export default defineCommand({
+  name: 'eco',
+  description: 'Repete o texto informado.',
+  args: { texto: arg.text().rest().required() },
+  async run(ctx) {
+    await ctx.reply(ctx.args.get('texto'));
+  },
+});
+```
+
+Schemas `arg.*` inferem os tipos de argumentos e flags. Você também pode declarar
+subcomandos, checks e middleware. O [guia nativo](docs/NATIVE.md) cobre esses
+contratos, eventos, moderação e persistência.
+
+### Scripts no estilo ForgeScript
+
+```ts
+import { script } from 'yuzuha/functions';
+
+export default script({
+  name: 'eco',
+  description: 'Repete o texto informado.',
+  code: '$reply[$messageSlice[0]]',
+});
+```
+
+O function mode tem **288 funções** para mensagens, guards, moderação, variáveis,
+JSON, arrays, loops, eventos e agendamentos. O runtime é ativado ao registrar um
+comando com `code` ou um evento de script.
+
+A sintaxe é inspirada no ForgeScript; a compatibilidade é parcial. Consulte a
+[linguagem](docs/LANGUAGE.md), as [assinaturas das funções](docs/FUNCTIONS.md)
+e a [cobertura](docs/PARITY.md).
+
+## Recursos
+
+| Área | O que está disponível |
+|---|---|
+| Comandos | Prefixos, aliases, subcomandos, argumentos e flags tipadas, cooldowns e ajuda gerada dos metadados |
+| Extensões | Plugins, eventos, checks, middleware e recarga atômica de comandos |
+| Moderação | Ban, kick, timeout, unban e moderação de voz, com permissões, hierarquia e casos por servidor |
+| Fluxer | Usuários, membros, cargos, canais, mensagens, reações, anexos, threads, convites, webhooks e expressões |
+| Dados | Memória, JSON e SQLite; TTL, transações, limpeza e backup/restauração com simulação |
+| Agendamentos | Tarefas persistentes, cron, fusos IANA, pausa/retomada, histórico e retry |
+| HTTP | Texto, bytes, streaming e multipart, com limites, cancelamento e políticas por comando |
+| Desenvolvimento | CLI, autocomplete e diagnósticos no VS Code, mocks e relógio controlável para testes |
+
+## Testar sem token
+
+O scaffold já inclui um teste executável com `npm test`. Para testar o comando
+`eco` acima, crie `test/eco.test.ts` (`.js` para JavaScript):
+
+```ts
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { createTestBot } from 'yuzuha/testing';
+import eco from '../commands/eco.js';
+
+test('eco responde com o texto informado', async t => {
+  const fixture = createTestBot({ commands: [eco] });
+  t.after(() => fixture.destroy());
+
+  assert.equal(await fixture.send('!eco Olá, Yuzuha!'), 'success');
+  assert.equal(fixture.messages.at(-1)?.payload.content, 'Olá, Yuzuha!');
+});
+```
+
+`createTestBot` usa transporte e recursos simulados, com estado isolado. O relógio
+controlável permite testar cooldown, TTL e tarefas sem aguardar tempo real.
+Veja fixtures, stores e cenários na [documentação de testes](docs/TESTING.md).
+
+## CLI
+
+Execute estes comandos no diretório do seu bot:
+
+| Comando | Uso |
+|---|---|
+| `npx yuzuha check` | Validar configuração e comandos sem login |
+| `npx yuzuha doctor` | Diagnosticar ambiente, configuração e store |
+| `npx yuzuha lint commands --json` | Analisar scripts sem importar módulos |
+| `npx yuzuha functions --category moderation` | Consultar funções e assinaturas |
+| `npx yuzuha editor` | Encontrar a extensão VS Code incluída no pacote |
+
+`check` importa configurações e comandos JS/TS de confiança; a verificação de
+tipos é feita por `npm run typecheck`. A [referência da CLI](docs/CLI.md) também cobre
+catálogos de plugins, cenários offline e manutenção de dados.
+
+## Documentação
+
+O [índice completo](docs/README.md) reúne os guias e as referências.
+
+| Quero… | Ler |
+|---|---|
+| Criar e configurar um bot | [Guia inicial](docs/QUICKSTART.md) |
+| Programar em JS/TS | [Guia nativo](docs/NATIVE.md), [framework](docs/FRAMEWORK.md) e [API](docs/API.md) |
+| Escrever scripts `$...` | [Linguagem](docs/LANGUAGE.md) e [referência de funções](docs/FUNCTIONS.md) |
+| Copiar exemplos | [Receitas](docs/COOKBOOK.md) e [código de exemplo](examples) |
+| Usar o editor ou diagnosticar um erro | [VS Code](docs/EDITOR.md) e [problemas comuns](docs/TROUBLESHOOTING.md) |
+| Entender a cobertura | [Paridade](docs/PARITY.md) e [funções ausentes](docs/FUNCTION-GAPS.md) |
+| Conferir mudanças e validação | [Changelog](CHANGELOG.md), [versionamento](VERSIONING.md) e [evidências](docs/VALIDATION.md) |
+
+## Desenvolver a biblioteca
+
+Na cópia do repositório:
+
+```sh
+git clone https://github.com/horizzon3507/yuzuha.git
+cd yuzuha
+npm ci
+npm run check
+npm run smoke:package
+```
+
+Para experimentar os exemplos offline:
 
 ```sh
 npx tsx examples/offline.ts
 npx tsx examples/function-mode.ts
-node dist/cli.js check examples/yuzuha.config.js --json
-node dist/cli.js functions --category moderation
 ```
 
-Os exemplos usam `MockTransport`; nenhuma ação chega ao Fluxer. `check` importa
-config e comandos JS/TS de confiança, valida os scripts e não chama `login`.
-Ele não substitui o typecheck do TypeScript.
+Para gerar um bot que use sua instalação local da biblioteca:
 
-## Documentação
+```sh
+node dist/cli.js init ../meu-bot-local --ts --local
+```
 
-Comece pelo [índice da documentação](docs/README.md).
-
-| Preciso de… | Documento |
-|---|---|
-| Criar meu primeiro bot JS ou TS | [Guia inicial](docs/QUICKSTART.md) |
-| Programar comandos, eventos e plugins | [Guia nativo JS/TS](docs/NATIVE.md) |
-| Escrever scripts `$...` | [Function mode](docs/LANGUAGE.md) e [referência](docs/FUNCTIONS.md) |
-| Saber quais funções de script existem | [Lacunas auditadas](docs/FUNCTION-GAPS.md) |
-| Usar comandos, contexto e extensões | [Framework](docs/FRAMEWORK.md) e [API](docs/API.md) |
-| Copiar exemplos completos | [Receitas](docs/COOKBOOK.md) |
-| Usar a linha de comando | [CLI](docs/CLI.md) |
-| Entender módulos e dependências | [Arquitetura](docs/ARCHITECTURE.md) |
-| Escolher persistência e tratar falhas | [Estado e execução](docs/STORAGE.md) |
-| Diagnosticar ou testar | [Problemas comuns](docs/TROUBLESHOOTING.md) e [testes](docs/TESTING.md) |
-| Usar autocomplete e diagnóstico offline | [Editor e doctor](docs/EDITOR.md) |
-| Medir dispatch, runtime e memória | [Benchmarks](docs/BENCHMARKS.md) |
-| Ver evidência local | [Validação](docs/VALIDATION.md) |
-
-As mudanças estão no [changelog](CHANGELOG.md); a política de versões está em
-[VERSIONING.md](VERSIONING.md). Leia [CONTRIBUTING.md](CONTRIBUTING.md) para contribuir.
+O `init` usa a dependência npm por padrão; `--local` aponta para a instalação
+que executa a CLI. Veja [contribuição](CONTRIBUTING.md) para as regras de código
+e as verificações do projeto.
