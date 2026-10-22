@@ -5,20 +5,20 @@
 Use Node >=22.13 e npm. O pacote é ESM; o projeto consumidor deve usar
 `"type": "module"` no `package.json`. O scaffold já prepara isso.
 
-Em um projeto ESM existente, execute `npm install yuzuha@0.1.4`. Para gerar um
+Em um projeto ESM existente, execute `npm install yuzuha@0.1.5`. Para gerar um
 bot em uma pasta nova:
 
 ```sh
-npx yuzuha@0.1.4 init ./meu-bot --ts
+npx yuzuha@0.1.5 init ./meu-bot --ts
 cd meu-bot
-npm install yuzuha@0.1.4
+npm install
 npm run check
 npm run typecheck
+npm test
 ```
 
-O `init` usa uma referência `file:` à instalação que o executou. O `npm install`
-acima a substitui pela versão no registro, evitando depender de um caminho do
-cache do npx ou da máquina que gerou o bot. Use `--js` para JavaScript e omita
+O `init` declara a versão npm do Yuzuha. O projeto pode ser compartilhado e
+instalado em outra máquina. Use `--js` para JavaScript e omita
 `typecheck`. `--functions` inclui um comando de exemplo de function mode.
 
 ## Usar uma cópia local da biblioteca
@@ -29,7 +29,7 @@ Compile a biblioteca e gere um diretório novo:
 cd ~/Projects/yuzuha
 npm ci
 npm run build
-node dist/cli.js init ~/Projects/meu-bot --ts
+node dist/cli.js init ~/Projects/meu-bot --ts --local
 cd ~/Projects/meu-bot
 npm install
 npm run check
@@ -52,6 +52,8 @@ meu-bot/
     ping.ts
     ban.ts
     hello.ts
+  test/
+    hello.test.ts
   yuzuha.config.ts
   package.json
   tsconfig.json
@@ -125,8 +127,9 @@ export default script({
 ```
 
 O runtime de funções é ativado automaticamente no primeiro comando com `code`.
-Para pré-carregar, chame `bot.enableFunctions()`. Um comando aceita exatamente um
+Para pré-carregar, chame `bot.enableFunctions()`. Um comando executável aceita exatamente um
 entre `code` e `run`. A sintaxe está em [Function mode](LANGUAGE.md).
+Grupos também podem declarar somente `subcommands`; veja [NATIVE.md](NATIVE.md).
 
 ## Validar sem conectar
 

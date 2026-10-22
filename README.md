@@ -2,7 +2,7 @@
 
 Framework para bots do Fluxer: a ergonomia que falta no Fluxer.js, com comandos
 tipados, guards, estado, moderação, agendamentos e testes offline. Function mode
-(scripts no estilo ForgeScript) é opcional. Versão **0.1.4**.
+(scripts no estilo ForgeScript) é opcional. Versão **0.1.5**.
 
 ```ts
 import { arg, defineCommand, Yuzuha } from 'yuzuha';
@@ -33,7 +33,8 @@ executa o banimento e registra o caso. O token vem de `FLUXER_BOT_TOKEN`.
 
 ## O que o Yuzuha adiciona ao Fluxer.js
 
-- Comandos com prefixos, aliases, argumentos tipados, cooldowns e permissões.
+- Comandos com prefixos, subcomandos, flags e argumentos tipados, cooldowns e permissões.
+- Ajuda com uso, escolhas e exemplos a partir das definições dos comandos.
 - Guards, middleware, plugins, eventos tipados e recarga de comandos sem reiniciar.
 - Moderação compartilhada (ban, kick, timeout, unban) com casos por servidor.
 - Recursos prontos: usuários, cargos, canais, mensagens, convites, webhooks,
@@ -42,7 +43,7 @@ executa o banimento e registra o caso. O token vem de `FLUXER_BOT_TOKEN`.
 - Estado em memória, JSON ou SQLite, com transações e variáveis por escopo.
 - Agendamentos persistentes com cron, fuso IANA, concorrência e retry com jitter.
 - HTTP textual/binário, streaming e multipart, com limites e políticas por comando.
-- `MockTransport`, `mockResources` e `MemoryStore` para testar sem token.
+- `createTestBot`, relógio controlável, `MockTransport` e stores isolados para testar sem token.
 - Transações entre chaves, agendamentos editáveis com pausa/retry e apelidos com autorização compartilhada.
 - Limpeza de expirados, estatísticas e backup/restauração versionados com simulação.
 - `doctor`, lint JSON, cenários offline, catálogos de plugins e extensão VS Code.
@@ -82,23 +83,24 @@ Requer Node **22.13 ou mais recente**. O pacote é ESM; use `"type": "module"`
 no `package.json` do seu projeto.
 
 ```sh
-npm install yuzuha@0.1.4
+npm install yuzuha@0.1.5
 ```
 
 Para gerar um bot novo:
 
 ```sh
-npx yuzuha@0.1.4 init ./meu-bot --ts
+npx yuzuha@0.1.5 init ./meu-bot --ts
 cd meu-bot
-npm install yuzuha@0.1.4
+npm install
 npm run check
 npm run typecheck
+npm test
 cp .env.example .env
 ```
 
-`init` aponta inicialmente para a instalação que o executou. O `npm install`
-acima troca essa referência local pela versão do registro, permitindo mover e
-compartilhar o projeto. Para JavaScript, use `--js` e omita `typecheck`.
+`init` declara a dependência npm e gera um teste offline. O projeto pode ser
+movido e compartilhado sem depender do caminho da instalação que o criou.
+Para JavaScript, use `--js` e omita `typecheck`.
 Para acrescentar um exemplo de script, use `--functions`.
 
 Preencha `FLUXER_BOT_TOKEN` no `.env` e execute `npm run dev`.
@@ -109,7 +111,7 @@ Preencha `FLUXER_BOT_TOKEN` no `.env` e execute `npm run dev`.
 cd ~/Projects/yuzuha
 npm ci
 npm run build
-node dist/cli.js init ~/Projects/meu-bot --ts
+node dist/cli.js init ~/Projects/meu-bot --ts --local
 cd ~/Projects/meu-bot
 npm install
 npm run check

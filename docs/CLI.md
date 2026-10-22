@@ -10,7 +10,7 @@ e execute `node dist/cli.js`.
 |---|---|
 | `yuzuha`, `yuzuha help` ou `yuzuha --help` | Mostra ajuda |
 | `yuzuha --version` | Mostra a versão do manifest |
-| `yuzuha init <diretório> [--js \| --ts] [--functions]` | Cria um projeto em pasta nova; TS por padrão |
+| `yuzuha init <diretório> [--js \| --ts] [--functions] [--local]` | Cria um projeto em pasta nova; TS por padrão |
 | `yuzuha check [config ou diretório] [--json]` | Importa e valida sem login |
 | `yuzuha functions [--json] [--category nome]` | Lista assinaturas e descrições |
 | `yuzuha functions --catalog [--config arquivo] [--plugins-only]` | Exporta metadados JSON |
@@ -57,15 +57,28 @@ Sucesso produz um objeto na saída padrão:
 ```json
 {
   "valid": true,
-  "version": "0.1.4",
+  "version": "0.1.5",
   "commands": [
-    { "name": "ping", "description": "Responde com a latência." }
+    {
+      "name": "ping",
+      "description": "Responde com a latência.",
+      "usage": "!ping",
+      "args": [],
+      "flags": [],
+      "examples": [],
+      "subcommands": []
+    }
   ]
 }
 ```
 
 `aliases` e `description` aparecem quando definidos pelo comando. O exemplo
 acima ilustra o formato, não o número de comandos da config incluída no repo.
+`args` e `flags` expõem nome, tipo, obrigatoriedade, aliases, descrição, escolhas,
+valor padrão e limites definidos. Validadores e outros callbacks são omitidos.
+`subcommands` usa o mesmo formato recursivamente; `usage` contém o caminho
+completo. O prefixo vem da configuração estática; para uma função de prefixo,
+o catálogo usa `!` sem executar a função.
 
 Falha usa código de saída `1` e escreve em stderr:
 
@@ -130,11 +143,14 @@ yuzuha init ./meu-bot-ts --ts
 ```
 
 A pasta deve ser nova. O scaffold inclui três comandos, config, `.env.example`,
-`.gitignore` e scripts de execução. TS inclui `tsconfig.json` e dependências
-de tipos; o JS roda como ESM diretamente no Node.
+`.gitignore`, scripts de execução e `test/hello.test.js` ou `.ts` com `npm test`.
+TS inclui `tsconfig.json`, dependências de tipos e `tsx` para os testes;
+o JS roda como ESM diretamente no Node.
 
-A dependência `file:` aponta para a instalação que gerou o scaffold.
-Instale as dependências no novo projeto antes de executar. Veja
+Por padrão, a dependência usa `^0.1.5` do npm. A opção `--local` troca essa
+dependência por `file:` apontando para a instalação que gerou o scaffold.
+Use `--local` para desenvolver a biblioteca; compartilhe projetos com a
+dependência npm. Instale as dependências antes de executar `npm test`. Veja
 [QUICKSTART.md](QUICKSTART.md).
 
 ## Lint sem imports

@@ -10,8 +10,8 @@ omite detalhes internos.
 |---|---|
 | `Cannot use import statement outside a module` | O consumidor precisa de `"type": "module"` ou arquivos `.mjs` |
 | Entry point ou `dist` ausente | Rode `npm run build` na biblioteca antes de instalar/gerar o consumidor |
-| Dependência `file:` ausente | Preserve a instalação local no caminho gravado no manifest do bot |
-| Versão antiga na CLI | Confira `npm ls yuzuha` no consumidor e reinstale a dependência local |
+| Dependência `file:` ausente | Em projetos `--local`, preserve a instalação local ou troque pela versão npm do Yuzuha |
+| Versão antiga na CLI | Confira `npm ls yuzuha` no consumidor e atualize a dependência |
 | `node:sqlite` indisponível | Requer Node >=22.13; use JSON/memória se não precisar de SQLite |
 | Aviso experimental do SQLite | Algumas versões do Node sinalizam essa API; ela só é carregada ao usar SQLite |
 

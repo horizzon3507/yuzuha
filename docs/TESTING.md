@@ -54,7 +54,67 @@ A verificação de links confere arquivos locais; não valida páginas externas 
 o significado do conteúdo. A verificação de arquitetura não substitui teste
 de comportamento.
 
-## Primeiro teste de comando
+## Fixture para comandos nativos
+
+`createTestBot`, em `yuzuha/testing`, cria um bot sem login, com `MockTransport`,
+`MemoryStore` isolado, recursos simulados e HTTP desabilitado por padrão.
+O scheduler executa apenas quando solicitado, sem iniciar polling.
+
+```ts
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { defineCommand } from 'yuzuha';
+import { createTestBot } from 'yuzuha/testing';
+
+test('cooldown e expiração usam tempo controlado', async t => {
+  const fixture = createTestBot({
+    now: 1000,
+    commands: [defineCommand({
+      name: 'token',
+      cooldown: '1s',
+      async run(ctx) {
+        await ctx.data.user.set('token', 'temporário', { ttlMs: 1000 });
+        await ctx.reply('Criado.');
+      },
+    })],
+  });
+  t.after(() => fixture.destroy());
+
+  assert.equal(await fixture.send('!token'), 'success');
+  assert.equal(await fixture.send('!token'), 'guarded');
+  fixture.clock.advance(1000);
+  assert.equal(await fixture.send('!token'), 'success');
+  assert.equal(fixture.messages.at(-1)?.payload.content, 'Criado.');
+  assert.deepEqual(fixture.errors, []);
+});
+```
+
+`send(content, overrides?)` retorna `DispatchResult`; os overrides escolhem autor,
+servidor, canal ou ID da mensagem. `message` nas opções define defaults da fixture.
+`messages`, `transport.actions`, `errors` e `results` permitem inspecionar os
+efeitos. Erros capturados são os enviados a `onError`; recusas normais de guards
+aparecem no resultado e nas respostas, sem virar erros internos.
+
+`clock.now()` retorna epoch em ms. `clock.advance(ms)` apenas avança o relógio;
+`await fixture.tick(ms)` também aguarda uma passagem do scheduler e seus handlers.
+Cooldown, TTL e o scheduler padrão usam esse relógio. Use `ctx.now()` em cálculos
+de prazo próprios; o relógio não altera `Date.now` global, timers de terceiros
+ou timeouts de HTTP. Um scheduler fornecido pelo chamador controla seu próprio
+relógio.
+
+`resources` aceita overrides parciais como `mockResources`; métodos ausentes
+falham explicitamente. `transport` aceita um `MockTransport` próprio. Stores
+fornecidos continuam sendo responsabilidade do chamador.
+`destroy()`, `close()` e `Symbol.asyncDispose` solicitam o encerramento e drenam
+o trabalho conforme o contrato do bot. Use `t.after` ou `await using` para
+garantir o descarte, inclusive quando uma asserção falhar.
+
+Os scaffolds JS/TS já incluem `test/hello.test.js` ou `.ts` com essa fixture.
+Execute `npm test` no projeto gerado. Os cenários JSON da CLI continuam
+declarativos e atendem comandos de script; o helper permite testar handlers
+JS/TS e scripts pelo mesmo caminho de dispatch.
+
+## Primeiro teste de comando com os ports
 
 Salve em `test/ping.test.js` no seu bot:
 
