@@ -1,16 +1,16 @@
 # Versionamento
 
 O Yuzuha aplica o formato Hory ao histórico e usa **SemVer simples** no pacote.
-A versão desta atualização é **0.1.4**.
+A versão desta atualização é **0.1.5**.
 
 ## Pacote e histórico
 
 | Lugar | Formato nesta versão |
 |---|---|
-| `package.json` e raiz do `package-lock.json` | `0.1.4` |
-| Pacote npm e saída de `yuzuha --version` | `0.1.4` |
-| Título do changelog | `## v0.1.4 · 22/10/2026` |
-| Eventual tag Git | `v0.1.4` |
+| `package.json` e raiz do `package-lock.json` | `0.1.5` |
+| Pacote npm e saída de `yuzuha --version` | `0.1.5` |
+| Título do changelog | `## v0.1.5 · 22/10/2026` |
+| Eventual tag Git | `v0.1.5` |
 
 O SDK e a CLI pertencem ao mesmo pacote. Para bibliotecas, a convenção Hory mantém
 SemVer sem `m`, sem seções por superfície e sem sufixos de canal.
@@ -39,6 +39,19 @@ A versão do SDK é fixada separadamente. Atualizá-la exige revisar
 gerado por `init` pertence ao consumidor e não precisa acompanhar a biblioteca.
 
 ## Preparar uma atualização
+
+### Migrar para 0.1.5
+
+Imports, argumentos posicionais e comandos existentes continuam disponíveis.
+Flags são interpretadas somente em comandos que as declaram. Grupos de
+subcomandos não declaram argumentos ou flags próprios; a folha define sua entrada.
+Permissões, checks, middleware e demais restrições dos grupos continuam valendo
+nos filhos. Veja o contrato em [NATIVE.md](docs/NATIVE.md).
+
+O scaffold agora declara a versão npm do Yuzuha. Para desenvolver contra a
+instalação que executa a CLI, use `init --local`. Projetos já gerados conservam
+suas dependências; a atualização não reescreve projetos consumidores.
+O schema de persistência permanece em 2 e o SDK em 3.3.0.
 
 ### Migrar para 0.1.4
 

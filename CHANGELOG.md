@@ -21,6 +21,16 @@ documentos. Veja a [política completa](VERSIONING.md).
 
 </details>
 
+## v0.1.5 · 22/10/2026
+
+Subcomandos e flags tipadas, ajuda derivada das definições e testes nativos com relógio controlável, com projetos gerados prontos para compartilhar. Esta atualização da biblioteca Yuzuha foi preparada em 22/10/2026 (v0.1.5).
+
+- Comandos aceitam árvores de subcomandos e flags com inferência de tipos, aliases, valores entre aspas e separador `--`. As restrições dos grupos são preservadas na execução dos filhos.
+- Ajuda detalha argumentos, flags, escolhas, valores padrão, exemplos e subcomandos. Erros de entrada incluem o uso esperado; metadados também ficam disponíveis no JSON de `check`.
+- `createTestBot`, em `yuzuha/testing`, reúne transporte, recursos simulados, estado isolado, mensagens, erros e resultados. O relógio controlável permite verificar cooldown, TTL e tarefas sem aguardar tempo real; o descarte aguarda o encerramento.
+- `init` usa dependência npm por padrão; `--local` seleciona a instalação local explicitamente. Projetos JS/TS incluem teste offline de exemplo e `npm test`.
+- SDK permanece em 3.3.0 e o catálogo mantém 288 funções. Os contratos e exemplos novos são compartilhados com a documentação e a validação do pacote instalado.
+
 ## v0.1.4 · 22/10/2026
 
 Eventos em scripts, cron com fuso, HTTP em streaming e ferramentas de manutenção e testes offline, com autorização compartilhada nos recursos. Esta atualização da biblioteca Yuzuha foi preparada em 22/10/2026 (v0.1.4).

@@ -1,9 +1,17 @@
 {
   "name": "yuzuha",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Fluxer bots with simple scripts and typed JavaScript/TypeScript.",
   "type": "module",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/horizzon3507/yuzuha.git"
+  },
+  "homepage": "https://github.com/horizzon3507/yuzuha#readme",
+  "bugs": {
+    "url": "https://github.com/horizzon3507/yuzuha/issues"
+  },
   "engines": {
     "node": ">=22.13.0"
   },
