@@ -22,7 +22,8 @@ import type { NativeData } from '../services/native-data.js';
 import { bindAuthorizedResources } from '../services/resource-authorization.js';
 import { MemberService } from '../services/members.js';
 import { GuardError, PartialModerationError, YuzuhaError } from '../shared/errors.js';
-import { parseArguments, tokenize } from './arguments.js';
+import { parseArguments, parseFlags, tokenize } from './arguments.js';
+import { commandUsage } from './help.js';
 import { ArgumentBag } from './typed-arguments.js';
 import type { Command } from './definition.js';
 
@@ -31,8 +32,11 @@ export interface ContextOptions {
   transport: Transport;
   store: Store;
   command: Command;
+  lineage?: readonly Command[];
+  prefix?: string;
   input?: string;
   cooldown: (key: string, duration: number) => number;
+  now?: () => number;
   help?: () => string;
   native?: NativeAccess;
   resources?: Resources;
@@ -49,10 +53,12 @@ export class CommandContext {
   private executionKey?: string;
   readonly vars = new Map<string, unknown>();
   readonly args = new ArgumentBag();
+  readonly flags = new ArgumentBag();
   readonly mod: NativeModeration;
   readonly data: NativeData;
   readonly members: MemberService;
   readonly signal: AbortSignal;
+  readonly now: () => number;
   readonly tokens: string[];
   lastCase?: CaseRecord;
   private moderationApplied = false;
@@ -66,6 +72,8 @@ export class CommandContext {
   readonly input: string;
   readonly help: () => string;
   private readonly claimCooldown: ContextOptions['cooldown'];
+  private readonly lineage: readonly Command[];
+  private readonly prefix: string;
   private readonly authorization: AuthorizationService;
   private readonly moderation: ModerationService;
   private readonly cases: CaseService;
@@ -86,20 +94,27 @@ export class CommandContext {
     this.transport = options.transport;
     this.store = options.store;
     this.command = options.command;
+    this.lineage = options.lineage ?? [options.command];
+    this.prefix = options.prefix ?? '';
     this.input = options.input ?? '';
-    this.tokens = tokenize(this.input);
+    try { this.tokens = tokenize(this.input); }
+    catch (error) {
+      if (error instanceof GuardError) throw new GuardError(`${error.message}\nUso: ${commandUsage(this.command, this.prefix)}`);
+      throw error;
+    }
     this.claimCooldown = options.cooldown;
     this.help = options.help ?? (() => '');
     this.native = options.native;
     this.schedulerService = options.scheduler;
     this.signal = options.signal ?? new AbortController().signal;
+    this.now = options.now ?? Date.now;
     this.httpService = options.http;
     this.nativeResources = options.resources;
     const scope = { guildID: this.guildID, authorID: this.authorID };
     this.authorization = new AuthorizationService(this.transport, scope);
     this.moderation = new ModerationService(this.transport, this.store, scope);
     this.cases = new CaseService(this.store);
-    this.variables = new VariableService(this.store, scope);
+    this.variables = new VariableService(this.store, scope, this.now);
     this.members = new MemberService(this.transport, scope, () => this.resources.users);
     this.mod = new NativeModeration((action, target, reason, moderationOptions) =>
       this.moderate(action, target, reason, moderationOptions));
@@ -190,8 +205,21 @@ export class CommandContext {
     if (this.command.guildOnly) this.requireGuild();
     for (const permission of this.command.permissions ?? []) await this.requirePermission(permission);
     for (const permission of this.command.botPermissions ?? []) await this.requirePermission(permission, true);
-    for (const [name, value] of parseArguments(this.command.args ?? [], this.tokens)) this.args.set(name, value);
-    if (this.command.cooldown !== undefined) this.cooldown(this.command.cooldown);
+    try {
+      const parsed = parseFlags(this.command.flags, this.tokens);
+      for (const [name, value] of parsed.flags) this.flags.set(name, value);
+      for (const [name, value] of parseArguments(this.command.args ?? [], parsed.tokens)) this.args.set(name, value);
+      this.tokens.splice(0, this.tokens.length, ...parsed.tokens);
+    } catch (error) {
+      if (error instanceof GuardError) throw new GuardError(`${error.message}\nUso: ${commandUsage(this.command, this.prefix)}`);
+      throw error;
+    }
+    for (const command of this.lineage) {
+      if (command.cooldown === undefined) continue;
+      const key = JSON.stringify([this.guildID, this.message.channelID, this.authorID, command.name]);
+      const remaining = this.claimCooldown(key, parseDuration(command.cooldown));
+      if (remaining > 0) throw new GuardError(`Aguarde ${Math.ceil(remaining / 1000)}s antes de usar novamente.`);
+    }
   }
 
   async moderate(action: ModerationAction, target: string, reason: string, options: ModerationOptions = {}): Promise<CaseRecord | undefined> {

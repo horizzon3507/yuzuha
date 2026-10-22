@@ -2,6 +2,7 @@ export { CommandContext } from './commands/context.js';
 export type { ContextOptions } from './commands/context.js';
 export { defineCommand } from './commands/definition.js';
 export type { Command, ArgumentDefinition } from './commands/definition.js';
+export { commandUsage, commandHelp } from './commands/help.js';
 export { tokenize, validateArgumentDefinitions } from './commands/arguments.js';
 export { parseDuration, userID } from './domain/values.js';
 export { arg, ArgumentBuilder } from './commands/builders.js';

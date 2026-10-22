@@ -2,6 +2,7 @@ export { Yuzuha, Bot } from './bot.js';
 export type { YuzuhaOptions, YuzuhaPlugin, Middleware, DispatchResult } from './bot.js';
 export { CommandContext, defineCommand, parseDuration } from './context.js';
 export type { Command, ArgumentDefinition } from './context.js';
+export { commandUsage, commandHelp } from './commands/help.js';
 export type { ContextOptions } from './context.js';
 export { arg, ArgumentBuilder } from './commands/builders.js';
 export type { ArgumentSchema, InferArgument } from './commands/builders.js';
