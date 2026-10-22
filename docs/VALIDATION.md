@@ -1,5 +1,36 @@
 # Validação local
 
+## Atualização 0.1.5
+
+Executada em **22/10/2026**, Linux, Node **26.11.1**, npm **12.2.1** e
+`@fluxerjs/core` **3.3.0**. A versão foi preparada localmente; nenhuma publicação
+ou conexão de bot ao Fluxer foi feita nesta atualização.
+
+| Verificação | Resultado |
+|---|---|
+| `npm run check` | PASS: tipos, arquitetura, **411 testes**, build, editor, referência e links |
+| `npm run smoke:package` | PASS: tarball instalado, consumidores JS/TS, CLI, SDK e scaffolds |
+| Comandos | PASS: aliases aninhados, flags inferidas, aspas, negativos, `--`, erros e ajuda |
+| Herança | PASS: servidor, permissões de autor/bot, checks, middleware, cooldown e políticas HTTP |
+| Registro e recarga | PASS: snapshots, ciclos/profundidade, conflitos, rollback e preservação de comandos manuais |
+| Plugins | PASS: scripts em subcomandos usam builtins e funções do plugin |
+| Fixture de testes | PASS: isolamento, mensagens/erros/resultados, TTL, cooldown, scheduler/retry e encerramento |
+| Scaffold | PASS: dependência npm por padrão; modo local JS/TS e function mode passam instalação, testes e check |
+| Consumidor TypeScript | PASS: flags e argumentos inferidos, tipos do helper e imports públicos |
+| Catálogo | PASS: 288 funções; JSON dos comandos compartilha uso e metadados com a ajuda |
+
+O smoke confere o range npm do scaffold padrão e instala os exemplos com
+`--local`, usando o pacote em teste. A 0.1.5 ainda não foi publicada no registro.
+HTTP nos testes usa fetch simulado; moderação usa `MockTransport`; stores de
+teste são isolados. Relógio controlável não altera timers globais, timeout de
+rede ou relógios de schedulers fornecidos pelo consumidor. Não foi executada
+a matriz remota de CI nem validação ao vivo no Fluxer.
+
+As seções seguintes preservam o registro histórico da 0.1.4, incluindo suas
+medições e a publicação anterior; esses resultados não são medições da 0.1.5.
+
+## Registro anterior: 0.1.4
+
 Evidência da versão **0.1.4**, executada em **22/10/2026**, sem login ou ações
 no Fluxer real. Ambiente: Linux, Node **26.11.1**, npm **12.2.1** e
 `@fluxerjs/core` **3.3.0**, fixado no lockfile.
@@ -125,3 +156,15 @@ A série ampliada terminou com variação de heap de **55240 bytes** após GC e
 RSS menor. Isso não comprova ausência de vazamentos. Os resultados são
 exploratórios desta máquina; não medem latência real do Fluxer. Metodologia e
 opções estão em [BENCHMARKS.md](BENCHMARKS.md).
+
+## Publicação confirmada no npm
+
+Em **22/10/2026**, `yuzuha@0.1.4` foi publicado no
+[npm](https://www.npmjs.com/package/yuzuha/v/0.1.4), com `latest` apontando para
+`0.1.4`. Após o processamento do registro, foram conferidos a versão pública,
+a tag e o download do tarball: **591282 bytes**, com SHA-512 igual ao artefato
+local validado. O comprovante local está em `artifacts/publish-0.1.4.json`.
+
+Uma pasta temporária instalou `yuzuha@0.1.4` pelo registro público e confirmou a
+CLI `0.1.4`, os cinco entrypoints, 288 funções, exports do SDK, cron, backup e
+resposta de comando com transporte simulado. Nenhum bot foi conectado ao Fluxer.
