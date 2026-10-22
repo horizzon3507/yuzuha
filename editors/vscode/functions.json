@@ -1,0 +1,2318 @@
+[
+  {
+    "name": "authorID",
+    "category": "context",
+    "minArgs": 0,
+    "maxArgs": 0,
+    "usage": "$authorID",
+    "description": "ID do autor."
+  },
+  {
+    "name": "authorName",
+    "category": "context",
+    "minArgs": 0,
+    "maxArgs": 0,
+    "usage": "$authorName",
+    "description": "Nome do autor."
+  },
+  {
+    "name": "username",
+    "category": "context",
+    "minArgs": 0,
+    "maxArgs": 0,
+    "usage": "$username",
+    "description": "Nome do autor."
+  },
+  {
+    "name": "botID",
+    "category": "context",
+    "minArgs": 0,
+    "maxArgs": 0,
+    "usage": "$botID",
+    "description": "ID do bot."
+  },
+  {
+    "name": "guildID",
+    "category": "context",
+    "minArgs": 0,
+    "maxArgs": 0,
+    "usage": "$guildID",
+    "description": "ID do servidor; vazio em DM."
+  },
+  {
+    "name": "channelID",
+    "category": "context",
+    "minArgs": 0,
+    "maxArgs": 0,
+    "usage": "$channelID",
+    "description": "ID do canal; vazio se o evento não tiver canal."
+  },
+  {
+    "name": "messageID",
+    "category": "context",
+    "minArgs": 0,
+    "maxArgs": 0,
+    "usage": "$messageID",
+    "description": "ID da mensagem."
+  },
+  {
+    "name": "ping",
+    "category": "context",
+    "minArgs": 0,
+    "maxArgs": 0,
+    "usage": "$ping",
+    "description": "Latência do gateway em ms."
+  },
+  {
+    "name": "caseID",
+    "category": "context",
+    "minArgs": 0,
+    "maxArgs": 0,
+    "usage": "$caseID",
+    "description": "ID do último caso criado nesta execução."
+  },
+  {
+    "name": "help",
+    "category": "context",
+    "minArgs": 0,
+    "maxArgs": 0,
+    "usage": "$help",
+    "description": "Ajuda dos comandos registrados."
+  },
+  {
+    "name": "mentioned",
+    "category": "context",
+    "minArgs": 1,
+    "maxArgs": 1,
+    "usage": "$mentioned[posição]",
+    "description": "Menção por posição, começando em 1; vazio se ausente."
+  },
+  {
+    "name": "message",
+    "category": "context",
+    "minArgs": 0,
+    "maxArgs": 1,
+    "usage": "$message[posição?]",
+    "description": "Texto dos argumentos, ou argumento por posição começando em 0."
+  },
+  {
+    "name": "messageSlice",
+    "category": "context",
+    "minArgs": 1,
+    "maxArgs": 2,
+    "usage": "$messageSlice[início;fim?]",
+    "description": "Fatia de argumentos, índice inicial 0 e fim exclusivo."
+  },
+  {
+    "name": "arg",
+    "category": "context",
+    "minArgs": 1,
+    "maxArgs": 1,
+    "usage": "$arg[nome]",
+    "description": "Argumento declarativo convertido."
+  },
+  {
+    "name": "let",
+    "category": "flow",
+    "minArgs": 2,
+    "maxArgs": 2,
+    "usage": "$let[nome;valor]",
+    "description": "Define variável local sem produzir texto."
+  },
+  {
+    "name": "get",
+    "category": "flow",
+    "minArgs": 1,
+    "maxArgs": 1,
+    "usage": "$get[nome]",
+    "description": "Recupera variável local preservando seu tipo."
+  },
+  {
+    "name": "if",
+    "category": "flow",
+    "minArgs": 2,
+    "maxArgs": 3,
+    "usage": "$if[condição;então;senão?]",
+    "description": "Avalia somente o ramo escolhido."
+  },
+  {
+    "name": "stop",
+    "category": "flow",
+    "minArgs": 0,
+    "maxArgs": 0,
+    "usage": "$stop",
+    "description": "Encerra a execução sem resposta automática."
+  },
+  {
+    "name": "throw",
+    "category": "flow",
+    "minArgs": 1,
+    "maxArgs": 1,
+    "usage": "$throw[mensagem]",
+    "description": "Emite erro explícito."
+  },
+  {
+    "name": "try",
+    "category": "flow",
+    "minArgs": 2,
+    "maxArgs": 2,
+    "usage": "$try[operação;fallback]",
+    "description": "Captura erros de operações; guards, limites e ações parciais continuam sendo erros."
+  },
+  {
+    "name": "onlyIf",
+    "category": "guards",
+    "minArgs": 2,
+    "maxArgs": 2,
+    "usage": "$onlyIf[condição;erro]",
+    "description": "Encerra se a condição for falsa; aceita ==, !=, >, <, >= e <=.",
+    "aliases": [
+      "require"
+    ]
+  },
+  {
+    "name": "requireGuild",
+    "category": "guards",
+    "minArgs": 0,
+    "maxArgs": 1,
+    "usage": "$requireGuild[erro?]",
+    "description": "Exige execução em servidor.",
+    "aliases": [
+      "onlyGuild"
+    ]
+  },
+  {
+    "name": "onlyPerms",
+    "category": "guards",
+    "minArgs": 1,
+    "maxArgs": 2,
+    "usage": "$onlyPerms[permissão;erro?]",
+    "description": "Exige permissão do autor no servidor.",
+    "aliases": [
+      "requirePermission"
+    ]
+  },
+  {
+    "name": "onlyBotPerms",
+    "category": "guards",
+    "minArgs": 1,
+    "maxArgs": 2,
+    "usage": "$onlyBotPerms[permissão;erro?]",
+    "description": "Exige permissão do bot no servidor.",
+    "aliases": [
+      "requireBotPermission"
+    ]
+  },
+  {
+    "name": "cooldown",
+    "category": "guards",
+    "minArgs": 1,
+    "maxArgs": 2,
+    "usage": "$cooldown[duração;erro?]",
+    "description": "Cooldown por autor/canal/servidor/comando; erro aceita {remaining}."
+  },
+  {
+    "name": "prop",
+    "category": "values",
+    "minArgs": 2,
+    "maxArgs": 2,
+    "usage": "$prop[objeto;propriedade]",
+    "description": "Obtém uma propriedade própria de objeto."
+  },
+  {
+    "name": "eq",
+    "category": "values",
+    "minArgs": 2,
+    "maxArgs": 2,
+    "usage": "$eq[a;b]",
+    "description": "Compara igualdade textual."
+  },
+  {
+    "name": "ne",
+    "category": "values",
+    "minArgs": 2,
+    "maxArgs": 2,
+    "usage": "$ne[a;b]",
+    "description": "Compara diferença textual."
+  },
+  {
+    "name": "not",
+    "category": "values",
+    "minArgs": 1,
+    "maxArgs": 1,
+    "usage": "$not[valor]",
+    "description": "Inverte condição."
+  },
+  {
+    "name": "and",
+    "category": "values",
+    "minArgs": 2,
+    "maxArgs": 32,
+    "usage": "$and[a;b;...]",
+    "description": "E lógico com avaliação curta."
+  },
+  {
+    "name": "or",
+    "category": "values",
+    "minArgs": 2,
+    "maxArgs": 32,
+    "usage": "$or[a;b;...]",
+    "description": "OU lógico com avaliação curta."
+  },
+  {
+    "name": "math",
+    "category": "values",
+    "minArgs": 3,
+    "maxArgs": 3,
+    "usage": "$math[a;operador;b]",
+    "description": "Calcula +, -, *, / ou % sem eval."
+  },
+  {
+    "name": "random",
+    "category": "values",
+    "minArgs": 2,
+    "maxArgs": 2,
+    "usage": "$random[mínimo;máximo]",
+    "description": "Inteiro aleatório com ambos os limites inclusivos."
+  },
+  {
+    "name": "lowercase",
+    "category": "values",
+    "minArgs": 1,
+    "maxArgs": 1,
+    "usage": "$lowercase[texto]",
+    "description": "Transformação de texto."
+  },
+  {
+    "name": "uppercase",
+    "category": "values",
+    "minArgs": 1,
+    "maxArgs": 1,
+    "usage": "$uppercase[texto]",
+    "description": "Transformação de texto."
+  },
+  {
+    "name": "trim",
+    "category": "values",
+    "minArgs": 1,
+    "maxArgs": 1,
+    "usage": "$trim[texto]",
+    "description": "Transformação de texto."
+  },
+  {
+    "name": "length",
+    "category": "values",
+    "minArgs": 1,
+    "maxArgs": 1,
+    "usage": "$length[texto]",
+    "description": "Transformação de texto."
+  },
+  {
+    "name": "replace",
+    "category": "values",
+    "minArgs": 3,
+    "maxArgs": 3,
+    "usage": "$replace[texto;busca;substituição]",
+    "description": "Substitui todas as ocorrências literais."
+  },
+  {
+    "name": "join",
+    "category": "values",
+    "minArgs": 2,
+    "maxArgs": 32,
+    "usage": "$join[separador;valor;...]",
+    "description": "Junta valores."
+  },
+  {
+    "name": "timestamp",
+    "category": "values",
+    "minArgs": 0,
+    "maxArgs": 0,
+    "usage": "$timestamp",
+    "description": "Timestamp Unix em milissegundos."
+  },
+  {
+    "name": "reply",
+    "category": "messages",
+    "minArgs": 1,
+    "maxArgs": 1,
+    "usage": "$reply[texto ou embed]",
+    "description": "Responde sem pings e sem produzir texto adicional."
+  },
+  {
+    "name": "sendMessage",
+    "category": "messages",
+    "minArgs": 2,
+    "maxArgs": 2,
+    "usage": "$sendMessage[canalID;texto ou embed]",
+    "description": "Envia e retorna o ID da mensagem."
+  },
+  {
+    "name": "editMessage",
+    "category": "messages",
+    "minArgs": 3,
+    "maxArgs": 3,
+    "usage": "$editMessage[canalID;mensagemID;texto ou embed]",
+    "description": "Edita mensagem."
+  },
+  {
+    "name": "deleteMessage",
+    "category": "messages",
+    "minArgs": 2,
+    "maxArgs": 2,
+    "usage": "$deleteMessage[canalID;mensagemID]",
+    "description": "Apaga mensagem."
+  },
+  {
+    "name": "react",
+    "category": "messages",
+    "minArgs": 1,
+    "maxArgs": 1,
+    "usage": "$react[emoji]",
+    "description": "Reage à mensagem que executou o comando."
+  },
+  {
+    "name": "embed",
+    "category": "embeds",
+    "minArgs": 1,
+    "maxArgs": 32,
+    "usage": "$embed[parte;parte;...]",
+    "description": "Combina partes tipadas de embed. Separe-as por ponto e vírgula."
+  },
+  {
+    "name": "title",
+    "category": "embeds",
+    "minArgs": 1,
+    "maxArgs": 1,
+    "usage": "$title[texto]",
+    "description": "Parte de embed."
+  },
+  {
+    "name": "description",
+    "category": "embeds",
+    "minArgs": 1,
+    "maxArgs": 1,
+    "usage": "$description[texto]",
+    "description": "Parte de embed."
+  },
+  {
+    "name": "footer",
+    "category": "embeds",
+    "minArgs": 1,
+    "maxArgs": 1,
+    "usage": "$footer[texto]",
+    "description": "Parte de embed."
+  },
+  {
+    "name": "image",
+    "category": "embeds",
+    "minArgs": 1,
+    "maxArgs": 1,
+    "usage": "$image[texto]",
+    "description": "Parte de embed."
+  },
+  {
+    "name": "thumbnail",
+    "category": "embeds",
+    "minArgs": 1,
+    "maxArgs": 1,
+    "usage": "$thumbnail[texto]",
+    "description": "Parte de embed."
+  },
+  {
+    "name": "color",
+    "category": "embeds",
+    "minArgs": 1,
+    "maxArgs": 1,
+    "usage": "$color[#RRGGBB]",
+    "description": "Cor RGB hexadecimal."
+  },
+  {
+    "name": "field",
+    "category": "embeds",
+    "minArgs": 2,
+    "maxArgs": 3,
+    "usage": "$field[nome;valor;inline?]",
+    "description": "Campo de embed."
+  },
+  {
+    "name": "moveMember",
+    "category": "moderation",
+    "minArgs": 3,
+    "maxArgs": 3,
+    "usage": "$moveMember[usuário;canalOuVazio;motivo]",
+    "description": "Modera voz com permissões e hierarquia."
+  },
+  {
+    "name": "modMoveMember",
+    "category": "moderation",
+    "minArgs": 3,
+    "maxArgs": 3,
+    "usage": "$modMoveMember[usuário;canalOuVazio;motivo]",
+    "description": "Modera voz com permissões e hierarquia, registra caso e define $caseID."
+  },
+  {
+    "name": "muteMember",
+    "category": "moderation",
+    "minArgs": 3,
+    "maxArgs": 3,
+    "usage": "$muteMember[usuário;ativar;motivo]",
+    "description": "Modera voz com permissões e hierarquia."
+  },
+  {
+    "name": "modMuteMember",
+    "category": "moderation",
+    "minArgs": 3,
+    "maxArgs": 3,
+    "usage": "$modMuteMember[usuário;ativar;motivo]",
+    "description": "Modera voz com permissões e hierarquia, registra caso e define $caseID."
+  },
+  {
+    "name": "deafenMember",
+    "category": "moderation",
+    "minArgs": 3,
+    "maxArgs": 3,
+    "usage": "$deafenMember[usuário;ativar;motivo]",
+    "description": "Modera voz com permissões e hierarquia."
+  },
+  {
+    "name": "modDeafenMember",
+    "category": "moderation",
+    "minArgs": 3,
+    "maxArgs": 3,
+    "usage": "$modDeafenMember[usuário;ativar;motivo]",
+    "description": "Modera voz com permissões e hierarquia, registra caso e define $caseID."
+  },
+  {
+    "name": "ban",
+    "category": "moderation",
+    "minArgs": 2,
+    "maxArgs": 3,
+    "usage": "$ban[usuário;motivo;diasDeHistórico?]",
+    "description": "Modera com guards e hierarquia, sem criar caso."
+  },
+  {
+    "name": "modBan",
+    "category": "moderation",
+    "minArgs": 2,
+    "maxArgs": 3,
+    "usage": "$modBan[usuário;motivo;diasDeHistórico?]",
+    "description": "Modera com guards e hierarquia e cria caso; define $caseID."
+  },
+  {
+    "name": "kick",
+    "category": "moderation",
+    "minArgs": 2,
+    "maxArgs": 2,
+    "usage": "$kick[usuário;motivo]",
+    "description": "Modera com guards e hierarquia, sem criar caso."
+  },
+  {
+    "name": "modKick",
+    "category": "moderation",
+    "minArgs": 2,
+    "maxArgs": 2,
+    "usage": "$modKick[usuário;motivo]",
+    "description": "Modera com guards e hierarquia e cria caso; define $caseID."
+  },
+  {
+    "name": "timeout",
+    "category": "moderation",
+    "minArgs": 3,
+    "maxArgs": 3,
+    "usage": "$timeout[usuário;duração;motivo]",
+    "description": "Modera com guards e hierarquia, sem criar caso."
+  },
+  {
+    "name": "modTimeout",
+    "category": "moderation",
+    "minArgs": 3,
+    "maxArgs": 3,
+    "usage": "$modTimeout[usuário;duração;motivo]",
+    "description": "Modera com guards e hierarquia e cria caso; define $caseID."
+  },
+  {
+    "name": "unban",
+    "category": "moderation",
+    "minArgs": 2,
+    "maxArgs": 2,
+    "usage": "$unban[usuário;motivo]",
+    "description": "Modera com guards e hierarquia, sem criar caso."
+  },
+  {
+    "name": "modUnban",
+    "category": "moderation",
+    "minArgs": 2,
+    "maxArgs": 2,
+    "usage": "$modUnban[usuário;motivo]",
+    "description": "Modera com guards e hierarquia e cria caso; define $caseID."
+  },
+  {
+    "name": "case",
+    "category": "storage",
+    "minArgs": 1,
+    "maxArgs": 1,
+    "usage": "$case[número]",
+    "description": "Consulta caso do servidor atual."
+  },
+  {
+    "name": "getVar",
+    "category": "storage",
+    "minArgs": 1,
+    "maxArgs": 2,
+    "usage": "$getVar[nome;padrão?]",
+    "description": "Lê variável persistente do escopo."
+  },
+  {
+    "name": "setVar",
+    "category": "storage",
+    "minArgs": 2,
+    "maxArgs": 3,
+    "usage": "$setVar[nome;valor;ttlMs?]",
+    "description": "Salva variável do escopo; TTL opcional em milissegundos. Sem TTL, o valor é persistente."
+  },
+  {
+    "name": "deleteVar",
+    "category": "storage",
+    "minArgs": 1,
+    "maxArgs": 1,
+    "usage": "$deleteVar[nome]",
+    "description": "Remove variável persistente do escopo."
+  },
+  {
+    "name": "ttlVar",
+    "category": "storage",
+    "minArgs": 1,
+    "maxArgs": 1,
+    "usage": "$ttlVar[nome]",
+    "description": "Retorna TTL restante em milissegundos; -1 persistente, -2 ausente ou expirada."
+  },
+  {
+    "name": "expireVar",
+    "category": "storage",
+    "minArgs": 2,
+    "maxArgs": 2,
+    "usage": "$expireVar[nome;ttlMs]",
+    "description": "Define expiração em milissegundos; null remove TTL, zero expira imediatamente. Retorna se o valor existia."
+  },
+  {
+    "name": "getGuildVar",
+    "category": "storage",
+    "minArgs": 1,
+    "maxArgs": 2,
+    "usage": "$getGuildVar[nome;padrão?]",
+    "description": "Lê variável persistente do escopo."
+  },
+  {
+    "name": "setGuildVar",
+    "category": "storage",
+    "minArgs": 2,
+    "maxArgs": 3,
+    "usage": "$setGuildVar[nome;valor;ttlMs?]",
+    "description": "Salva variável do escopo; TTL opcional em milissegundos. Sem TTL, o valor é persistente."
+  },
+  {
+    "name": "deleteGuildVar",
+    "category": "storage",
+    "minArgs": 1,
+    "maxArgs": 1,
+    "usage": "$deleteGuildVar[nome]",
+    "description": "Remove variável persistente do escopo."
+  },
+  {
+    "name": "ttlGuildVar",
+    "category": "storage",
+    "minArgs": 1,
+    "maxArgs": 1,
+    "usage": "$ttlGuildVar[nome]",
+    "description": "Retorna TTL restante em milissegundos; -1 persistente, -2 ausente ou expirada."
+  },
+  {
+    "name": "expireGuildVar",
+    "category": "storage",
+    "minArgs": 2,
+    "maxArgs": 2,
+    "usage": "$expireGuildVar[nome;ttlMs]",
+    "description": "Define expiração em milissegundos; null remove TTL, zero expira imediatamente. Retorna se o valor existia."
+  },
+  {
+    "name": "getUserVar",
+    "category": "storage",
+    "minArgs": 1,
+    "maxArgs": 2,
+    "usage": "$getUserVar[nome;padrão?]",
+    "description": "Lê variável persistente do escopo."
+  },
+  {
+    "name": "setUserVar",
+    "category": "storage",
+    "minArgs": 2,
+    "maxArgs": 3,
+    "usage": "$setUserVar[nome;valor;ttlMs?]",
+    "description": "Salva variável do escopo; TTL opcional em milissegundos. Sem TTL, o valor é persistente."
+  },
+  {
+    "name": "deleteUserVar",
+    "category": "storage",
+    "minArgs": 1,
+    "maxArgs": 1,
+    "usage": "$deleteUserVar[nome]",
+    "description": "Remove variável persistente do escopo."
+  },
+  {
+    "name": "ttlUserVar",
+    "category": "storage",
+    "minArgs": 1,
+    "maxArgs": 1,
+    "usage": "$ttlUserVar[nome]",
+    "description": "Retorna TTL restante em milissegundos; -1 persistente, -2 ausente ou expirada."
+  },
+  {
+    "name": "expireUserVar",
+    "category": "storage",
+    "minArgs": 2,
+    "maxArgs": 2,
+    "usage": "$expireUserVar[nome;ttlMs]",
+    "description": "Define expiração em milissegundos; null remove TTL, zero expira imediatamente. Retorna se o valor existia."
+  },
+  {
+    "name": "dataTransaction",
+    "category": "storage",
+    "minArgs": 1,
+    "maxArgs": 1,
+    "usage": "$dataTransaction[operações]",
+    "description": "Executa atomicamente 1–100 operações JSON get/set/delete/increment/expire/ttl entre escopos; retorna resultados na ordem."
+  },
+  {
+    "name": "userProfile",
+    "category": "users",
+    "minArgs": 1,
+    "maxArgs": 1,
+    "usage": "$userProfile[usuário]",
+    "description": "Busca usuário, perfil global e perfil/membro do servidor atual quando disponível."
+  },
+  {
+    "name": "guildCounts",
+    "category": "users",
+    "minArgs": 0,
+    "maxArgs": 1,
+    "usage": "$guildCounts[timeout?]",
+    "description": "Solicita contagens ao vivo de membros e online ao gateway; timeout em milissegundos."
+  },
+  {
+    "name": "channelCounts",
+    "category": "users",
+    "minArgs": 0,
+    "maxArgs": 2,
+    "usage": "$channelCounts[canal?;timeout?]",
+    "description": "Solicita contagens ao vivo do canal ao gateway, aguardando o evento correspondente."
+  },
+  {
+    "name": "user",
+    "category": "users",
+    "minArgs": 1,
+    "maxArgs": 2,
+    "usage": "$user[id;propriedade?]",
+    "description": "Usuário por ID, ou uma propriedade própria; vazio se não existir."
+  },
+  {
+    "name": "member",
+    "category": "users",
+    "minArgs": 1,
+    "maxArgs": 2,
+    "usage": "$member[id;propriedade?]",
+    "description": "Membro do servidor atual, ou propriedade; vazio se não existir."
+  },
+  {
+    "name": "members",
+    "category": "users",
+    "minArgs": 0,
+    "maxArgs": 1,
+    "usage": "$members[limite?]",
+    "description": "Membros do servidor atual; padrão 50, máximo 1000."
+  },
+  {
+    "name": "avatar",
+    "category": "users",
+    "minArgs": 1,
+    "maxArgs": 2,
+    "usage": "$avatar[id;tamanho?]",
+    "description": "URL do avatar; tamanho de 16 a 4096; vazio se ausente."
+  },
+  {
+    "name": "displayName",
+    "category": "users",
+    "minArgs": 1,
+    "maxArgs": 1,
+    "usage": "$displayName[id]",
+    "description": "Nome de exibição do usuário; vazio se não existir."
+  },
+  {
+    "name": "memberCount",
+    "category": "users",
+    "minArgs": 0,
+    "maxArgs": 0,
+    "usage": "$memberCount",
+    "description": "Total de membros do servidor atual."
+  },
+  {
+    "name": "userBanner",
+    "category": "users",
+    "minArgs": 1,
+    "maxArgs": 2,
+    "usage": "$userBanner[id;tamanho?]",
+    "description": "URL do banner do usuário; tamanho de 16 a 4096; vazio se ausente."
+  },
+  {
+    "name": "userCreated",
+    "category": "users",
+    "minArgs": 1,
+    "maxArgs": 1,
+    "usage": "$userCreated[id]",
+    "description": "Criação da conta em milissegundos; vazio se não existir."
+  },
+  {
+    "name": "guild",
+    "category": "users",
+    "minArgs": 0,
+    "maxArgs": 1,
+    "usage": "$guild[propriedade?]",
+    "description": "Servidor atual, ou uma propriedade própria."
+  },
+  {
+    "name": "guildIcon",
+    "category": "users",
+    "minArgs": 0,
+    "maxArgs": 1,
+    "usage": "$guildIcon[tamanho?]",
+    "description": "URL do ícone do servidor atual; vazio se ausente."
+  },
+  {
+    "name": "guildBanner",
+    "category": "users",
+    "minArgs": 0,
+    "maxArgs": 1,
+    "usage": "$guildBanner[tamanho?]",
+    "description": "URL do banner do servidor atual; vazio se ausente."
+  },
+  {
+    "name": "bans",
+    "category": "users",
+    "minArgs": 0,
+    "maxArgs": 1,
+    "usage": "$bans[limite?]",
+    "description": "Banimentos do servidor atual; padrão 50, máximo 1000."
+  },
+  {
+    "name": "auditLogs",
+    "category": "users",
+    "minArgs": 0,
+    "maxArgs": 1,
+    "usage": "$auditLogs[limite?]",
+    "description": "Logs de auditoria do servidor atual; padrão 50, máximo 100."
+  },
+  {
+    "name": "setPresence",
+    "category": "users",
+    "minArgs": 1,
+    "maxArgs": 3,
+    "usage": "$setPresence[status;atividade?;tipo?]",
+    "description": "Define presença: status e atividade opcional (playing por padrão)."
+  },
+  {
+    "name": "setStatus",
+    "category": "users",
+    "minArgs": 1,
+    "maxArgs": 1,
+    "usage": "$setStatus[status]",
+    "description": "Define o status da presença; limpa a atividade."
+  },
+  {
+    "name": "setActivity",
+    "category": "users",
+    "minArgs": 1,
+    "maxArgs": 2,
+    "usage": "$setActivity[atividade;tipo?]",
+    "description": "Define a atividade com status online."
+  },
+  {
+    "name": "moveRole",
+    "category": "roles",
+    "minArgs": 2,
+    "maxArgs": 2,
+    "usage": "$moveRole[cargo;posição]",
+    "description": "Move cargo com autorização e hierarquia do autor e do bot; posição a partir de 1."
+  },
+  {
+    "name": "role",
+    "category": "roles",
+    "minArgs": 1,
+    "maxArgs": 2,
+    "usage": "$role[cargo;propriedade?]",
+    "description": "Resolve cargo do servidor atual; retorna o cargo ou uma propriedade."
+  },
+  {
+    "name": "roles",
+    "category": "roles",
+    "minArgs": 0,
+    "maxArgs": 0,
+    "usage": "$roles",
+    "description": "Lista cargos do servidor ordenados por posição."
+  },
+  {
+    "name": "hasRole",
+    "category": "roles",
+    "minArgs": 2,
+    "maxArgs": 2,
+    "usage": "$hasRole[usuário;cargo]",
+    "description": "Verifica se o usuário possui o cargo."
+  },
+  {
+    "name": "addRole",
+    "category": "roles",
+    "minArgs": 2,
+    "maxArgs": 2,
+    "usage": "$addRole[usuário;cargo]",
+    "description": "Adiciona cargo ao usuário."
+  },
+  {
+    "name": "removeRole",
+    "category": "roles",
+    "minArgs": 2,
+    "maxArgs": 2,
+    "usage": "$removeRole[usuário;cargo]",
+    "description": "Remove cargo do usuário."
+  },
+  {
+    "name": "createRole",
+    "category": "roles",
+    "minArgs": 1,
+    "maxArgs": 3,
+    "usage": "$createRole[nome;cor?;permissões?]",
+    "description": "Cria cargo; cor #RRGGBB ou número; permissões separadas por vírgula."
+  },
+  {
+    "name": "editRole",
+    "category": "roles",
+    "minArgs": 1,
+    "maxArgs": 4,
+    "usage": "$editRole[cargo;nome?;cor?;permissões?]",
+    "description": "Edita cargo; texto vazio mantém cada campo."
+  },
+  {
+    "name": "deleteRole",
+    "category": "roles",
+    "minArgs": 1,
+    "maxArgs": 1,
+    "usage": "$deleteRole[cargo]",
+    "description": "Exclui cargo do servidor."
+  },
+  {
+    "name": "createLinkChannel",
+    "category": "channels",
+    "minArgs": 2,
+    "maxArgs": 3,
+    "usage": "$createLinkChannel[nome;url;categoria?]",
+    "description": "Cria um canal de link com autorização do autor e do bot."
+  },
+  {
+    "name": "editLinkChannel",
+    "category": "channels",
+    "minArgs": 2,
+    "maxArgs": 3,
+    "usage": "$editLinkChannel[canal;url;motivo?]",
+    "description": "Altera a URL de um canal de link do servidor atual."
+  },
+  {
+    "name": "setContentWarning",
+    "category": "channels",
+    "minArgs": 2,
+    "maxArgs": 4,
+    "usage": "$setContentWarning[canal;nível;texto?;motivo?]",
+    "description": "Define aviso de conteúdo: 0 herda, 1 ativa, vazio remove o override."
+  },
+  {
+    "name": "moveChannel",
+    "category": "channels",
+    "minArgs": 2,
+    "maxArgs": 2,
+    "usage": "$moveChannel[canal;posição]",
+    "description": "Move um canal para a posição indicada, a partir de 0."
+  },
+  {
+    "name": "setCategory",
+    "category": "channels",
+    "minArgs": 2,
+    "maxArgs": 3,
+    "usage": "$setCategory[canal;categoria;motivo?]",
+    "description": "Define a categoria do canal; categoria vazia remove o vínculo."
+  },
+  {
+    "name": "channel",
+    "category": "channels",
+    "minArgs": 1,
+    "maxArgs": 2,
+    "usage": "$channel[canal;propriedade?]",
+    "description": "Mostra um canal; com propriedade, mostra só ela."
+  },
+  {
+    "name": "channels",
+    "category": "channels",
+    "minArgs": 0,
+    "maxArgs": 0,
+    "usage": "$channels",
+    "description": "Lista os canais do servidor atual por posição."
+  },
+  {
+    "name": "createChannel",
+    "category": "channels",
+    "minArgs": 1,
+    "maxArgs": 3,
+    "usage": "$createChannel[nome;tipo?;categoria?]",
+    "description": "Cria um canal e mostra os dados."
+  },
+  {
+    "name": "editChannel",
+    "category": "channels",
+    "minArgs": 1,
+    "maxArgs": 4,
+    "usage": "$editChannel[canal;nome?;topico?;slowmode?]",
+    "description": "Edita um canal; vazio mantém."
+  },
+  {
+    "name": "deleteChannel",
+    "category": "channels",
+    "minArgs": 1,
+    "maxArgs": 1,
+    "usage": "$deleteChannel[canal]",
+    "description": "Apaga um canal."
+  },
+  {
+    "name": "slowmode",
+    "category": "channels",
+    "minArgs": 1,
+    "maxArgs": 2,
+    "usage": "$slowmode[segundos;canal?]",
+    "description": "Define o modo lento (0 a 21600s)."
+  },
+  {
+    "name": "channelPerms",
+    "category": "channels",
+    "minArgs": 2,
+    "maxArgs": 4,
+    "usage": "$channelPerms[canal;alvo;permitir?;negar?]",
+    "description": "Define permissões locais; listas separadas por vírgula."
+  },
+  {
+    "name": "channelPermsOf",
+    "category": "channels",
+    "minArgs": 2,
+    "maxArgs": 2,
+    "usage": "$channelPermsOf[canal;usuario]",
+    "description": "Permissões efetivas do usuário no canal."
+  },
+  {
+    "name": "preloadMessages",
+    "category": "messages",
+    "minArgs": 1,
+    "maxArgs": 1,
+    "usage": "$preloadMessages[canais]",
+    "description": "Busca a última mensagem de até 100 canais; recebe array de IDs e retorna objeto por canal."
+  },
+  {
+    "name": "removeReaction",
+    "category": "messages",
+    "minArgs": 2,
+    "maxArgs": 4,
+    "usage": "$removeReaction[mensagem;emoji;usuário?;canal?]",
+    "description": "Remove a reação do bot ou de um usuário da mensagem."
+  },
+  {
+    "name": "clearReactions",
+    "category": "messages",
+    "minArgs": 1,
+    "maxArgs": 3,
+    "usage": "$clearReactions[mensagem;emoji?;canal?]",
+    "description": "Remove todas as reações ou somente as de um emoji."
+  },
+  {
+    "name": "reactionUsers",
+    "category": "messages",
+    "minArgs": 2,
+    "maxArgs": 5,
+    "usage": "$reactionUsers[mensagem;emoji;limite?;após?;canal?]",
+    "description": "Lista IDs de usuários que reagiram; limite de 1 a 100 e cursor por usuário."
+  },
+  {
+    "name": "fetchMessage",
+    "category": "messages",
+    "minArgs": 2,
+    "maxArgs": 3,
+    "usage": "$fetchMessage[canal;mensagem;propriedade?]",
+    "description": "Busca uma mensagem e retorna objeto ou propriedade."
+  },
+  {
+    "name": "messages",
+    "category": "messages",
+    "minArgs": 1,
+    "maxArgs": 5,
+    "usage": "$messages[canal;limite?;before?;after?;around?]",
+    "description": "Lista mensagens, da mais recente para a mais antiga; aceita somente um cursor por chamada."
+  },
+  {
+    "name": "pin",
+    "category": "messages",
+    "minArgs": 1,
+    "maxArgs": 2,
+    "usage": "$pin[mensagem;canal?]",
+    "description": "Fixa uma mensagem no canal."
+  },
+  {
+    "name": "unpin",
+    "category": "messages",
+    "minArgs": 1,
+    "maxArgs": 2,
+    "usage": "$unpin[mensagem;canal?]",
+    "description": "Desafixa uma mensagem do canal."
+  },
+  {
+    "name": "pinnedMessages",
+    "category": "messages",
+    "minArgs": 0,
+    "maxArgs": 2,
+    "usage": "$pinnedMessages[canal?;limite?]",
+    "description": "Lista mensagens fixadas, da mais recente para a mais antiga."
+  },
+  {
+    "name": "sendFiles",
+    "category": "messages",
+    "minArgs": 2,
+    "maxArgs": 4,
+    "usage": "$sendFiles[canal;url;nome?;conteudo?]",
+    "description": "Envia um anexo e retorna o ID da mensagem."
+  },
+  {
+    "name": "attachment",
+    "category": "messages",
+    "minArgs": 1,
+    "maxArgs": 2,
+    "usage": "$attachment[url;nome?]",
+    "description": "Monta especificação de anexo sem enviar."
+  },
+  {
+    "name": "awaitMessage",
+    "category": "collectors",
+    "minArgs": 1,
+    "maxArgs": 3,
+    "usage": "$awaitMessage[segundos;usuario?;canal?]",
+    "description": "Aguarda mensagem e retorna o conteúdo ou vazio em timeout."
+  },
+  {
+    "name": "awaitReaction",
+    "category": "collectors",
+    "minArgs": 1,
+    "maxArgs": 3,
+    "usage": "$awaitReaction[segundos;emoji?;mensagem?]",
+    "description": "Aguarda reação e retorna o userID ou vazio em timeout."
+  },
+  {
+    "name": "confirm",
+    "category": "collectors",
+    "minArgs": 1,
+    "maxArgs": 2,
+    "usage": "$confirm[segundos;texto?]",
+    "description": "Pede confirmação com ✅/❌ e retorna boolean."
+  },
+  {
+    "name": "createWebhook",
+    "category": "webhooks",
+    "minArgs": 2,
+    "maxArgs": 2,
+    "usage": "$createWebhook[canal;nome]",
+    "description": "Cria webhook no canal e retorna suas informações."
+  },
+  {
+    "name": "webhooks",
+    "category": "webhooks",
+    "minArgs": 0,
+    "maxArgs": 1,
+    "usage": "$webhooks[canal?]",
+    "description": "Lista webhooks do canal (padrão: canal atual)."
+  },
+  {
+    "name": "sendWebhook",
+    "category": "webhooks",
+    "minArgs": 3,
+    "maxArgs": 3,
+    "usage": "$sendWebhook[id;token;texto]",
+    "description": "Envia via webhook do servidor atual com ManageWebhooks do autor e bot; token não contorna autorização."
+  },
+  {
+    "name": "editWebhook",
+    "category": "webhooks",
+    "minArgs": 2,
+    "maxArgs": 3,
+    "usage": "$editWebhook[id;nome;token?]",
+    "description": "Renomeia webhook do servidor atual com ManageWebhooks; sem token usa a autenticação do bot."
+  },
+  {
+    "name": "deleteWebhook",
+    "category": "webhooks",
+    "minArgs": 1,
+    "maxArgs": 2,
+    "usage": "$deleteWebhook[id;token?]",
+    "description": "Apaga webhook do servidor atual com ManageWebhooks; token não contorna autorização."
+  },
+  {
+    "name": "createEmojisBulk",
+    "category": "expressions",
+    "minArgs": 1,
+    "maxArgs": 1,
+    "usage": "$createEmojisBulk[emojis]",
+    "description": "Cria de 1 a 50 emojis com name e image em base64; retorna success e failed sem ocultar falhas parciais."
+  },
+  {
+    "name": "editEmoji",
+    "category": "expressions",
+    "minArgs": 2,
+    "maxArgs": 3,
+    "usage": "$editEmoji[nomeOuID;novoNome;motivo?]",
+    "description": "Renomeia um emoji do servidor e retorna suas informações."
+  },
+  {
+    "name": "createSticker",
+    "category": "expressions",
+    "minArgs": 2,
+    "maxArgs": 5,
+    "usage": "$createSticker[nome;imagemBase64;descrição?;tags?;motivo?]",
+    "description": "Cria sticker com imagem em base64; tags separadas por vírgula."
+  },
+  {
+    "name": "editSticker",
+    "category": "expressions",
+    "minArgs": 1,
+    "maxArgs": 4,
+    "usage": "$editSticker[nomeOuID;novoNome?;descrição?;motivo?]",
+    "description": "Edita sticker; nome vazio mantém e descrição vazia limpa."
+  },
+  {
+    "name": "deleteSticker",
+    "category": "expressions",
+    "minArgs": 1,
+    "maxArgs": 2,
+    "usage": "$deleteSticker[nomeOuID;motivo?]",
+    "description": "Apaga um sticker do servidor."
+  },
+  {
+    "name": "emoji",
+    "category": "expressions",
+    "minArgs": 1,
+    "maxArgs": 2,
+    "usage": "$emoji[nomeOuID;propriedade?]",
+    "description": "Busca emoji do servidor por ID, nome ou menção."
+  },
+  {
+    "name": "emojis",
+    "category": "expressions",
+    "minArgs": 0,
+    "maxArgs": 0,
+    "usage": "$emojis",
+    "description": "Lista emojis do servidor atual."
+  },
+  {
+    "name": "createEmoji",
+    "category": "expressions",
+    "minArgs": 2,
+    "maxArgs": 2,
+    "usage": "$createEmoji[nome;url]",
+    "description": "Baixa imagem por HTTP com a política de rede configurada, converte para base64 e cria emoji no servidor."
+  },
+  {
+    "name": "deleteEmoji",
+    "category": "expressions",
+    "minArgs": 1,
+    "maxArgs": 1,
+    "usage": "$deleteEmoji[nomeOuID]",
+    "description": "Apaga emoji do servidor."
+  },
+  {
+    "name": "sticker",
+    "category": "expressions",
+    "minArgs": 1,
+    "maxArgs": 2,
+    "usage": "$sticker[nomeOuID;propriedade?]",
+    "description": "Busca sticker do servidor por ID ou nome."
+  },
+  {
+    "name": "stickers",
+    "category": "expressions",
+    "minArgs": 0,
+    "maxArgs": 0,
+    "usage": "$stickers",
+    "description": "Lista stickers do servidor atual."
+  },
+  {
+    "name": "activeThreads",
+    "category": "threads",
+    "minArgs": 0,
+    "maxArgs": 0,
+    "usage": "$activeThreads",
+    "description": "Lista threads ativas do servidor e suas associações."
+  },
+  {
+    "name": "archivedThreads",
+    "category": "threads",
+    "minArgs": 1,
+    "maxArgs": 4,
+    "usage": "$archivedThreads[canal;tipo?;limite?;antes?]",
+    "description": "Pagina threads arquivadas: public/private usam timestamp ISO; joined usa ID."
+  },
+  {
+    "name": "addThreadMember",
+    "category": "threads",
+    "minArgs": 2,
+    "maxArgs": 2,
+    "usage": "$addThreadMember[thread;usuário]",
+    "description": "Adiciona ou remove um membro da thread."
+  },
+  {
+    "name": "removeThreadMember",
+    "category": "threads",
+    "minArgs": 2,
+    "maxArgs": 2,
+    "usage": "$removeThreadMember[thread;usuário]",
+    "description": "Adiciona ou remove um membro da thread."
+  },
+  {
+    "name": "threadMembers",
+    "category": "threads",
+    "minArgs": 1,
+    "maxArgs": 3,
+    "usage": "$threadMembers[thread;limite?;após?]",
+    "description": "Lista membros da thread com limite de 1 a 100 e cursor por usuário."
+  },
+  {
+    "name": "createThread",
+    "category": "threads",
+    "minArgs": 1,
+    "maxArgs": 4,
+    "usage": "$createThread[nome;canal?;mensagem?;arquivamento?]",
+    "description": "Cria thread no canal atual ou informado."
+  },
+  {
+    "name": "archiveThread",
+    "category": "threads",
+    "minArgs": 1,
+    "maxArgs": 2,
+    "usage": "$archiveThread[thread;bloquear?]",
+    "description": "Arquiva thread; bloquear aceita true/false."
+  },
+  {
+    "name": "unarchiveThread",
+    "category": "threads",
+    "minArgs": 1,
+    "maxArgs": 1,
+    "usage": "$unarchiveThread[thread]",
+    "description": "Desarquiva thread."
+  },
+  {
+    "name": "forumPost",
+    "category": "threads",
+    "minArgs": 3,
+    "maxArgs": 4,
+    "usage": "$forumPost[canal;título;conteúdo;tags?]",
+    "description": "Cria post em fórum/mídia; tags separadas por vírgula."
+  },
+  {
+    "name": "invite",
+    "category": "invites",
+    "minArgs": 1,
+    "maxArgs": 1,
+    "usage": "$invite[codigo]",
+    "description": "Mostra um convite por código ou URL."
+  },
+  {
+    "name": "createInvite",
+    "category": "invites",
+    "minArgs": 1,
+    "maxArgs": 3,
+    "usage": "$createInvite[canal;maxUsos?;duracao?]",
+    "description": "Cria um convite; duração como 1h, 0 nunca expira."
+  },
+  {
+    "name": "deleteInvite",
+    "category": "invites",
+    "minArgs": 1,
+    "maxArgs": 1,
+    "usage": "$deleteInvite[codigo]",
+    "description": "Apaga um convite por código ou URL."
+  },
+  {
+    "name": "jsonValues",
+    "category": "language",
+    "minArgs": 1,
+    "maxArgs": 1,
+    "usage": "$jsonValues[valor]",
+    "description": "Lista valores ou pares de chaves e valores próprios de objeto ou array."
+  },
+  {
+    "name": "jsonEntries",
+    "category": "language",
+    "minArgs": 1,
+    "maxArgs": 1,
+    "usage": "$jsonEntries[valor]",
+    "description": "Lista valores ou pares de chaves e valores próprios de objeto ou array."
+  },
+  {
+    "name": "object",
+    "category": "language",
+    "minArgs": 0,
+    "maxArgs": 64,
+    "usage": "$object[chave;valor;...]",
+    "description": "Monta objeto com pares chave;valor. Número ímpar de argumentos é erro."
+  },
+  {
+    "name": "jsonEncode",
+    "category": "language",
+    "minArgs": 1,
+    "maxArgs": 1,
+    "usage": "$jsonEncode[valor]",
+    "description": "Codifica valor como texto JSON."
+  },
+  {
+    "name": "jsonDecode",
+    "category": "language",
+    "minArgs": 1,
+    "maxArgs": 1,
+    "usage": "$jsonDecode[texto]",
+    "description": "Decodifica texto JSON. Erro se inválido."
+  },
+  {
+    "name": "jsonGet",
+    "category": "language",
+    "minArgs": 2,
+    "maxArgs": 3,
+    "usage": "$jsonGet[valor;caminho;padrão?]",
+    "description": "Lê caminho com pontos e índices, ex. \"a.0.b\". Retorna padrão se ausente."
+  },
+  {
+    "name": "jsonSet",
+    "category": "language",
+    "minArgs": 3,
+    "maxArgs": 3,
+    "usage": "$jsonSet[valor;caminho;novo]",
+    "description": "Retorna cópia com caminho alterado, sem mutar o original."
+  },
+  {
+    "name": "jsonDelete",
+    "category": "language",
+    "minArgs": 2,
+    "maxArgs": 2,
+    "usage": "$jsonDelete[valor;caminho]",
+    "description": "Retorna cópia sem o caminho; remove índice de array. Caminho ausente não altera."
+  },
+  {
+    "name": "jsonMerge",
+    "category": "language",
+    "minArgs": 1,
+    "maxArgs": 64,
+    "usage": "$jsonMerge[valor;...]",
+    "description": "Mescla objetos em profundidade, sem mutar; o último valor vence e arrays são substituídos."
+  },
+  {
+    "name": "jsonKeys",
+    "category": "language",
+    "minArgs": 1,
+    "maxArgs": 1,
+    "usage": "$jsonKeys[valor]",
+    "description": "Lista chaves próprias de objeto ou índices de array."
+  },
+  {
+    "name": "hasProp",
+    "category": "language",
+    "minArgs": 2,
+    "maxArgs": 2,
+    "usage": "$hasProp[valor;chave]",
+    "description": "Verifica propriedade própria de objeto."
+  },
+  {
+    "name": "array",
+    "category": "language",
+    "minArgs": 0,
+    "maxArgs": 64,
+    "usage": "$array[valor;...]",
+    "description": "Monta um array com os valores informados."
+  },
+  {
+    "name": "arrayPush",
+    "category": "language",
+    "minArgs": 2,
+    "maxArgs": 64,
+    "usage": "$arrayPush[array;valor;...]",
+    "description": "Retorna novo array com os valores adicionados."
+  },
+  {
+    "name": "arrayGet",
+    "category": "language",
+    "minArgs": 2,
+    "maxArgs": 3,
+    "usage": "$arrayGet[array;índice;padrão?]",
+    "description": "Obtém item por índice; retorna padrão se ausente."
+  },
+  {
+    "name": "arrayLength",
+    "category": "language",
+    "minArgs": 1,
+    "maxArgs": 1,
+    "usage": "$arrayLength[array]",
+    "description": "Quantidade de itens do array."
+  },
+  {
+    "name": "arraySlice",
+    "category": "language",
+    "minArgs": 2,
+    "maxArgs": 3,
+    "usage": "$arraySlice[array;início;fim?]",
+    "description": "Fatia do array; fim exclusivo."
+  },
+  {
+    "name": "arrayIncludes",
+    "category": "language",
+    "minArgs": 2,
+    "maxArgs": 2,
+    "usage": "$arrayIncludes[array;valor]",
+    "description": "Verifica se o array contém o valor."
+  },
+  {
+    "name": "arrayIndexOf",
+    "category": "language",
+    "minArgs": 2,
+    "maxArgs": 2,
+    "usage": "$arrayIndexOf[array;valor]",
+    "description": "Posição da primeira ocorrência, ou -1."
+  },
+  {
+    "name": "arrayJoin",
+    "category": "language",
+    "minArgs": 2,
+    "maxArgs": 2,
+    "usage": "$arrayJoin[array;separador]",
+    "description": "Junta itens convertidos para texto."
+  },
+  {
+    "name": "arraySort",
+    "category": "language",
+    "minArgs": 1,
+    "maxArgs": 2,
+    "usage": "$arraySort[array;direção?]",
+    "description": "Ordena cópia do array; direção asc ou desc."
+  },
+  {
+    "name": "arrayReverse",
+    "category": "language",
+    "minArgs": 1,
+    "maxArgs": 1,
+    "usage": "$arrayReverse[array]",
+    "description": "Retorna cópia invertida do array."
+  },
+  {
+    "name": "arrayUnique",
+    "category": "language",
+    "minArgs": 1,
+    "maxArgs": 1,
+    "usage": "$arrayUnique[array]",
+    "description": "Remove duplicados, mantendo a primeira ocorrência."
+  },
+  {
+    "name": "arrayUnion",
+    "category": "language",
+    "minArgs": 2,
+    "maxArgs": 2,
+    "usage": "$arrayUnion[array;outroArray]",
+    "description": "União sem duplicados; preserva a ordem da primeira ocorrência. Máximo de 1000 itens somados."
+  },
+  {
+    "name": "arrayIntersection",
+    "category": "language",
+    "minArgs": 2,
+    "maxArgs": 2,
+    "usage": "$arrayIntersection[array;outroArray]",
+    "description": "Itens únicos do primeiro array presentes no segundo. Máximo de 1000 itens somados."
+  },
+  {
+    "name": "arrayDifference",
+    "category": "language",
+    "minArgs": 2,
+    "maxArgs": 2,
+    "usage": "$arrayDifference[array;outroArray]",
+    "description": "Itens únicos do primeiro array ausentes do segundo. Máximo de 1000 itens somados."
+  },
+  {
+    "name": "range",
+    "category": "language",
+    "minArgs": 2,
+    "maxArgs": 3,
+    "usage": "$range[início;fim;passo?]",
+    "description": "Sequência de números; no máximo 1000 itens."
+  },
+  {
+    "name": "paginate",
+    "category": "language",
+    "minArgs": 3,
+    "maxArgs": 3,
+    "usage": "$paginate[array;página;tamanho]",
+    "description": "Página 1-based do array."
+  },
+  {
+    "name": "arrayConcat",
+    "category": "language",
+    "minArgs": 1,
+    "maxArgs": 64,
+    "usage": "$arrayConcat[array;...]",
+    "description": "Concatena arrays sem alterar os originais."
+  },
+  {
+    "name": "arrayFlat",
+    "category": "language",
+    "minArgs": 1,
+    "maxArgs": 2,
+    "usage": "$arrayFlat[array;profundidade?]",
+    "description": "Achata arrays; profundidade inteira entre 0 e 64."
+  },
+  {
+    "name": "arrayChunk",
+    "category": "language",
+    "minArgs": 2,
+    "maxArgs": 2,
+    "usage": "$arrayChunk[array;tamanho]",
+    "description": "Divide array em grupos do tamanho indicado."
+  },
+  {
+    "name": "arrayMap",
+    "category": "language",
+    "minArgs": 2,
+    "maxArgs": 2,
+    "usage": "$arrayMap[array;expressão]",
+    "description": "Retorna um array com o resultado da expressão para cada item. Usa $loopValue/$loopIndex; máximo 1000 itens."
+  },
+  {
+    "name": "arrayFilter",
+    "category": "language",
+    "minArgs": 2,
+    "maxArgs": 2,
+    "usage": "$arrayFilter[array;expressão]",
+    "description": "Retorna os itens cuja expressão é verdadeira. Usa $loopValue/$loopIndex; máximo 1000 itens."
+  },
+  {
+    "name": "arraySome",
+    "category": "language",
+    "minArgs": 2,
+    "maxArgs": 2,
+    "usage": "$arraySome[array;expressão]",
+    "description": "Retorna true no primeiro item com expressão verdadeira; false se nenhum. Usa $loopValue/$loopIndex; máximo 1000 itens."
+  },
+  {
+    "name": "arrayEvery",
+    "category": "language",
+    "minArgs": 2,
+    "maxArgs": 2,
+    "usage": "$arrayEvery[array;expressão]",
+    "description": "Retorna false no primeiro item com expressão falsa; true se todos, inclusive array vazio. Usa $loopValue/$loopIndex; máximo 1000 itens."
+  },
+  {
+    "name": "arrayFind",
+    "category": "language",
+    "minArgs": 2,
+    "maxArgs": 2,
+    "usage": "$arrayFind[array;expressão]",
+    "description": "Retorna o primeiro item com expressão verdadeira, ou null se ausente. Usa $loopValue/$loopIndex; máximo 1000 itens."
+  },
+  {
+    "name": "arrayReduce",
+    "category": "language",
+    "minArgs": 3,
+    "maxArgs": 3,
+    "usage": "$arrayReduce[array;inicial;expressão]",
+    "description": "Reduz até 1000 itens usando $loopAccumulator, $loopValue e $loopIndex."
+  },
+  {
+    "name": "arraySortBy",
+    "category": "language",
+    "minArgs": 2,
+    "maxArgs": 3,
+    "usage": "$arraySortBy[array;chave;direção?]",
+    "description": "Ordena até 1000 itens por chaves de mesmo tipo, texto ou número; calculadas uma vez por item. Asc/desc preservam empates."
+  },
+  {
+    "name": "split",
+    "category": "language",
+    "minArgs": 2,
+    "maxArgs": 2,
+    "usage": "$split[texto;separador]",
+    "description": "Divide texto; separador vazio retorna caracteres."
+  },
+  {
+    "name": "sliceText",
+    "category": "language",
+    "minArgs": 2,
+    "maxArgs": 3,
+    "usage": "$sliceText[texto;início;fim?]",
+    "description": "Fatia caracteres; fim exclusivo."
+  },
+  {
+    "name": "includes",
+    "category": "language",
+    "minArgs": 2,
+    "maxArgs": 2,
+    "usage": "$includes[texto;busca]",
+    "description": "Verifica se o texto contém a busca."
+  },
+  {
+    "name": "startsWith",
+    "category": "language",
+    "minArgs": 2,
+    "maxArgs": 2,
+    "usage": "$startsWith[texto;prefixo]",
+    "description": "Verifica prefixo do texto."
+  },
+  {
+    "name": "endsWith",
+    "category": "language",
+    "minArgs": 2,
+    "maxArgs": 2,
+    "usage": "$endsWith[texto;sufixo]",
+    "description": "Verifica sufixo do texto."
+  },
+  {
+    "name": "padStart",
+    "category": "language",
+    "minArgs": 2,
+    "maxArgs": 3,
+    "usage": "$padStart[texto;tamanho;preenchimento?]",
+    "description": "Preenche à esquerda até o tamanho."
+  },
+  {
+    "name": "padEnd",
+    "category": "language",
+    "minArgs": 2,
+    "maxArgs": 3,
+    "usage": "$padEnd[texto;tamanho;preenchimento?]",
+    "description": "Preenche à direita até o tamanho."
+  },
+  {
+    "name": "repeatText",
+    "category": "language",
+    "minArgs": 2,
+    "maxArgs": 2,
+    "usage": "$repeatText[texto;vezes]",
+    "description": "Repete texto; no máximo 100000 caracteres."
+  },
+  {
+    "name": "truncate",
+    "category": "language",
+    "minArgs": 2,
+    "maxArgs": 3,
+    "usage": "$truncate[texto;limite;sufixo?]",
+    "description": "Corta texto no limite e adiciona sufixo."
+  },
+  {
+    "name": "escapeMarkdown",
+    "category": "language",
+    "minArgs": 1,
+    "maxArgs": 1,
+    "usage": "$escapeMarkdown[texto]",
+    "description": "Escapa caracteres especiais de Markdown."
+  },
+  {
+    "name": "mention",
+    "category": "language",
+    "minArgs": 1,
+    "maxArgs": 2,
+    "usage": "$mention[id;tipo?]",
+    "description": "Menciona user, role ou channel; ID deve ser numérico."
+  },
+  {
+    "name": "round",
+    "category": "language",
+    "minArgs": 1,
+    "maxArgs": 2,
+    "usage": "$round[valor;casas?]",
+    "description": "Arredonda com casas decimais."
+  },
+  {
+    "name": "floor",
+    "category": "language",
+    "minArgs": 1,
+    "maxArgs": 1,
+    "usage": "$floor[valor]",
+    "description": "Arredonda para baixo."
+  },
+  {
+    "name": "ceil",
+    "category": "language",
+    "minArgs": 1,
+    "maxArgs": 1,
+    "usage": "$ceil[valor]",
+    "description": "Arredonda para cima."
+  },
+  {
+    "name": "abs",
+    "category": "language",
+    "minArgs": 1,
+    "maxArgs": 1,
+    "usage": "$abs[valor]",
+    "description": "Valor absoluto."
+  },
+  {
+    "name": "clamp",
+    "category": "language",
+    "minArgs": 3,
+    "maxArgs": 3,
+    "usage": "$clamp[valor;mínimo;máximo]",
+    "description": "Limita valor ao intervalo."
+  },
+  {
+    "name": "fixed",
+    "category": "language",
+    "minArgs": 1,
+    "maxArgs": 2,
+    "usage": "$fixed[valor;casas?]",
+    "description": "Texto com casas decimais fixas."
+  },
+  {
+    "name": "formatNumber",
+    "category": "language",
+    "minArgs": 1,
+    "maxArgs": 2,
+    "usage": "$formatNumber[valor;local?]",
+    "description": "Formata número para o local informado."
+  },
+  {
+    "name": "formatBytes",
+    "category": "language",
+    "minArgs": 1,
+    "maxArgs": 3,
+    "usage": "$formatBytes[bytes;casas?;base?]",
+    "description": "Formata bytes não negativos; casas 0–6, base 1024 (KiB) ou 1000 (kB)."
+  },
+  {
+    "name": "percent",
+    "category": "language",
+    "minArgs": 2,
+    "maxArgs": 3,
+    "usage": "$percent[parte;total;casas?]",
+    "description": "Formata parte/total × 100 com %; total positivo, casas 0–6 (padrão 2)."
+  },
+  {
+    "name": "toBase",
+    "category": "language",
+    "minArgs": 2,
+    "maxArgs": 2,
+    "usage": "$toBase[inteiroDecimal;base]",
+    "description": "Converte inteiro seguro ou texto decimal exato para base 2–36; até 1024 dígitos de entrada."
+  },
+  {
+    "name": "fromBase",
+    "category": "language",
+    "minArgs": 2,
+    "maxArgs": 2,
+    "usage": "$fromBase[texto;base]",
+    "description": "Converte texto de base 2–36 para texto decimal exato; até 1024 dígitos, sem prefixos."
+  },
+  {
+    "name": "date",
+    "category": "language",
+    "minArgs": 0,
+    "maxArgs": 3,
+    "usage": "$date[timestamp?;formato?;local?]",
+    "description": "Formata data; timestamp em ms, formato date/time/datetime/iso/relative."
+  },
+  {
+    "name": "relativeTime",
+    "category": "language",
+    "minArgs": 1,
+    "maxArgs": 2,
+    "usage": "$relativeTime[timestamp;local?]",
+    "description": "Descreve distância até agora, ex. \"há 2 dias\"."
+  },
+  {
+    "name": "parseDate",
+    "category": "language",
+    "minArgs": 1,
+    "maxArgs": 1,
+    "usage": "$parseDate[texto]",
+    "description": "Converte texto de data em milissegundos; erro se inválido."
+  },
+  {
+    "name": "repeat",
+    "category": "language",
+    "minArgs": 2,
+    "maxArgs": 32,
+    "usage": "$repeat[vezes;corpo;...]",
+    "description": "Repete o corpo reavaliando a cada iteração; retorna a concatenação."
+  },
+  {
+    "name": "forEach",
+    "category": "language",
+    "minArgs": 2,
+    "maxArgs": 32,
+    "usage": "$forEach[array;corpo;...]",
+    "description": "Concatena o corpo para cada item, com $loopValue e $loopIndex."
+  },
+  {
+    "name": "loopIndex",
+    "category": "language",
+    "minArgs": 0,
+    "maxArgs": 0,
+    "usage": "$loopIndex",
+    "description": "Índice da iteração atual; vazio fora de loops."
+  },
+  {
+    "name": "loopValue",
+    "category": "language",
+    "minArgs": 0,
+    "maxArgs": 0,
+    "usage": "$loopValue",
+    "description": "Valor da iteração atual; vazio fora de loops."
+  },
+  {
+    "name": "loopAccumulator",
+    "category": "language",
+    "minArgs": 0,
+    "maxArgs": 0,
+    "usage": "$loopAccumulator",
+    "description": "Acumulador atual de $arrayReduce; vazio fora da redução."
+  },
+  {
+    "name": "incrementVar",
+    "category": "language",
+    "minArgs": 1,
+    "maxArgs": 2,
+    "usage": "$incrementVar[nome;delta?]",
+    "description": "Incrementa número persistente de forma atômica; retorna o novo valor."
+  },
+  {
+    "name": "pushVar",
+    "category": "language",
+    "minArgs": 2,
+    "maxArgs": 2,
+    "usage": "$pushVar[nome;valor]",
+    "description": "Adiciona item a array persistente; cria se ausente."
+  },
+  {
+    "name": "pullVar",
+    "category": "language",
+    "minArgs": 2,
+    "maxArgs": 2,
+    "usage": "$pullVar[nome;valor]",
+    "description": "Remove todas as ocorrências do valor em array persistente."
+  },
+  {
+    "name": "setVarPath",
+    "category": "language",
+    "minArgs": 3,
+    "maxArgs": 3,
+    "usage": "$setVarPath[nome;caminho;novo]",
+    "description": "Atualiza caminho em objeto persistente de forma atômica; cria a estrutura ausente e retorna o valor completo."
+  },
+  {
+    "name": "incrementGuildVar",
+    "category": "language",
+    "minArgs": 1,
+    "maxArgs": 2,
+    "usage": "$incrementGuildVar[nome;delta?]",
+    "description": "Incrementa número persistente de forma atômica; retorna o novo valor."
+  },
+  {
+    "name": "pushGuildVar",
+    "category": "language",
+    "minArgs": 2,
+    "maxArgs": 2,
+    "usage": "$pushGuildVar[nome;valor]",
+    "description": "Adiciona item a array persistente; cria se ausente."
+  },
+  {
+    "name": "pullGuildVar",
+    "category": "language",
+    "minArgs": 2,
+    "maxArgs": 2,
+    "usage": "$pullGuildVar[nome;valor]",
+    "description": "Remove todas as ocorrências do valor em array persistente."
+  },
+  {
+    "name": "setGuildVarPath",
+    "category": "language",
+    "minArgs": 3,
+    "maxArgs": 3,
+    "usage": "$setGuildVarPath[nome;caminho;novo]",
+    "description": "Atualiza caminho em objeto persistente de forma atômica; cria a estrutura ausente e retorna o valor completo."
+  },
+  {
+    "name": "incrementUserVar",
+    "category": "language",
+    "minArgs": 1,
+    "maxArgs": 2,
+    "usage": "$incrementUserVar[nome;delta?]",
+    "description": "Incrementa número persistente de forma atômica; retorna o novo valor."
+  },
+  {
+    "name": "pushUserVar",
+    "category": "language",
+    "minArgs": 2,
+    "maxArgs": 2,
+    "usage": "$pushUserVar[nome;valor]",
+    "description": "Adiciona item a array persistente; cria se ausente."
+  },
+  {
+    "name": "pullUserVar",
+    "category": "language",
+    "minArgs": 2,
+    "maxArgs": 2,
+    "usage": "$pullUserVar[nome;valor]",
+    "description": "Remove todas as ocorrências do valor em array persistente."
+  },
+  {
+    "name": "setUserVarPath",
+    "category": "language",
+    "minArgs": 3,
+    "maxArgs": 3,
+    "usage": "$setUserVarPath[nome;caminho;novo]",
+    "description": "Atualiza caminho em objeto persistente de forma atômica; cria a estrutura ausente e retorna o valor completo."
+  },
+  {
+    "name": "caseList",
+    "category": "language",
+    "minArgs": 0,
+    "maxArgs": 2,
+    "usage": "$caseList[página?;tamanho?]",
+    "description": "Lista casos do servidor; página 1-based, tamanho padrão 10, máximo 100."
+  },
+  {
+    "name": "caseCount",
+    "category": "language",
+    "minArgs": 0,
+    "maxArgs": 0,
+    "usage": "$caseCount",
+    "description": "Quantidade de casos do servidor atual."
+  },
+  {
+    "name": "schedule",
+    "category": "schedule",
+    "minArgs": 2,
+    "maxArgs": 4,
+    "usage": "$schedule[duração;comando;entrada?;retry?]",
+    "description": "Agenda execução única; retry recebe maxAttempts, retryDelayMs, retryBackoff e retryJitter."
+  },
+  {
+    "name": "scheduleEvery",
+    "category": "schedule",
+    "minArgs": 2,
+    "maxArgs": 4,
+    "usage": "$scheduleEvery[duração;comando;entrada?;retry?]",
+    "description": "Agenda execução repetida; retry recebe maxAttempts, retryDelayMs, retryBackoff e retryJitter."
+  },
+  {
+    "name": "scheduleCron",
+    "category": "schedule",
+    "minArgs": 3,
+    "maxArgs": 5,
+    "usage": "$scheduleCron[expressão;fuso;comando;entrada?;opções?]",
+    "description": "Agenda cron de cinco campos em fuso IANA; opções recebem missedRun (run-once ou skip) e retry com jitter."
+  },
+  {
+    "name": "unschedule",
+    "category": "schedule",
+    "minArgs": 1,
+    "maxArgs": 1,
+    "usage": "$unschedule[id]",
+    "description": "Cancela um agendamento; retorna true/false."
+  },
+  {
+    "name": "editSchedule",
+    "category": "schedule",
+    "minArgs": 2,
+    "maxArgs": 2,
+    "usage": "$editSchedule[id;opções]",
+    "description": "Edita seu agendamento, cron/fuso, política e retry; interval ou cron null remove a repetição correspondente."
+  },
+  {
+    "name": "pauseSchedule",
+    "category": "schedule",
+    "minArgs": 1,
+    "maxArgs": 1,
+    "usage": "$pauseSchedule[id]",
+    "description": "Pausa seu agendamento, preservando o vencimento e a política de retry."
+  },
+  {
+    "name": "resumeSchedule",
+    "category": "schedule",
+    "minArgs": 1,
+    "maxArgs": 2,
+    "usage": "$resumeSchedule[id;duração?]",
+    "description": "Retoma seu agendamento; duração opcional define novo vencimento a partir de agora."
+  },
+  {
+    "name": "schedules",
+    "category": "schedule",
+    "minArgs": 0,
+    "maxArgs": 0,
+    "usage": "$schedules",
+    "description": "Lista agendamentos do servidor atual."
+  },
+  {
+    "name": "scheduleHistory",
+    "category": "schedule",
+    "minArgs": 0,
+    "maxArgs": 0,
+    "usage": "$scheduleHistory",
+    "description": "Lista o histórico dos seus agendamentos no servidor atual."
+  },
+  {
+    "name": "failedSchedules",
+    "category": "schedule",
+    "minArgs": 0,
+    "maxArgs": 0,
+    "usage": "$failedSchedules",
+    "description": "Lista suas execuções agendadas encerradas com falha."
+  },
+  {
+    "name": "retrySchedule",
+    "category": "schedule",
+    "minArgs": 1,
+    "maxArgs": 2,
+    "usage": "$retrySchedule[execução;duração?]",
+    "description": "Reagenda uma falha operacional sua; guards e efeitos de moderação impedem reexecução."
+  },
+  {
+    "name": "httpMultipart",
+    "category": "network",
+    "minArgs": 3,
+    "maxArgs": 4,
+    "usage": "$httpMultipart[método;url;partes;cabeçalhos?]",
+    "description": "Envia partes de formulário com value textual ou base64 binário; retorna o corpo da resposta."
+  },
+  {
+    "name": "http",
+    "category": "network",
+    "minArgs": 2,
+    "maxArgs": 4,
+    "usage": "$http[método;url;corpo?;cabeçalhos?]",
+    "description": "Executa requisição HTTP com timeout e limite de resposta; retorna o corpo."
+  },
+  {
+    "name": "httpJson",
+    "category": "network",
+    "minArgs": 2,
+    "maxArgs": 4,
+    "usage": "$httpJson[método;url;corpo?;cabeçalhos?]",
+    "description": "Como $http, mas decodifica a resposta como JSON."
+  },
+  {
+    "name": "dm",
+    "category": "messages",
+    "minArgs": 2,
+    "maxArgs": 2,
+    "usage": "$dm[usuário;conteúdo]",
+    "description": "Envia mensagem direta e retorna o ID; não menciona usuários automaticamente."
+  },
+  {
+    "name": "forward",
+    "category": "messages",
+    "minArgs": 3,
+    "maxArgs": 3,
+    "usage": "$forward[destino;canalOrigem;mensagem]",
+    "description": "Encaminha uma mensagem para outro canal e retorna o novo ID."
+  },
+  {
+    "name": "searchMessages",
+    "category": "messages",
+    "minArgs": 1,
+    "maxArgs": 5,
+    "usage": "$searchMessages[texto;canal?;limite?;cursor?;autor?]",
+    "description": "Busca mensagens; retorna indexing, messages, total e cursor. Cursor é array retornado pela página anterior."
+  },
+  {
+    "name": "fileBase64",
+    "category": "messages",
+    "minArgs": 2,
+    "maxArgs": 3,
+    "usage": "$fileBase64[base64;nome;descrição?]",
+    "description": "Monta um anexo base64 para $sendAttachments, sem enviá-lo."
+  },
+  {
+    "name": "sendFileBase64",
+    "category": "messages",
+    "minArgs": 3,
+    "maxArgs": 4,
+    "usage": "$sendFileBase64[canal;base64;nome;conteúdo?]",
+    "description": "Decodifica base64 e envia um anexo binário, retornando o ID."
+  },
+  {
+    "name": "sendAttachments",
+    "category": "messages",
+    "minArgs": 2,
+    "maxArgs": 3,
+    "usage": "$sendAttachments[canal;array;conteúdo?]",
+    "description": "Envia de 1 a 10 anexos URL/base64 na mesma mensagem, com até 10 MB de bytes."
+  },
+  {
+    "name": "searchMembers",
+    "category": "users",
+    "minArgs": 1,
+    "maxArgs": 3,
+    "usage": "$searchMembers[nome;limite?;offset?]",
+    "description": "Busca membros por nome; retorna members, total, hasMore e indexing."
+  },
+  {
+    "name": "nickname",
+    "category": "users",
+    "minArgs": 3,
+    "maxArgs": 3,
+    "usage": "$nickname[usuário;apelido;motivo]",
+    "description": "Altera apelido com permissões e hierarquia; vazio remove. Retorna o membro."
+  },
+  {
+    "name": "editGuild",
+    "category": "users",
+    "minArgs": 1,
+    "maxArgs": 1,
+    "usage": "$editGuild[opções]",
+    "description": "Edita nome, ícone, banner, canal de sistema/AFK e timeout AFK; exige ManageGuild de autor e bot."
+  },
+  {
+    "name": "editThread",
+    "category": "threads",
+    "minArgs": 2,
+    "maxArgs": 2,
+    "usage": "$editThread[thread;opções]",
+    "description": "Edita nome, arquivamento, bloqueio, duração, slowmode e tags; exige ManageChannels."
+  },
+  {
+    "name": "joinThread",
+    "category": "threads",
+    "minArgs": 1,
+    "maxArgs": 1,
+    "usage": "$joinThread[thread]",
+    "description": "Faz o bot entrar na thread."
+  },
+  {
+    "name": "leaveThread",
+    "category": "threads",
+    "minArgs": 1,
+    "maxArgs": 1,
+    "usage": "$leaveThread[thread]",
+    "description": "Faz o bot sair da thread."
+  },
+  {
+    "name": "searchThreads",
+    "category": "threads",
+    "minArgs": 1,
+    "maxArgs": 4,
+    "usage": "$searchThreads[canal;nome?;limite?;offset?]",
+    "description": "Busca threads; retorna threads, total, hasMore, indexing e retryAfter."
+  },
+  {
+    "name": "invites",
+    "category": "invites",
+    "minArgs": 0,
+    "maxArgs": 0,
+    "usage": "$invites",
+    "description": "Lista convites do servidor; exige ManageGuild de autor e bot."
+  },
+  {
+    "name": "vanity",
+    "category": "invites",
+    "minArgs": 0,
+    "maxArgs": 0,
+    "usage": "$vanity",
+    "description": "Obtém código e usos do convite personalizado do servidor."
+  },
+  {
+    "name": "setVanity",
+    "category": "invites",
+    "minArgs": 1,
+    "maxArgs": 1,
+    "usage": "$setVanity[código]",
+    "description": "Define convite personalizado; vazio remove. Exige ManageGuild."
+  },
+  {
+    "name": "cloneEmoji",
+    "category": "expressions",
+    "minArgs": 1,
+    "maxArgs": 1,
+    "usage": "$cloneEmoji[idOrigem]",
+    "description": "Clona expressão de outro servidor para o atual; exige ManageExpressions."
+  },
+  {
+    "name": "cloneSticker",
+    "category": "expressions",
+    "minArgs": 1,
+    "maxArgs": 1,
+    "usage": "$cloneSticker[idOrigem]",
+    "description": "Clona expressão de outro servidor para o atual; exige ManageExpressions."
+  },
+  {
+    "name": "eventName",
+    "category": "events",
+    "minArgs": 0,
+    "maxArgs": 0,
+    "usage": "$eventName",
+    "description": "Consulta o campo do evento; requer contexto de evento e preserva ausências como null."
+  },
+  {
+    "name": "eventUserID",
+    "category": "events",
+    "minArgs": 0,
+    "maxArgs": 0,
+    "usage": "$eventUserID",
+    "description": "Consulta o campo do evento; requer contexto de evento e preserva ausências como null."
+  },
+  {
+    "name": "eventGuildID",
+    "category": "events",
+    "minArgs": 0,
+    "maxArgs": 0,
+    "usage": "$eventGuildID",
+    "description": "Consulta o campo do evento; requer contexto de evento e preserva ausências como null."
+  },
+  {
+    "name": "eventChannelID",
+    "category": "events",
+    "minArgs": 0,
+    "maxArgs": 0,
+    "usage": "$eventChannelID",
+    "description": "Consulta o campo do evento; requer contexto de evento e preserva ausências como null."
+  },
+  {
+    "name": "eventMessageID",
+    "category": "events",
+    "minArgs": 0,
+    "maxArgs": 0,
+    "usage": "$eventMessageID",
+    "description": "Consulta o campo do evento; requer contexto de evento e preserva ausências como null."
+  },
+  {
+    "name": "eventContent",
+    "category": "events",
+    "minArgs": 0,
+    "maxArgs": 0,
+    "usage": "$eventContent",
+    "description": "Consulta o campo do evento; requer contexto de evento e preserva ausências como null."
+  },
+  {
+    "name": "eventOldContent",
+    "category": "events",
+    "minArgs": 0,
+    "maxArgs": 0,
+    "usage": "$eventOldContent",
+    "description": "Consulta o campo do evento; requer contexto de evento e preserva ausências como null."
+  },
+  {
+    "name": "eventEmoji",
+    "category": "events",
+    "minArgs": 0,
+    "maxArgs": 0,
+    "usage": "$eventEmoji",
+    "description": "Consulta o campo do evento; requer contexto de evento e preserva ausências como null."
+  }
+]

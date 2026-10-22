@@ -1,0 +1,62 @@
+{
+  "name": "yuzuha-language",
+  "displayName": "Yuzuha",
+  "description": "Diagnósticos, funções, assinaturas e catálogos de plugins do Yuzuha.",
+  "version": "0.1.4",
+  "publisher": "yuzuha-local",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "main": "./extension.cjs",
+  "activationEvents": [
+    "onLanguage:yuzuha",
+    "onLanguage:javascript",
+    "onLanguage:typescript",
+    "onLanguage:javascriptreact",
+    "onLanguage:typescriptreact"
+  ],
+  "contributes": {
+    "languages": [
+      {
+        "id": "yuzuha",
+        "aliases": [
+          "Yuzuha",
+          "yuzuha"
+        ],
+        "extensions": [
+          ".yz",
+          ".yuzuha"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "yuzuha",
+        "scopeName": "source.yuzuha",
+        "path": "./yuzuha.tmLanguage.json"
+      }
+    ],
+    "configuration": {
+      "title": "Yuzuha",
+      "properties": {
+        "yuzuha.diagnostics.enabled": {
+          "type": "boolean",
+          "default": true,
+          "scope": "resource",
+          "description": "Aponta erros de sintaxe, funções desconhecidas e aridade nos scripts."
+        },
+        "yuzuha.functionCatalogs": {
+          "type": "array",
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "scope": "resource",
+          "description": "Caminhos relativos a catálogos JSON de funções de plugins. Não importa nem executa código."
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "compilerOptions": {
+    "target": "ES2023",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "verbatimModuleSyntax": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "types": [
+      "node"
+    ],
+    "paths": {
+      "yuzuha": [
+        "./src/index.ts"
+      ],
+      "yuzuha/testing": [
+        "./src/testing.ts"
+      ],
+      "yuzuha/sdk": [
+        "./src/sdk.ts"
+      ],
+      "yuzuha/functions": [
+        "./src/functions.ts"
+      ]
+    }
+  },
+  "include": [
+    "src/**/*.ts",
+    "test/**/*.ts",
+    "examples/**/*.ts"
+  ]
+}

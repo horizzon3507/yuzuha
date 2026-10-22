@@ -1,0 +1,72 @@
+{
+  "name": "yuzuha",
+  "version": "0.1.4",
+  "description": "Fluxer bots with simple scripts and typed JavaScript/TypeScript.",
+  "type": "module",
+  "license": "MIT",
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./sdk": {
+      "types": "./dist/sdk.d.ts",
+      "import": "./dist/sdk.js"
+    },
+    "./testing": {
+      "types": "./dist/testing.d.ts",
+      "import": "./dist/testing.js"
+    },
+    "./functions": {
+      "types": "./dist/functions.d.ts",
+      "import": "./dist/functions.js"
+    },
+    "./tooling": {
+      "types": "./dist/tooling.d.ts",
+      "import": "./dist/tooling.js"
+    }
+  },
+  "bin": {
+    "yuzuha": "dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "docs",
+    "examples",
+    "LICENSE",
+    "src",
+    "CHANGELOG.md",
+    "VERSIONING.md",
+    "editors/vscode",
+    "benchmarks"
+  ],
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test test/*.test.ts",
+    "check": "npm run typecheck && npm run check:architecture && npm test && npm run build && npm run check:editor && node scripts/generate-functions.mjs --check && npm run check:docs",
+    "prepack": "npm run build",
+    "docs:generate": "npm run build && node scripts/generate-functions.mjs",
+    "smoke:package": "node scripts/smoke-package.mjs",
+    "check:architecture": "node scripts/check-architecture.mjs",
+    "check:docs": "node scripts/check-docs.mjs",
+    "bench": "npm run build && node --expose-gc benchmarks/run.mjs",
+    "check:editor": "tsc -p editors/vscode/tsconfig.json",
+    "package:editor": "node scripts/package-editor.mjs"
+  },
+  "dependencies": {
+    "@fluxerjs/core": "3.3.0",
+    "tsx": "^4.20.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/vscode": "^1.140.0",
+    "typescript": "^5.9.0"
+  }
+}

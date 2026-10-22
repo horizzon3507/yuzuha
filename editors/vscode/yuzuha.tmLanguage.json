@@ -1,0 +1,9 @@
+{
+  "scopeName": "source.yuzuha",
+  "patterns": [
+    { "name": "constant.character.escape.yuzuha", "match": "\\\\[\\\\$;\\[\\]]" },
+    { "name": "support.function.yuzuha", "match": "\\$[A-Za-z_][A-Za-z_0-9]*" },
+    { "name": "punctuation.section.brackets.yuzuha", "match": "[\\[\\]]" },
+    { "name": "punctuation.separator.yuzuha", "match": ";" }
+  ]
+}

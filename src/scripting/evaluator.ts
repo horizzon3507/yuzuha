@@ -1,0 +1,98 @@
+import type { CommandContext } from '../commands/context.js';
+import { GuardError, PartialModerationError, ScriptError, StopExecution, YuzuhaError } from '../errors.js';
+import type { CallNode, Node, Program } from './ast.js';
+import type { FunctionRegistry } from './registry.js';
+import type { Limits } from './types.js';
+import { text } from './values.js';
+
+export class Evaluator {
+  private calls = 0;
+  private deadline: number;
+
+  constructor(
+    private readonly program: Program,
+    private readonly ctx: CommandContext,
+    private readonly registry: FunctionRegistry,
+    private readonly limits: Readonly<Limits>,
+  ) {
+    this.deadline = Date.now() + limits.timeoutMs;
+  }
+
+  async run(): Promise<unknown> {
+    try { return await this.evaluate(this.program.nodes, 0); }
+    catch (error) { if (error instanceof StopExecution) return ''; throw error; }
+  }
+
+  private check(offset: number, depth: number): void {
+    if (this.ctx.signal.aborted) throw this.error('EXECUTION_ABORTED', 'Execução cancelada.', offset);
+    if (this.calls > this.limits.calls || depth > this.limits.depth || Date.now() > this.deadline) {
+      throw this.error('EXECUTION_LIMIT', 'Limite de execução excedido.', offset);
+    }
+  }
+
+  private checkOutput(value: unknown, offset: number): void {
+    if (text(value).length > this.limits.output) throw this.error('OUTPUT_LIMIT', 'Saída excede o limite.', offset);
+  }
+
+  private error(code: string, message: string, offset: number): ScriptError {
+    return new ScriptError(code, message, this.program.source, offset, this.program.file);
+  }
+
+  private async evaluate(nodes: Node[], depth: number): Promise<unknown> {
+    this.check(nodes[0]?.offset ?? 0, depth);
+    if (nodes.length === 1 && nodes[0]!.kind === 'call') return this.invoke(nodes[0]!, depth);
+    const significant = nodes.filter(node => node.kind === 'call' || node.value.trim());
+    const soleCall = significant.length === 1 && significant[0]!.kind === 'call' ? significant[0] : undefined;
+    const soleValue = soleCall ? await this.invoke(soleCall, depth) : undefined;
+    if (soleValue !== null && typeof soleValue === 'object') return soleValue;
+    let result = '';
+    for (const node of nodes) {
+      this.check(node.offset, depth);
+      result += node.kind === 'text' ? node.value : text(node === soleCall ? soleValue : await this.invoke(node, depth));
+      this.checkOutput(result, node.offset);
+    }
+    return result;
+  }
+
+  private async invoke(node: CallNode, depth: number): Promise<unknown> {
+    this.calls++;
+    this.check(node.offset, depth);
+    const fn = this.registry.resolve(node, this.program);
+    const values = new Map<number, Promise<unknown>>();
+    const arg = (index: number): Promise<unknown> => {
+      if (!values.has(index)) values.set(index, this.evaluate(node.args[index] ?? [], depth + 1));
+      return values.get(index)!;
+    };
+    const fresh = (index: number): Promise<unknown> => this.evaluate(node.args[index] ?? [], depth + 1);
+    try {
+      const result = await fn.execute({
+        ctx: this.ctx,
+        count: node.args.length,
+        arg,
+        fresh,
+        checkOutput: value => this.checkOutput(value, node.offset),
+        text: async index => text(await arg(index)),
+        all: async () => {
+          const result: unknown[] = [];
+          for (let i = 0; i < node.args.length; i++) result.push(await arg(i));
+          return result;
+        },
+        wait: async <T>(operation: Promise<T>): Promise<T> => {
+          const started = Date.now();
+          try { return await operation; }
+          finally { this.deadline += Date.now() - started; }
+        },
+      });
+      this.check(node.offset, depth);
+      this.checkOutput(result, node.offset);
+      return result;
+    } catch (error) {
+      if (error instanceof GuardError || error instanceof StopExecution || error instanceof ScriptError || error instanceof PartialModerationError) throw error;
+      if (error instanceof YuzuhaError && ['EXECUTION_LIMIT', 'OUTPUT_LIMIT', 'EXECUTION_ABORTED'].includes(error.code)) {
+        throw this.error(error.code, error.message, node.offset);
+      }
+      throw new ScriptError('FUNCTION_ERROR', `Falha em $${node.name}: ${error instanceof YuzuhaError ? error.message : 'a operação não pôde ser concluída'}.`,
+        this.program.source, node.offset, this.program.file, { cause: error });
+    }
+  }
+}
