@@ -5,11 +5,11 @@
 Use Node >=22.13 e npm. O pacote é ESM; o projeto consumidor deve usar
 `"type": "module"` no `package.json`. O scaffold já prepara isso.
 
-Em um projeto ESM existente, execute `npm install yuzuha@0.1.6`. Para gerar um
+Em um projeto ESM existente, execute `npm install yuzuha@0.1.5`. Para gerar um
 bot em uma pasta nova:
 
 ```sh
-npx yuzuha@0.1.6 init ./meu-bot --ts
+npx yuzuha@0.1.5 init ./meu-bot --ts
 cd meu-bot
 npm install
 npm run check

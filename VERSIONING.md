@@ -1,16 +1,16 @@
 # Versionamento
 
 O Yuzuha aplica o formato Hory ao histórico e usa **SemVer simples** no pacote.
-A versão desta atualização é **0.1.6**.
+A versão desta atualização é **0.1.5**.
 
 ## Pacote e histórico
 
 | Lugar | Formato nesta versão |
 |---|---|
-| `package.json` e raiz do `package-lock.json` | `0.1.6` |
-| Pacote npm e saída de `yuzuha --version` | `0.1.6` |
-| Título do changelog | `## v0.1.6 · 22/10/2026` |
-| Eventual tag Git | `v0.1.6` |
+| `package.json` e raiz do `package-lock.json` | `0.1.5` |
+| Pacote npm e saída de `yuzuha --version` | `0.1.5` |
+| Título do changelog | `## v0.1.5 · 22/10/2026` |
+| Eventual tag Git | `v0.1.5` |
 
 O SDK e a CLI pertencem ao mesmo pacote. Para bibliotecas, a convenção Hory mantém
 SemVer sem `m`, sem seções por superfície e sem sufixos de canal.
@@ -39,12 +39,6 @@ A versão do SDK é fixada separadamente. Atualizá-la exige revisar
 gerado por `init` pertence ao consumidor e não precisa acompanhar a biblioteca.
 
 ## Preparar uma atualização
-
-### Migrar para 0.1.6
-
-Atualização de documentação: o README organiza instalação, modos de escrita,
-recursos, testes e CLI. APIs e scripts mantêm os contratos da 0.1.5; o SDK
-continua em 3.3.0 e o schema persistido em 2.
 
 ### Migrar para 0.1.5
 

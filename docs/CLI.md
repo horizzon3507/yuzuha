@@ -57,7 +57,7 @@ Sucesso produz um objeto na saída padrão:
 ```json
 {
   "valid": true,
-  "version": "0.1.6",
+  "version": "0.1.5",
   "commands": [
     {
       "name": "ping",
@@ -147,7 +147,7 @@ A pasta deve ser nova. O scaffold inclui três comandos, config, `.env.example`,
 TS inclui `tsconfig.json`, dependências de tipos e `tsx` para os testes;
 o JS roda como ESM diretamente no Node.
 
-Por padrão, a dependência usa `^0.1.6` do npm. A opção `--local` troca essa
+Por padrão, a dependência usa `^0.1.5` do npm. A opção `--local` troca essa
 dependência por `file:` apontando para a instalação que gerou o scaffold.
 Use `--local` para desenvolver a biblioteca; compartilhe projetos com a
 dependência npm. Instale as dependências antes de executar `npm test`. Veja
