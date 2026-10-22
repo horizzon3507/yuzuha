@@ -3,6 +3,12 @@ import type { Resources } from './ports/resources.js';
 import { PermissionFlags } from '@fluxerjs/core';
 import { YuzuhaError } from './errors.js';
 import type { VoiceModerationOptions } from './domain/moderation.js';
+import { Yuzuha } from './framework/bot.js';
+import type { DispatchResult, YuzuhaOptions } from './framework/options.js';
+import { reportError } from './framework/reporting.js';
+import type { Command } from './commands/definition.js';
+import { MemoryStore } from './store.js';
+import type { Store } from './ports/store.js';
 
 /**
  * Recursos nativos simulados para testes. Áreas não informadas falham ao ser usadas.
@@ -79,4 +85,86 @@ let sequence = 0;
 export function mockMessage(content: string, overrides: Partial<IncomingMessage> = {}): IncomingMessage {
   return { id: String(++sequence), content, authorID: '1', authorName: 'Hory', authorBot: false,
     guildID: '100', channelID: '200', mentions: [...content.matchAll(/<@!?(\d+)>/g)].map(m => m[1]!), ...overrides };
+}
+
+export class TestClock {
+  private time: number;
+
+  constructor(now = Date.now()) {
+    if (!Number.isSafeInteger(now) || now < 0) throw new YuzuhaError('TEST_CLOCK', 'O relógio exige um instante inteiro não negativo.');
+    this.time = now;
+  }
+
+  readonly now = (): number => this.time;
+
+  advance(milliseconds: number): number {
+    if (!Number.isSafeInteger(milliseconds) || milliseconds < 0 || !Number.isSafeInteger(this.time + milliseconds)) {
+      throw new YuzuhaError('TEST_CLOCK', 'O avanço exige milissegundos inteiros não negativos dentro do intervalo seguro.');
+    }
+    this.time += milliseconds;
+    return this.time;
+  }
+}
+
+export interface TestBotOptions extends Omit<YuzuhaOptions, 'now' | 'transport' | 'resources'> {
+  commands?: readonly Command[];
+  transport?: MockTransport;
+  resources?: MockResourceOverrides;
+  message?: Partial<IncomingMessage>;
+  now?: number;
+}
+
+export interface TestBot {
+  readonly bot: Yuzuha;
+  readonly transport: MockTransport;
+  readonly store: Store;
+  readonly clock: TestClock;
+  readonly messages: MockTransport['messages'];
+  readonly errors: unknown[];
+  readonly results: DispatchResult[];
+  send(content: string, overrides?: Partial<IncomingMessage>): Promise<DispatchResult>;
+  /** Advances the clock and awaits one scheduler pass, including scheduled handlers. */
+  tick(milliseconds?: number): Promise<void>;
+  destroy(): Promise<void>;
+  close(): Promise<void>;
+  [Symbol.asyncDispose](): Promise<void>;
+}
+
+/** Creates an offline bot with isolated state, captured output and a manually advanced clock. */
+export function createTestBot(options: TestBotOptions = {}): TestBot {
+  const { commands = [], transport = new MockTransport(), resources, message, now,
+    onError, ...botOptions } = options;
+  const clock = new TestClock(now);
+  const store = options.store ?? new MemoryStore();
+  const errors: unknown[] = [], results: DispatchResult[] = [];
+  const defaults = structuredClone(message ?? {});
+  const bot = new Yuzuha({ ...botOptions, transport, resources: mockResources(resources), store,
+    now: clock.now, http: options.http ?? false,
+    onError: async (error, ctx) => { errors.push(error); await onError?.(error, ctx); },
+  });
+  try { for (const command of commands) bot.command(command); }
+  catch (error) {
+    void bot.destroy().catch(failure => reportError(bot.options, failure));
+    throw error;
+  }
+  let messageID = 0;
+  let closing = false;
+  const destroy = (): Promise<void> => {
+    closing = true;
+    return bot.destroy();
+  };
+  return {
+    bot, transport, store, clock, messages: transport.messages, errors, results,
+    async send(content, overrides) {
+      const outcome = await bot.handle(mockMessage(content, { ...defaults, id: String(++messageID), ...overrides }));
+      results.push(outcome);
+      return outcome;
+    },
+    async tick(milliseconds = 0) {
+      if (closing || bot.signal.aborted) throw new YuzuhaError('BOT_CLOSED', 'O bot está encerrado.');
+      clock.advance(milliseconds);
+      await bot.scheduler?.tick();
+    },
+    destroy, close: destroy, [Symbol.asyncDispose]: destroy,
+  };
 }
