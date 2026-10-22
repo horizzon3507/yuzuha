@@ -3,8 +3,8 @@
 ## Atualização 0.1.5
 
 Executada em **22/10/2026**, Linux, Node **26.11.1**, npm **12.2.1** e
-`@fluxerjs/core` **3.3.0**. A versão foi preparada localmente; nenhuma publicação
-ou conexão de bot ao Fluxer foi feita nesta atualização.
+`@fluxerjs/core` **3.3.0**. A validação funcional usa mocks e stores isolados,
+sem conexão de bot ao Fluxer. A distribuição pública foi conferida separadamente.
 
 | Verificação | Resultado |
 |---|---|
@@ -18,13 +18,39 @@ ou conexão de bot ao Fluxer foi feita nesta atualização.
 | Scaffold | PASS: dependência npm por padrão; modo local JS/TS e function mode passam instalação, testes e check |
 | Consumidor TypeScript | PASS: flags e argumentos inferidos, tipos do helper e imports públicos |
 | Catálogo | PASS: 288 funções; JSON dos comandos compartilha uso e metadados com a ajuda |
+| Matriz local | PASS: `check` e `smoke:package` em Node **22.23.4**, **24.22.1** e **26.11.1** |
+| GitHub Actions | PASS: matriz Node 22, 24 e 26 no commit da release |
 
 O smoke confere o range npm do scaffold padrão e instala os exemplos com
-`--local`, usando o pacote em teste. A 0.1.5 ainda não foi publicada no registro.
+`--local`, usando o pacote em teste. Após a publicação, scaffolds padrão JS/TS
+também foram instalados pelo npm e passaram testes, check e typecheck TS.
 HTTP nos testes usa fetch simulado; moderação usa `MockTransport`; stores de
 teste são isolados. Relógio controlável não altera timers globais, timeout de
 rede ou relógios de schedulers fornecidos pelo consumidor. Não foi executada
-a matriz remota de CI nem validação ao vivo no Fluxer.
+validação ao vivo no Fluxer.
+
+### Publicação confirmada da 0.1.5
+
+Em **22/10/2026**, a autenticação por passkey confirmou a publicação de
+[`yuzuha@0.1.5` no npm](https://www.npmjs.com/package/yuzuha/v/0.1.5), com
+`latest` apontando para `0.1.5`. O tarball público tem **615092 bytes** e SHA-512
+igual ao artefato local validado:
+
+```text
+sha512-Fa34WB61mBBTPIDM1+OiunlA5cfIk/E8+mOwVHMxX8FCu37kKcSjljlRk5Rk2jLgYH64Gef2pOXUWLMeUtzMbw==
+```
+
+A [release do GitHub](https://github.com/horizzon3507/yuzuha/releases/tag/v0.1.5)
+inclui tarball, VSIX e checksums. A tag `v0.1.5` aponta para
+`b1da0d32c77055591be6240ad0dc8b321aa08819`; os
+[testes remotos desse commit](https://github.com/horizzon3507/yuzuha/actions/runs/39795420825)
+e os da tag passaram nas três versões de Node.
+
+Uma pasta temporária instalou a versão exata pelo registro e verificou a CLI,
+os cinco entrypoints, 288 funções, paridade dos exports do SDK e execução de
+subcomando com flag tipada sobre mocks. Scaffolds JS e TS gerados sem `--local`
+instalaram `yuzuha@0.1.5` pelo npm e passaram `npm test`, `check` e o typecheck TS.
+O comprovante local está em `artifacts/release-0.1.5-public-receipt.json`.
 
 As seções seguintes preservam o registro histórico da 0.1.4, incluindo suas
 medições e a publicação anterior; esses resultados não são medições da 0.1.5.
