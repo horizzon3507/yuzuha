@@ -43,7 +43,7 @@ export class Yuzuha {
   private readonly registry: CommandRegistry;
   private readonly middleware: Middleware[] = [];
   private readonly plugins = new Set<string>();
-  private readonly limits = new RateLimits();
+  private readonly limits: RateLimits;
   private readonly active = new Set<Promise<unknown>>();
   private readonly controllers = new Set<AbortController>();
   private readonly shutdown = new AbortController();
@@ -58,12 +58,14 @@ export class Yuzuha {
   private readonly listener: (message: Message) => void;
 
   constructor(public readonly options: YuzuhaOptions = {}) {
+    this.limits = new RateLimits(options.now);
     this.client = options.client ?? new Client(options.clientOptions);
     this.transport = options.transport ?? new FluxerTransport(this.client);
     this.resources = options.resources ?? new FluxerResources(this.client);
     this.store = options.store ?? new JsonStore(defaultDataPath(options.name));
     this.scheduler = options.scheduler === false ? undefined : options.scheduler ?? new Scheduler(this.store,
       (task, signal) => this.runScheduled(task, signal), {
+        now: options.now,
         onEvent: event => this.execution.run(true, () => emitLog(this.options, event)),
         onError: error => this.execution.run(true, () => reportError(this.options, error)),
       });
@@ -94,7 +96,16 @@ export class Yuzuha {
     if (this.closing) throw new YuzuhaError('BOT_CLOSED', 'O bot está encerrado.');
     if (!plugin.name || this.plugins.has(plugin.name)) throw new YuzuhaError('PLUGIN_DUPLICATE', 'Plugin sem nome ou já instalado.');
     if ((plugin.middleware ?? []).some(item => typeof item !== 'function')) throw new YuzuhaError('PLUGIN_MIDDLEWARE', 'Middleware de plugin inválido.');
-    if ((plugin.commands ?? []).some(command => typeof command.code === 'string') || plugin.scriptEvents?.length) this.enableFunctions();
+    const pending = [...plugin.commands ?? []], inspected = new Set<Command>();
+    let hasScript = Boolean(plugin.scriptEvents?.length);
+    while (pending.length && !hasScript) {
+      const command = pending.pop()!;
+      if (!command || inspected.has(command)) continue;
+      inspected.add(command);
+      hasScript = typeof command.code === 'string';
+      if (Array.isArray(command.subcommands)) pending.push(...command.subcommands);
+    }
+    if (hasScript) this.enableFunctions();
     const stagedRuntime = new Runtime(this.runtime.limits);
     stagedRuntime.registerAll([...this.runtime.functions(), ...(plugin.functions ?? [])]);
     const commitCommands = this.registry.prepare(plugin.commands ?? [], stagedRuntime);
@@ -109,17 +120,16 @@ export class Yuzuha {
     return this;
   }
 
-  command<const S extends ArgumentSchema>(command: NativeCommandDefinition<S>): this;
+  command<const S extends ArgumentSchema = {}, const F extends ArgumentSchema = {}>(command: NativeCommandDefinition<S, F>): this;
   command(command: Command): this;
-  command(command: Command | NativeCommandDefinition<ArgumentSchema>): this {
-    this.registry.add(command.args && !Array.isArray(command.args)
-      ? defineCommand(command as NativeCommandDefinition<ArgumentSchema>) : command as Command);
+  command(command: Command | NativeCommandDefinition<ArgumentSchema, ArgumentSchema>): this {
+    this.registry.add(defineCommand(command as NativeCommandDefinition<ArgumentSchema, ArgumentSchema>));
     return this;
   }
   load(directory: string, replace = true): Promise<void> { return this.registry.load(directory, replace ? 'replace' : 'append'); }
   reload(directory: string): Promise<void> { return this.registry.load(directory, 'reload'); }
   listCommands(): Command[] { return this.registry.list(); }
-  help(): string { return this.registry.help(); }
+  help(command?: string, prefix = ''): string { return this.registry.help(command, prefix); }
   get signal(): AbortSignal { return this.shutdown.signal; }
 
   on<K extends ClientEventName>(event: K, listener: NativeListener<K>): this {
@@ -153,7 +163,7 @@ export class Yuzuha {
     if (this.closing) controller.abort();
     const ctx = new EventContext({ ...source, channelID: definition.channelID, actorID: definition.actorID,
       policy: definition.http, transport: this.transport, store: this.store, resources: this.resources,
-      scheduler: this.scheduler, http: this.http, cooldown: (key, duration) => this.limits.cooldown(key, duration), signal: controller.signal });
+      scheduler: this.scheduler, http: this.http, now: this.options.now, cooldown: (key, duration) => this.limits.cooldown(key, duration), signal: controller.signal });
     const started = this.options.onLog ? performance.now() : 0;
     let outcome: DispatchResult = 'success';
     try {
@@ -259,16 +269,18 @@ export class Yuzuha {
     const configured = typeof this.options.prefix === 'function' ? await this.options.prefix(message) : this.options.prefix ?? '!';
     const routed = route(message.content, validatePrefixes(configured));
     if (!routed) return 'ignored';
-    const compiled = this.registry.find(routed.name);
-    if (!compiled || this.limits.duplicate(message.channelID, message.id)) return 'ignored';
+    const resolved = this.registry.resolve(routed.name, routed.input);
+    if (!resolved || this.limits.duplicate(message.channelID, message.id)) return 'ignored';
+    const { compiled } = resolved;
     let ctx: CommandContext | undefined;
     let outcome: DispatchResult = 'success';
     const started = this.options.onLog ? performance.now() : 0;
     try {
       ctx = new CommandContext({ message, transport: this.transport, store: this.store, command: compiled.command,
-        input: routed.input, help: () => this.help(), cooldown: (key, duration) => this.limits.cooldown(key, duration),
+        input: resolved.input, prefix: routed.prefix, lineage: compiled.lineage,
+        help: () => this.help(), cooldown: (key, duration) => this.limits.cooldown(key, duration),
         native: { client: this.client, message: message.raw instanceof Message ? message.raw : undefined },
-        resources: this.resources, scheduler: this.scheduler, http: this.http, signal, executionID });
+        resources: this.resources, scheduler: this.scheduler, http: this.http, now: this.options.now, signal, executionID });
       if (this.options.onLog) await emitLog(this.options, { event: 'command.start', executionID: ctx.executionID, command: ctx.command.name });
       if (signal.aborted) throw cancellationError();
       await ctx.prepare();
@@ -281,7 +293,8 @@ export class Yuzuha {
         if (compiled.program) {
           const output = text(await this.runtime.execute(compiled.program, current)).trim();
           if (output) await current.reply(output);
-        } else await compiled.command.run!(current);
+        } else if (compiled.command.run) await compiled.command.run(current);
+        else throw new GuardError(`${resolved.input ? 'Subcomando desconhecido.\n' : ''}${this.help(compiled.command.name, routed.prefix)}`);
       });
     } catch (error) {
       onFailure?.(error, ctx);

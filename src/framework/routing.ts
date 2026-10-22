@@ -8,9 +8,9 @@ export function validatePrefixes(value: string | string[]): string[] {
   return prefixes.sort((a, b) => b.length - a.length);
 }
 
-export function route(content: string, prefixes: string[]): { name: string; input: string } | undefined {
+export function route(content: string, prefixes: string[]): { name: string; input: string; prefix: string } | undefined {
   const prefix = prefixes.find(p => content.startsWith(p));
   if (!prefix) return;
   const match = /^(\S+)(?:\s+([\s\S]*))?$/.exec(content.slice(prefix.length).trim());
-  if (match) return { name: match[1]!.toLowerCase(), input: match[2] ?? '' };
+  if (match) return { name: match[1]!.toLowerCase(), input: match[2] ?? '', prefix };
 }

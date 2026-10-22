@@ -28,6 +28,8 @@ export interface YuzuhaOptions {
   resources?: Resources;
   store?: Store;
   name?: string;
+  /** Clock shared by cooldowns, variable TTLs and the default scheduler. */
+  now?: () => number;
   limits?: Partial<Limits>;
   scheduler?: Scheduler | false;
   http?: HttpService | false;
