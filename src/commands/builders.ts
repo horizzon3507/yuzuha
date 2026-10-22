@@ -16,6 +16,7 @@ export class ArgumentBuilder<T extends ArgumentValue, Required extends boolean =
     this.definition = Object.freeze({ ...definition,
       ...(definition.choices ? { choices: Object.freeze([...definition.choices]) } : {}),
       ...(definition.validators ? { validators: Object.freeze(definition.validators.map(validator => Object.freeze({ ...validator }))) } : {}),
+      ...(definition.aliases ? { aliases: Object.freeze([...definition.aliases]) } : {}),
     });
     Object.freeze(this);
   }
@@ -30,6 +31,8 @@ export class ArgumentBuilder<T extends ArgumentValue, Required extends boolean =
   rest(): ArgumentBuilder<T, Required> { return this.copy({ rest: true }); }
   min(value: number): ArgumentBuilder<T, Required> { return this.copy({ min: value }); }
   max(value: number): ArgumentBuilder<T, Required> { return this.copy({ max: value }); }
+  alias(...aliases: string[]): ArgumentBuilder<T, Required> { return this.copy({ aliases: [...aliases] }); }
+  describe(description: string): ArgumentBuilder<T, Required> { return this.copy({ description }); }
   choices<const Values extends readonly T[]>(values: Values): ArgumentBuilder<Values[number], Required> {
     return this.copy<Values[number]>({ choices: [...values] });
   }

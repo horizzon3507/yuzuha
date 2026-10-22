@@ -29,6 +29,8 @@ export function validateArgumentDefinitions(definitions: readonly ArgumentDefini
     if (typeof definition.name !== 'string' || !definition.name || names.has(definition.name)
       || (definition.required !== undefined && typeof definition.required !== 'boolean')
       || (definition.rest !== undefined && typeof definition.rest !== 'boolean')
+      || (definition.description !== undefined && typeof definition.description !== 'string')
+      || (definition.aliases !== undefined && (!Array.isArray(definition.aliases) || definition.aliases.some(alias => typeof alias !== 'string')))
       || (definition.rest && index !== definitions.length - 1)
       || (definition.type !== undefined && !['string', 'number', 'integer', 'user', 'duration', 'boolean'].includes(definition.type))
       || (definition.choices !== undefined && (!Array.isArray(definition.choices)
@@ -107,7 +109,7 @@ export function tokenize(input: string): string[] {
     const character = input[index]!;
     if (character === '\\' && index + 1 < input.length) { token += input[++index]; started = true; }
     else if (quote && character === quote) quote = '';
-    else if (!quote && !started && (character === '"' || character === "'")) { quote = character; started = true; }
+    else if (!quote && (!started || token.endsWith('=')) && (character === '"' || character === "'")) { quote = character; started = true; }
     else if (!quote && /\s/.test(character)) {
       if (started) result.push(token);
       token = ''; started = false;
@@ -116,4 +118,55 @@ export function tokenize(input: string): string[] {
   if (quote) throw new GuardError('Feche as aspas do argumento.');
   if (started) result.push(token);
   return result;
+}
+
+export function validateFlagDefinitions(definitions: readonly ArgumentDefinition[], commandName: string): void {
+  validateArgumentDefinitions(definitions, commandName);
+  const names = new Set<string>();
+  for (const definition of definitions) {
+    if (definition.rest) throw new YuzuhaError('COMMAND_FLAGS', `Flag ${definition.name} não aceita rest().`);
+    for (const name of [definition.name, ...definition.aliases ?? []]) {
+      if (!/^[\p{L}][\p{L}\p{N}_-]*$/u.test(name) || names.has(name)) {
+        throw new YuzuhaError('COMMAND_FLAGS', `Nome ou alias de flag inválido ou duplicado em ${commandName}: ${name}.`);
+      }
+      names.add(name);
+    }
+  }
+}
+
+export function parseFlags(definitions: readonly ArgumentDefinition[] | undefined, tokens: readonly string[]): {
+  tokens: string[]; flags: Map<string, ArgumentValue>;
+} {
+  if (definitions === undefined) return { tokens: [...tokens], flags: new Map() };
+  const lookup = new Map<string, ArgumentDefinition>();
+  for (const definition of definitions) for (const name of [definition.name, ...definition.aliases ?? []]) lookup.set(name, definition);
+  const values = new Map<string, ArgumentValue>(), positional: string[] = [];
+  let terminated = false;
+  for (let index = 0; index < tokens.length; index++) {
+    const token = tokens[index]!;
+    if (terminated) { positional.push(token); continue; }
+    if (token === '--') { terminated = true; continue; }
+    if (!(token.startsWith('--') || /^-[^\d.]/u.test(token)) || token === '-') { positional.push(token); continue; }
+    const match = /^--?([^=]+)(?:=([\s\S]*))?$/.exec(token)!;
+    const definition = lookup.get(match[1]!);
+    if (!definition) throw new GuardError(`Flag desconhecida: ${token.split('=')[0]}.`);
+    if (values.has(definition.name)) throw new GuardError(`Flag repetida: --${definition.name}.`);
+    let input = match[2];
+    if (input === undefined) {
+      if (definition.type === 'boolean') input = 'true';
+      else {
+        input = tokens[index + 1];
+        if (input === undefined || input.startsWith('--') || /^-[^\d.]/u.test(input)) throw new GuardError(`Informe o valor de --${definition.name}.`);
+        index++;
+      }
+    }
+    const value = parseArguments([{ ...definition, required: true }], [input]).get(definition.name);
+    if (value !== undefined) values.set(definition.name, value);
+  }
+  for (const definition of definitions) {
+    if (values.has(definition.name)) continue;
+    const value = parseArguments([definition], []).get(definition.name);
+    if (value !== undefined) values.set(definition.name, value);
+  }
+  return { tokens: positional, flags: values };
 }

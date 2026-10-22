@@ -15,6 +15,8 @@ export interface ArgumentDefinition {
   min?: number;
   max?: number;
   validators?: readonly { readonly check: (value: ArgumentValue) => boolean; readonly message: string }[];
+  aliases?: readonly string[];
+  description?: string;
 }
 
 export type CommandCheck = (ctx: CommandContext) => boolean | string | void | Promise<boolean | string | void>;
@@ -31,6 +33,9 @@ export interface Command {
   botPermissions?: string[];
   cooldown?: string | number;
   args?: ArgumentDefinition[];
+  flags?: ArgumentDefinition[];
+  subcommands?: Command[];
+  examples?: string[];
   file?: string;
   hidden?: boolean;
   checks?: CommandCheck[];
@@ -38,18 +43,17 @@ export interface Command {
   http?: HttpPolicy;
 }
 
-export type NativeCommandContext<S extends ArgumentSchema> = Omit<CommandContext, 'args'> & { readonly args: TypedArguments<S> };
-export type NativeCommandDefinition<S extends ArgumentSchema> = Omit<Command, 'args' | 'run'> & {
-  args: S;
-  run?: (ctx: NativeCommandContext<S>) => unknown | Promise<unknown>;
+export type NativeCommandContext<S extends ArgumentSchema, F extends ArgumentSchema = ArgumentSchema> = Omit<CommandContext, 'args' | 'flags'> & { readonly args: TypedArguments<S>; readonly flags: TypedArguments<F> };
+export type NativeCommandDefinition<S extends ArgumentSchema = {}, F extends ArgumentSchema = {}> = Omit<Command, 'args' | 'flags' | 'run'> & {
+  args?: S;
+  flags?: F;
+  run?: (ctx: NativeCommandContext<S, F>) => unknown | Promise<unknown>;
 };
 
-export function defineCommand<const S extends ArgumentSchema>(command: NativeCommandDefinition<S>): Command;
+export function defineCommand<const S extends ArgumentSchema = {}, const F extends ArgumentSchema = {}>(command: NativeCommandDefinition<S, F>): Command;
 export function defineCommand<T extends Command>(command: T): T;
-export function defineCommand(command: Command | NativeCommandDefinition<ArgumentSchema>): Command {
-  if (!command.args || Array.isArray(command.args)) return command as Command;
-  const run = (command as NativeCommandDefinition<ArgumentSchema>).run;
-  return { ...command, args: argumentDefinitions(command.args),
-    run: run ? context => run(context as NativeCommandContext<ArgumentSchema>) : undefined,
-  };
+export function defineCommand(command: Command | NativeCommandDefinition<ArgumentSchema, ArgumentSchema>): Command {
+  if ((!command.args || Array.isArray(command.args)) && (!command.flags || Array.isArray(command.flags))) return command as Command;
+  return { ...command, args: command.args && (Array.isArray(command.args) ? command.args : argumentDefinitions(command.args)),
+    flags: command.flags && (Array.isArray(command.flags) ? command.flags : argumentDefinitions(command.flags)), run: command.run as Command['run'] };
 }
