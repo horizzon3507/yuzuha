@@ -13,6 +13,7 @@ import { runBot } from './runner.js';
 import { scaffold } from './scaffold.js';
 import { packageRoot, VERSION } from './version.js';
 import { doctor } from './doctor.js';
+import { commandCatalog } from './command-catalog.js';
 
 export async function main(args = process.argv.slice(2)): Promise<void> {
   const options = parseArguments(args);
@@ -70,7 +71,9 @@ export async function main(args = process.argv.slice(2)): Promise<void> {
   } else ({ bot, commandsPath } = await configuredBot(await findConfig(options.input), options.action !== 'check'));
   if (options.action === 'check') {
     try {
-      const commands = bot.listCommands().map(({ name, aliases, description }) => ({ name, aliases, description }));
+      const configuredPrefix = bot.options.prefix;
+      const prefix = typeof configuredPrefix === 'string' ? configuredPrefix : Array.isArray(configuredPrefix) ? configuredPrefix[0] ?? '!' : '!';
+      const commands = commandCatalog(bot.listCommands(), prefix);
       console.log(options.json ? JSON.stringify({ valid: true, version: VERSION, commands }, null, 2) : `${commands.length} comandos válidos. Nenhum login realizado.`);
     } finally { await bot.destroy(); await bot.options.store?.close?.(); }
     return;
