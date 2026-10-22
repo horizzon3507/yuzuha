@@ -44,7 +44,7 @@ export async function main(args = process.argv.slice(2)): Promise<void> {
     if (!report.ok) process.exitCode = 1;
     return;
   }
-  if (options.action === 'init') { await scaffold(options.directory, options.language, options.functions); return; }
+  if (options.action === 'init') { await scaffold(options.directory, options.language, options.functions, options.local); return; }
   if (options.action === 'functions') {
     let catalogBot: Yuzuha | undefined;
     let all;

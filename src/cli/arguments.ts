@@ -3,7 +3,7 @@ import { NODE_REQUIREMENT, VERSION } from './version.js';
 
 export const usage = `Yuzuha ${VERSION}
 
-yuzuha init <diretório> [--js | --ts] [--functions] Cria um bot local
+yuzuha init <diretório> [--js | --ts] [--functions] [--local] Cria um projeto de bot
 yuzuha check [config ou diretório] [--json] Valida comandos sem login
 yuzuha functions [--json] [--category nome] Lista funções e assinaturas
 yuzuha lint <arquivo|diretório> [--json] [--catalog arquivo] Valida texto sem importar
@@ -16,10 +16,11 @@ yuzuha run [config]                        Carrega .env e conecta
 yuzuha dev [config]                        Recarrega comandos ao editar
 
 Config padrão: yuzuha.config.ts ou yuzuha.config.js. Node ${NODE_REQUIREMENT}.
+init usa o pacote npm; --local vincula a instalação atual para desenvolvimento.
 `;
 
 export type CLIArguments = { action: 'help' } | { action: 'version' }
-  | { action: 'init'; directory: string; language: 'js' | 'ts'; functions: boolean }
+  | { action: 'init'; directory: string; language: 'js' | 'ts'; functions: boolean; local: boolean }
   | { action: 'functions'; json: boolean; category?: string; catalog?: boolean; config?: string; pluginsOnly?: boolean }
   | { action: 'lint'; input: string; json: boolean; catalogs: string[] }
   | { action: 'test'; input: string; json: boolean }
@@ -40,10 +41,12 @@ export function parseArguments(args: string[]): CLIArguments {
   if (action === 'editor') { if (rest.length) fail(); return { action }; }
   if (action === 'init') {
     const [directory, ...flags] = rest;
-    if (!directory) return fail('Use init <diretório> [--js | --ts].');
-    if (directory.startsWith('-') || flags.some(flag => !['--js', '--ts', '--functions'].includes(flag))
-      || flags.filter(flag => flag === '--js' || flag === '--ts').length > 1) fail('Use init <diretório> [--js | --ts] [--functions].');
-    return { action, directory, language: flags.includes('--js') ? 'js' : 'ts', functions: flags.includes('--functions') };
+    if (!directory) return fail('Use init <diretório> [--js | --ts] [--functions] [--local].');
+    if (directory.startsWith('-') || flags.some(flag => !['--js', '--ts', '--functions', '--local'].includes(flag))
+      || new Set(flags).size !== flags.length || flags.filter(flag => flag === '--js' || flag === '--ts').length > 1) {
+      fail('Use init <diretório> [--js | --ts] [--functions] [--local].');
+    }
+    return { action, directory, language: flags.includes('--js') ? 'js' : 'ts', functions: flags.includes('--functions'), local: flags.includes('--local') };
   }
   if (action === 'functions') {
     let json = false, category: string | undefined, catalog = false, config: string | undefined, pluginsOnly = false;

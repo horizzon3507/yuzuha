@@ -1,7 +1,7 @@
 import { mkdir, rm, writeFile } from 'node:fs/promises';
 import { basename, join, resolve } from 'node:path';
 import { YuzuhaError } from '../errors.js';
-import { NODE_REQUIREMENT, packageRoot } from './version.js';
+import { NODE_REQUIREMENT, packageRoot, VERSION } from './version.js';
 
 function commandFiles(extension: string, functions: boolean): Record<string, string> {
   const files: Record<string, string> = {
@@ -15,29 +15,32 @@ function commandFiles(extension: string, functions: boolean): Record<string, str
   return files;
 }
 
-export async function scaffold(directory: string, language: 'js' | 'ts', functions = false): Promise<void> {
+export async function scaffold(directory: string, language: 'js' | 'ts', functions = false, local = false): Promise<void> {
   const root = resolve(directory);
   const name = basename(root).toLowerCase().replace(/[^a-z0-9_-]/g, '-');
   if (!name || name.startsWith('-')) throw new YuzuhaError('INIT_NAME', 'Escolha um nome de diretório válido.');
-  const scripts: Record<string, string> = { start: 'yuzuha run', dev: 'yuzuha dev', check: 'yuzuha check' };
+  const scripts: Record<string, string> = { start: 'yuzuha run', dev: 'yuzuha dev', check: 'yuzuha check',
+    test: language === 'ts' ? 'tsx --test test/*.test.ts' : 'node --test test/*.test.js' };
   if (language === 'ts') scripts['typecheck'] = 'tsc --noEmit';
   const manifest = { name, version: '0.1.0', private: true, type: 'module', engines: { node: NODE_REQUIREMENT },
-    scripts, dependencies: { yuzuha: `file:${packageRoot}` },
-    ...(language === 'ts' ? { devDependencies: { typescript: '^5.9.0', '@types/node': '^22.0.0' } } : {}),
+    scripts, dependencies: { yuzuha: local ? `file:${packageRoot}` : `^${VERSION}` },
+    ...(language === 'ts' ? { devDependencies: { typescript: '^5.9.0', '@types/node': '^22.0.0', tsx: '^4.20.0' } } : {}),
   };
   const files: Record<string, string> = {
     ...commandFiles(language, functions),
+    [`test/hello.test.${language}`]: `import test from 'node:test';\nimport assert from 'node:assert/strict';\nimport { createTestBot } from 'yuzuha/testing';\nimport hello from '../commands/hello.js';\n\ntest('hello responde com o nome informado sem conectar ao Fluxer', async t => {\n  const fixture = createTestBot({ commands: [hello] });\n  t.after(() => fixture.destroy());\n\n  const outcome = await fixture.send('!hello Yuzuha');\n\n  assert.equal(outcome, 'success');\n  assert.deepEqual(fixture.messages.map(message => message.payload.content), ['Olá, Yuzuha!']);\n  assert.deepEqual(fixture.errors, []);\n});\n`,
     'package.json': `${JSON.stringify(manifest, null, 2)}\n`,
     '.env.example': 'FLUXER_BOT_TOKEN=\n',
     '.gitignore': 'node_modules/\n.env\ndata/\n',
     [`yuzuha.config.${language}`]: `import { defineConfig } from 'yuzuha';\n\nexport default defineConfig({\n  name: ${JSON.stringify(name)},\n  prefix: '!',\n  commands: './commands',\n});\n`,
-    'README.md': `# ${name}\n\nBot do Fluxer com Yuzuha.\n\n1. Execute \`npm install\`.\n2. Execute \`npm run check\` para validar offline.\n3. Copie \`.env.example\` para \`.env\` e preencha o token.\n4. Execute \`npm run dev\` ou \`npm start\`.\n\nComandos: \`!ping\`, \`!hello\`, \`!ban @membro motivo\`.\n\nA dependência local aponta para a instalação que gerou este projeto.\nCasos e variáveis ficam no diretório XDG de dados do Yuzuha, sob o nome deste bot.\n`,
+    'README.md': `# ${name}\n\nBot do Fluxer com Yuzuha.\n\n1. Execute \`npm install\`.\n2. Execute \`npm run check\` e \`npm test\` para validar offline.\n3. Copie \`.env.example\` para \`.env\` e preencha o token.\n4. Execute \`npm run dev\` ou \`npm start\`.\n\nComandos: \`!ping\`, \`!hello\`, \`!ban @membro motivo\`.\n\n${local ? 'A dependência local aponta para a instalação que gerou este projeto. Para compartilhar, troque-a pela versão publicada no npm.' : 'A dependência do Yuzuha usa a versão do npm, permitindo instalar o projeto em outra máquina.'}\nO teste de exemplo usa \`yuzuha/testing\`, sem token nem conexão ao Fluxer.\nCasos e variáveis ficam no diretório XDG de dados do Yuzuha, sob o nome deste bot.\n`,
   };
   if (language === 'ts') files['tsconfig.json'] = `${JSON.stringify({ compilerOptions: { target: 'ES2023', module: 'NodeNext', moduleResolution: 'NodeNext', strict: true, noEmit: true }, include: ['**/*.ts'] }, null, 2)}\n`;
   await mkdir(root, { recursive: false });
   try {
     await mkdir(join(root, 'commands'));
+    await mkdir(join(root, 'test'));
     for (const [file, content] of Object.entries(files)) await writeFile(join(root, file), content, { flag: 'wx', mode: 0o644 });
   } catch (error) { await rm(root, { recursive: true, force: true }); throw error; }
-  console.log(`Criado: ${root}\nEntre no diretório e execute npm install e npm run check.`);
+  console.log(`Criado: ${root}\nEntre no diretório e execute npm install, npm run check e npm test.`);
 }
