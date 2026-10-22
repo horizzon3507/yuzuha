@@ -73,6 +73,12 @@ recursos. O runtime de scripts só é registrado quando o function mode é usado
 
 ## Entregas e dependências
 
+A atualização 0.1.5 acrescenta subcomandos e flags tipadas, ajuda e uso derivados
+dos metadados, scaffolds com dependência npm e testes offline gerados. O helper
+`createTestBot` reúne fixtures e relógio controlável para cooldown, TTL e tarefas.
+Grupos preservam suas restrições nos filhos e a recarga continua atômica.
+O SDK permanece em 3.3.0, o schema em 2 e o catálogo em 288 funções.
+
 A atualização 0.1.4 acrescenta autorização compartilhada para mutações de cargos,
 canais e webhooks, eventos no function mode, cron com fuso IANA e concorrência
 limitada, streaming/multipart e políticas HTTP por comando. Inclui manutenção de

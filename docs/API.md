@@ -21,6 +21,7 @@ A fonte das assinaturas completas são as declarações TypeScript distribuídas
 | `scheduler` | `Scheduler` próprio, `false` para desligar; padrão sobre o mesmo store |
 | `http` | `HttpService` próprio, `false` para desligar; padrão seguro |
 | `limits` | Subconjunto de `calls`, `depth`, `output`, `timeoutMs` |
+| `now` | Função que retorna epoch em ms para cooldown, dados e scheduler; padrão `Date.now` |
 | `onError(error, ctx?)` | Observação de falhas internas e operacionais |
 | `onCommand(ctx, outcome)` | Observação do resultado de comandos encontrados |
 | `onLog(record)` | Eventos estruturados opcionais, sem conteúdo/segredos automáticos |
@@ -42,7 +43,7 @@ erro, o resultado continua sendo `success`.
 | `load(directory, replace = true)` | Valida a pasta e substitui tudo; `false` acrescenta |
 | `reload(directory)` | Troca só os comandos daquela pasta |
 | `listCommands()` | Snapshot das definições, sem duplicar aliases |
-| `help()` | Texto com nome e descrição de comandos visíveis |
+| `help(path?, prefix?)` | Catálogo visível ou ajuda detalhada de um comando/subcomando |
 | `handle(message)` | Despacho manual; retorna `Promise<DispatchResult>` |
 | `login(token?)` | Usa o argumento ou `FLUXER_BOT_TOKEN`; só aqui conecta |
 | `destroy()` | Aguarda handlers, encerra client e store próprio; idempotente |
@@ -89,9 +90,16 @@ Esse exemplo valida a duração e responde; ele não agenda um lembrete.
 `duration` retorna milissegundos. Números usados como cooldown também são ms.
 
 Campos: `name`, `aliases`, `description`, `code` ou `run`, `guildOnly`,
-`permissions`, `botPermissions`, `cooldown`, `args`, `checks`, `middleware`, `hidden` e `file`.
+`permissions`, `botPermissions`, `cooldown`, `args`, `flags`, `subcommands`, `examples`,
+`checks`, `middleware`, `hidden`, `http` e `file`.
 `hidden` omite da ajuda, mas não bloqueia execução. `file` identifica a origem
 dos diagnósticos e é preenchido pelo loader.
+
+Grupos podem ter somente `subcommands`, sem `code`/`run`, e não declaram entrada
+posicional ou flags próprias. Folhas recebem as restrições ancestrais; exemplos
+e regras completas estão em [NATIVE.md](NATIVE.md). Os helpers `commandUsage`
+e `commandHelp` produzem texto a partir de uma definição normalizada, sem
+executar seus callbacks. Para resolver um caminho na árvore, use `bot.help`.
 
 Tipos de argumento:
 
@@ -119,6 +127,8 @@ Nomes/aliases são únicos sem distinção entre maiúsculas e minúsculas.
 | `authorID`, `guildID` | Autor e servidor; servidor vazio em DM |
 | `command`, `input`, `tokens` | Definição, texto dos argumentos e tokens |
 | `args` | ArgumentBag compatível com Map; get/require inferidos para schemas |
+| `flags` | Flags declaradas e convertidas; get/require inferidos para schemas |
+| `now()` | Epoch em ms pelo relógio configurado; use para cálculos de prazo |
 | `vars` | Map local daquela execução |
 | `reply(stringOuPayload)` | Retorna o ID da resposta |
 | `send`, `edit`, `delete`, `react` | Helpers do transporte, usando o canal/mensagem atuais como padrão |

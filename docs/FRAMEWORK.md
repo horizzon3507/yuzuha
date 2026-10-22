@@ -84,6 +84,12 @@ bot.command(defineCommand({
 `defineCommand` é o caminho principal. Comandos com `code` continuam válidos e
 ativam o function mode automaticamente. Veja o [guia nativo](NATIVE.md).
 
+Na 0.1.5, `subcommands` organiza grupos como `!config prefixo ?`; cada folha
+declara seus `args` e `flags`. Os builders `arg.*` também inferem os tipos em
+`ctx.flags`. `bot.help('config prefixo', '!')` mostra o uso e os metadados da
+folha. As regras de herança, parsing e exemplos completos estão em
+[NATIVE.md](NATIVE.md).
+
 ## Contexto
 
 | Membro | Uso |
@@ -91,6 +97,7 @@ ativam o function mode automaticamente. Veja o [guia nativo](NATIVE.md).
 | `ctx.message` | Mensagem normalizada; `raw` guarda a mensagem original do SDK |
 | `ctx.authorID`, `ctx.guildID`, `ctx.input`, `ctx.tokens` | Dados da execução |
 | `ctx.args` | Map de argumentos declarativos convertidos |
+| `ctx.flags` | Map de flags declaradas convertidas |
 | `ctx.vars` | Map de variáveis locais da execução |
 | `ctx.reply(textoOuPayload)` | Resposta sem pings pelo adaptador |
 | `ctx.requireGuild()` | Exige servidor e retorna seu ID |

@@ -42,12 +42,17 @@ exports de `yuzuha/sdk` aos da dependência instalada.
 | CLI, plugins, comandos e middleware | Recursos próprios do Yuzuha; lint/catálogos/cenários e manutenção de dados | 288 funções canônicas; comandos e eventos de script |
 
 A camada nativa do Yuzuha — o caminho principal — acrescenta schemas de argumentos
-com inferência, checks e middleware por comando, eventos com encaminhamento de
+e flags com inferência, subcomandos, ajuda detalhada, checks e middleware por comando, eventos com encaminhamento de
 erros e plugins que agrupam comandos e eventos. Os mesmos contratos de recursos atendem scripts
 e comandos nativos, e `ctx.scheduler`/`ctx.http` expõem agendamento e rede sem
 duplicar regras. Veja o [guia nativo](NATIVE.md) e o
 [inventário de lacunas](FUNCTION-GAPS.md), que separa wrappers ausentes de
 recursos já acessíveis no SDK.
+
+`createTestBot`, em `yuzuha/testing`, facilita testes nativos sobre mocks com
+relógio controlável; não conecta ao gateway. Os cenários JSON de `yuzuha test`
+continuam sendo um formato declarativo para scripts. Os projetos de `init`
+incluem um teste nativo e usam a dependência npm por padrão (`--local` é explícito).
 
 O lockfile registra a árvore exata. Ao atualizar o SDK, rode os testes de tipos,
 adaptador, consumidores JS/TS e paridade de exports antes de alterar esta tabela.

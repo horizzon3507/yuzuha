@@ -5,7 +5,7 @@ Este é o caminho principal do Yuzuha: comandos e eventos em JS/TS, sem funçõe
 transporte, persistência, guards e moderação com os comandos nativos.
 O acesso ao client Fluxer.js continua disponível para recursos específicos do SDK.
 
-Os exemplos usam imports públicos de **Yuzuha 0.1.4**. JavaScript usa os mesmos
+Os exemplos usam imports públicos de **Yuzuha 0.1.5**. JavaScript usa os mesmos
 imports e objetos; TypeScript acrescenta inferência e validação estática.
 
 ## Um comando com argumentos inferidos
@@ -557,6 +557,83 @@ seu código tem as permissões normais do processo Node.
 
 A [referência do framework](FRAMEWORK.md) detalha carregamento de diretórios,
 recarga, middleware global e composição com funções de script.
+
+## Subcomandos, flags e ajuda
+
+Uma árvore em `subcommands` organiza comandos sem exigir roteamento no handler.
+O grupo abaixo aceita `!config prefixo ?` e o alias `!cfg prefixo ?`:
+
+```ts
+import { arg, defineCommand } from 'yuzuha';
+
+export const config = defineCommand({
+  name: 'config',
+  aliases: ['cfg'],
+  guildOnly: true,
+  permissions: ['ManageGuild'],
+  subcommands: [defineCommand({
+    name: 'prefixo',
+    description: 'Salva o prefixo deste servidor.',
+    args: { valor: arg.text().min(1).max(10).required() },
+    flags: { confirmar: arg.boolean().alias('c').default(false) },
+    examples: ['!config prefixo ? --confirmar'],
+    async run(ctx) {
+      if (!ctx.flags.get('confirmar')) {
+        await ctx.reply(`Prefixo proposto: ${ctx.args.get('valor')}. Use --confirmar para salvar.`);
+        return;
+      }
+      await ctx.data.guild.set('prefix', ctx.args.get('valor'));
+      await ctx.reply('Prefixo salvo.');
+    },
+  })],
+});
+```
+
+Salvar o prefixo não altera uma configuração estática. Para usar esse dado no
+roteamento, configure a função `prefix` do bot para ler o store.
+
+Grupos não declaram `args` ou `flags`; cada folha define a entrada que recebe.
+Aliases são únicos entre irmãos, sem distinguir maiúsculas de minúsculas.
+Restrições de servidor, permissões de autor/bot, checks, middleware e cooldown
+dos grupos continuam valendo nos filhos. Políticas HTTP só podem restringir
+as políticas ancestrais. O registro e a recarga validam a árvore inteira antes
+de substituir comandos.
+
+Flags usam os mesmos tipos, escolhas, valores padrão e validadores de `args`:
+
+```ts
+export const aviso = defineCommand({
+  name: 'aviso',
+  args: { membro: arg.user().required() },
+  flags: {
+    motivo: arg.text().alias('m').required(),
+    prioridade: arg.string().choices(['normal', 'alta']).default('normal'),
+    silencioso: arg.boolean().default(false),
+  },
+  examples: ['!aviso @membro --motivo "spam no chat" --silencioso'],
+  async run(ctx) {
+    const motivo: string = ctx.flags.get('motivo');
+    const prioridade: 'normal' | 'alta' = ctx.flags.get('prioridade');
+    const silencioso: boolean = ctx.flags.get('silencioso');
+    await ctx.reply(`${ctx.args.get('membro')}: ${motivo} (${prioridade}, ${silencioso})`);
+  },
+});
+```
+
+- Valores aceitam `--motivo texto`, `--motivo=texto` ou `-m texto`.
+- Aspas agrupam valores com espaços, inclusive `--motivo="spam no chat"`.
+- Uma flag booleana sem valor significa `true`; use `--silencioso=false` para `false`.
+- `--` encerra a leitura de flags; o restante vira entrada posicional.
+- Números negativos continuam válidos como valores numéricos.
+- Flags desconhecidas, repetidas ou sem valor exigido são recusadas antes do handler.
+- Comandos sem declaração de flags preservam sua entrada posicional.
+
+`bot.help()` mantém o catálogo de comandos visíveis.
+`bot.help('aviso', '!')` e `bot.help('config prefixo', '!')` mostram uso,
+argumentos, flags, escolhas, padrões, exemplos e subcomandos disponíveis.
+Erros de entrada acrescentam o uso esperado. `hidden` omite comandos da ajuda;
+isso não substitui autorização. Os metadados também estão no JSON de
+`yuzuha check`; veja [CLI.md](CLI.md).
 
 ## Recursos acrescentados na 0.1.4
 
