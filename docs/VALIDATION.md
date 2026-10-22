@@ -1,5 +1,18 @@
 # Validação local
 
+## Atualização 0.1.6
+
+Atualização de documentação validada em **22/10/2026**, Linux, Node **26.11.1**
+e npm **12.2.1**. O README reorganiza instalação, exemplos dos dois modos e
+testes offline; os contratos de execução da 0.1.5 são preservados.
+
+- `npm run check`: PASS, incluindo **411 testes**, tipos, arquitetura, build,
+  editor, catálogo de **288 funções** e links da documentação.
+- `npm run smoke:package`: PASS, com instalação do tarball, CLI, entrypoints,
+  paridade do SDK e scaffolds JS, TS e function mode.
+
+Os registros abaixo documentam as validações anteriores e suas respectivas versões.
+
 ## Atualização 0.1.5
 
 Executada em **22/10/2026**, Linux, Node **26.11.1**, npm **12.2.1** e

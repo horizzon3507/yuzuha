@@ -21,6 +21,14 @@ documentos. Veja a [política completa](VERSIONING.md).
 
 </details>
 
+## v0.1.6 · 22/10/2026
+
+README reorganizado para apresentar instalação, comandos nos dois modos e testes offline. Esta atualização de documentação da biblioteca Yuzuha foi preparada em 22/10/2026 (v0.1.6).
+
+- Instalação pelo npm e criação de bots aparecem antes dos exemplos, com navegação por seções e recursos agrupados por área.
+- Exemplos de comando nativo e script ficam juntos, acompanhados de um teste com `createTestBot`. CLI, referências e desenvolvimento local têm seções próprias.
+- Instruções de instalação, manifest e lockfile passam a referenciar a 0.1.6. O SDK continua em 3.3.0 e o catálogo mantém 288 funções.
+
 ## v0.1.5 · 22/10/2026
 
 Subcomandos e flags tipadas, ajuda derivada das definições e testes nativos com relógio controlável, com projetos gerados prontos para compartilhar. Esta atualização da biblioteca Yuzuha foi preparada em 22/10/2026 (v0.1.5).

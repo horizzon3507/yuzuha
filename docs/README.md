@@ -1,6 +1,6 @@
 # Documentação do Yuzuha
 
-Referência da versão **0.1.5**, em JavaScript ESM e TypeScript, para Node >=22.13.
+Referência da versão **0.1.6**, em JavaScript ESM e TypeScript, para Node >=22.13.
 
 Ferramentas: [CLI e cenários offline](CLI.md), [editor e catálogos](EDITOR.md)
 e [benchmarks reproduzíveis](BENCHMARKS.md).

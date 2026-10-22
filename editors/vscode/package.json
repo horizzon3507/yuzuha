@@ -2,7 +2,7 @@
   "name": "yuzuha-language",
   "displayName": "Yuzuha",
   "description": "Diagnósticos, funções, assinaturas e catálogos de plugins do Yuzuha.",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "publisher": "yuzuha-local",
   "license": "MIT",
   "engines": {

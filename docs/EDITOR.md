@@ -1,6 +1,6 @@
 # Editor e diagnóstico local
 
-A extensão VS Code da 0.1.5 fornece autocomplete com argumentos em snippets,
+A extensão VS Code da 0.1.6 fornece autocomplete com argumentos em snippets,
 hover, assinatura/argumento ativo e diagnósticos durante a edição. Reconhece arquivos
 `.yz`/`.yuzuha` e strings JS/TS, incluindo JSX/TSX. Os metadados vêm do mesmo
 registro usado pelo runtime e pela [referência de funções](FUNCTIONS.md).
@@ -11,7 +11,7 @@ Na árvore da biblioteca:
 
 ```sh
 npm run package:editor
-code --install-extension artifacts/yuzuha-language-0.1.5.vsix
+code --install-extension artifacts/yuzuha-language-0.1.6.vsix
 ```
 
 O primeiro comando usa `@vscode/vsce` pelo npm para empacotar localmente;
