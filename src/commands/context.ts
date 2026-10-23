@@ -51,12 +51,12 @@ export interface ContextOptions {
 
 export class CommandContext {
   private executionKey?: string;
-  readonly vars = new Map<string, unknown>();
-  readonly args = new ArgumentBag();
-  readonly flags = new ArgumentBag();
-  readonly mod: NativeModeration;
-  readonly data: NativeData;
-  readonly members: MemberService;
+  private localVars?: Map<string, unknown>;
+  private argumentsBag?: ArgumentBag;
+  private flagsBag?: ArgumentBag;
+  private nativeMod?: NativeModeration;
+  private nativeData?: NativeData;
+  private memberService?: MemberService;
   readonly signal: AbortSignal;
   readonly now: () => number;
   readonly tokens: string[];
@@ -74,10 +74,11 @@ export class CommandContext {
   private readonly claimCooldown: ContextOptions['cooldown'];
   private readonly lineage: readonly Command[];
   private readonly prefix: string;
-  private readonly authorization: AuthorizationService;
-  private readonly moderation: ModerationService;
-  private readonly cases: CaseService;
-  private readonly variables: VariableService;
+  private authorizationService?: AuthorizationService;
+  private moderationService?: ModerationService;
+  private caseService?: CaseService;
+  private variableService?: VariableService;
+  private readonly scope: { guildID: string; authorID: string };
   private readonly native?: NativeAccess;
   private readonly nativeResources?: Resources;
   private readonly schedulerService?: Scheduler;
@@ -91,6 +92,7 @@ export class CommandContext {
     this.event = options.event ? Object.freeze({ ...options.event }) : undefined;
     this.messageAvailable = options.messageAvailable ?? true;
     this.actor = options.actor;
+    this.scope = { guildID: this.guildID, authorID: this.authorID };
     this.transport = options.transport;
     this.store = options.store;
     this.command = options.command;
@@ -110,19 +112,24 @@ export class CommandContext {
     this.now = options.now ?? Date.now;
     this.httpService = options.http;
     this.nativeResources = options.resources;
-    const scope = { guildID: this.guildID, authorID: this.authorID };
-    this.authorization = new AuthorizationService(this.transport, scope);
-    this.moderation = new ModerationService(this.transport, this.store, scope);
-    this.cases = new CaseService(this.store);
-    this.variables = new VariableService(this.store, scope, this.now);
-    this.members = new MemberService(this.transport, scope, () => this.resources.users);
-    this.mod = new NativeModeration((action, target, reason, moderationOptions) =>
-      this.moderate(action, target, reason, moderationOptions));
-    this.data = Object.freeze({
-      guild: new ScopedData(this.variables, 'guild'),
-      user: new ScopedData(this.variables, 'user'),
-      userFor: (id: string) => new ScopedData(this.variables.forUser(id), 'user'),
+  }
+
+  private get authorization(): AuthorizationService { return this.authorizationService ??= new AuthorizationService(this.transport, this.scope); }
+  private get moderation(): ModerationService { return this.moderationService ??= new ModerationService(this.transport, this.store, this.scope); }
+  private get cases(): CaseService { return this.caseService ??= new CaseService(this.store); }
+  private get variables(): VariableService { return this.variableService ??= new VariableService(this.store, this.scope, this.now); }
+  get members(): MemberService { return this.memberService ??= new MemberService(this.transport, this.scope, () => this.resources.users); }
+  get vars(): Map<string, unknown> { return this.localVars ??= new Map(); }
+  get args(): ArgumentBag { return this.argumentsBag ??= new ArgumentBag(); }
+  get flags(): ArgumentBag { return this.flagsBag ??= new ArgumentBag(); }
+  get mod(): NativeModeration {
+    return this.nativeMod ??= new NativeModeration((action, target, reason, options) => this.moderate(action, target, reason, options));
+  }
+  get data(): NativeData {
+    return this.nativeData ??= Object.freeze({
+      guild: new ScopedData(this.variables, 'guild'), user: new ScopedData(this.variables, 'user'),
       global: new ScopedData(this.variables, 'global'),
+      userFor: (id: string) => new ScopedData(this.variables.forUser(id), 'user'),
       transaction: <T>(writer: (data: DataTransaction) => T) => this.variables.transaction(writer),
     });
   }
@@ -206,10 +213,12 @@ export class CommandContext {
     for (const permission of this.command.permissions ?? []) await this.requirePermission(permission);
     for (const permission of this.command.botPermissions ?? []) await this.requirePermission(permission, true);
     try {
-      const parsed = parseFlags(this.command.flags, this.tokens);
-      for (const [name, value] of parsed.flags) this.flags.set(name, value);
-      for (const [name, value] of parseArguments(this.command.args ?? [], parsed.tokens)) this.args.set(name, value);
-      this.tokens.splice(0, this.tokens.length, ...parsed.tokens);
+      if (this.command.flags !== undefined) {
+        const parsed = parseFlags(this.command.flags, this.tokens);
+        for (const [name, value] of parsed.flags) this.flags.set(name, value);
+        this.tokens.splice(0, this.tokens.length, ...parsed.tokens);
+      }
+      if (this.command.args?.length) for (const [name, value] of parseArguments(this.command.args, this.tokens)) this.args.set(name, value);
     } catch (error) {
       if (error instanceof GuardError) throw new GuardError(`${error.message}\nUso: ${commandUsage(this.command, this.prefix)}`);
       throw error;
