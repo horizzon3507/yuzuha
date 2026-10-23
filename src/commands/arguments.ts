@@ -103,17 +103,18 @@ export function parseArguments(definitions: readonly ArgumentDefinition[], token
 }
 
 export function tokenize(input: string): string[] {
+  if (!/[\\"']/.test(input)) return input.match(/\S+/g) ?? [];
   const result: string[] = [];
-  let token = '', quote = '', started = false;
+  let token = '', quote = '', last = '', started = false;
   for (let index = 0; index < input.length; index++) {
     const character = input[index]!;
-    if (character === '\\' && index + 1 < input.length) { token += input[++index]; started = true; }
+    if (character === '\\' && index + 1 < input.length) { last = input[++index]!; token += last; started = true; }
     else if (quote && character === quote) quote = '';
-    else if (!quote && (!started || token.endsWith('=')) && (character === '"' || character === "'")) { quote = character; started = true; }
+    else if (!quote && (!started || last === '=') && (character === '"' || character === "'")) { quote = character; started = true; }
     else if (!quote && /\s/.test(character)) {
       if (started) result.push(token);
-      token = ''; started = false;
-    } else { token += character; started = true; }
+      token = ''; last = ''; started = false;
+    } else { token += character; last = character; started = true; }
   }
   if (quote) throw new GuardError('Feche as aspas do argumento.');
   if (started) result.push(token);
