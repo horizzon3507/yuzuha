@@ -1,16 +1,16 @@
 # Versionamento
 
 O Yuzuha aplica o formato Hory ao histórico e usa **SemVer simples** no pacote.
-A versão desta atualização é **0.1.5**.
+A versão desta atualização é **0.1.6**.
 
 ## Pacote e histórico
 
 | Lugar | Formato nesta versão |
 |---|---|
-| `package.json` e raiz do `package-lock.json` | `0.1.5` |
-| Pacote npm e saída de `yuzuha --version` | `0.1.5` |
-| Título do changelog | `## v0.1.5 · 22/10/2026` |
-| Eventual tag Git | `v0.1.5` |
+| `package.json` e raiz do `package-lock.json` | `0.1.6` |
+| Pacote npm e saída de `yuzuha --version` | `0.1.6` |
+| Título do changelog | `## v0.1.6 · 22/10/2026` |
+| Eventual tag Git | `v0.1.6` |
 
 O SDK e a CLI pertencem ao mesmo pacote. Para bibliotecas, a convenção Hory mantém
 SemVer sem `m`, sem seções por superfície e sem sufixos de canal.
@@ -30,7 +30,7 @@ estivermos em `0.x`. Ao chegar a `1.0.0`, mudanças incompatíveis exigem major;
 novas funcionalidades compatíveis, minor; correções compatíveis, patch.
 
 Os exports públicos são `yuzuha`, `yuzuha/functions`, `yuzuha/sdk`,
-`yuzuha/testing` e `yuzuha/tooling`. A organização interna de `src/` não cria estabilidade de deep
+`yuzuha/testing`, `yuzuha/tooling` e `yuzuha/music`. A organização interna de `src/` não cria estabilidade de deep
 imports. Schema persistido,
 gramática e funções documentadas também fazem parte da compatibilidade.
 
@@ -39,6 +39,30 @@ A versão do SDK é fixada separadamente. Atualizá-la exige revisar
 gerado por `init` pertence ao consumidor e não precisa acompanhar a biblioteca.
 
 ## Preparar uma atualização
+
+### Migrar para 0.1.6
+
+Imports, schema 2, SDK 3.3.0 e 288 funções permanecem disponíveis. Os serviços do
+contexto e seus mapas são inicializados sob demanda; as referências devolvidas
+continuam estáveis por contexto. Mensagens ignoradas não criam uma execução.
+O sinal de cancelamento pode ser compartilhado entre comandos do mesmo bot;
+não dependa de sua identidade para correlacionar execuções: use `executionID`.
+
+`Store.readVariable` é opcional e deve retornar uma cópia isolada, respeitar a
+ordenação das transações e avaliar o callback de relógio `now` dentro da leitura,
+após aguardar operações anteriores. `undefined` indica
+ausente/expirado; `null` continua sendo um valor JSON válido. Não há migração de
+disco. SQLite conserva validação do estado completo antes de cada commit.
+
+`yuzuha/music` é um import adicional. Configure `music`/`voice` explicitamente;
+o bot encerra os serviços fornecidos e o chamador fecha os nodes Lavalink.
+`@fluxerjs/voice` é um peer opcional carregado em `join`. Para áudio Lavalink no
+Fluxer, configure `FluxerLavalinkBridge` e instale o plugin `yuzuha-audio` fornecido
+pelo Yuzuha no servidor; veja [MUSIC.md](docs/MUSIC.md).
+Não há wrappers de música no function mode nesta versão.
+
+Benchmarks agora exigem a versão exata do Node e o mesmo modo de GC, suíte e
+carga. Relatórios de outro runtime devem ser executados novamente antes de comparar.
 
 ### Migrar para 0.1.5
 

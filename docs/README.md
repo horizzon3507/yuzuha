@@ -1,6 +1,6 @@
 # Documentação do Yuzuha
 
-Referência da versão **0.1.5**, em JavaScript ESM e TypeScript, para Node >=22.13.
+Referência da versão **0.1.6**, em JavaScript ESM e TypeScript, para Node >=22.13.
 
 Ferramentas: [CLI e cenários offline](CLI.md), [editor e catálogos](EDITOR.md)
 e [benchmarks reproduzíveis](BENCHMARKS.md).
@@ -32,6 +32,7 @@ O caminho principal é JS/TS. Function mode (`$...`) é opcional e vive em
 | [Eventos de scripts](EVENTS.md) | Payloads, contexto, guards e ciclo de vida |
 | [Agendamentos](SCHEDULER.md) | Cron, fusos, concorrência, atrasos e retry |
 | [HTTP](HTTP.md) | Streaming, multipart, cancelamento e políticas por comando |
+| [Música e voz](MUSIC.md) | Lavalink v4, plugin e ponte de áudio para Fluxer, filas e recuperação |
 | [Logs e correlação](OBSERVABILITY.md) | Eventos estruturados opcionais, duração, erros e privacidade |
 | [Cobertura](PARITY.md) | Acesso ao SDK e diferenças em relação ao ForgeScript |
 

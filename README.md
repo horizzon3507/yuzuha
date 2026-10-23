@@ -7,7 +7,7 @@ Os dois modos compartilham permissões, moderação, estado e recursos.
 O Yuzuha usa **Fluxer.js 3.3.0**. Você continua tendo acesso ao client original
 por `bot.client` e aos exports do SDK em `yuzuha/sdk`.
 
-[npm 0.1.5](https://www.npmjs.com/package/yuzuha/v/0.1.5) · Node **22.13+** · ESM · [MIT](LICENSE)
+[0.1.6](CHANGELOG.md) · Node **22.13+** · ESM · [MIT](LICENSE)
 
 [Começar](#começar) · [Comandos](#escrever-comandos) · [Recursos](#recursos) · [Testes](#testar-sem-token) · [Documentação](#documentação)
 
@@ -16,7 +16,7 @@ por `bot.client` e aos exports do SDK em `yuzuha/sdk`.
 ### Criar um bot
 
 ```sh
-npx yuzuha@0.1.5 init ./meu-bot --ts
+npx yuzuha@0.1.6 init ./meu-bot --ts
 cd meu-bot
 npm install
 npm run check
@@ -42,7 +42,7 @@ para incluir um comando de exemplo com scripts.
 ### Usar em um projeto existente
 
 ```sh
-npm install yuzuha@0.1.5
+npm install yuzuha@0.1.6
 ```
 
 Use `"type": "module"` no `package.json`. O [guia inicial](docs/QUICKSTART.md)
@@ -103,6 +103,7 @@ e a [cobertura](docs/PARITY.md).
 | Dados | Memória, JSON e SQLite; TTL, transações, limpeza e backup/restauração com simulação |
 | Agendamentos | Tarefas persistentes, cron, fusos IANA, pausa/retomada, histórico e retry |
 | HTTP | Texto, bytes, streaming e multipart, com limites, cancelamento e políticas por comando |
+| Música | Lavalink v4 com plugin e ponte de áudio para Fluxer, recuperação, filas editáveis, loop, seek, volume e filtros |
 | Desenvolvimento | CLI, autocomplete e diagnósticos no VS Code, mocks e relógio controlável para testes |
 
 ## Testar sem token
@@ -153,6 +154,8 @@ O [índice completo](docs/README.md) reúne os guias e as referências.
 |---|---|
 | Criar e configurar um bot | [Guia inicial](docs/QUICKSTART.md) |
 | Programar em JS/TS | [Guia nativo](docs/NATIVE.md), [framework](docs/FRAMEWORK.md) e [API](docs/API.md) |
+| Criar um bot de música | [Lavalink, filas e voz Fluxer](docs/MUSIC.md) |
+| Medir performance | [Benchmarks e comparações com a 0.1.5](docs/BENCHMARKS.md) |
 | Escrever scripts `$...` | [Linguagem](docs/LANGUAGE.md) e [referência de funções](docs/FUNCTIONS.md) |
 | Copiar exemplos | [Receitas](docs/COOKBOOK.md) e [código de exemplo](examples) |
 | Usar o editor ou diagnosticar um erro | [VS Code](docs/EDITOR.md) e [problemas comuns](docs/TROUBLESHOOTING.md) |

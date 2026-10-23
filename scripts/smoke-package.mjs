@@ -27,6 +27,11 @@ try {
   assert.ok(info.files.some(file => file.path === 'dist/index.d.ts'));
   assert.ok(info.files.some(file => file.path === 'dist/functions.d.ts'));
   assert.ok(info.files.some(file => file.path === 'dist/tooling.d.ts'));
+  assert.ok(info.files.some(file => file.path === 'dist/music.d.ts'));
+  assert.ok(info.files.some(file => file.path === 'bridges/lavalink/build.mjs'));
+  assert.ok(info.files.some(file => file.path === 'bridges/lavalink/src/AudioController.java'));
+  assert.ok(!info.files.some(file => file.path.startsWith('bridges/lavalink/build/')));
+  assert.ok(info.files.some(file => file.path === 'benchmarks/performance.mjs'));
   assert.ok(info.files.some(file => file.path === 'editors/vscode/functions.json'));
   assert.ok(info.files.some(file => file.path === 'editors/vscode/extension.cjs'));
   assert.ok(info.files.some(file => file.path === 'benchmarks/compare.mjs'));
@@ -46,8 +51,30 @@ try {
     import { Runtime, registerBuiltins } from 'yuzuha/functions';
     import { CommandContext, HttpService } from 'yuzuha';
     import { complete, signatureAt, diagnose, parseFunctionCatalog } from 'yuzuha/tooling';
+    import { LavalinkNode, MusicManager, FluxerVoice, FluxerLavalinkBridge, TrackQueue } from 'yuzuha/music';
+    import { MockMusicBackend, mockTrack } from 'yuzuha/testing';
     assert.deepEqual(Object.keys(sdk).sort(), Object.keys(upstream).sort());
     assert.equal('Runtime' in native, false);
+    assert.equal('LavalinkNode' in native, false);
+    const node = new LavalinkNode({ url: 'http://localhost:2333', password: 'mock', userID: '999' });
+    assert.equal(node.state, 'idle'); await node.close();
+    const voiceClient = new sdk.Client();
+    const nativeVoice = new FluxerVoice(voiceClient); assert.equal(nativeVoice.size, 0);
+    const audioBridge = new FluxerLavalinkBridge({ voice: nativeVoice });
+    assert.equal(audioBridge.size, 0); await audioBridge.close(); await nativeVoice.close(); await voiceClient.destroy();
+    const queue = new TrackQueue(2); queue.enqueue('a', 'b'); assert.equal(queue.dequeue(), 'a');
+    const musicBackend = new MockMusicBackend(), music = new MusicManager({ nodes: [musicBackend] });
+    const musicFixture = createTestBot({ music, scheduler: false, commands: [{ name: 'play', async run(ctx) {
+      const player = ctx.music.createPlayer(ctx.requireGuild()); player.enqueue([mockTrack('a'), mockTrack('b')]);
+      await player.play(); await player.skip(); await ctx.reply(player.current.info.title);
+    } }] });
+    assert.equal(await musicFixture.send('!play'), 'success'); assert.equal(musicFixture.messages.at(-1).payload.content, 'b');
+    const musicPlayer = music.get('100');
+    musicPlayer.enqueueResult({ loadType: 'search', data: [mockTrack('c')] });
+    assert.equal(musicPlayer.queuePage(0, 1)[0].encoded, 'c');
+    musicBackend.emitLifecycle({ type: 'ready', sessionID: 'fresh', resumed: false }); await music.drain();
+    assert.equal(musicPlayer.current.encoded, 'b'); assert.equal(musicPlayer.queueSize, 1); assert.equal(musicPlayer.isRecovering, false);
+    await musicFixture.destroy(); assert.deepEqual(musicBackend.destroyed, ['100']);
     assert.equal(script({ name: 'x', code: '$reply[x]' }).name, 'x');
     const runtime = registerBuiltins(new Runtime());
     const context = new CommandContext({ message: mockMessage('!extras'), command: { name: 'extras', code: '' },
@@ -254,6 +281,9 @@ try {
       await writeFile(join(directory, 'extra-types.ts'), `
         import { arg, defineCommand, EventContext, HttpService, StateMaintenance } from 'yuzuha';
         import { createTestBot, TestClock } from 'yuzuha/testing';
+        import { MockMusicBackend, mockTrack } from 'yuzuha/testing';
+        import { LavalinkNode, MusicManager, FluxerVoice, FluxerLavalinkBridge, TrackQueue } from 'yuzuha/music';
+        import type { MusicTrack, MusicVoiceAdapter, MusicAudioOutput, MusicAudioStream, MusicBackend, MusicNodeEvent, LavalinkSocket, LavalinkDiagnostics } from 'yuzuha/music';
         import type { DataTransaction, MessageSearchPage, MemberSearchPage, ThreadSearchPage, NativeMoveOptions, CaseRecord, UserProfileInfo, ThreadListPage, ScheduleExecutionRecord,
           ScriptEventDefinition, CronScheduleInput, HttpPolicy, HttpMultipartPart, StateBackup, EmojiCreateInput, EmojiBulkResult } from 'yuzuha';
         import { complete, signatureAt, diagnose, documentDiagnostics, parseFunctionCatalog } from 'yuzuha/tooling';
@@ -277,6 +307,24 @@ try {
             const result = tx.guild.update('a', value => Number(value) + 1, 0);
             tx.user.set('b', result); return result;
           });
+          const musicBackend: MusicBackend = new MockMusicBackend();
+          const voice = new FluxerVoice(ctx.client);
+          const audio: MusicAudioOutput = new FluxerLavalinkBridge({ voice, maxStreams: 16 });
+          const music = new MusicManager({ nodes: [musicBackend], audio, maxPendingControls: 32, recoveryConcurrency: 2 });
+          const stream: MusicAudioStream = { format: 'webm-opus', data: { async *[Symbol.asyncIterator]() { yield new Uint8Array(); } }, async close() {} };
+          const track: MusicTrack = mockTrack();
+          const queue = new TrackQueue<MusicTrack>(10); queue.enqueue(track);
+          queue.insert(0, [track]); queue.move(0, 1); queue.shuffle();
+          const player = music.createPlayer('100'); const page: MusicTrack[] = player.queuePage();
+          const position: number = player.position, pending: number = player.pendingControls;
+          const lifecycle: MusicNodeEvent = { type: 'ready', sessionID: 'mock', resumed: false };
+          const decode: LavalinkNode['decodeTracks'] = async encoded => encoded.map(value => mockTrack(value));
+          const diagnostics = (node: LavalinkNode): LavalinkDiagnostics => node.diagnostics;
+          const current: MusicTrack | null = ctx.music.get(ctx.requireGuild())?.current ?? null;
+          await ctx.voice.leave(ctx.requireGuild());
+          // @ts-expect-error Lavalink filters retain their typed values.
+          await ctx.music.get(ctx.guildID)?.setFilters({ timescale: { speed: 'fast' } });
+          void [music, stream, current, LavalinkNode, FluxerVoice, page, position, pending, lifecycle, decode, diagnostics];
           const members: MemberSearchPage = await ctx.members.search('Ana');
           const search: MessageSearchPage = await ctx.resources.messages.search({ content: 'teste', guildID: ctx.guildID });
           const threads: ThreadSearchPage = await ctx.resources.threads.search('200', { limit: 10 });

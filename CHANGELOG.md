@@ -21,6 +21,23 @@ documentos. Veja a [política completa](VERSIONING.md).
 
 </details>
 
+## v0.1.6 · 22/10/2026
+
+Dispatch, argumentos, runtime e leituras de estado mais rápidos, com ferramentas nativas para música e integração Lavalink v4. Esta atualização da biblioteca Yuzuha foi preparada em 22/10/2026 (v0.1.6).
+
+- Deduplicação usa uma fila circular de 10000 entradas; mensagens ignoradas seguem um caminho curto. Prefixos estáticos são reaproveitados, o sinal de encerramento é compartilhado e serviços, mapas de argumentos e variáveis do contexto são criados sob demanda.
+- Registro individual de comandos valida conflitos antes de inserir, sem copiar todo o catálogo. Carga e recarga continuam atômicas. Argumentos simples usam tokenização por trechos; o caminho de aspas/apóstrofos evita inspecionar repetidamente a palavra em construção. Escapes, flags e erros de entrada são preservados.
+- Parser acumula trechos de texto; evaluator evita promises para literais e resolve funções com cache fraco por AST. A validação continua ativa para ASTs externos ou editados, com ordem, tipos, guards, orçamento e falhas parciais preservados.
+- Leituras pontuais em memória e JSON copiam somente o valor solicitado e respeitam TTL e ordenação das transações. Stores próprios conservam o caminho anterior; `readVariable` é uma capacidade opcional. SQLite reutiliza statements sem alterar schema, WAL ou validação antes do commit.
+- `yuzuha/music` entrega cliente Lavalink v4 com REST/WebSocket autenticados, retomada de sessão, reconexão limitada, cancelamento, limite de respostas/requisições, cache LRU com orçamento de bytes e compartilhamento de buscas simultâneas.
+- Gerenciador de música com distribuição de novos players entre nodes disponíveis, filas limitadas por servidor, avanço automático, loop, pause, skip, stop, seek, volume e filtros. Controles e eventos são serializados; falhas de PATCH preservam as faixas pendentes.
+- Sessões Lavalink perdidas são reconstruídas com concorrência limitada, posição, pausa, filtros e renovação de voz. Sessões retomadas preservam a reprodução; eventos aguardam a confirmação do handshake. Respostas antigas não alteram a fila.
+- Filas permitem remover, mover, embaralhar e consultar páginas sem copiar todo o catálogo. Controles pendentes são limitados por player; eventos de fim mantêm capacidade reservada. Nodes consideram CPU, players e frames ao distribuir carga; saídas pelo plugin ignoram os contadores de voz Discord, evitando perda falsa no balanceamento.
+- Buscas com signals distintos compartilham a requisição, com cancelamento por chamada e aborto quando todos desistem. Decode de faixas/lotes e diagnósticos de cache/rede completam a API; parsing de flags evita mapas e objetos temporários por valor.
+- `FluxerVoice` carrega `@fluxerjs/voice` opcionalmente para áudio WebM/Opus nativo. `ctx.voice` e `ctx.music` recebem serviços configurados e participam do encerramento.
+- `FluxerLavalinkBridge` e o plugin `yuzuha-audio` conectam a saída Opus do Lavalink 4.2.2 ao SDK do Fluxer. Mantêm uma publicação entre faixas, pausa, seek e filtros; transmissão incremental, limites, cancelamento e reconexão liberam os recursos por servidor. A integração local usa áudio e decoder reais, com publicação LiveKit simulada.
+- `MockMusicBackend`, `mockTrack`, exemplo offline, guia de música e benchmarks adicionais acompanham a versão. Relatórios anteriores/atuais e método estão em [BENCHMARKS.md](docs/BENCHMARKS.md). SDK 3.3.0, schema 2 e 288 funções de script permanecem compatíveis.
+
 ## v0.1.5 · 22/10/2026
 
 Subcomandos e flags tipadas, ajuda derivada das definições e testes nativos com relógio controlável, com projetos gerados prontos para compartilhar. Esta atualização da biblioteca Yuzuha foi preparada em 22/10/2026 (v0.1.5).
