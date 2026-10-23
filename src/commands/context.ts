@@ -21,6 +21,8 @@ import { ScopedData } from '../services/native-data.js';
 import type { NativeData } from '../services/native-data.js';
 import { bindAuthorizedResources } from '../services/resource-authorization.js';
 import { MemberService } from '../services/members.js';
+import type { MusicManager } from '../services/music.js';
+import type { NativeVoice } from '../ports/voice.js';
 import { GuardError, PartialModerationError, YuzuhaError } from '../shared/errors.js';
 import { parseArguments, parseFlags, tokenize } from './arguments.js';
 import { commandUsage } from './help.js';
@@ -42,6 +44,8 @@ export interface ContextOptions {
   resources?: Resources;
   scheduler?: Scheduler;
   http?: HttpService;
+  music?: MusicManager;
+  voice?: NativeVoice;
   signal?: AbortSignal;
   executionID?: string;
   event?: Readonly<ScriptEventData>;
@@ -83,6 +87,8 @@ export class CommandContext {
   private readonly nativeResources?: Resources;
   private readonly schedulerService?: Scheduler;
   private readonly httpService?: HttpService;
+  private readonly musicService?: MusicManager;
+  private readonly voiceService?: NativeVoice;
   private scopedHttp?: HttpService;
   private scopedResources?: Resources;
 
@@ -111,6 +117,8 @@ export class CommandContext {
     this.signal = options.signal ?? new AbortController().signal;
     this.now = options.now ?? Date.now;
     this.httpService = options.http;
+    this.musicService = options.music;
+    this.voiceService = options.voice;
     this.nativeResources = options.resources;
   }
 
@@ -166,6 +174,14 @@ export class CommandContext {
   get scheduler(): Scheduler {
     if (!this.schedulerService) throw new YuzuhaError('NATIVE_UNAVAILABLE', 'O agendador não foi fornecido a este contexto.');
     return this.schedulerService;
+  }
+  get music(): MusicManager {
+    if (!this.musicService) throw new YuzuhaError('NATIVE_UNAVAILABLE', 'O gerenciador de música não foi fornecido a este contexto.');
+    return this.musicService;
+  }
+  get voice(): NativeVoice {
+    if (!this.voiceService) throw new YuzuhaError('NATIVE_UNAVAILABLE', 'O serviço de voz não foi fornecido a este contexto.');
+    return this.voiceService;
   }
   get http(): HttpService {
     if (!this.httpService) throw new YuzuhaError('NATIVE_UNAVAILABLE', 'O serviço HTTP não foi fornecido a este contexto.');

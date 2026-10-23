@@ -9,6 +9,8 @@ import type { Scheduler } from '../services/scheduler.js';
 import type { NativeEvent } from './events.js';
 import type { LogRecord } from './logging.js';
 import type { ScriptEventDefinition } from './script-events.js';
+import type { MusicManager } from '../services/music.js';
+import type { NativeVoice } from '../ports/voice.js';
 
 export type DispatchResult = 'ignored' | 'success' | 'guarded' | 'error';
 export type Middleware = (ctx: CommandContext, next: () => Promise<void>) => Promise<void>;
@@ -33,6 +35,8 @@ export interface YuzuhaOptions {
   limits?: Partial<Limits>;
   scheduler?: Scheduler | false;
   http?: HttpService | false;
+  music?: MusicManager;
+  voice?: NativeVoice;
   onError?: (error: unknown, ctx?: CommandContext) => void | Promise<void>;
   onCommand?: (ctx: CommandContext, outcome: DispatchResult) => void | Promise<void>;
   onLog?: (record: LogRecord) => void | Promise<void>;

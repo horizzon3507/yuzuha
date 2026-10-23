@@ -33,6 +33,8 @@ import { EventContext } from '../commands/event-context.js';
 import { adaptScriptEvent, validateScriptEvent } from './script-events.js';
 import type { ScriptEventDefinition } from './script-events.js';
 import type { Program } from '../scripting/ast.js';
+import type { MusicManager } from '../services/music.js';
+import type { NativeVoice } from '../ports/voice.js';
 
 type RoutedCommand = { compiled: CompiledCommand; input: string; prefix: string };
 const ignored: Promise<DispatchResult> = Promise.resolve('ignored');
@@ -44,6 +46,8 @@ export class Yuzuha {
   readonly resources: Resources;
   readonly scheduler?: Scheduler;
   readonly http?: HttpService;
+  readonly music?: MusicManager;
+  readonly voice?: NativeVoice;
   readonly runtime: Runtime;
   private readonly registry: CommandRegistry;
   private readonly middleware: Middleware[] = [];
@@ -79,6 +83,8 @@ export class Yuzuha {
         onError: error => this.execution.run(true, () => reportError(this.options, error)),
       });
     this.http = options.http === false ? undefined : options.http ?? new HttpService();
+    this.music = options.music;
+    this.voice = options.voice;
     this.runtime = new Runtime({ ...defaultLimits, ...options.limits });
     this.registry = new CommandRegistry(this.runtime, () => this.enableFunctions(), command => {
       if (command.http) (this.http ?? new HttpService()).withPolicy(command.http);
@@ -171,7 +177,7 @@ export class Yuzuha {
     const signal = this.shutdown.signal;
     const ctx = new EventContext({ ...source, channelID: definition.channelID, actorID: definition.actorID,
       policy: definition.http, transport: this.transport, store: this.store, resources: this.resources,
-      scheduler: this.scheduler, http: this.http, now: this.options.now, cooldown: this.contextCooldown, signal });
+      scheduler: this.scheduler, http: this.http, music: this.music, voice: this.voice, now: this.options.now, cooldown: this.contextCooldown, signal });
     const started = this.options.onLog ? performance.now() : 0;
     let outcome: DispatchResult = 'success';
     try {
@@ -250,8 +256,15 @@ export class Yuzuha {
     this.closeTask = (async () => {
       await Promise.allSettled([...this.active]);
       await this.scheduler?.drain();
-      await this.client.destroy();
-      if (!this.options.store) await this.store.close?.();
+      try {
+        const results = await Promise.allSettled([this.music?.close(), this.voice?.close()]);
+        const failures = results.filter((item): item is PromiseRejectedResult => item.status === 'rejected');
+        if (failures.length) throw new AggregateError(failures.map(item => item.reason), 'Falha ao encerrar música ou voz.');
+      }
+      finally {
+        await this.client.destroy();
+        if (!this.options.store) await this.store.close?.();
+      }
     })();
     return this.execution.getStore() ? Promise.resolve() : this.closeTask;
   }
@@ -312,7 +325,7 @@ export class Yuzuha {
         input: resolved.input, prefix, lineage: compiled.lineage,
         help: this.contextHelp, cooldown: this.contextCooldown,
         native: { client: this.client, message: message.raw instanceof Message ? message.raw : undefined },
-        resources: this.resources, scheduler: this.scheduler, http: this.http, now: this.options.now, signal, executionID });
+        resources: this.resources, scheduler: this.scheduler, http: this.http, music: this.music, voice: this.voice, now: this.options.now, signal, executionID });
       if (this.options.onLog) await emitLog(this.options, { event: 'command.start', executionID: ctx.executionID, command: ctx.command.name });
       if (signal.aborted) throw cancellationError();
       await ctx.prepare();
