@@ -109,7 +109,13 @@ export class CommandRegistry {
       next.set(name, entry);
     }
   }
-  add(command: Command): void { this.prepare([command])(); }
+  add(command: Command): void {
+    const entry = this.compile(command);
+    for (const name of [entry.definition.name, ...(entry.definition.aliases ?? [])]) {
+      if (this.entries.has(name.toLowerCase())) throw new YuzuhaError('COMMAND_DUPLICATE', `Nome ou alias duplicado: ${name}.`);
+    }
+    this.insert(this.entries, entry);
+  }
   prepare(commands: Command[], runtime = this.runtime): () => void {
     const next = new Map(this.entries);
     for (const command of commands) this.insert(next, this.compile(command, undefined, runtime));
