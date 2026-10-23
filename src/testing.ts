@@ -40,6 +40,7 @@ export function mockResources(overrides: MockResourceOverrides = {}): Resources 
 
 
 export class MockTransport implements Transport {
+  private messageSequence = 0;
   botID = '999';
   ping = 12;
   readonly messages: { id: string; channelID: string; replyTo?: string; payload: Payload }[] = [];
@@ -54,10 +55,10 @@ export class MockTransport implements Transport {
   }
   setMember(guildID: string, member: ModerationMember): void { this.members.set(JSON.stringify([guildID, member.id]), member); }
   async reply(message: IncomingMessage, payload: Payload): Promise<string> {
-    const id = await this.send(message.channelID, payload); this.messages.at(-1)!.replyTo = message.id; return id;
+    const id = await this.send(message.channelID, payload); this.messages.find(item => item.id === id)!.replyTo = message.id; return id;
   }
   async send(channelID: string, payload: Payload): Promise<string> {
-    const id = String(this.messages.length + 1);
+    const id = String(++this.messageSequence);
     this.messages.push({ id, channelID, payload: structuredClone(payload) }); return id;
   }
   async edit(channelID: string, messageID: string, payload: Payload): Promise<void> {
