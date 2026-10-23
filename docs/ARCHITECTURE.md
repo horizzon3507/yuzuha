@@ -11,7 +11,7 @@ src/
   domain/                  Tipos e regras de valores, mensagens, moderação e estado
   ports/                   Contratos Store, Transport, recursos nativos e acesso ao SDK
     resources/             Contratos por área: usuários, cargos, canais, mensagens...
-  services/                Autorização, moderação, casos, variáveis, scheduler e HTTP
+  services/                Autorização, moderação, casos, variáveis, scheduler, HTTP e música
   commands/                Definição, builders, argumentos tipados e contexto
   scripting/               AST, parser, registro, avaliação, runtime e limites
     builtins/              Funções por categoria
@@ -19,6 +19,7 @@ src/
   infrastructure/
     fluxer/                Mensagens, payloads, transporte e recursos do SDK real
     storage/               Estado, fila, caminhos, memória, JSON e SQLite
+    lavalink/              REST/WebSocket v4, limites, cache e validação de protocolo
   cli/                     Argumentos, config, scaffold, execução e watcher
   shared/                  Classes de erro
   index.ts                 API pública nativa (yuzuha)
@@ -26,12 +27,13 @@ src/
   sdk.ts                   Reexportação do SDK (yuzuha/sdk)
   testing.ts               Transporte, mensagens e recursos de teste (yuzuha/testing)
   tooling.ts               Auxiliares de editor, diagnósticos e catálogos (yuzuha/tooling)
+  music.ts                 Lavalink, filas e ponte para voz nativa (yuzuha/music)
   tooling/                 Análise textual para editores, sem execução de funções
 ```
 
 Os arquivos da raiz, como `bot.ts`, `context.ts`, `runtime.ts`, `store.ts` e
 `adapter.ts`, mantêm reexports para os módulos atuais. Os consumidores importam
-pelos cinco exports públicos do pacote; `runtime.ts` e `parser.ts` não fazem
+pelos seis exports públicos do pacote; `runtime.ts` e `parser.ts` não fazem
 parte da raiz nativa.
 
 ## Responsabilidades e dependências
@@ -71,6 +73,20 @@ snapshot e o resultado antes de confirmar a transação. Cron é uma regra pura 
 `domain/cron.ts`; o scheduler coordena claims, heartbeat, workers e políticas de
 retry. `HttpService.withPolicy` restringe a política do serviço pai antes de
 vincular o sinal do contexto.
+
+`MusicManager` e `MusicPlayer` coordenam filas e controles sobre `MusicBackend`.
+O gerenciador distribui carga e limita a recuperação por node; o player serializa
+controles, correlaciona eventos e confirma alterações de fila apenas na sessão
+que iniciou o pedido. `LavalinkNode` traduz esse port para REST, eventos e ciclo
+de sessão v4. Compartilhamento de buscas usa uma espera cancelável por chamada e
+uma requisição por identificador em andamento. `FluxerVoice` implementa
+`NativeVoice` usando o SDK opcional, carregado apenas ao entrar em voz.
+`MusicAudioOutput` separa publicação de áudio das credenciais de voz do protocolo
+Lavalink. `FluxerLavalinkBridge` implementa esse port, ligando um `MusicAudioStream`
+incremental ao SDK de voz. O plugin Java em `bridges/lavalink/` extrai Opus pela
+API pública do servidor; o núcleo TypeScript não depende de classes Java. O núcleo
+recebe essas capacidades por injeção; importar `yuzuha` não carrega o cliente de
+música, `ws` por essa integração ou o pacote de voz. Consulte [MUSIC.md](MUSIC.md).
 
 ```mermaid
 flowchart LR

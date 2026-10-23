@@ -73,6 +73,29 @@ recursos. O runtime de scripts só é registrado quando o function mode é usado
 
 ## Entregas e dependências
 
+A atualização 0.1.6 prioriza o custo de despacho: deduplicação circular,
+prefixos reaproveitados, mensagens ignoradas sem contexto de execução,
+cancelamento compartilhado, serviços/mapas sob demanda e tokenização simples
+por trechos. Registro individual deixa de copiar o catálogo; carga/recarga
+mantêm a transação de registro. Parser, evaluator, leituras pontuais em memória/JSON
+e statements SQLite recebem otimizações verificadas contra a 0.1.5.
+
+`yuzuha/music` reúne cliente Lavalink v4, filas limitadas e controles por servidor.
+`MusicBackend` separa o serviço de players do protocolo de rede. `FluxerVoice`
+usa o pacote oficial de voz sob demanda, sem reimplementar codec, gateway ou
+LiveKit. `FluxerLavalinkBridge` implementa `MusicAudioOutput`: consome a saída
+WebM/Opus do plugin `yuzuha-audio` fornecido em `bridges/lavalink/` e a publica
+pelo SDK oficial. Não depende de credenciais Discord nem de um evento de fim no
+SDK de voz. O plugin usa a API pública do Lavalink 4.2.2, extração ritmada de
+frames, I/O assíncrono e limite de saídas. A integração local verifica áudio
+sintético e decoder reais; a publicação na sala LiveKit é simulada.
+Contratos, ciclo de vida, capacidades e limites estão em [MUSIC.md](MUSIC.md).
+Música é nativa nesta versão; o catálogo de scripts continua em 288 funções.
+O refinamento inclui reconstrução automática de sessões perdidas com concorrência
+limitada, preservação de sessões retomadas, balanceamento por carga, controles
+pendentes limitados, edição/paginação de filas e buscas compartilhadas com
+cancelamento independente. Uma sessão antiga não confirma transações de fila.
+
 A atualização 0.1.5 acrescenta subcomandos e flags tipadas, ajuda e uso derivados
 dos metadados, scaffolds com dependência npm e testes offline gerados. O helper
 `createTestBot` reúne fixtures e relógio controlável para cooldown, TTL e tarefas.

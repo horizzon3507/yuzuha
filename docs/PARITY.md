@@ -33,7 +33,7 @@ exports de `yuzuha/sdk` aos da dependência instalada.
 | Presença | `client.user.setPresence` | setPresence, setStatus e setActivity |
 | Cache e presença | Opções e métodos do SDK | Acesso nativo |
 | Instância própria/discovery | `Client.fromDiscovery`, client injetado | Mesmo adaptador do client |
-| Áudio em voz | Pacote separado `@fluxerjs/voice` | Sem reprodução de áudio própria; moderação de membros usa o SDK core |
+| Áudio em voz | `FluxerVoice` sobre `@fluxerjs/voice` opcional; Lavalink v4 com plugin de áudio, `FluxerLavalinkBridge`, filas editáveis e recuperação em `yuzuha/music` | Sem wrappers de reprodução; moderação de membros usa o SDK core |
 | Sharding | Pacote separado `@fluxerjs/sharding` | Sem coordenação própria |
 | Cluster/subpaths | Imports diretos de `@fluxerjs/core/cluster` | Sem wrapper próprio |
 | Estado e casos | `ctx.data`, TTL, userFor, transaction entre chaves e stores | Variáveis, TTL, incrementos, listas, casos e dataTransaction com operações declarativas |
@@ -111,12 +111,19 @@ são simuladas como se existissem no Fluxer.
 
 ## Extensões futuras
 
+Música na 0.1.6 reúne `FluxerVoice`, o protocolo de controle Lavalink v4 e
+`FluxerLavalinkBridge`. O plugin `yuzuha-audio` do Yuzuha fornece a saída de
+áudio no servidor; a ponte a publica pelo SDK do Fluxer. A integração local usa
+Lavalink/plugin/decoder reais e áudio sintético, com publicação LiveKit simulada.
+`MusicVoiceAdapter` permanece como alternativa para servidores que implementem
+outro transporte compatível. Veja [MUSIC.md](MUSIC.md).
+
 A extensão VS Code oferece autocomplete, hover, assinatura, diagnósticos e
 catálogos JSON de plugins; os auxiliares estão em `yuzuha/tooling`.
 Logs opcionais e correlação estão documentados em [OBSERVABILITY.md](OBSERVABILITY.md).
 A CLI inclui lint textual, exportação de catálogos e cenários JSON offline.
 O scheduler e a rede têm guias próprios em [SCHEDULER.md](SCHEDULER.md) e
 [HTTP.md](HTTP.md); estatísticas, limpeza, backups e restauração estão em
-[STORAGE.md](STORAGE.md). LSP, bibliotecas de canvas/voz e ferramentas
+[STORAGE.md](STORAGE.md). LSP, bibliotecas de canvas e ferramentas
 de migração continuam fora desta versão. Integração ao vivo deve ser validada em
 um servidor de teste antes de distribuir um bot para produção.
