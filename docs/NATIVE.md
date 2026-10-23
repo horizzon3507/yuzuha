@@ -5,7 +5,7 @@ Este é o caminho principal do Yuzuha: comandos e eventos em JS/TS, sem funçõe
 transporte, persistência, guards e moderação com os comandos nativos.
 O acesso ao client Fluxer.js continua disponível para recursos específicos do SDK.
 
-Os exemplos usam imports públicos de **Yuzuha 0.1.5**. JavaScript usa os mesmos
+Os exemplos usam imports públicos de **Yuzuha 0.1.6**. JavaScript usa os mesmos
 imports e objetos; TypeScript acrescenta inferência e validação estática.
 
 ## Um comando com argumentos inferidos
@@ -323,7 +323,10 @@ aguardam eventos do gateway com timeout de 5s (configurável de 1 a 60000 ms).
 `channels.create` aceita tipo `GuildLink` com `url` HTTP(S), e `channels.edit`
 aceita `url`, `contentWarningLevel` (0, 1 ou null) e `contentWarningText`.
 Os helpers de script verificam autor/bot e o servidor; ports nativos seguem
-a autoridade do client. Áudio reproduzido em voz continua no pacote opcional.
+a autoridade do client. `ctx.voice` delega áudio ao pacote oficial opcional;
+`ctx.music` oferece filas e controles Lavalink; `FluxerLavalinkBridge` publica
+o áudio no Fluxer usando o plugin `yuzuha-audio` no servidor Lavalink.
+Veja instalação, métodos e limites em [MUSIC.md](MUSIC.md).
 
 TTL, `userFor` e transações declarativas estão descritos em
 [STORAGE.md](STORAGE.md). Logs opcionais e correlação ficam em

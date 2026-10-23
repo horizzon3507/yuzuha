@@ -1,7 +1,8 @@
 # API pública
 
 Os exports suportados são `yuzuha` (nativo), `yuzuha/functions` (function mode),
-`yuzuha/sdk`, `yuzuha/testing` e `yuzuha/tooling` (auxiliares de editor).
+`yuzuha/sdk`, `yuzuha/testing`, `yuzuha/tooling` (auxiliares de editor) e
+`yuzuha/music` (Lavalink, filas e voz opcional).
 A fonte das assinaturas completas são as declarações TypeScript distribuídas em
 `dist/`. Este guia explica os contratos usados pelos comandos e extensões.
 
@@ -20,6 +21,8 @@ A fonte das assinaturas completas são as declarações TypeScript distribuídas
 | `store` | Implementação de `Store`; padrão `JsonStore` |
 | `scheduler` | `Scheduler` próprio, `false` para desligar; padrão sobre o mesmo store |
 | `http` | `HttpService` próprio, `false` para desligar; padrão seguro |
+| `music` | `MusicManager` injetado, exposto em `ctx.music`; bot encerra seus players |
+| `voice` | `NativeVoice` injetado, exposto em `ctx.voice`; bot encerra suas conexões |
 | `limits` | Subconjunto de `calls`, `depth`, `output`, `timeoutMs` |
 | `now` | Função que retorna epoch em ms para cooldown, dados e scheduler; padrão `Date.now` |
 | `onError(error, ctx?)` | Observação de falhas internas e operacionais |
@@ -277,11 +280,22 @@ identity helper tipado para deixar explícito que um comando usa `code`.
 com ID, permissões e hierarquia. Para anexos, collectors e APIs específicas,
 use o SDK original por `bot.client`.
 
-`Store` define `read(reader)`, `update(writer)` e `close?()`. `update`
+`Store` define `read(reader)`, `update(writer)` e `close?()`. Opcionalmente,
+`readVariable(key, now)` recebe uma função de relógio, avaliada dentro da leitura
+serializada, e oferece leitura isolada de um valor, retornando
+`undefined` para ausente/expirado. Memória e JSON implementam essa capacidade;
+stores próprios e SQLite continuam atendidos por `read`. `update`
 recebe callback síncrono. Valores persistentes são JSON e o schema atual
 é `2`, com `variables`, `cases`, `schedules` e campos opcionais
 `variableExpirations`/`scheduleHistory`; estados schema `1` são migrados
 na leitura. Consulte [STORAGE.md](STORAGE.md) antes de criar um adaptador.
+
+## Música e voz
+
+`yuzuha/music` exporta `LavalinkNode`, `MusicManager`, `MusicPlayer`, `TrackQueue`,
+`FluxerVoice` e `FluxerLavalinkBridge`, além dos tipos de protocolo e ports. A referência de métodos,
+limites, dependência de voz opcional e instalação do plugin de áudio está em
+[MUSIC.md](MUSIC.md). O catálogo do function mode continua em 288 funções.
 
 ## Erros
 

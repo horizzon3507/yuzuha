@@ -61,6 +61,7 @@
     "bridges/lavalink/integration.mjs",
     "bridges/lavalink/src",
     "bridges/lavalink/results",
+    "bridges/lavalink/README.md",
     "bridges/lavalink/application.yml"
   ],
   "scripts": {

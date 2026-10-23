@@ -1,6 +1,6 @@
 # Funções que ainda faltam
 
-Inventário da versão **0.1.5**, comparando o registro executável do Yuzuha com os
+Inventário da versão **0.1.6**, comparando o registro executável do Yuzuha com os
 tipos públicos de **@fluxerjs/core 3.3.0**, fixado no lockfile. O inventário tem
 **288 funções canônicas**; aliases não aumentam esse número.
 
@@ -118,9 +118,10 @@ complexas, use o [guia nativo](NATIVE.md).
 - ForgeScript trabalha com Discord. Slash commands, interações, botões, selects
   e modais do Discord não são contratos do Yuzuha. Exigem suporte e APIs
   equivalentes no Fluxer antes de qualquer implementação.
-- Voz e sharding têm pacotes separados no ecossistema Fluxer.js. Reexportar a
-  raiz de `@fluxerjs/core` não instala nem integra esses pacotes ao Yuzuha.
-- Economia, XP, rankings, tickets e música são sistemas de produto. Ter variáveis,
+- Voz e sharding têm pacotes separados no ecossistema Fluxer.js. A 0.1.6 integra
+  voz oficial opcional e controle Lavalink em `yuzuha/music`, sem wrappers de
+  reprodução em scripts. O acesso nativo ao core não inclui sharding.
+- Economia, XP, rankings e tickets são sistemas de produto. Ter variáveis,
   moderação ou acesso ao SDK não significa que esses sistemas já estejam prontos.
 - LSP e migração automática do ForgeScript ainda não são ferramentas entregues.
   Autocomplete, hover, assinatura e diagnósticos estão na extensão VS Code incluída.
