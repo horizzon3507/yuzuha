@@ -24,6 +24,9 @@
       ],
       "yuzuha/functions": [
         "./src/functions.ts"
+      ],
+      "yuzuha/music": [
+        "./src/music.ts"
       ]
     }
   },

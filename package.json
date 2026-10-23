@@ -37,6 +37,10 @@
     "./tooling": {
       "types": "./dist/tooling.d.ts",
       "import": "./dist/tooling.js"
+    },
+    "./music": {
+      "types": "./dist/music.d.ts",
+      "import": "./dist/music.js"
     }
   },
   "bin": {
