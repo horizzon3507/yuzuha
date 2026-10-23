@@ -64,40 +64,46 @@ export function validateArgumentDefinitions(definitions: readonly ArgumentDefini
   }
 }
 
+function parseValue(definition: ArgumentDefinition, input: string | undefined, required = definition.required): ArgumentValue | undefined {
+  if (input === undefined || input.length === 0) {
+    if (definition.defaultValue !== undefined) {
+      const value = definition.type === 'user' ? userID(String(definition.defaultValue)) : definition.defaultValue;
+      validateValue(definition, value);
+      return value;
+    } else if (required) throw new GuardError(`Informe o argumento ${definition.name}.`);
+    return undefined;
+  }
+  let value: ArgumentValue = input;
+  if (definition.type === 'number' || definition.type === 'integer') {
+    value = Number(input);
+    if (!input.trim() || !Number.isFinite(value) || (definition.type === 'integer' && !Number.isSafeInteger(value))) {
+      throw new GuardError(`${definition.name} deve ser um número${definition.type === 'integer' ? ' inteiro' : ''}.`);
+    }
+  } else if (definition.type === 'boolean') {
+    const normalized = input.toLowerCase();
+    if (!['true', 'false', 'yes', 'no', 'sim', 'não', 'nao', '1', '0'].includes(normalized)) {
+      throw new GuardError(`${definition.name} deve ser true ou false.`);
+    }
+    value = ['true', 'yes', 'sim', '1'].includes(normalized);
+  } else if (definition.type === 'user') value = userID(input);
+  else if (definition.type === 'duration') {
+    try { value = parseDuration(input); }
+    catch (error) {
+      if (!(error instanceof YuzuhaError) || error.code !== 'DURATION') throw error;
+      throw new GuardError(`${definition.name}: ${error.message}`);
+    }
+  }
+  validateValue(definition, value);
+  return value;
+}
+
 export function parseArguments(definitions: readonly ArgumentDefinition[], tokens: readonly string[]): Map<string, ArgumentValue> {
   const args = new Map<string, ArgumentValue>();
-  for (const [index, definition] of definitions.entries()) {
+  for (let index = 0; index < definitions.length; index++) {
+    const definition = definitions[index]!;
     const input = definition.rest ? tokens.slice(index).join(' ') : tokens[index];
-    if (input === undefined || input.length === 0) {
-      if (definition.defaultValue !== undefined) {
-        const value = definition.type === 'user' ? userID(String(definition.defaultValue)) : definition.defaultValue;
-        validateValue(definition, value);
-        args.set(definition.name, value);
-      } else if (definition.required) throw new GuardError(`Informe o argumento ${definition.name}.`);
-      continue;
-    }
-    let value: ArgumentValue = input;
-    if (definition.type === 'number' || definition.type === 'integer') {
-      value = Number(input);
-      if (!input.trim() || !Number.isFinite(value) || (definition.type === 'integer' && !Number.isSafeInteger(value))) {
-        throw new GuardError(`${definition.name} deve ser um número${definition.type === 'integer' ? ' inteiro' : ''}.`);
-      }
-    } else if (definition.type === 'boolean') {
-      const normalized = input.toLowerCase();
-      if (!['true', 'false', 'yes', 'no', 'sim', 'não', 'nao', '1', '0'].includes(normalized)) {
-        throw new GuardError(`${definition.name} deve ser true ou false.`);
-      }
-      value = ['true', 'yes', 'sim', '1'].includes(normalized);
-    } else if (definition.type === 'user') value = userID(input);
-    else if (definition.type === 'duration') {
-      try { value = parseDuration(input); }
-      catch (error) {
-        if (!(error instanceof YuzuhaError) || error.code !== 'DURATION') throw error;
-        throw new GuardError(`${definition.name}: ${error.message}`);
-      }
-    }
-    validateValue(definition, value);
-    args.set(definition.name, value);
+    const value = parseValue(definition, input);
+    if (value !== undefined) args.set(definition.name, value);
   }
   return args;
 }
@@ -161,12 +167,12 @@ export function parseFlags(definitions: readonly ArgumentDefinition[] | undefine
         index++;
       }
     }
-    const value = parseArguments([{ ...definition, required: true }], [input]).get(definition.name);
+    const value = parseValue(definition, input, true);
     if (value !== undefined) values.set(definition.name, value);
   }
   for (const definition of definitions) {
     if (values.has(definition.name)) continue;
-    const value = parseArguments([definition], []).get(definition.name);
+    const value = parseValue(definition, undefined);
     if (value !== undefined) values.set(definition.name, value);
   }
   return { tokens: positional, flags: values };
