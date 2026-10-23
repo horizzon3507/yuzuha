@@ -1,0 +1,39 @@
+{
+  "date": "2026-10-23T02:26:18.090Z",
+  "version": "0.1.6",
+  "node": "26.11.1",
+  "lavalink": "4.2.2",
+  "voice": "3.1.0",
+  "serverSha256": "8cb801e591072c3689fafd71ccf571a95a4ead3cc35dfc045e157d763d89119a",
+  "pluginSha256": "09b97b69cdce653de2ab488886b1128941ada4d8e754e2eec75cca824048e56c",
+  "sourceHashes": {
+    "dist/infrastructure/lavalink/node.js": "d38cad8504779fa46bc4db2d3a534a3b5c0e98e6e8a26a83b352be70fc5cf216",
+    "dist/infrastructure/lavalink/audio-stream.js": "ecd36b99246bfca2bc63d86786bd796cfa503fe1a71f8484c6f6aee8df175bb9",
+    "dist/infrastructure/fluxer/lavalink-bridge.js": "151e4cb5209a8c14264c84d5a40c5b5a374dac278cde0c42266fc5e9273c3d74",
+    "dist/infrastructure/fluxer/voice.js": "ed753c575a2540367197ad6df70ab663bf6caa52bbcfa4320e2981b08043e46b",
+    "dist/services/music.js": "a328093187e3304bacbf2021b73313c7df93bf080124bf98e84c70ca75295192",
+    "dist/services/music-player.js": "abda99410fc7d691aff2353db64865a5076f9e20f38b6488ff303abda48ae45f",
+    "bridges/lavalink/src/AudioController.java": "e9f3bcf683be43f4afe9fb41efd1aa1399401f8a04eb97a2daecab4e2381ca7c",
+    "bridges/lavalink/src/WebmOpus.java": "4dbe8e3f939b4a45ea34ebbffc2f9cc41625bbdc35404eb0d3150c2a9ccb42e4"
+  },
+  "boundary": "real Lavalink + plugin + Yuzuha + official SDK decoder; mocked LiveKit publication",
+  "decodedFrames": 340,
+  "audibleRms": 5990.1718861198315,
+  "pausedRms": 0,
+  "mutedRms": 0,
+  "recoveredRms": 2068.4427320526065,
+  "publications": 2,
+  "recovered": 1,
+  "checks": [
+    "authentication",
+    "real Opus decoding",
+    "pause",
+    "volume",
+    "filters",
+    "seek",
+    "automatic queue advance",
+    "server restart recovery",
+    "duplicate and capacity limits",
+    "resource cleanup"
+  ]
+}
