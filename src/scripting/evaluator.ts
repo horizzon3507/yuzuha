@@ -38,11 +38,25 @@ export class Evaluator {
     return new ScriptError(code, message, this.program.source, offset, this.program.file);
   }
 
-  private async evaluate(nodes: Node[], depth: number): Promise<unknown> {
+  private evaluate(nodes: Node[], depth: number): unknown | Promise<unknown> {
     this.check(nodes[0]?.offset ?? 0, depth);
-    if (nodes.length === 1 && nodes[0]!.kind === 'call') return this.invoke(nodes[0]!, depth);
-    const significant = nodes.filter(node => node.kind === 'call' || node.value.trim());
-    const soleCall = significant.length === 1 && significant[0]!.kind === 'call' ? significant[0] : undefined;
+    if (nodes.length === 0) return '';
+    if (nodes.length === 1) {
+      const node = nodes[0]!;
+      if (node.kind === 'call') return this.invoke(node, depth);
+      this.checkOutput(node.value, node.offset);
+      return node.value;
+    }
+    return this.sequence(nodes, depth);
+  }
+
+  private async sequence(nodes: Node[], depth: number): Promise<unknown> {
+    let soleCall: CallNode | undefined;
+    for (const node of nodes) {
+      if (node.kind === 'text' && !node.value.trim()) continue;
+      if (node.kind === 'text' || soleCall) { soleCall = undefined; break; }
+      soleCall = node;
+    }
     const soleValue = soleCall ? await this.invoke(soleCall, depth) : undefined;
     if (soleValue !== null && typeof soleValue === 'object') return soleValue;
     let result = '';
@@ -58,12 +72,15 @@ export class Evaluator {
     this.calls++;
     this.check(node.offset, depth);
     const fn = this.registry.resolve(node, this.program);
-    const values = new Map<number, Promise<unknown>>();
-    const arg = (index: number): Promise<unknown> => {
-      if (!values.has(index)) values.set(index, this.evaluate(node.args[index] ?? [], depth + 1));
-      return values.get(index)!;
+    let values: (Promise<unknown> | undefined)[] | undefined;
+    const fresh = (index: number): Promise<unknown> => {
+      try { return Promise.resolve(this.evaluate(node.args[index] ?? [], depth + 1)); }
+      catch (error) { return Promise.reject(error); }
     };
-    const fresh = (index: number): Promise<unknown> => this.evaluate(node.args[index] ?? [], depth + 1);
+    const arg = (index: number): Promise<unknown> => {
+      values ??= [];
+      return values[index] ??= fresh(index);
+    };
     try {
       const result = await fn.execute({
         ctx: this.ctx,

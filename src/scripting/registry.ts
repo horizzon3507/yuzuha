@@ -4,6 +4,7 @@ import type { FunctionDefinition } from './types.js';
 
 export class FunctionRegistry {
   private entries = new Map<string, FunctionDefinition>();
+  private resolved = new WeakMap<CallNode, { name: string; count: number; fn: FunctionDefinition }>();
 
   register(definition: FunctionDefinition): void {
     const names = [definition.name, ...(definition.aliases ?? [])];
@@ -28,16 +29,20 @@ export class FunctionRegistry {
     const staged = new FunctionRegistry();
     for (const definition of [...this.functions(), ...definitions]) staged.register(definition);
     this.entries = staged.entries;
+    this.resolved = new WeakMap();
   }
 
   functions(): FunctionDefinition[] { return [...new Set(this.entries.values())]; }
 
-  resolve(node: CallNode, program: Program): FunctionDefinition {
+  resolve(node: CallNode, program: Program, cache = true): FunctionDefinition {
+    const cached = cache ? this.resolved.get(node) : undefined;
+    if (cached?.name === node.name && cached.count === node.args.length) return cached.fn;
     const fn = this.entries.get(node.name.toLowerCase());
     if (!fn) throw new ScriptError('UNKNOWN_FUNCTION', `Função desconhecida: $${node.name}.`, program.source, node.offset, program.file);
     if (node.args.length < fn.minArgs || node.args.length > fn.maxArgs) {
       throw new ScriptError('ARITY', `Uso: ${fn.usage}`, program.source, node.offset, program.file);
     }
+    if (cache) this.resolved.set(node, { name: node.name, count: node.args.length, fn });
     return fn;
   }
 
@@ -45,7 +50,7 @@ export class FunctionRegistry {
     const visit = (nodes: Node[]) => {
       for (const node of nodes) {
         if (node.kind !== 'call') continue;
-        this.resolve(node, program);
+        this.resolve(node, program, false);
         node.args.forEach(visit);
       }
     };
