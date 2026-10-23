@@ -169,3 +169,4 @@ export function createTestBot(options: TestBotOptions = {}): TestBot {
     destroy, close: destroy, [Symbol.asyncDispose]: destroy,
   };
 }
+export { MockMusicBackend, mockTrack } from './testing/music.js';
