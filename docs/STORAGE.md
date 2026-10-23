@@ -28,6 +28,15 @@ O `JsonStore` mantém um snapshot em memória. Compartilhe a mesma instância en
 bots que deliberadamente compartilham um arquivo; não abra duas instâncias ou
 processos escritores para o mesmo JSON. Use SQLite nesses casos.
 
+Na 0.1.6, memória e JSON atendem `ctx.data.*.get` por leitura pontual: a fila
+aguarda operações anteriores, avalia o relógio de TTL e copia somente o valor
+selecionado. O contrato `Store.readVariable(key, now)` é opcional; `now` é uma
+função de relógio, chamada dentro da operação serializada. `undefined` significa
+ausente ou expirado; `null` é um valor persistente válido. `Store.read` continua
+fornecendo snapshots completos e stores próprios podem manter apenas esse método.
+SQLite reutiliza statements, mantendo a leitura/validação do estado completo,
+WAL e os mesmos limites de escala descritos abaixo.
+
 ```ts
 import { defineCommand, SQLiteStore, Yuzuha } from 'yuzuha';
 

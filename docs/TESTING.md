@@ -32,6 +32,24 @@ Também valida `yuzuha/tooling`, TTL, transações declarativas e entre escopos,
 histórico/reexecução, pausa/retomada, `doctor`, catálogo do editor e os tipos
 novos de moderação, threads e perfis em um consumidor TS isolado.
 
+Na 0.1.6, o tarball também verifica `yuzuha/music`, filas e controles com
+`MockMusicBackend`, paginação, recuperação de sessão, tipos de música e construção de `FluxerVoice` sem carregar
+a dependência de áudio opcional. Testes Lavalink injetam fetch e socket;
+nenhum node real, bot logado ou codec é iniciado. `mockTrack` cria faixas
+determinísticas, `MockMusicBackend.emit` entrega eventos do protocolo e
+`emitLifecycle` simula retomada/perda da sessão. A suíte cobre estado REST inválido,
+respostas atrasadas, concorrência de recuperação e saturação de controles sem
+perder eventos de fim.
+
+`npm run music:integration` é uma verificação adicional, com JDK 17+ e
+`@fluxerjs/voice` 3.1.0 instalados. Compila o plugin, sobe um Lavalink 4.2.2
+temporário e reproduz um WAV sintético pelo decoder real do SDK. Verifica áudio,
+pausa/volume zero, seek/filtros, avanço da fila, reinício do servidor, headers,
+limites e encerramento. Apenas a publicação no LiveKit é simulada; não há bot
+logado. `YUZUHA_LAVALINK_JAR` permite usar o JAR oficial já baixado, sempre com
+SHA-256 verificado. O comando não faz parte de `npm run check`, que continua
+sem servidor ou codecs nativos.
+
 Na 0.1.4, o consumidor também cobre eventos em scripts, cron, streaming/multipart,
 manutenção de estado, novos tipos públicos e comandos de lint/catálogos/cenários.
 Os cenários JSON da CLI executam comandos de script sobre `MockTransport` e
@@ -46,7 +64,7 @@ O formato versionado e as expectativas estão em [CLI.md](CLI.md). Para plugins,
 exporte o catálogo com uma config confiável indicada explicitamente; depois,
 lint e editor usam somente o JSON declarativo.
 
-`npm run bench` mede dispatch/runtime, memória e concorrência separadamente dos
+`npm run bench` e `npm run bench:performance` medem dispatch/runtime, memória e concorrência separadamente dos
 testes de aceitação; veja [BENCHMARKS.md](BENCHMARKS.md). A extensão pode ser
 empacotada localmente com `npm run package:editor`; veja [EDITOR.md](EDITOR.md).
 

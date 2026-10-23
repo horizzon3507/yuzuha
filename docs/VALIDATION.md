@@ -1,5 +1,57 @@
 # Validação local
 
+## Atualização 0.1.6
+
+Preparação local em **22/10/2026**, Linux x64, Node **26.11.1**, npm **12.2.1** e
+`@fluxerjs/core` **3.3.0**. A referência de performance vem do commit `556e76d`
+(0.1.5), recompilado em diretório temporário para a suíte adicional.
+
+| Verificação | Resultado |
+|---|---|
+| `npm run check` | PASS: tipos, arquitetura de 164 módulos, **494 testes**, build, editor, catálogo e links |
+| `npm run smoke:package` | PASS: instalação isolada, consumidores JS/TS, CLI, SDK e scaffolds |
+| Compatibilidade de runtime | PASS: `npm run check` e `npm run smoke:package` completos em Node **22.22.3** e **26.11.1**, com 494 testes por runtime |
+| Dispatch e runtime | PASS: prefixos alterados, TTL em fila, deduplicação limitada, AST editável, ordem, limites e guards |
+| Comparação estrutural | PASS: 20000 entradas de tokenização e 10000 ASTs/diagnósticos equivalentes à 0.1.5; mais 10000 casos de flags e 10000 argumentos contra a primeira implementação 0.1.6, com geração determinística |
+| Moderação | PASS: autor, bot, hierarquia, persistência de casos e falha parcial na suíte existente |
+| Música | PASS: isolamento, carga, edição/páginas, loop, posição, controles limitados, eventos antigos/duplicados e falhas antes da confirmação da fila |
+| Recuperação | PASS: sessão retomada sem reiniciar, reconstrução limitada de sessões perdidas, renovação de voz, transições interrompidas, respostas atrasadas e encerramento durante recuperação |
+| Lavalink v4 | PASS: headers, REST validado, decode, ready/resume, buffer limitado, TTL/LRU/bytes, buscas compartilhadas com cancelamento independente e timeout com fetch/socket simulados |
+| Voz Fluxer | PASS: driver injetado, join compartilhado, playback, volume, disconnect, late join, publicação cancelada e encerramento reentrante |
+| Ponte de áudio | PASS: plugin Lavalink 4.2.2 real, Opus/WebM a 48 kHz, decoder oficial 3.1.0, pausa, volume, filtros, seek, avanço de fila e reinício do servidor em Node 22/26; publicação LiveKit simulada |
+| Limites da ponte | PASS: autenticação, saídas duplicadas/capacidade, timeout/cancelamento de HTTP, reconexão limitada, uma inscrição por node, 16 servidores e liberação de recursos |
+| Pacote instalado | PASS: sexto entrypoint `yuzuha/music`, tipos da ponte/stream, fontes do plugin, recuperação sobre mocks e construção sem dependência opcional de voz |
+| Compatibilidade | PASS: SDK 3.3.0, schema 2, 288 funções e exports anteriores preservados |
+
+Os relatórios em [BENCHMARKS.md](BENCHMARKS.md) registram duas rodadas iniciais,
+uma reexecução do build refinado e uma suíte adicional, contra a referência 0.1.5.
+Nessa reexecução, dispatch nativo sequencial ficou em **3,03×**, scripts em
+**1,73×**, e avaliação em **1,37×**. Transações variaram de −7,2% a +4,9% nas
+três rodadas, com −6,1% no build refinado, sem ganho geral comprovado.
+Entradas simples longas, registro de catálogo e leitura pontual têm cargas
+específicas documentadas; não são estimativas de latência em produção.
+
+O refinamento foi comparado também à primeira implementação local da 0.1.6:
+paginação de 25/5000 faixas ficou em **217–224×**, parsing isolado de flags em
+**1,47–1,56×** e lotes de 32 buscas com signals em **6,09–6,34×**. As buscas
+compartilharam uma requisição simulada por lote em vez de 32. O dispatch com flags
+variou de −4,6% a +41,7%, sem ganho estável demonstrado. A reexecução com a ponte
+manteve **224×** na página da fila e **6,12×** no lote de buscas. Configurações,
+hashes e amostras estão nos quatro relatórios de refinamento em [BENCHMARKS.md](BENCHMARKS.md).
+
+Os testes principais usam `MockTransport`, `MockMusicBackend`, drivers/fetch/sockets
+simulados e stores temporários. A integração adicional subiu um Lavalink 4.2.2
+temporário com o plugin `yuzuha-audio`, WAV sintético e decoder real do SDK.
+Os trechos pausados e com volume zero tiveram RMS 0; a recuperação voltou a
+produzir áudio. Relatórios de [Node 22](../bridges/lavalink/results/node22.json)
+e [Node 26](../bridges/lavalink/results/node26.json) incluem medidas, verificações
+e hashes do servidor, plugin e módulos executados.
+
+Somente a publicação LiveKit foi simulada: não houve login nem áudio em uma
+sala real. O pacote e o plugin estão preparados localmente, sem publicação npm,
+tag ou release remota. Instalação e limites estão em [MUSIC.md](MUSIC.md).
+As evidências abaixo da 0.1.5 e anteriores permanecem históricas.
+
 ## Atualização 0.1.5
 
 Executada em **22/10/2026**, Linux, Node **26.11.1**, npm **12.2.1** e
