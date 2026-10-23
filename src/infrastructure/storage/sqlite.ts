@@ -1,7 +1,7 @@
 import { cloneValue } from '../../shared/clone.js';
 import { chmod, mkdir } from 'node:fs/promises';
 import { dirname } from 'node:path';
-import type { DatabaseSync } from 'node:sqlite';
+import type { DatabaseSync, StatementSync } from 'node:sqlite';
 import type { State, Store } from '../../contracts.js';
 import { YuzuhaError } from '../../errors.js';
 import { defaultDataPath } from './paths.js';
@@ -10,6 +10,8 @@ import { assertState, assertSynchronous, decodeState, emptyState } from './state
 
 export class SQLiteStore implements Store {
   private database?: DatabaseSync;
+  private selectState?: StatementSync;
+  private updateState?: StatementSync;
   private closed = false;
   private readonly queue = new TransactionQueue();
   constructor(public readonly path = defaultDataPath().replace(/\.json$/, '.sqlite')) {}
@@ -24,13 +26,15 @@ export class SQLiteStore implements Store {
       if (this.path !== ':memory:') await chmod(this.path, 0o600);
       db.exec('PRAGMA busy_timeout=5000; PRAGMA journal_mode=WAL; CREATE TABLE IF NOT EXISTS yuzuha_state (id INTEGER PRIMARY KEY CHECK (id=1), value TEXT NOT NULL);');
       db.prepare('INSERT OR IGNORE INTO yuzuha_state (id, value) VALUES (1, ?)').run(JSON.stringify(emptyState()));
+      this.selectState = db.prepare('SELECT value FROM yuzuha_state WHERE id=1');
+      this.updateState = db.prepare('UPDATE yuzuha_state SET value=? WHERE id=1');
       this.database = db;
       return db;
     } catch (error) { db.close(); throw error; }
   }
 
   private state(db: DatabaseSync): State {
-    const row = db.prepare('SELECT value FROM yuzuha_state WHERE id=1').get();
+    const row = this.selectState!.get();
     return decodeState(String(row?.['value']));
   }
 
@@ -47,7 +51,7 @@ export class SQLiteStore implements Store {
         assertSynchronous(value);
         assertState(state);
         const result = cloneValue(value);
-        db.prepare('UPDATE yuzuha_state SET value=? WHERE id=1').run(JSON.stringify(state));
+        this.updateState!.run(JSON.stringify(state));
         db.exec('COMMIT');
         return result;
       } catch (error) { db.exec('ROLLBACK'); throw error; }
@@ -55,6 +59,6 @@ export class SQLiteStore implements Store {
   }
 
   close(): Promise<void> {
-    return this.queue.run(async () => { this.database?.close(); this.database = undefined; this.closed = true; });
+    return this.queue.run(async () => { this.database?.close(); this.database = undefined; this.selectState = undefined; this.updateState = undefined; this.closed = true; });
   }
 }
