@@ -56,7 +56,10 @@
     "CHANGELOG.md",
     "VERSIONING.md",
     "editors/vscode",
-    "benchmarks"
+    "benchmarks",
+    "bridges/lavalink/build.mjs",
+    "bridges/lavalink/src",
+    "bridges/lavalink/application.yml"
   ],
   "scripts": {
     "build": "node scripts/build.mjs",
@@ -66,6 +69,7 @@
     "prepack": "npm run build",
     "docs:generate": "npm run build && node scripts/generate-functions.mjs",
     "smoke:package": "node scripts/smoke-package.mjs",
+    "music:build-plugin": "node bridges/lavalink/build.mjs",
     "check:architecture": "node scripts/check-architecture.mjs",
     "check:docs": "node scripts/check-docs.mjs",
     "bench": "npm run build && node --expose-gc benchmarks/run.mjs",

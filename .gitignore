@@ -8,3 +8,4 @@ data/
 *.tgz
 *.log
 artifacts/
+bridges/lavalink/build/

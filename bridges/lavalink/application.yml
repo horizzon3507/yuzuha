@@ -1,0 +1,20 @@
+server:
+  address: 127.0.0.1
+  port: 2333
+lavalink:
+  server:
+    password: ${LAVALINK_PASSWORD}
+    sources:
+      youtube: false
+      bandcamp: true
+      soundcloud: true
+      twitch: true
+      vimeo: true
+      nico: false
+      http: false
+      local: false
+    frameBufferDurationMs: 400
+    playerUpdateInterval: 1
+plugins:
+  yuzuha-audio:
+    max-streams: 128
