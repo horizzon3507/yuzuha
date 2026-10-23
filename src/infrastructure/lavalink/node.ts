@@ -1,7 +1,8 @@
 import { EventEmitter } from 'node:events';
 import WebSocket from 'ws';
 import type { LavalinkStats, MusicEvent, MusicNodeEvent, MusicPlayerUpdate, MusicTrack, RemoteMusicPlayer, TrackLoadResult } from '../../domain/music.js';
-import type { MusicBackend } from '../../ports/music.js';
+import type { MusicAudioStream, MusicBackend } from '../../ports/music.js';
+import { openAudioStream } from './audio-stream.js';
 import { abortable, cancellationError } from '../../services/cancellation.js';
 import { YuzuhaError } from '../../shared/errors.js';
 import { decodedTrack, decodedTracks, loadResult, musicEvent, nodeStats, record, remotePlayer, remotePlayers } from './protocol.js';
@@ -35,6 +36,8 @@ export interface LavalinkOptions {
   maxResponseBytes?: number;
   maxPendingRequests?: number;
   maxPendingLoads?: number;
+  maxAudioStreams?: number;
+  audioIdleTimeoutMs?: number;
   cache?: false | { ttlMs?: number; capacity?: number; maxBytes?: number };
   fetch?: typeof globalThis.fetch;
   socketFactory?: (url: string, headers: Record<string, string>) => LavalinkSocket;
@@ -55,6 +58,7 @@ export interface LavalinkDiagnostics {
   cacheHits: number;
   cacheEntries: number;
   cacheBytes: number;
+  activeAudioStreams: number;
 }
 type ConnectionState = 'idle' | 'connecting' | 'ready' | 'disconnected' | 'closed';
 type CachedLoad = { value: TrackLoadResult; expires: number; bytes: number };
@@ -77,6 +81,10 @@ export class LavalinkNode extends EventEmitter<LavalinkNodeEvents> implements Mu
   private readonly maxBytes: number;
   private readonly maxPending: number;
   private readonly maxPendingLoads: number;
+  private readonly maxAudioStreams: number;
+  private readonly audioIdleTimeout: number;
+  private readonly audioStreams = new Map<string, { controller: AbortController; close?: () => Promise<void> }>();
+  private readonly audioOpening = new Set<Promise<unknown>>();
   private readonly reconnect: { attempts: number; delayMs: number; maxDelayMs: number } | false;
   private readonly cacheOptions: { ttlMs: number; capacity: number; maxBytes: number } | false;
   private readonly cache = new Map<string, CachedLoad>();
@@ -119,6 +127,8 @@ export class LavalinkNode extends EventEmitter<LavalinkNodeEvents> implements Mu
     this.maxBytes = integer(options.maxResponseBytes ?? 2_000_000, 1, 100_000_000, 'maxResponseBytes');
     this.maxPending = integer(options.maxPendingRequests ?? 128, 1, 10_000, 'maxPendingRequests');
     this.maxPendingLoads = integer(options.maxPendingLoads ?? 1024, 1, 100_000, 'maxPendingLoads');
+    this.maxAudioStreams = integer(options.maxAudioStreams ?? 128, 1, 10_000, 'maxAudioStreams');
+    this.audioIdleTimeout = integer(options.audioIdleTimeoutMs ?? 15_000, 1, 300_000, 'audioIdleTimeoutMs');
     this.reconnect = options.reconnect === false ? false : {
       attempts: integer(options.reconnect?.attempts ?? 5, 0, 100, 'reconnect.attempts'),
       delayMs: integer(options.reconnect?.delayMs ?? 1000, 1, 300_000, 'reconnect.delayMs'),
@@ -143,13 +153,14 @@ export class LavalinkNode extends EventEmitter<LavalinkNodeEvents> implements Mu
   get penalty(): number {
     const stats = this.nodeStats;
     if (!stats || performance.now() - this.statsReceivedAt > 90_000) return 0;
-    const frames = stats.frameStats;
+    const frames = this.audioStreams.size ? undefined : stats.frameStats;
     return stats.playingPlayers + stats.cpu.lavalinkLoad * 100
       + (frames ? (Math.max(0, frames.deficit) + frames.nulled) / 3000 * 100 : 0);
   }
   get diagnostics(): LavalinkDiagnostics {
     return { requests: this.requests, pendingRequests: this.pending.size, pendingLoads: this.loadWaiters,
-      coalescedLoads: this.coalescedLoads, cacheHits: this.cacheHits, cacheEntries: this.cache.size, cacheBytes: this.cacheBytes };
+      coalescedLoads: this.coalescedLoads, cacheHits: this.cacheHits, cacheEntries: this.cache.size, cacheBytes: this.cacheBytes,
+      activeAudioStreams: this.audioStreams.size };
   }
 
   connect(): Promise<void> {
@@ -331,6 +342,24 @@ export class LavalinkNode extends EventEmitter<LavalinkNodeEvents> implements Mu
   }
   async destroyPlayer(guildID: string, signal?: AbortSignal): Promise<void> { await this.request('DELETE', this.playerPath(guildID), undefined, signal); }
 
+  async openAudioStream(guildID: string, signal?: AbortSignal): Promise<MusicAudioStream> {
+    const path = this.playerPath(guildID).replace('v4/sessions/', 'v4/yuzuha/sessions/') + '/audio';
+    if (signal?.aborted) throw cancellationError();
+    if (this.audioStreams.has(guildID)) throw new YuzuhaError('LAVALINK_AUDIO_BUSY', 'Já há uma saída de áudio neste servidor.');
+    if (this.audioStreams.size >= this.maxAudioStreams) throw new YuzuhaError('LAVALINK_AUDIO_LIMIT', 'Limite de saídas de áudio excedido.');
+    const entry: { controller: AbortController; close?: () => Promise<void> } = { controller: new AbortController() };
+    this.audioStreams.set(guildID, entry);
+    const combined = AbortSignal.any([this.shutdown.signal, entry.controller.signal, ...(signal ? [signal] : [])]);
+    const release = () => { if (this.audioStreams.get(guildID) === entry) this.audioStreams.delete(guildID); };
+    const task = openAudioStream({ url: new URL(path, this.base), password: this.headers.Authorization!, fetch: this.fetcher,
+      timeout: this.timeout, idleTimeout: this.audioIdleTimeout, controller: entry.controller, signal: combined, release });
+    this.requests++; this.audioOpening.add(task);
+    try {
+      const stream = await task; entry.close = stream.close;
+      if (combined.aborted) { await stream.close(); throw cancellationError(); }
+      return stream;
+    } finally { this.audioOpening.delete(task); }
+  }
 
   private request<T>(method: string, path: string, body?: unknown, signal?: AbortSignal): Promise<T> {
     if (this.shutdown.signal.aborted) return Promise.reject(new YuzuhaError('LAVALINK_CLOSED', 'O node Lavalink está fechado.'));
@@ -386,8 +415,10 @@ export class LavalinkNode extends EventEmitter<LavalinkNodeEvents> implements Mu
     this.connectionState = 'closed';
     if (this.retryTimer) clearTimeout(this.retryTimer);
     this.shutdown.abort(); this.rejectConnect?.(cancellationError()); this.socket?.terminate(); this.socket = undefined;
+    const audio = [...this.audioStreams.values()].map(entry => { entry.controller.abort(); return entry.close?.(); });
+    this.audioStreams.clear();
     this.cache.clear(); this.cacheBytes = 0; this.loading.clear();
-    this.closeTask = Promise.allSettled([...this.pending, ...(this.connectTask ? [this.connectTask] : [])]).then(() => { this.removeAllListeners(); });
+    this.closeTask = Promise.allSettled([...this.pending, ...this.audioOpening, ...audio, ...(this.connectTask ? [this.connectTask] : [])]).then(() => { this.removeAllListeners(); });
     this.emit('lifecycle', { type: 'closed' });
     return this.closeTask;
   }
