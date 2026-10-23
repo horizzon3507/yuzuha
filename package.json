@@ -1,6 +1,6 @@
 {
   "name": "yuzuha",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "Fluxer bots with simple scripts and typed JavaScript/TypeScript.",
   "type": "module",
   "license": "MIT",
@@ -70,11 +70,21 @@
   },
   "dependencies": {
     "@fluxerjs/core": "3.3.0",
-    "tsx": "^4.20.0"
+    "tsx": "^4.20.0",
+    "ws": "^8.22.0"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
     "@types/vscode": "^1.140.0",
+    "@types/ws": "^8.18.2",
     "typescript": "^5.9.0"
+  },
+  "peerDependencies": {
+    "@fluxerjs/voice": "^3.1.0"
+  },
+  "peerDependenciesMeta": {
+    "@fluxerjs/voice": {
+      "optional": true
+    }
   }
 }
