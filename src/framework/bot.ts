@@ -1,4 +1,5 @@
 import { AsyncLocalStorage } from 'node:async_hooks';
+import { setMaxListeners } from 'node:events';
 import { Client, Events, Message } from '@fluxerjs/core';
 import type { ClientEventName } from '@fluxerjs/core';
 import { FluxerTransport, incoming } from '../adapter.js';
@@ -15,6 +16,7 @@ import { registerBuiltins } from '../functions.js';
 import { Runtime, defaultLimits, text } from '../runtime.js';
 import { JsonStore, defaultDataPath } from '../store.js';
 import { CommandRegistry } from './command-registry.js';
+import type { CompiledCommand } from './command-registry.js';
 import { runMiddleware } from './middleware.js';
 import type { DispatchResult, Middleware, YuzuhaOptions, YuzuhaPlugin } from './options.js';
 import { RateLimits } from './rate-limits.js';
@@ -32,6 +34,9 @@ import { adaptScriptEvent, validateScriptEvent } from './script-events.js';
 import type { ScriptEventDefinition } from './script-events.js';
 import type { Program } from '../scripting/ast.js';
 
+type RoutedCommand = { compiled: CompiledCommand; input: string; prefix: string };
+const ignored: Promise<DispatchResult> = Promise.resolve('ignored');
+
 export class Yuzuha {
   readonly client: Client;
   readonly transport: Transport;
@@ -45,7 +50,6 @@ export class Yuzuha {
   private readonly plugins = new Set<string>();
   private readonly limits: RateLimits;
   private readonly active = new Set<Promise<unknown>>();
-  private readonly controllers = new Set<AbortController>();
   private readonly shutdown = new AbortController();
   private readonly events: NativeEvents;
   private readonly execution = new AsyncLocalStorage<boolean>();
@@ -56,8 +60,13 @@ export class Yuzuha {
   private loginTask?: Promise<void>;
   private loginAbort?: AbortController;
   private readonly listener: (message: Message) => void;
+  private prefixSource?: string | string[];
+  private prefixes: string[] = [];
+  private readonly contextCooldown = (key: string, duration: number) => this.limits.cooldown(key, duration);
+  private readonly contextHelp = () => this.help();
 
   constructor(public readonly options: YuzuhaOptions = {}) {
+    setMaxListeners(0, this.shutdown.signal);
     this.limits = new RateLimits(options.now);
     this.client = options.client ?? new Client(options.clientOptions);
     this.transport = options.transport ?? new FluxerTransport(this.client);
@@ -75,7 +84,7 @@ export class Yuzuha {
       if (command.http) (this.http ?? new HttpService()).withPolicy(command.http);
     });
     this.events = new NativeEvents(this.client, work => this.scheduleEvent(work));
-    if (typeof options.prefix !== 'function') validatePrefixes(options.prefix ?? '!');
+    if (typeof options.prefix !== 'function') this.resolvePrefixes(options.prefix ?? '!');
     this.listener = message => { void this.handle(incoming(message)).catch(error => reportError(this.options, error)); };
   }
 
@@ -159,11 +168,10 @@ export class Yuzuha {
   private async runScriptEvent(definition: ScriptEventDefinition, program: Program, args: unknown[]): Promise<void> {
     const source = adaptScriptEvent(definition.event, args);
     if ((definition.ignoreBots ?? true) && source.event.userBot) return;
-    const controller = new AbortController(); this.controllers.add(controller);
-    if (this.closing) controller.abort();
+    const signal = this.shutdown.signal;
     const ctx = new EventContext({ ...source, channelID: definition.channelID, actorID: definition.actorID,
       policy: definition.http, transport: this.transport, store: this.store, resources: this.resources,
-      scheduler: this.scheduler, http: this.http, now: this.options.now, cooldown: (key, duration) => this.limits.cooldown(key, duration), signal: controller.signal });
+      scheduler: this.scheduler, http: this.http, now: this.options.now, cooldown: this.contextCooldown, signal });
     const started = this.options.onLog ? performance.now() : 0;
     let outcome: DispatchResult = 'success';
     try {
@@ -177,7 +185,6 @@ export class Yuzuha {
       outcome = error instanceof GuardError ? 'guarded' : 'error';
       await reportError(this.options, error, ctx);
     } finally {
-      this.controllers.delete(controller);
       if (this.options.onLog) await emitLog(this.options, { event: 'event.finish', executionID: ctx.executionID,
         command: ctx.command.name, outcome, durationMs: performance.now() - started });
     }
@@ -189,7 +196,7 @@ export class Yuzuha {
       try { await Promise.resolve().then(work); } catch (error) { await reportError(this.options, error); }
     });
     this.active.add(task);
-    void task.finally(() => this.active.delete(task)).catch(() => {});
+    void task.then(() => this.active.delete(task), () => this.active.delete(task));
   }
 
   private async runScheduled(task: ScheduleRecord, signal: AbortSignal): Promise<void> {
@@ -197,7 +204,7 @@ export class Yuzuha {
     const configured = typeof this.options.prefix === 'function'
       ? await this.options.prefix({ channelID: task.channelID, guildID: task.guildID } as IncomingMessage)
       : this.options.prefix ?? '!';
-    const prefixes = validatePrefixes(configured);
+    const prefixes = this.resolvePrefixes(configured);
     const prefix = (Array.isArray(prefixes) ? prefixes[0] : prefixes) ?? '!';
     const suffix = task.input ? ` ${task.input}` : '';
     let retryable = true, cause: unknown;
@@ -236,7 +243,6 @@ export class Yuzuha {
     this.closing = true;
     this.shutdown.abort();
     this.loginAbort?.abort();
-    for (const controller of this.controllers) controller.abort();
     this.scheduler?.stop();
     this.events.close();
     if (this.listening) this.client.off(Events.MessageCreate, this.listener);
@@ -254,31 +260,57 @@ export class Yuzuha {
     return this.handleMessage(message);
   }
 
+  private resolvePrefixes(source: string | string[]): string[] {
+    const previous = this.prefixSource;
+    if (typeof source === 'string' && source === previous) return this.prefixes;
+    if (Array.isArray(source) && Array.isArray(previous) && source.length === previous.length) {
+      let same = true;
+      for (let index = 0; index < source.length; index++) if (source[index] !== previous[index]) { same = false; break; }
+      if (same) return this.prefixes;
+    }
+    const prefixes = validatePrefixes(source);
+    this.prefixSource = Array.isArray(source) ? [...source] : source;
+    return this.prefixes = prefixes;
+  }
+
+  private resolveCommand(message: IncomingMessage, configured: string | string[]): RoutedCommand | undefined {
+    const routed = route(message.content, this.resolvePrefixes(configured));
+    if (!routed) return;
+    const resolved = this.registry.resolve(routed.name, routed.input);
+    if (!resolved || this.limits.duplicate(message.channelID, message.id)) return;
+    return { ...resolved, prefix: routed.prefix };
+  }
+
   private handleMessage(message: IncomingMessage, onFailure?: (error: unknown, ctx?: CommandContext) => void, parentSignal?: AbortSignal, executionID?: string): Promise<DispatchResult> {
-    if (this.closing) return Promise.resolve('ignored');
-    const controller = new AbortController();
-    this.controllers.add(controller);
-    const task = this.execution.run(true, () => this.dispatch(message, parentSignal ? AbortSignal.any([controller.signal, parentSignal]) : controller.signal, onFailure, executionID));
+    if (this.closing || message.authorBot || message.authorID === this.transport.botID) return ignored;
+    let routed: RoutedCommand | undefined;
+    if (typeof this.options.prefix !== 'function') {
+      try { routed = this.resolveCommand(message, this.options.prefix ?? '!'); }
+      catch (error) { return Promise.reject(error); }
+      if (!routed) return ignored;
+    }
+    const signal = parentSignal ? AbortSignal.any([this.shutdown.signal, parentSignal]) : this.shutdown.signal;
+    const task = this.execution.run(true, () => this.dispatch(message, signal, onFailure, executionID, routed));
     this.active.add(task);
-    void task.finally(() => { this.active.delete(task); this.controllers.delete(controller); }).catch(() => {});
+    void task.then(() => this.active.delete(task), () => this.active.delete(task));
     return task;
   }
 
-  private async dispatch(message: IncomingMessage, signal: AbortSignal, onFailure?: (error: unknown, ctx?: CommandContext) => void, executionID?: string): Promise<DispatchResult> {
-    if (message.authorBot || message.authorID === this.transport.botID) return 'ignored';
-    const configured = typeof this.options.prefix === 'function' ? await this.options.prefix(message) : this.options.prefix ?? '!';
-    const routed = route(message.content, validatePrefixes(configured));
-    if (!routed) return 'ignored';
-    const resolved = this.registry.resolve(routed.name, routed.input);
-    if (!resolved || this.limits.duplicate(message.channelID, message.id)) return 'ignored';
-    const { compiled } = resolved;
+  private async dispatch(message: IncomingMessage, signal: AbortSignal, onFailure?: (error: unknown, ctx?: CommandContext) => void, executionID?: string, resolved?: RoutedCommand): Promise<DispatchResult> {
+    if (!resolved) {
+      const configured = typeof this.options.prefix === 'function' ? await this.options.prefix(message) : this.options.prefix ?? '!';
+      if (this.closing || signal.aborted) return 'ignored';
+      resolved = this.resolveCommand(message, configured);
+    }
+    if (!resolved) return 'ignored';
+    const { compiled, prefix } = resolved;
     let ctx: CommandContext | undefined;
     let outcome: DispatchResult = 'success';
     const started = this.options.onLog ? performance.now() : 0;
     try {
       ctx = new CommandContext({ message, transport: this.transport, store: this.store, command: compiled.command,
-        input: resolved.input, prefix: routed.prefix, lineage: compiled.lineage,
-        help: () => this.help(), cooldown: (key, duration) => this.limits.cooldown(key, duration),
+        input: resolved.input, prefix, lineage: compiled.lineage,
+        help: this.contextHelp, cooldown: this.contextCooldown,
         native: { client: this.client, message: message.raw instanceof Message ? message.raw : undefined },
         resources: this.resources, scheduler: this.scheduler, http: this.http, now: this.options.now, signal, executionID });
       if (this.options.onLog) await emitLog(this.options, { event: 'command.start', executionID: ctx.executionID, command: ctx.command.name });
@@ -289,13 +321,17 @@ export class Yuzuha {
         const result = await check(current);
         if (result === false || typeof result === 'string') throw new GuardError(typeof result === 'string' ? result : 'Você não pode executar este comando.');
       }
-      await runMiddleware([...this.middleware, ...(compiled.command.middleware ?? [])], current, async () => {
+      const execute = async () => {
         if (compiled.program) {
           const output = text(await this.runtime.execute(compiled.program, current)).trim();
           if (output) await current.reply(output);
         } else if (compiled.command.run) await compiled.command.run(current);
-        else throw new GuardError(`${resolved.input ? 'Subcomando desconhecido.\n' : ''}${this.help(compiled.command.name, routed.prefix)}`);
-      });
+        else throw new GuardError(`${resolved.input ? 'Subcomando desconhecido.\n' : ''}${this.help(compiled.command.name, prefix)}`);
+      };
+      const local = compiled.command.middleware ?? [];
+      if (this.middleware.length) await runMiddleware(local.length ? [...this.middleware, ...local] : this.middleware, current, execute);
+      else if (local.length) await runMiddleware(local, current, execute);
+      else await execute();
     } catch (error) {
       onFailure?.(error, ctx);
       outcome = error instanceof GuardError ? 'guarded' : 'error';
