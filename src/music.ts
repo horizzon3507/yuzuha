@@ -5,5 +5,7 @@ export type { MusicManagerOptions, MusicPlayerOptions, MusicPlayerEvents, MusicV
 export { TrackQueue } from './domain/track-queue.js';
 export type * from './domain/music.js';
 export type { MusicBackend, MusicAudioStream, MusicAudioOutput } from './ports/music.js';
+export { FluxerLavalinkBridge } from './infrastructure/fluxer/lavalink-bridge.js';
+export type { FluxerLavalinkBridgeOptions } from './infrastructure/fluxer/lavalink-bridge.js';
 export { FluxerVoice } from './infrastructure/fluxer/voice.js';
 export type { FluxerVoiceConnection, FluxerVoiceDriver, NativeVoice } from './ports/voice.js';
