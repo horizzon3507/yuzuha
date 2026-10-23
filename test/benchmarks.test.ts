@@ -22,13 +22,26 @@ test('benchmark comparisons distinguish regressions, improvements and new worklo
 
 test('benchmark comparisons refuse incompatible machines, runtimes, settings and corrupt measurements', () => {
   const baseline = report();
-  for (const change of [{ platform: 'darwin' }, { arch: 'arm64' }, { cpu: 'other' }, { node: '24.0.0' }]) {
+  for (const change of [{ platform: 'darwin' }, { arch: 'arm64' }, { cpu: 'other' }, { node: '24.0.0' }, { node: '26.8.3' }]) {
     assert.throws(() => compareReports({ ...report(), ...change }, baseline), /incompatível/);
   }
   const current = report(); current.config.catalogSize++;
   assert.throws(() => compareReports(current, baseline), /catalogSize/);
   baseline.results[0]!.operationsPerSecond = 0;
   assert.throws(() => compareReports(report(), baseline), /inválida/);
+});
+
+test('benchmark comparisons reject different suites, GC settings and per-scenario units', () => {
+  assert.throws(() => compareReports({ ...report(), suite: 'performance' }, report()), /suíte/);
+  assert.throws(() => compareReports({ ...report(), gc: false }, { ...report(), gc: true }), /GC/);
+  const baseline = report(), current = report();
+  Object.assign(baseline.results[0]!, { unitsPerOperation: 1000 });
+  Object.assign(current.results[0]!, { unitsPerOperation: 100 });
+  assert.throws(() => compareReports(current, baseline), /unitsPerOperation/);
+  for (const name of ['queueSize', 'pageSize', 'fanout', 'warmup']) {
+    const old = report(), next = report(); Object.assign(old.config, { [name]: 32 }); Object.assign(next.config, { [name]: 64 });
+    assert.throws(() => compareReports(next, old), new RegExp(name));
+  }
 });
 
 test('older baselines compare common scenarios while new workloads remain unscored', () => {

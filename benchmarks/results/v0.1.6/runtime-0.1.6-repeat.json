@@ -1,0 +1,406 @@
+{
+  "version": "0.1.6",
+  "date": "2026-10-22T22:38:34.015Z",
+  "node": "26.11.1",
+  "platform": "linux",
+  "arch": "x64",
+  "cpu": "AMD Ryzen 5 5625U with Radeon Graphics",
+  "gc": true,
+  "config": {
+    "iterations": 10000,
+    "samples": 9,
+    "concurrency": 16,
+    "catalogSize": 1000,
+    "payloadSize": 4096,
+    "soakRounds": 20,
+    "json": true
+  },
+  "results": [
+    {
+      "name": "dispatch/native",
+      "operations": 90000,
+      "concurrency": 1,
+      "medianMs": 32.276314999999954,
+      "p95Ms": 47.31103499999995,
+      "operationsPerSecond": 290940.607006263,
+      "heapDeltaBytes": 1687424,
+      "rssDeltaBytes": 46366720,
+      "samplesMs": [
+        41.247862999999995,
+        47.31103499999995,
+        32.276314999999954,
+        31.234458000000018,
+        32.94473099999999,
+        33.92228899999998,
+        31.305110000000013,
+        30.51916399999999,
+        28.580522000000087
+      ]
+    },
+    {
+      "name": "dispatch/native-concurrent",
+      "operations": 90000,
+      "concurrency": 16,
+      "medianMs": 34.47287300000005,
+      "p95Ms": 46.265289999999936,
+      "operationsPerSecond": 278542.2403953358,
+      "heapDeltaBytes": 1598944,
+      "rssDeltaBytes": 38100992,
+      "samplesMs": [
+        45.02510999999993,
+        37.708503000000064,
+        33.124900000000025,
+        36.669039,
+        34.47287300000005,
+        29.85989500000005,
+        31.32526800000005,
+        46.265289999999936,
+        28.659899999999993
+      ]
+    },
+    {
+      "name": "dispatch/functions",
+      "operations": 90000,
+      "concurrency": 1,
+      "medianMs": 55.23305000000005,
+      "p95Ms": 74.11898600000006,
+      "operationsPerSecond": 172586.66046520596,
+      "heapDeltaBytes": 1674848,
+      "rssDeltaBytes": 6995968,
+      "samplesMs": [
+        74.11898600000006,
+        61.16875300000015,
+        51.87934900000005,
+        59.03338099999996,
+        58.54276899999991,
+        55.23305000000005,
+        55.08276799999999,
+        51.49653000000012,
+        54.9215650000001
+      ]
+    },
+    {
+      "name": "dispatch/functions-concurrent",
+      "operations": 90000,
+      "concurrency": 16,
+      "medianMs": 56.818078000000014,
+      "p95Ms": 76.76723099999981,
+      "operationsPerSecond": 166892.66220176386,
+      "heapDeltaBytes": 1657200,
+      "rssDeltaBytes": 3194880,
+      "samplesMs": [
+        76.76723099999981,
+        65.34340599999996,
+        57.9847699999998,
+        58.787499000000025,
+        55.43543,
+        56.818078000000014,
+        55.21814200000017,
+        56.655682999999954,
+        56.25852699999996
+      ]
+    },
+    {
+      "name": "runtime/compile",
+      "operations": 90000,
+      "concurrency": 1,
+      "medianMs": 14.165435999999772,
+      "p95Ms": 20.98102199999994,
+      "operationsPerSecond": 665362.6347603301,
+      "heapDeltaBytes": 24392,
+      "rssDeltaBytes": 167936,
+      "samplesMs": [
+        20.98102199999994,
+        14.448999000000185,
+        14.839872999999898,
+        14.049057000000175,
+        14.087370000000192,
+        14.165435999999772,
+        14.66116699999975,
+        14.132384000000002,
+        13.8992760000001
+      ]
+    },
+    {
+      "name": "runtime/evaluate",
+      "operations": 90000,
+      "concurrency": 1,
+      "medianMs": 199.55672600000025,
+      "p95Ms": 240.37966000000006,
+      "operationsPerSecond": 48123.537612581684,
+      "heapDeltaBytes": 138296,
+      "rssDeltaBytes": 131072,
+      "samplesMs": [
+        228.62038600000005,
+        203.11236699999972,
+        198.44624999999996,
+        198.76741300000003,
+        196.81675799999994,
+        205.25566499999968,
+        240.37966000000006,
+        199.55672600000025,
+        199.23147500000005
+      ]
+    },
+    {
+      "name": "store/transaction-concurrent",
+      "operations": 90000,
+      "concurrency": 16,
+      "medianMs": 71.38437700000031,
+      "p95Ms": 81.78306599999996,
+      "operationsPerSecond": 137262.7638276302,
+      "heapDeltaBytes": 76584,
+      "rssDeltaBytes": 40189952,
+      "samplesMs": [
+        74.23618599999963,
+        81.78306599999996,
+        67.90547999999944,
+        71.38437700000031,
+        76.38342000000011,
+        69.47551999999996,
+        70.74830199999997,
+        70.97879499999999,
+        72.78158299999996
+      ]
+    },
+    {
+      "name": "dispatch/large-catalog",
+      "operations": 90000,
+      "concurrency": 1,
+      "medianMs": 35.38996599999973,
+      "p95Ms": 47.0224819999994,
+      "operationsPerSecond": 268605.48573461117,
+      "heapDeltaBytes": 1604824,
+      "rssDeltaBytes": 2088960,
+      "samplesMs": [
+        47.0224819999994,
+        43.39949500000057,
+        35.38996599999973,
+        36.831263999999464,
+        34.9212150000003,
+        33.83564500000011,
+        33.16189899999972,
+        34.97517599999992,
+        35.52675199999976
+      ]
+    },
+    {
+      "name": "runtime/large-payload",
+      "operations": 90000,
+      "concurrency": 1,
+      "medianMs": 9.624795000000631,
+      "p95Ms": 20.679003999999622,
+      "operationsPerSecond": 902555.3870161349,
+      "heapDeltaBytes": 55952,
+      "rssDeltaBytes": 131072,
+      "samplesMs": [
+        20.679003999999622,
+        12.594844999999623,
+        11.0176620000002,
+        9.624795000000631,
+        9.09854500000074,
+        10.474511000000348,
+        9.053531000000476,
+        8.437533999999687,
+        8.736445000000458
+      ]
+    }
+  ],
+  "memory": {
+    "samples": [
+      {
+        "round": 0,
+        "operations": 0,
+        "heapUsed": 28632584,
+        "rss": 231141376
+      },
+      {
+        "round": 1,
+        "operations": 10000,
+        "heapUsed": 28642856,
+        "rss": 233275392
+      },
+      {
+        "round": 2,
+        "operations": 20000,
+        "heapUsed": 28673944,
+        "rss": 233263104
+      },
+      {
+        "round": 3,
+        "operations": 30000,
+        "heapUsed": 28710000,
+        "rss": 233263104
+      },
+      {
+        "round": 4,
+        "operations": 40000,
+        "heapUsed": 28723376,
+        "rss": 233656320
+      },
+      {
+        "round": 5,
+        "operations": 50000,
+        "heapUsed": 28688472,
+        "rss": 233660416
+      },
+      {
+        "round": 6,
+        "operations": 60000,
+        "heapUsed": 28720592,
+        "rss": 233660416
+      },
+      {
+        "round": 7,
+        "operations": 70000,
+        "heapUsed": 28720480,
+        "rss": 233701376
+      },
+      {
+        "round": 8,
+        "operations": 80000,
+        "heapUsed": 28711192,
+        "rss": 233701376
+      },
+      {
+        "round": 9,
+        "operations": 90000,
+        "heapUsed": 28724416,
+        "rss": 233758720
+      },
+      {
+        "round": 10,
+        "operations": 100000,
+        "heapUsed": 28724336,
+        "rss": 233758720
+      },
+      {
+        "round": 11,
+        "operations": 110000,
+        "heapUsed": 28689408,
+        "rss": 233795584
+      },
+      {
+        "round": 12,
+        "operations": 120000,
+        "heapUsed": 28721528,
+        "rss": 233795584
+      },
+      {
+        "round": 13,
+        "operations": 130000,
+        "heapUsed": 28721448,
+        "rss": 233795584
+      },
+      {
+        "round": 14,
+        "operations": 140000,
+        "heapUsed": 28712056,
+        "rss": 233791488
+      },
+      {
+        "round": 15,
+        "operations": 150000,
+        "heapUsed": 28725112,
+        "rss": 233791488
+      },
+      {
+        "round": 16,
+        "operations": 160000,
+        "heapUsed": 28725032,
+        "rss": 233881600
+      },
+      {
+        "round": 17,
+        "operations": 170000,
+        "heapUsed": 28690104,
+        "rss": 233881600
+      },
+      {
+        "round": 18,
+        "operations": 180000,
+        "heapUsed": 28730736,
+        "rss": 233889792
+      },
+      {
+        "round": 19,
+        "operations": 190000,
+        "heapUsed": 28722352,
+        "rss": 233889792
+      },
+      {
+        "round": 20,
+        "operations": 200000,
+        "heapUsed": 28712792,
+        "rss": 233889792
+      }
+    ],
+    "heapGrowthBytes": 80208,
+    "rssGrowthBytes": 2748416
+  },
+  "comparison": [
+    {
+      "name": "dispatch/native",
+      "status": "compared",
+      "throughputChangePercent": 242.05010432370494,
+      "regressionPercent": 0,
+      "heapChangeBytes": 88896
+    },
+    {
+      "name": "dispatch/native-concurrent",
+      "status": "compared",
+      "throughputChangePercent": 221.0307546596295,
+      "regressionPercent": 0,
+      "heapChangeBytes": 114072
+    },
+    {
+      "name": "dispatch/functions",
+      "status": "compared",
+      "throughputChangePercent": 147.8346005230822,
+      "regressionPercent": 0,
+      "heapChangeBytes": 150168
+    },
+    {
+      "name": "dispatch/functions-concurrent",
+      "status": "compared",
+      "throughputChangePercent": 148.62731174755305,
+      "regressionPercent": 0,
+      "heapChangeBytes": 158328
+    },
+    {
+      "name": "runtime/compile",
+      "status": "compared",
+      "throughputChangePercent": 29.526888575652087,
+      "regressionPercent": 0,
+      "heapChangeBytes": 528
+    },
+    {
+      "name": "runtime/evaluate",
+      "status": "compared",
+      "throughputChangePercent": 53.614583827379406,
+      "regressionPercent": 0,
+      "heapChangeBytes": 21440
+    },
+    {
+      "name": "store/transaction-concurrent",
+      "status": "compared",
+      "throughputChangePercent": 4.884184626903898,
+      "regressionPercent": 0,
+      "heapChangeBytes": -1296
+    },
+    {
+      "name": "dispatch/large-catalog",
+      "status": "compared",
+      "throughputChangePercent": 196.66181280636636,
+      "regressionPercent": 0,
+      "heapChangeBytes": 126424
+    },
+    {
+      "name": "runtime/large-payload",
+      "status": "compared",
+      "throughputChangePercent": 40.261860600683534,
+      "regressionPercent": 0,
+      "heapChangeBytes": 744
+    }
+  ]
+}

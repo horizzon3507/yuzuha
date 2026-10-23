@@ -1,0 +1,117 @@
+{
+  "suite": "refinement",
+  "version": "0.1.6",
+  "date": "2026-10-22T23:16:16.090Z",
+  "node": "26.11.1",
+  "platform": "linux",
+  "arch": "x64",
+  "cpu": "AMD Ryzen 5 5625U with Radeon Graphics",
+  "gc": true,
+  "sourceHashes": {
+    "commands/arguments.js": "73c495911dda3b73731c4425568fcdf5f8635f1f4d05dfad9d291d74fd9b4f76",
+    "domain/track-queue.js": "827084fb22925f67d6dcfac59daa6381ce64eaf58e0bc9a52a85e7960de7a0a4",
+    "domain/music-state.js": null,
+    "services/music.js": "d70dd7c7cbbf263abec08d9e934d8e10c349b57e28dd30d7e3038bc83d35d79f",
+    "services/music-player.js": null,
+    "infrastructure/lavalink/node.js": "adf6aa838c54abf047bace2f4c301abfa6881f9b70bfb10523aa4ccf287829f1",
+    "infrastructure/lavalink/protocol.js": "cd3373800a9e34c0faf779514a33a4b61dee9ec83163f2fbc64cf6c85abdd514"
+  },
+  "config": {
+    "iterations": 10000,
+    "samples": 7,
+    "warmup": 2000,
+    "queueSize": 5000,
+    "pageSize": 25,
+    "fanout": 32,
+    "concurrency": 1,
+    "json": true
+  },
+  "results": [
+    {
+      "name": "arguments/typed-flags",
+      "iterations": 10000,
+      "operations": 70000,
+      "unitsPerOperation": 1,
+      "concurrency": 1,
+      "medianMs": 40.548562000000004,
+      "p95Ms": 42.67006300000003,
+      "samplesMs": [
+        42.38465100000002,
+        39.12979300000001,
+        40.548562000000004,
+        40.314565000000016,
+        41.536707999999976,
+        42.67006300000003,
+        39.03915400000005
+      ],
+      "operationsPerSecond": 245077.8769264836,
+      "heapDeltaBytes": -15064,
+      "rssDeltaBytes": -524288
+    },
+    {
+      "name": "dispatch/typed-flags",
+      "iterations": 10000,
+      "operations": 70000,
+      "unitsPerOperation": 1,
+      "concurrency": 1,
+      "medianMs": 139.4371739999999,
+      "p95Ms": 217.6686890000001,
+      "samplesMs": [
+        217.6686890000001,
+        177.20449400000007,
+        139.4371739999999,
+        150.81806200000005,
+        132.51110399999993,
+        124.03387700000007,
+        133.6635450000001
+      ],
+      "operationsPerSecond": 65095.87560018221,
+      "heapDeltaBytes": 1422904,
+      "rssDeltaBytes": 29380608
+    },
+    {
+      "name": "music/queue-page",
+      "iterations": 100,
+      "operations": 700,
+      "unitsPerOperation": 1,
+      "concurrency": 1,
+      "medianMs": 1219.7123110000011,
+      "p95Ms": 1255.273346,
+      "samplesMs": [
+        1233.371079,
+        1235.783953,
+        1182.1935279999998,
+        1207.0048690000003,
+        1206.457547,
+        1255.273346,
+        1219.7123110000011
+      ],
+      "operationsPerSecond": 81.96916508468333,
+      "heapDeltaBytes": -29040,
+      "rssDeltaBytes": 35864576
+    },
+    {
+      "name": "music/signaled-search-fanout",
+      "iterations": 100,
+      "operations": 700,
+      "unitsPerOperation": 1,
+      "concurrency": 1,
+      "medianMs": 201.82134700000097,
+      "p95Ms": 242.8275969999995,
+      "samplesMs": [
+        213.31177900000148,
+        242.8275969999995,
+        227.58676100000048,
+        201.82134700000097,
+        139.45600899999954,
+        126.68724900000052,
+        113.09427099999994
+      ],
+      "operationsPerSecond": 553.4537433675289,
+      "heapDeltaBytes": 16656912,
+      "rssDeltaBytes": -16232448,
+      "backendRequests": 22400,
+      "backendRequestsPerOperation": 32
+    }
+  ]
+}

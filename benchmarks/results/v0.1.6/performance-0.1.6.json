@@ -1,0 +1,263 @@
+{
+  "suite": "performance",
+  "version": "0.1.6",
+  "date": "2026-10-22T22:46:46.035Z",
+  "node": "26.11.1",
+  "platform": "linux",
+  "arch": "x64",
+  "cpu": "AMD Ryzen 5 5625U with Radeon Graphics",
+  "gc": true,
+  "config": {
+    "iterations": 10000,
+    "samples": 9,
+    "concurrency": 1,
+    "catalogSize": 1000,
+    "payloadSize": 4096,
+    "stateKeys": 2000,
+    "json": true
+  },
+  "results": [
+    {
+      "name": "dispatch/ignored-ordinary",
+      "iterations": 10000,
+      "unitsPerOperation": 1,
+      "operations": 90000,
+      "concurrency": 1,
+      "medianMs": 1.0846670000000245,
+      "p95Ms": 5.0413099999999815,
+      "samplesMs": [
+        4.624526000000003,
+        2.5676730000000134,
+        5.0413099999999815,
+        1.55471,
+        0.9696109999999862,
+        1.0846670000000245,
+        0.9704929999999763,
+        1.0458340000000135,
+        0.970593000000008
+      ],
+      "operationsPerSecond": 4779754.997194016,
+      "heapDeltaBytes": 33560,
+      "rssDeltaBytes": 7954432
+    },
+    {
+      "name": "dispatch/ignored-unknown",
+      "iterations": 10000,
+      "unitsPerOperation": 1,
+      "operations": 90000,
+      "concurrency": 1,
+      "medianMs": 4.075936000000013,
+      "p95Ms": 6.579437999999982,
+      "samplesMs": [
+        6.579437999999982,
+        4.966549000000043,
+        4.075936000000013,
+        3.730396999999982,
+        3.6932370000000105,
+        4.70878399999998,
+        4.312259999999981,
+        3.879788000000019,
+        3.8335610000000315
+      ],
+      "operationsPerSecond": 2262446.282612218,
+      "heapDeltaBytes": 46264,
+      "rssDeltaBytes": -299008
+    },
+    {
+      "name": "dispatch/ignored-bot",
+      "iterations": 10000,
+      "unitsPerOperation": 1,
+      "operations": 90000,
+      "concurrency": 1,
+      "medianMs": 0.9763629999999921,
+      "p95Ms": 1.0588989999999967,
+      "samplesMs": [
+        0.93128999999999,
+        1.0588989999999967,
+        0.9094779999999787,
+        1.0211979999999699,
+        0.932672000000025,
+        0.9763629999999921,
+        0.9494740000000093,
+        0.9924240000000282,
+        0.993235000000027
+      ],
+      "operationsPerSecond": 10268073.149296736,
+      "heapDeltaBytes": -2656,
+      "rssDeltaBytes": 0
+    },
+    {
+      "name": "dispatch/long-input",
+      "iterations": 1000,
+      "unitsPerOperation": 1,
+      "operations": 9000,
+      "concurrency": 1,
+      "medianMs": 9.352687000000003,
+      "p95Ms": 11.118493999999998,
+      "samplesMs": [
+        11.118493999999998,
+        9.394956999999977,
+        9.30265300000002,
+        9.352687000000003,
+        8.75501399999996,
+        8.776605000000018,
+        9.24810100000002,
+        9.540770000000009,
+        9.366714000000002
+      ],
+      "operationsPerSecond": 106062.04075504624,
+      "heapDeltaBytes": 1131256,
+      "rssDeltaBytes": 2146304
+    },
+    {
+      "name": "dispatch/quoted-long-input",
+      "iterations": 1000,
+      "unitsPerOperation": 1,
+      "operations": 9000,
+      "concurrency": 1,
+      "medianMs": 48.17713200000003,
+      "p95Ms": 58.71287099999995,
+      "samplesMs": [
+        45.20297500000004,
+        46.09139399999998,
+        58.71287099999995,
+        57.30654900000002,
+        48.17713200000003,
+        49.25552700000003,
+        48.19800100000009,
+        45.87047999999993,
+        42.958199000000036
+      ],
+      "operationsPerSecond": 20372.447823490063,
+      "heapDeltaBytes": 548848,
+      "rssDeltaBytes": 17514496
+    },
+    {
+      "name": "dispatch/apostrophe-long-input",
+      "iterations": 1000,
+      "unitsPerOperation": 1,
+      "operations": 9000,
+      "concurrency": 1,
+      "medianMs": 120.36498299999994,
+      "p95Ms": 134.535259,
+      "samplesMs": [
+        122.30773199999999,
+        120.73044000000004,
+        117.84062199999994,
+        114.53227700000002,
+        120.36498299999994,
+        121.29262500000004,
+        134.535259,
+        114.25269200000002,
+        119.88739599999985
+      ],
+      "operationsPerSecond": 8289.246622113122,
+      "heapDeltaBytes": 4400,
+      "rssDeltaBytes": 34533376
+    },
+    {
+      "name": "catalog/register",
+      "iterations": 1,
+      "unitsPerOperation": 1000,
+      "operations": 9000,
+      "concurrency": 1,
+      "medianMs": 3.9682929999999033,
+      "p95Ms": 6.2978689999999915,
+      "samplesMs": [
+        4.685901999999942,
+        5.300344999999652,
+        3.9682929999999033,
+        3.873345999999856,
+        6.2978689999999915,
+        5.128944000000047,
+        3.684379999999692,
+        3.701532000000043,
+        3.372033999999985
+      ],
+      "operationsPerSecond": 224928.89435327757,
+      "heapDeltaBytes": 113392,
+      "rssDeltaBytes": 393216
+    },
+    {
+      "name": "store/read-large-state",
+      "iterations": 1000,
+      "unitsPerOperation": 1,
+      "operations": 9000,
+      "concurrency": 1,
+      "medianMs": 3.701151000000209,
+      "p95Ms": 5.033644999999979,
+      "samplesMs": [
+        4.513167000000067,
+        3.701151000000209,
+        4.309314000000086,
+        3.507908999999927,
+        3.8028129999997873,
+        3.509741999999733,
+        5.033644999999979,
+        3.228324000000157,
+        3.362145000000055
+      ],
+      "operationsPerSecond": 257376.6286578581,
+      "heapDeltaBytes": 33408,
+      "rssDeltaBytes": 131072
+    }
+  ],
+  "comparison": [
+    {
+      "name": "dispatch/ignored-ordinary",
+      "status": "compared",
+      "throughputChangePercent": 557.260615132163,
+      "regressionPercent": 0,
+      "heapChangeBytes": -44640
+    },
+    {
+      "name": "dispatch/ignored-unknown",
+      "status": "compared",
+      "throughputChangePercent": 300.3864861569708,
+      "regressionPercent": 0,
+      "heapChangeBytes": 6016
+    },
+    {
+      "name": "dispatch/ignored-bot",
+      "status": "compared",
+      "throughputChangePercent": 919.4241025675549,
+      "regressionPercent": 0,
+      "heapChangeBytes": -9168
+    },
+    {
+      "name": "dispatch/long-input",
+      "status": "compared",
+      "throughputChangePercent": 18608.92682950686,
+      "regressionPercent": 0,
+      "heapChangeBytes": 106936
+    },
+    {
+      "name": "dispatch/quoted-long-input",
+      "status": "compared",
+      "throughputChangePercent": 311.93717966476163,
+      "regressionPercent": 0,
+      "heapChangeBytes": 1956112
+    },
+    {
+      "name": "dispatch/apostrophe-long-input",
+      "status": "compared",
+      "throughputChangePercent": 1701.446094901194,
+      "regressionPercent": 0,
+      "heapChangeBytes": -17736
+    },
+    {
+      "name": "catalog/register",
+      "status": "compared",
+      "throughputChangePercent": 710.040328501178,
+      "regressionPercent": 0,
+      "heapChangeBytes": 20392
+    },
+    {
+      "name": "store/read-large-state",
+      "status": "compared",
+      "throughputChangePercent": 73944.96283910441,
+      "regressionPercent": 0,
+      "heapChangeBytes": 6328
+    }
+  ]
+}

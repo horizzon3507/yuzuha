@@ -1,0 +1,147 @@
+{
+  "suite": "refinement",
+  "version": "0.1.6",
+  "date": "2026-10-22T23:17:32.131Z",
+  "node": "26.11.1",
+  "platform": "linux",
+  "arch": "x64",
+  "cpu": "AMD Ryzen 5 5625U with Radeon Graphics",
+  "gc": true,
+  "sourceHashes": {
+    "commands/arguments.js": "964fa333095aced3f9a3946936b4713acbecae414e4c07c564e98da5d78580df",
+    "domain/track-queue.js": "d7ef3f202ed9b677689d6f6c2d018e1108886b68c0ad92d1b2f3039e22b5666e",
+    "domain/music-state.js": "a8ef96fdb420a38c0eaddaf23756f8210165df9e98e50bb00cc26ed156c9b333",
+    "services/music.js": "0da8a48f2c87b58d84e1e5be9e6e0f516c3332196383b60e503a8939b6d06c56",
+    "services/music-player.js": "2a0ab19b27331431bdbd8912371a787bd0444980430d0151f49777f02b7a0ae2",
+    "infrastructure/lavalink/node.js": "18246231adb0f1349c05b0a76f4bc8da1697996d2f3cf53c1d507f4633fd26f0",
+    "infrastructure/lavalink/protocol.js": "854976db25aa706eb51a065647b946854fdf4d37d7a0fd81e299b2367d0e3ec6"
+  },
+  "config": {
+    "iterations": 10000,
+    "samples": 7,
+    "warmup": 2000,
+    "queueSize": 5000,
+    "pageSize": 25,
+    "fanout": 32,
+    "concurrency": 1,
+    "json": true
+  },
+  "results": [
+    {
+      "name": "arguments/typed-flags",
+      "iterations": 10000,
+      "operations": 70000,
+      "unitsPerOperation": 1,
+      "concurrency": 1,
+      "medianMs": 25.967412000000024,
+      "p95Ms": 28.855936999999983,
+      "samplesMs": [
+        28.855936999999983,
+        27.052348999999992,
+        27.330869000000007,
+        24.764466000000027,
+        24.76959599999998,
+        25.967412000000024,
+        24.285892999999987
+      ],
+      "operationsPerSecond": 382458.2319277203,
+      "heapDeltaBytes": -12352,
+      "rssDeltaBytes": 1429504
+    },
+    {
+      "name": "dispatch/typed-flags",
+      "iterations": 10000,
+      "operations": 70000,
+      "unitsPerOperation": 1,
+      "concurrency": 1,
+      "medianMs": 103.52231300000017,
+      "p95Ms": 136.51584699999995,
+      "samplesMs": [
+        136.51584699999995,
+        124.66384399999993,
+        98.24352499999998,
+        100.05153099999995,
+        96.69548399999996,
+        103.52231300000017,
+        112.68940100000009
+      ],
+      "operationsPerSecond": 90628.73679679293,
+      "heapDeltaBytes": 1424072,
+      "rssDeltaBytes": 31748096
+    },
+    {
+      "name": "music/queue-page",
+      "iterations": 100,
+      "operations": 700,
+      "unitsPerOperation": 1,
+      "concurrency": 1,
+      "medianMs": 5.475255000000061,
+      "p95Ms": 6.485452000000123,
+      "samplesMs": [
+        6.485452000000123,
+        5.348909000000049,
+        5.442313000000013,
+        5.417427000000089,
+        5.613453000000163,
+        5.475255000000061,
+        5.615697000000182
+      ],
+      "operationsPerSecond": 17767.171171414164,
+      "heapDeltaBytes": 20000,
+      "rssDeltaBytes": 0
+    },
+    {
+      "name": "music/signaled-search-fanout",
+      "iterations": 100,
+      "operations": 700,
+      "unitsPerOperation": 1,
+      "concurrency": 1,
+      "medianMs": 31.457595000000083,
+      "p95Ms": 35.16093100000012,
+      "samplesMs": [
+        34.095590999999786,
+        35.16093100000012,
+        34.18915700000002,
+        31.457595000000083,
+        26.45136700000012,
+        25.526618999999982,
+        20.950524000000087
+      ],
+      "operationsPerSecond": 3368.108508369439,
+      "heapDeltaBytes": 952952,
+      "rssDeltaBytes": 4083712,
+      "backendRequests": 700,
+      "backendRequestsPerOperation": 1
+    }
+  ],
+  "comparison": [
+    {
+      "name": "arguments/typed-flags",
+      "status": "compared",
+      "throughputChangePercent": 56.05579611024905,
+      "regressionPercent": 0,
+      "heapChangeBytes": 2712
+    },
+    {
+      "name": "dispatch/typed-flags",
+      "status": "compared",
+      "throughputChangePercent": 39.22346993753203,
+      "regressionPercent": 0,
+      "heapChangeBytes": 1168
+    },
+    {
+      "name": "music/queue-page",
+      "status": "compared",
+      "throughputChangePercent": 21575.43264965391,
+      "regressionPercent": 0,
+      "heapChangeBytes": 49040
+    },
+    {
+      "name": "music/signaled-search-fanout",
+      "status": "compared",
+      "throughputChangePercent": 508.56188050620847,
+      "regressionPercent": 0,
+      "heapChangeBytes": -15703960
+    }
+  ]
+}

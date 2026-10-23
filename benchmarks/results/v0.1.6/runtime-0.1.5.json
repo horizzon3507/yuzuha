@@ -1,0 +1,341 @@
+{
+  "version": "0.1.5",
+  "date": "2026-10-22T22:20:33.886Z",
+  "node": "26.11.1",
+  "platform": "linux",
+  "arch": "x64",
+  "cpu": "AMD Ryzen 5 5625U with Radeon Graphics",
+  "gc": true,
+  "config": {
+    "iterations": 10000,
+    "samples": 9,
+    "concurrency": 16,
+    "catalogSize": 1000,
+    "payloadSize": 4096,
+    "soakRounds": 20,
+    "json": true
+  },
+  "results": [
+    {
+      "name": "dispatch/native",
+      "operations": 90000,
+      "concurrency": 1,
+      "medianMs": 124.212898,
+      "p95Ms": 173.14809900000006,
+      "operationsPerSecond": 85057.89161547116,
+      "heapDeltaBytes": 1598528,
+      "rssDeltaBytes": 47460352,
+      "samplesMs": [
+        55.51429299999998,
+        71.74299000000002,
+        124.212898,
+        173.14809900000006,
+        94.68302900000003,
+        167.40865399999996,
+        101.20111600000007,
+        145.29655100000014,
+        124.89524899999992
+      ]
+    },
+    {
+      "name": "dispatch/native-concurrent",
+      "operations": 90000,
+      "concurrency": 16,
+      "medianMs": 109.910887,
+      "p95Ms": 177.373472,
+      "operationsPerSecond": 86764.97075510978,
+      "heapDeltaBytes": 1484872,
+      "rssDeltaBytes": 43819008,
+      "samplesMs": [
+        68.63688900000011,
+        76.72509299999979,
+        109.910887,
+        177.373472,
+        86.74499500000002,
+        157.04877299999998,
+        92.82692300000008,
+        146.95802900000035,
+        121.05990800000018
+      ]
+    },
+    {
+      "name": "dispatch/functions",
+      "operations": 90000,
+      "concurrency": 1,
+      "medianMs": 140.17863100000022,
+      "p95Ms": 199.04885400000012,
+      "operationsPerSecond": 69637.83914794093,
+      "heapDeltaBytes": 1524680,
+      "rssDeltaBytes": 7503872,
+      "samplesMs": [
+        97.63604200000009,
+        99.08341000000019,
+        132.4123209999998,
+        196.29893200000015,
+        140.17863100000022,
+        199.04885400000012,
+        116.19194900000002,
+        165.4511980000002,
+        146.0994770000002
+      ]
+    },
+    {
+      "name": "dispatch/functions-concurrent",
+      "operations": 90000,
+      "concurrency": 16,
+      "medianMs": 141.5823260000002,
+      "p95Ms": 209.76755700000012,
+      "operationsPerSecond": 67125.63516401629,
+      "heapDeltaBytes": 1498872,
+      "rssDeltaBytes": 1867776,
+      "samplesMs": [
+        97.50664900000038,
+        102.54337499999974,
+        141.5823260000002,
+        209.76755700000012,
+        113.39221199999974,
+        182.45045200000004,
+        123.65260500000022,
+        185.32833400000072,
+        184.5459260000007
+      ]
+    },
+    {
+      "name": "runtime/compile",
+      "operations": 90000,
+      "concurrency": 1,
+      "medianMs": 18.56192800000008,
+      "p95Ms": 25.87600999999995,
+      "operationsPerSecond": 513686.8816019735,
+      "heapDeltaBytes": 23864,
+      "rssDeltaBytes": 0,
+      "samplesMs": [
+        25.87600999999995,
+        20.97754299999997,
+        20.16930599999978,
+        18.56192800000008,
+        17.726028000000042,
+        17.89449500000046,
+        17.831937999999354,
+        18.60540999999921,
+        17.56134900000052
+      ]
+    },
+    {
+      "name": "runtime/evaluate",
+      "operations": 90000,
+      "concurrency": 1,
+      "medianMs": 301.3375880000003,
+      "p95Ms": 391.7830409999997,
+      "operationsPerSecond": 31327.453691935476,
+      "heapDeltaBytes": 116856,
+      "rssDeltaBytes": 655360,
+      "samplesMs": [
+        366.8125310000005,
+        391.7830409999997,
+        316.66237999999976,
+        301.3375880000003,
+        300.3917019999999,
+        308.35567399999945,
+        298.85349399999996,
+        290.171284,
+        298.5118220000004
+      ]
+    },
+    {
+      "name": "store/transaction-concurrent",
+      "operations": 90000,
+      "concurrency": 16,
+      "medianMs": 77.57012899999972,
+      "p95Ms": 90.82857999999942,
+      "operationsPerSecond": 130870.7926899599,
+      "heapDeltaBytes": 77880,
+      "rssDeltaBytes": 29409280,
+      "samplesMs": [
+        79.48859099999936,
+        82.37457900000118,
+        77.57012899999972,
+        77.92493500000091,
+        90.82857999999942,
+        71.36028100000112,
+        68.6010010000009,
+        69.75159100000019,
+        69.80150400000093
+      ]
+    },
+    {
+      "name": "dispatch/large-catalog",
+      "operations": 90000,
+      "concurrency": 1,
+      "medianMs": 107.11155999999937,
+      "p95Ms": 173.69093500000054,
+      "operationsPerSecond": 90542.65636471796,
+      "heapDeltaBytes": 1478400,
+      "rssDeltaBytes": 4268032,
+      "samplesMs": [
+        49.187824000000546,
+        68.50291599999946,
+        107.11155999999937,
+        173.69093500000054,
+        91.72218799999973,
+        155.8484669999998,
+        93.96858499999871,
+        133.93308400000024,
+        120.04106300000058
+      ]
+    },
+    {
+      "name": "runtime/large-payload",
+      "operations": 90000,
+      "concurrency": 1,
+      "medianMs": 13.745034999999916,
+      "p95Ms": 23.33225300000049,
+      "operationsPerSecond": 643478.835337606,
+      "heapDeltaBytes": 55208,
+      "rssDeltaBytes": 0,
+      "samplesMs": [
+        23.33225300000049,
+        19.13484299999982,
+        16.315200000000914,
+        14.648000000001048,
+        13.592759000001024,
+        12.51439499999833,
+        13.330456000001504,
+        13.745034999999916,
+        13.251799000001483
+      ]
+    }
+  ],
+  "memory": {
+    "samples": [
+      {
+        "round": 0,
+        "operations": 0,
+        "heapUsed": 27909072,
+        "rss": 231636992
+      },
+      {
+        "round": 1,
+        "operations": 10000,
+        "heapUsed": 27934440,
+        "rss": 181919744
+      },
+      {
+        "round": 2,
+        "operations": 20000,
+        "heapUsed": 27936680,
+        "rss": 182120448
+      },
+      {
+        "round": 3,
+        "operations": 30000,
+        "heapUsed": 27966928,
+        "rss": 182251520
+      },
+      {
+        "round": 4,
+        "operations": 40000,
+        "heapUsed": 27967016,
+        "rss": 182251520
+      },
+      {
+        "round": 5,
+        "operations": 50000,
+        "heapUsed": 27967104,
+        "rss": 182312960
+      },
+      {
+        "round": 6,
+        "operations": 60000,
+        "heapUsed": 27967192,
+        "rss": 182312960
+      },
+      {
+        "round": 7,
+        "operations": 70000,
+        "heapUsed": 27967280,
+        "rss": 182468608
+      },
+      {
+        "round": 8,
+        "operations": 80000,
+        "heapUsed": 27967368,
+        "rss": 182468608
+      },
+      {
+        "round": 9,
+        "operations": 90000,
+        "heapUsed": 27967456,
+        "rss": 182472704
+      },
+      {
+        "round": 10,
+        "operations": 100000,
+        "heapUsed": 27967544,
+        "rss": 182603776
+      },
+      {
+        "round": 11,
+        "operations": 110000,
+        "heapUsed": 27967632,
+        "rss": 182632448
+      },
+      {
+        "round": 12,
+        "operations": 120000,
+        "heapUsed": 27967720,
+        "rss": 182632448
+      },
+      {
+        "round": 13,
+        "operations": 130000,
+        "heapUsed": 27967888,
+        "rss": 183287808
+      },
+      {
+        "round": 14,
+        "operations": 140000,
+        "heapUsed": 27967976,
+        "rss": 186433536
+      },
+      {
+        "round": 15,
+        "operations": 150000,
+        "heapUsed": 27968064,
+        "rss": 186433536
+      },
+      {
+        "round": 16,
+        "operations": 160000,
+        "heapUsed": 27968152,
+        "rss": 186429440
+      },
+      {
+        "round": 17,
+        "operations": 170000,
+        "heapUsed": 27968240,
+        "rss": 186429440
+      },
+      {
+        "round": 18,
+        "operations": 180000,
+        "heapUsed": 27968536,
+        "rss": 186462208
+      },
+      {
+        "round": 19,
+        "operations": 190000,
+        "heapUsed": 27970568,
+        "rss": 186724352
+      },
+      {
+        "round": 20,
+        "operations": 200000,
+        "heapUsed": 27970656,
+        "rss": 186826752
+      }
+    ],
+    "heapGrowthBytes": 61584,
+    "rssGrowthBytes": -44810240
+  }
+}

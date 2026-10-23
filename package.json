@@ -76,6 +76,8 @@
     "check:architecture": "node scripts/check-architecture.mjs",
     "check:docs": "node scripts/check-docs.mjs",
     "bench": "npm run build && node --expose-gc benchmarks/run.mjs",
+    "bench:performance": "npm run build && node --expose-gc benchmarks/performance.mjs",
+    "bench:refinement": "npm run build && node --expose-gc benchmarks/refinement.mjs",
     "check:editor": "tsc -p editors/vscode/tsconfig.json",
     "package:editor": "node scripts/package-editor.mjs"
   },
