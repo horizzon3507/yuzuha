@@ -1,6 +1,10 @@
 import { ScriptError } from '../errors.js';
 import type { Node, Program } from './ast.js';
 
+function nameStart(code: number): boolean {
+  return code >= 65 && code <= 90 || code >= 97 && code <= 122 || code === 95;
+}
+
 export function parse(source: string, file = '<script>'): Program {
   if (source.length > 100_000) throw new ScriptError('SOURCE_LIMIT', 'Script excede 100000 caracteres.', source, 0, file);
   let pos = 0;
@@ -10,24 +14,26 @@ export function parse(source: string, file = '<script>'): Program {
   function sequence(argument: boolean, depth: number): Node[] {
     if (depth > 64) fail('Aninhamento excede 64 níveis.');
     const nodes: Node[] = [];
-    let value = '', start = pos;
+    let value = '', start = pos, chunk = pos;
     function flush() {
+      value += source.slice(chunk, pos);
       if (value) nodes.push({ kind: 'text', value, offset: start });
       value = '';
-      start = pos;
+      chunk = start = pos;
     }
     while (pos < source.length) {
       const char = source[pos]!;
       if (argument && (char === ';' || char === ']')) break;
       if (!argument && char === ']') fail('Colchete de fechamento inesperado.');
-      if (char === '\\' && /[\\$;\[\]]/.test(source[pos + 1] ?? '')) {
-        value += source[pos + 1]; pos += 2; continue;
+      if (char === '\\' && '\\$;[]'.includes(source[pos + 1] ?? '\0')) {
+        value += source.slice(chunk, pos) + source[pos + 1]; pos += 2; chunk = pos; continue;
       }
-      if (char === '$' && /[A-Za-z_]/.test(source[pos + 1] ?? '')) {
+      if (char === '$' && nameStart(source.charCodeAt(pos + 1))) {
         flush();
         const offset = pos++;
-        const match = /^[A-Za-z_][A-Za-z_0-9]*/.exec(source.slice(pos))!;
-        const name = match[0]; pos += name.length;
+        const nameOffset = pos++;
+        while (nameStart(source.charCodeAt(pos)) || source.charCodeAt(pos) >= 48 && source.charCodeAt(pos) <= 57) pos++;
+        const name = source.slice(nameOffset, pos);
         const args: Node[][] = [];
         if (source[pos] === '[') {
           pos++;
@@ -42,7 +48,7 @@ export function parse(source: string, file = '<script>'): Program {
           }
         }
         nodes.push({ kind: 'call', name, args, offset });
-        start = pos;
+        chunk = start = pos;
       } else if (char === '[') {
         if (!argument) fail('Colchete literal fora de argumento.');
         let level = 0, end = pos;
@@ -53,8 +59,8 @@ export function parse(source: string, file = '<script>'): Program {
           else if (current === ']') { level--; if (level === 0) break; }
         }
         if (level !== 0) fail('Colchete literal sem fechamento.');
-        value += source.slice(pos, end + 1); pos = end + 1;
-      } else { value += char; pos++; }
+        pos = end + 1;
+      } else pos++;
     }
     flush();
     return nodes;
