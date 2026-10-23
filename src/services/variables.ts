@@ -89,6 +89,7 @@ export class VariableService {
 
   get(scope: VariableScope, name: string, fallback: JsonValue = null): Promise<JsonValue> {
     const key = this.key(scope, name);
+    if (this.store.readVariable) return this.store.readVariable(key, this.now).then(value => value === undefined ? cloneValue(fallback) : value);
     return this.store.read(state => present(state, key, this.now()) ? state.variables[key]! : cloneValue(fallback));
   }
 
