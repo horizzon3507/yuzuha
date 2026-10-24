@@ -5,7 +5,7 @@ export const usage = `Yuzuha ${VERSION}
 
 yuzuha init <diretório> [--js | --ts] [--functions] [--local] Cria um projeto de bot
 yuzuha check [config ou diretório] [--json] Valida comandos sem login
-yuzuha functions [--json] [--category nome] Lista funções e assinaturas
+yuzuha functions [--json] [--category nome] [--search termo] Lista funções e assinaturas
 yuzuha lint <arquivo|diretório> [--json] [--catalog arquivo] Valida texto sem importar
 yuzuha test <cenários.json> [--json]       Executa cenários offline
 yuzuha data <stats|cleanup|backup|restore> <store> [opções] Manutenção offline
@@ -21,7 +21,7 @@ init usa o pacote npm; --local vincula a instalação atual para desenvolvimento
 
 export type CLIArguments = { action: 'help' } | { action: 'version' }
   | { action: 'init'; directory: string; language: 'js' | 'ts'; functions: boolean; local: boolean }
-  | { action: 'functions'; json: boolean; category?: string; catalog?: boolean; config?: string; pluginsOnly?: boolean }
+  | { action: 'functions'; json: boolean; category?: string; search?: string; catalog?: boolean; config?: string; pluginsOnly?: boolean }
   | { action: 'lint'; input: string; json: boolean; catalogs: string[] }
   | { action: 'test'; input: string; json: boolean }
   | { action: 'data'; operation: 'stats' | 'cleanup' | 'backup' | 'restore'; input: string; json: boolean;
@@ -49,18 +49,21 @@ export function parseArguments(args: string[]): CLIArguments {
     return { action, directory, language: flags.includes('--js') ? 'js' : 'ts', functions: flags.includes('--functions'), local: flags.includes('--local') };
   }
   if (action === 'functions') {
-    let json = false, category: string | undefined, catalog = false, config: string | undefined, pluginsOnly = false;
+    let json = false, category: string | undefined, search: string | undefined, catalog = false, config: string | undefined, pluginsOnly = false;
     for (let i = 0; i < rest.length; i++) {
       if (rest[i] === '--json' && !json) json = true;
       else if (rest[i] === '--catalog' && !catalog) catalog = true;
       else if (rest[i] === '--plugins-only' && !pluginsOnly) pluginsOnly = true;
       else if (rest[i] === '--category' && !category && rest[i + 1] && !rest[i + 1]!.startsWith('-')) category = rest[++i];
-      else if (rest[i] === '--config' && !config && rest[i + 1] && !rest[i + 1]!.startsWith('-')) config = rest[++i];
+      else if (rest[i] === '--search' && search === undefined && rest[i + 1] && !rest[i + 1]!.startsWith('-')) {
+        search = rest[++i]!.trim().replace(/^\$/, '').trim();
+        if (!search) fail('--search exige um termo não vazio.');
+      } else if (rest[i] === '--config' && !config && rest[i + 1] && !rest[i + 1]!.startsWith('-')) config = rest[++i];
       else fail();
     }
     if (config && !catalog) fail('--config exige functions --catalog.');
     if (pluginsOnly && (!catalog || !config)) fail('--plugins-only exige --catalog e --config explícito.');
-    return { action, json, category, ...(catalog ? { catalog } : {}), ...(config ? { config } : {}), ...(pluginsOnly ? { pluginsOnly } : {}) };
+    return { action, json, category, ...(search === undefined ? {} : { search }), ...(catalog ? { catalog } : {}), ...(config ? { config } : {}), ...(pluginsOnly ? { pluginsOnly } : {}) };
   }
   if (action === 'lint' || action === 'test') {
     let input: string | undefined, json = false;

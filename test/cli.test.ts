@@ -31,6 +31,50 @@ test('CLI reports package version and filters function metadata', async () => {
   assert.ok(output.length > 0); assert.ok(output.every(fn => fn.category === 'moderation'));
 });
 
+test('CLI search arguments normalize terms and reject missing, empty or repeated values', () => {
+  assert.deepEqual(parseArguments(['functions', '--search', '  $RePlY  ', '--category', 'messages', '--json']),
+    { action: 'functions', json: true, category: 'messages', search: 'RePlY' });
+  assert.deepEqual(parseArguments(['functions']), { action: 'functions', json: false, category: undefined });
+  for (const args of [['--search'], ['--search', ''], ['--search', '   '], ['--search', '$'], ['--search', ' $  '],
+    ['--search', '--json'], ['--search', 'reply', '--search', 'ban'], ['--search=reply']]) {
+    assert.throws(() => parseArguments(['functions', ...args]), { code: 'USAGE' });
+  }
+  assert.throws(() => parseArguments(['functions', '--search', 'reply', '--config', 'bot.mjs']), { code: 'USAGE' });
+  assert.throws(() => parseArguments(['functions', '--search', 'reply', '--plugins-only']), { code: 'USAGE' });
+});
+
+test('CLI searches names, aliases and descriptions while preserving order and metadata', async () => {
+  const all = JSON.parse((await invoke(['functions', '--json'])).stdout) as { name: string; category: string; usage: string; description: string }[];
+  assert.equal(all.length, 306);
+  const named = JSON.parse((await invoke(['functions', '--search', '  $NiCkNaMe ', '--json'])).stdout);
+  assert.deepEqual(named, all.filter(fn => fn.name === 'nickname'));
+  assert.equal(named.length, 1);
+  const alias = JSON.parse((await invoke(['functions', '--search', '$ONLYGUILD', '--json'])).stdout);
+  assert.deepEqual(alias, all.filter(fn => fn.name === 'requireGuild'));
+  assert.equal(alias.length, 1);
+  const described = JSON.parse((await invoke(['functions', '--search', 'ALTERA APELIDO', '--json'])).stdout);
+  assert.deepEqual(described, named);
+  const messages = JSON.parse((await invoke(['functions', '--category', 'messages', '--search', 'MENSAGEM', '--json'])).stdout);
+  assert.ok(messages.length > 0);
+  assert.deepEqual(messages, all.filter(fn => fn.category === 'messages' && fn.description.toLowerCase().includes('mensagem')));
+  const text = (await invoke(['functions', '--search', 'nickname'])).stdout.trimEnd();
+  const nickname = named[0]; assert.ok(nickname);
+  assert.equal(text, `${nickname.usage.padEnd(52)} ${nickname.description}`);
+  const catalog = JSON.parse((await invoke(['functions', '--catalog', '--search', 'nickname'])).stdout);
+  assert.deepEqual(catalog, { version: 1, functions: named });
+});
+
+test('CLI search returns successful empty outputs and still rejects unknown categories', async () => {
+  const search = ['functions', '--search', 'yuzuha-no-such-function-017'];
+  assert.equal((await invoke(search)).stdout.trim(), 'Nenhuma função encontrada.');
+  assert.deepEqual(JSON.parse((await invoke([...search, '--json'])).stdout), []);
+  assert.deepEqual(JSON.parse((await invoke([...search, '--catalog'])).stdout), { version: 1, functions: [] });
+  assert.deepEqual(JSON.parse((await invoke(['functions', '--category', 'moderation', '--search', 'nickname', '--json'])).stdout), []);
+  await assert.rejects(invoke([...search, '--category', 'unknown-category', '--json']), (error: unknown) => {
+    assert.equal(JSON.parse((error as { stderr: string }).stderr).code, 'CATEGORY'); return true;
+  });
+});
+
 test('CLI check JSON reports valid commands and located errors without login', async () => {
   const directory = await mkdtemp(join(tmpdir(), 'yuzuha-cli-check-'));
   try {

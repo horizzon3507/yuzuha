@@ -58,10 +58,14 @@ export async function main(args = process.argv.slice(2)): Promise<void> {
 
     const builtinNames = options.pluginsOnly ? new Set(registerBuiltins(new Runtime()).functions().map(fn => fn.name.replace(/^\$/, '').toLowerCase())) : undefined;
     const visible = builtinNames ? all.filter(fn => !builtinNames.has(fn.name.replace(/^\$/, '').toLowerCase())) : all;
-    const functions = options.category ? visible.filter(fn => fn.category === options.category) : visible;
+    let functions = options.category ? visible.filter(fn => fn.category === options.category) : visible;
     if (options.category && !functions.length) throw new YuzuhaError('CATEGORY', `Categoria desconhecida. Escolha: ${[...new Set(all.map(fn => fn.category))].join(', ')}.`);
+    if (options.search !== undefined) {
+      const term = options.search.toLowerCase();
+      functions = functions.filter(fn => [fn.name, ...(fn.aliases ?? []), fn.description].some(value => value.toLowerCase().includes(term)));
+    }
     const metadata = functions.map(({ execute: _execute, ...value }) => value);
-    console.log(options.catalog ? JSON.stringify({ version: 1, functions: metadata }, null, 2) : options.json ? JSON.stringify(metadata, null, 2) : functions.map(fn => `${fn.usage.padEnd(52)} ${fn.description}`).join('\n'));
+    console.log(options.catalog ? JSON.stringify({ version: 1, functions: metadata }, null, 2) : options.json ? JSON.stringify(metadata, null, 2) : options.search !== undefined && !functions.length ? 'Nenhuma função encontrada.' : functions.map(fn => `${fn.usage.padEnd(52)} ${fn.description}`).join('\n'));
     return;
   }
   let bot: Yuzuha, commandsPath: string;

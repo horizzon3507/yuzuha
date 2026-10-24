@@ -59,6 +59,10 @@ test('catálogo exportado inclui plugins de config explícita sem carregar diret
   assert.ok(report.functions.every((fn: Record<string, unknown>) => !Object.hasOwn(fn, 'execute')));
   const plugins = JSON.parse((await invoke(['functions', '--catalog', '--config', config, '--plugins-only'])).stdout);
   assert.deepEqual(plugins.functions.map((fn: { name: string }) => fn.name), ['pluginFn']);
+  const searched = JSON.parse((await invoke(['functions', '--catalog', '--config', config, '--plugins-only', '--category', 'plugin', '--search', 'FIXTURE'])).stdout);
+  assert.deepEqual(searched, plugins);
+  const excluded = JSON.parse((await invoke(['functions', '--catalog', '--config', config, '--plugins-only', '--search', 'reply'])).stdout);
+  assert.deepEqual(excluded, { version: 1, functions: [] });
   const pluginCatalog = join(directory, 'plugin-catalog.json');
   await writeFile(pluginCatalog, JSON.stringify(plugins));
   const script = join(directory, 'check.yz');
