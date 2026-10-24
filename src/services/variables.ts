@@ -1,3 +1,5 @@
+import { queryOptions, queryState } from '../domain/variable-query.js';
+import type { VariableQueryOptions, VariablePage } from '../domain/variable-query.js';
 import { cloneValue } from '../shared/clone.js';
 import type { JsonValue, State, VariableScope } from '../domain/state.js';
 import { assertSynchronous, variableKey } from '../domain/state.js';
@@ -91,6 +93,14 @@ export class VariableService {
     const key = this.key(scope, name);
     if (this.store.readVariable) return this.store.readVariable(key, this.now).then(value => value === undefined ? cloneValue(fallback) : value);
     return this.store.read(state => present(state, key, this.now()) ? state.variables[key]! : cloneValue(fallback));
+  }
+
+  query(scope: VariableScope, options: VariableQueryOptions = {}): Promise<VariablePage> {
+    const subject = scope === 'guild' ? requireGuild(this.scope.guildID)
+      : scope === 'user' ? requireActor(this.scope.authorID) : '';
+    const query = { scope, subject, ...queryOptions(options) };
+    if (this.store.queryVariables) return this.store.queryVariables(query, this.now);
+    return this.store.read(state => queryState(state, query, this.now()));
   }
 
   async set(scope: VariableScope, name: string, value: JsonValue, options: VariableOptions = {}): Promise<void> {

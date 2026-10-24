@@ -60,3 +60,4 @@ export { loadCommands, commandFiles } from './loader.js';
 export * from './errors.js';
 export * as SDK from '@fluxerjs/core';
 export { decimal, decimalCompare, decimalRound } from './domain/decimal.js';
+export type { VariableQueryOptions, VariableQuery, VariableEntry, VariablePage } from './domain/variable-query.js';

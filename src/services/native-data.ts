@@ -1,3 +1,4 @@
+import type { VariableQueryOptions, VariablePage } from '../domain/variable-query.js';
 import type { JsonValue, VariableScope } from '../domain/state.js';
 import type { VariableService } from './variables.js';
 import type { DataTransaction } from './variables.js';
@@ -5,6 +6,10 @@ import type { VariableOptions } from './variables.js';
 
 export class ScopedData {
   constructor(private readonly variables: VariableService, private readonly scope: VariableScope) {}
+
+  query(options?: VariableQueryOptions): Promise<VariablePage> {
+    return this.variables.query(this.scope, options);
+  }
 
   get(name: string, fallback: JsonValue = null): Promise<JsonValue> {
     return this.variables.get(this.scope, name, fallback);
