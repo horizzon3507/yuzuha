@@ -1,8 +1,15 @@
+import { YuzuhaError } from '../../errors.js';
 import { dataOperations, executeDataOperations } from '../../services/variables.js';
 import { finite, index, toJson } from './arguments.js';
 import { defineFunctions } from './definition.js';
 
 export const storageFunctions = defineFunctions(fn => {
+  fn('queryVars', 'storage', 1, 2, '[escopo;opções?]', 'Consulta prefixo de variáveis global/guild/user; opções prefix, after e limit (1–100); retorna entries e nextCursor.', async c => {
+    const scope = await c.text(0);
+    if (scope !== 'global' && scope !== 'guild' && scope !== 'user') throw new YuzuhaError('VARIABLE_QUERY', 'Escopo deve ser global, guild ou user.');
+    const options = c.count > 1 ? await c.arg(1) : {};
+    return c.ctx.data[scope].query(options as import('../../domain/variable-query.js').VariableQueryOptions);
+  });
   fn('case', 'storage', 1, 1, '[número]', 'Consulta caso do servidor atual.', async c => {
     c.ctx.requireGuild();
     return await c.ctx.case(index(await c.text(0), 1)) ?? null;

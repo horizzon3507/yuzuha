@@ -1,3 +1,5 @@
+import { text } from '../values.js';
+import { loopFrame, setLoopFrame, LoopControl } from '../control-flow.js';
 import { YuzuhaError } from '../../errors.js';
 import { defineFunctions } from './definition.js';
 
@@ -29,6 +31,48 @@ function method(raw: string): string {
 }
 
 export const httpFunctions = defineFunctions(fn => {
+  fn('httpChunk', 'network', 0, 0, '', 'Trecho UTF-8 atual de httpStream; vazio fora do callback.', c => c.ctx.vars.get('__httpChunk') ?? '');
+  fn('httpChunkIndex', 'network', 0, 0, '', 'Índice do trecho textual de httpStream, começando em zero; vazio fora dele.', c => c.ctx.vars.get('__httpChunkIndex') ?? '');
+  fn('httpStream', 'network', 3, 5, '[método;url;callback;corpo?;cabeçalhos?]', 'Consome resposta por trechos UTF-8 e reavalia callback; até 1000 chunks, com backpressure, cancelamento e política HTTP do comando.', async c => {
+    const requestMethod = method(await c.text(0)), url = await c.text(1);
+    const body = c.count > 3 ? await c.text(3) : undefined;
+    const response = await c.wait(c.ctx.http.stream({ method: requestMethod, url,
+      ...(body ? { body } : {}), ...(c.count > 4 ? { headers: headers(await c.text(4)) } : {}) }));
+    const reader = response.body.getReader(), decoder = new TextDecoder();
+    const keys = ['__httpChunk', '__httpChunkIndex'];
+    const saved = new Map(keys.filter(key => c.ctx.vars.has(key)).map(key => [key, c.ctx.vars.get(key)]));
+    const previousFrame = loopFrame(c.ctx), frame = {};
+    let result = '', index = 0, chunks = 0, stop = false;
+    const consume = async (chunk: string): Promise<void> => {
+      if (!chunk) return;
+      c.checkOutput(chunk);
+      c.ctx.vars.set('__httpChunk', chunk); c.ctx.vars.set('__httpChunkIndex', index++);
+      setLoopFrame(c.ctx, frame);
+      try { result += text(await c.fresh(2)); c.checkOutput(result); }
+      catch (error) {
+        if (!(error instanceof LoopControl) || error.frame !== frame) throw error;
+        stop = error.action === 'break';
+      }
+    };
+    try {
+      for (;;) {
+        const next = await c.wait(reader.read());
+        if (next.done) { await consume(decoder.decode()); break; }
+        if (++chunks > 1000) throw new YuzuhaError('EXECUTION_LIMIT', 'Streaming excede 1000 chunks.');
+        await consume(decoder.decode(next.value, { stream: true }));
+        if (stop) break;
+      }
+      return result;
+    } finally {
+      // Source cancellation may never settle; cleanup must not hold the command open.
+      void reader.cancel().catch(() => {});
+      reader.releaseLock();
+      for (const key of keys) {
+        if (saved.has(key)) c.ctx.vars.set(key, saved.get(key)); else c.ctx.vars.delete(key);
+      }
+      setLoopFrame(c.ctx, previousFrame);
+    }
+  });
   fn('httpMultipart', 'network', 3, 4, '[método;url;partes;cabeçalhos?]', 'Envia partes de formulário com value textual ou base64 binário; retorna o corpo da resposta.', async c => {
     const requestMethod = method(await c.text(0));
     if (requestMethod === 'GET' || requestMethod === 'HEAD') throw new YuzuhaError('HTTP_BODY', `${requestMethod} não aceita corpo.`);
