@@ -1,5 +1,90 @@
 # Validação local
 
+## Preparação final da 0.1.7 — 24/10/2026
+
+Biblioteca e CLI na raiz, instaladas com `npm ci` e `package-lock.json`.
+Verificação em Linux x64, Node **26.11.1** e **22.22.3**, npm **12.2.1**.
+
+| Verificação | Resultado |
+|---|---|
+| `npm run check` em Node 26 e Node 22 | PASS em ambos: **542 testes**, tipos, arquitetura de **174 módulos**, build, editor, **306 funções** e links de **38 arquivos Markdown** |
+| `npm run smoke:package` em Node 26 e Node 22 | PASS em ambos: tarball instalado, sete entrypoints, paridade do SDK, consumidores e scaffolds JS/TS, CLI, regex e imagens com/sem Sharp |
+| Gateway | PASS: seis regressões sem login, cobrindo Error/ShardError, emissão pareada, hooks com rejeição, listeners externos, encerramento reentrante e limpeza de login tardio |
+| Streaming de scripts | PASS: fonte cujo `cancel()` nunca termina não impede a propagação de guards nem a restauração do contexto |
+| Parser | PASS: AST, escapes, offsets e erros preservados em **20.000 casos determinísticos**; nove amostras alternadas antes/depois em [BENCHMARKS.md](BENCHMARKS.md) |
+| Distribuição | PASS: workers de regex/imagens, tipos, fontes e guias incluídos; apps, workspaces, dependências web e metadados exclusivos do site ausentes |
+
+Os trechos longos melhoraram no microbenchmark do parser; os casos curtos e
+densos ficaram próximos. A medição não demonstra aceleração do despacho completo.
+O site anterior está preservado na branch local `archive/site-0.1.7-20261024`.
+Esta preparação não criou tag, push, publicação npm ou release remota. Os testes
+usaram mocks, stores temporários e imagens sintéticas, sem conexão ao Fluxer.
+
+## Lacunas implementadas na 0.1.7 — registro de 23/10/2026
+
+Verificação em **23/10/2026**, Linux x64, Node **26.11.1**, npm **12.2.1** e
+Bun **1.4.2**. Esta rodada amplia a preparação inicial da 0.1.7 descrita abaixo.
+
+| Verificação | Resultado |
+|---|---|
+| `npm run check` | PASS: **532 testes da biblioteca**, **68 dos docs**, tipos, arquitetura de **174 módulos**, build, editor e catálogo |
+| Referência web anterior | PASS: **556 páginas**, **306 funções**; 18 inclusões na v0.1.7 com versão na página e no dropdown |
+| Linguagem | PASS: loops, comparador estável, decimais BigInt e regex com prazo/worker/cancelamento |
+| Consultas | PASS: memória/JSON/SQLite, prefixo, cursor, ordem Unicode, TTL, snapshots, rollback e uso do índice SQLite |
+| Tarefas | PASS: prioridades, teto compartilhado em conexões e **processos Node independentes**, recuperação de leases |
+| Streams | PASS: HTTP incremental em scripts, UTF-8 dividido, backpressure, erros protegidos, limite e cancelamento; entrada de anexos limitada |
+| Imagens | PASS: imagens sintéticas reais, resize/rotação/tons de cinza, limites e processos canceláveis |
+| Node 22.22.3 | PASS: **35 testes focados** das novidades, usando o binário Node 22 diretamente; inclui filhos de imagem/regex e processos do scheduler |
+| SDK | PASS: configuração nativa de shards e client injetado sem login; componentes ausentes conferidos nos exports |
+| `npm run smoke:package` | PASS: CLI instalada, regex, JS/TS, SDK, scaffolds e módulo de imagens com e sem Sharp |
+| `npm pack --workspace yuzuha --dry-run` | PASS: **0.1.7**, **960 arquivos**, workers de regex/imagens incluídos e apps excluídos |
+| Interface atualizada | PASS: httpStream exibe versão no corpo e menu; uso sem caixa; animação de altura de 220 ms ao fechar/abrir sem mudança de URL |
+
+O índice SQLite é derivado e reconstruído na primeira consulta após escrita;
+as escritas ainda serializam o estado integral. Anexos recebidos por stream
+são acumulados antes do upload exigido pelo SDK. Componentes interativos e
+comandos de aplicação continuam sem contrato equivalente verificado.
+[FUNCTION-GAPS.md](FUNCTION-GAPS.md) e [INTEGRATIONS.md](INTEGRATIONS.md)
+registram essas limitações. Não houve publicação ou ações reais de bot.
+
+## Monorepo e documentação web — rodada anterior
+
+Verificação local em **23/10/2026**, Linux x64, Node **26.11.1**, npm **12.2.1**
+e Bun **1.4.2**. O pacote permanece em 0.1.7; os apps são privados.
+
+| Verificação | Resultado |
+|---|---|
+| `bun install --frozen-lockfile` | PASS: lockfile único e dependências isoladas, sem alterações |
+| `npm run check` | PASS: **497 testes da biblioteca**, **46 testes dos docs**, tipos, arquitetura, build, editor e catálogo |
+| Docs do gerador anterior | PASS: **518 páginas**, áreas Yuzuha/Funções/Projeto, **288 referências individuais** em **20 categorias**, validação de build e links |
+| Exemplos | PASS: tutoriais nativos, contador concorrente e scripts com resultado esperado em fixtures; exemplos de moderação/rede compilados sem ações |
+| `npm run smoke:package` | PASS: consumidores JS/TS, SDK, CLI, editor, música sobre mocks e scaffolds instalados do tarball |
+| Worker da landing | PASS: build React e `wrangler deploy --dry-run`, assets estáticos e nenhum binding |
+| Interface | PASS: navegação por teclado, cópia e exemplos alternáveis; landing inspecionada entre 320 e 1280 px; docs em temas claro e escuro |
+| Acento | PASS: `#EACB1A`; texto escuro no amarelo a **9,30:1**, links claros em variante escura a **6,79:1** |
+
+Esse registro corresponde à organização anterior, com landing e documentação
+web. O site e os relatórios de interface foram preservados na branch local
+`archive/site-0.1.7-20261024`. A biblioteca voltou à raiz com guias Markdown;
+as medições de interface acima são históricas. O ensaio do Worker não publicou
+o site; nenhum bot fez login, e nenhum pacote, tag ou release foi criado.
+
+## Atualização 0.1.7
+
+Preparação local em **23/10/2026**, Linux x64, Node **26.11.1** e npm **12.2.1**.
+A distribuição inclui o conteúdo preparado na 0.1.6 e acrescenta busca na CLI.
+
+| Verificação | Resultado |
+|---|---|
+| `npm run check` | PASS: tipos, arquitetura, **497 testes**, build, editor, 288 funções e links |
+| Busca de funções | PASS: nome, alias, descrição, caixa, `$`, espaços, categoria, JSON, catálogo, plugins, entradas inválidas e resultados vazios |
+| `npm run smoke:package` | PASS: busca pela CLI instalada do tarball, consumidores JS/TS, SDK, música sobre mocks e scaffolds offline |
+| `npm pack --dry-run` | PASS: versão 0.1.7, CLI, música, fontes do plugin, extensão e documentação incluídas |
+
+Os testes não fizeram login nem ações reais no Fluxer. As integrações de áudio
+e comparações de performance descritas na 0.1.6 abaixo são evidências históricas;
+não foram repetidas nesta preparação. Nenhum pacote, tag ou release foi publicado.
+
 ## Atualização 0.1.6
 
 Preparação local em **22/10/2026**, Linux x64, Node **26.11.1**, npm **12.2.1** e

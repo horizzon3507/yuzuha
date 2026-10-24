@@ -2,6 +2,10 @@
 
 Biblioteca TypeScript para bots do Fluxer; JavaScript ESM emitido em dist.
 
+A biblioteca e a CLI vivem na raiz do repositório. Os caminhos de módulos abaixo
+são relativos a `src/`. A documentação é Markdown em `docs/`, com exemplos em
+`examples/`. Instale com `npm ci`; runtime, build e testes usam Node.js.
+
 - Leia docs/PLAN.md e docs/PARITY.md antes de alterar arquitetura ou cobertura.
 - Rode npm run check e npm run smoke:package para mudanças de pacote/CLI.
 - Use npm run docs:generate após mudar metadados de funções.

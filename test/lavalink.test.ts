@@ -5,6 +5,7 @@ import type WebSocket from 'ws';
 import { LavalinkNode, MusicManager } from '../src/music.js';
 import type { LavalinkOptions } from '../src/music.js';
 import { MockMusicBackend, mockTrack } from '../src/testing.js';
+import { VERSION } from '../src/shared/package.js';
 
 class Socket extends EventEmitter {
   closed = false;
@@ -44,7 +45,7 @@ test('Lavalink handshake distinguishes node and voice sessions and authenticates
   const first = node.connect(); assert.equal(node.connect(), first); await first;
   assert.equal(node.state, 'ready'); assert.equal(node.sessionID, 's1'); assert.equal(node.available, true);
   assert.equal(handshakes[0]?.url, 'ws://localhost:2333/proxy/v4/websocket');
-  assert.deepEqual(handshakes[0]?.headers, { Authorization: 'mock-password', 'User-Id': '123', 'Client-Name': 'yuzuha/0.1.6' });
+  assert.deepEqual(handshakes[0]?.headers, { Authorization: 'mock-password', 'User-Id': '123', 'Client-Name': `yuzuha/${VERSION}` });
   assert.deepEqual(JSON.parse(String(requests[0]?.init.body)), { resuming: true, timeout: 60 });
   await node.updatePlayer('guild/with space', { track: { encoded: 'encoded' }, voice: { token: 'mock', endpoint: 'mock', sessionId: 'voice-session' } }, { noReplace: true });
   const request = requests.at(-1)!;

@@ -1,16 +1,16 @@
 # Versionamento
 
 O Yuzuha aplica o formato Hory ao histórico e usa **SemVer simples** no pacote.
-A versão desta atualização é **0.1.6**.
+A versão desta atualização é **0.1.7**.
 
 ## Pacote e histórico
 
 | Lugar | Formato nesta versão |
 |---|---|
-| `package.json` e raiz do `package-lock.json` | `0.1.6` |
-| Pacote npm e saída de `yuzuha --version` | `0.1.6` |
-| Título do changelog | `## v0.1.6 · 22/10/2026` |
-| Eventual tag Git | `v0.1.6` |
+| `package.json` e entrada raiz de `package-lock.json` | `0.1.7` |
+| Pacote npm e saída de `yuzuha --version` | `0.1.7` |
+| Título do changelog | `## v0.1.7 · 23/10/2026` |
+| Eventual tag Git | `v0.1.7` |
 
 O SDK e a CLI pertencem ao mesmo pacote. Para bibliotecas, a convenção Hory mantém
 SemVer sem `m`, sem seções por superfície e sem sufixos de canal.
@@ -30,7 +30,7 @@ estivermos em `0.x`. Ao chegar a `1.0.0`, mudanças incompatíveis exigem major;
 novas funcionalidades compatíveis, minor; correções compatíveis, patch.
 
 Os exports públicos são `yuzuha`, `yuzuha/functions`, `yuzuha/sdk`,
-`yuzuha/testing`, `yuzuha/tooling` e `yuzuha/music`. A organização interna de `src/` não cria estabilidade de deep
+`yuzuha/testing`, `yuzuha/tooling`, `yuzuha/music` e `yuzuha/images`. A organização interna de `src/` não cria estabilidade de deep
 imports. Schema persistido,
 gramática e funções documentadas também fazem parte da compatibilidade.
 
@@ -39,6 +39,22 @@ A versão do SDK é fixada separadamente. Atualizá-la exige revisar
 gerado por `init` pertence ao consumidor e não precisa acompanhar a biblioteca.
 
 ## Preparar uma atualização
+
+### Migrar para 0.1.7
+
+A distribuição 0.1.7 inclui o conteúdo preparado na 0.1.6 e acrescenta
+`yuzuha functions --search <termo>`. A busca combina com os filtros e formatos
+existentes sem alterar imports anteriores, schema 2 ou SDK 3.3.0.
+A linguagem recebe 18 funções, chegando a 306. `GuildInfo.features` e
+`UsersResources.leaveGuild` são opcionais para preservar recursos customizados;
+os novos auxiliares do contexto recusam recursos ausentes explicitamente.
+O port `Store.queryVariables` também é opcional; memória/JSON mantêm fallback
+por snapshot. SQLite cria um índice derivado automaticamente na primeira consulta,
+sem alterar schema 2. Prioridade padrão é zero e capacidade compartilhada só é
+ativada com `globalConcurrency`. `yuzuha/images` requer instalar Sharp; o restante
+da biblioteca continua independente dele. Não há mudanças obrigatórias nos bots
+existentes.
+As instruções da 0.1.6 abaixo continuam aplicáveis ao atualizar da 0.1.5.
 
 ### Migrar para 0.1.6
 
@@ -157,7 +173,7 @@ externos para idempotência. Veja [NATIVE.md](docs/NATIVE.md) e
 
 ### Procedimento
 
-1. Atualize manifest e lockfile para a mesma versão.
+1. Atualize `package.json` e regenere `package-lock.json` para a mesma versão.
 2. Acrescente a entrada no [CHANGELOG.md](CHANGELOG.md), com data real e mudanças verificáveis.
 3. Atualize migração, cobertura e documentação quando o contrato mudar.
 4. Rode `npm run check` e `npm run smoke:package` e registre a evidência.

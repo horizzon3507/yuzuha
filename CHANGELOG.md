@@ -21,6 +21,25 @@ documentos. Veja a [política completa](VERSIONING.md).
 
 </details>
 
+## v0.1.7 · 23/10/2026
+
+Loops controláveis, comparadores de arrays, regex isolada, decimais exatos e busca pela CLI, com o conteúdo preparado na 0.1.6. Esta atualização da biblioteca Yuzuha foi preparada em 23/10/2026 (v0.1.7).
+
+- `yuzuha functions --search <termo>` filtra nomes, aliases e descrições por trecho, sem distinguir maiúsculas e minúsculas. Aceita `$` inicial e combina com categoria, JSON, exportação de catálogo e filtros de plugins, preservando a ordem dos resultados.
+- Buscas sem resultados encerram com sucesso e retornam uma mensagem no terminal ou uma lista vazia em JSON. Termos vazios, ausentes ou repetidos são recusados; categorias desconhecidas continuam sendo erros.
+- Consultas paginadas de variáveis por prefixo, com TTL e cursor; índice SQLite derivado do snapshot e invalidado por trigger. Streaming UTF-8 em scripts, com backpressure, controle de loop e cancelamento.
+- `yuzuha/images` adiciona transformação opcional de PNG/JPEG/WebP com Sharp em processos limitados e canceláveis. `ctx.sendStream` lê anexos com orçamento e prazo antes do upload de bytes exigido pelo SDK.
+- Auditoria de integrações documenta configuração de shards já suportada pelo core, gerenciamento externo de processos e ausência de contratos para componentes/comandos de aplicação.
+- Tarefas aceitam prioridade persistida; `globalConcurrency` coordena claims no store compartilhado, preservando o limite local.
+- **18 funções novas**, totalizando **306**: `guildFeatures`, `leaveGuild`, `while`, `break`, `continue`, `arraySortWith`, `sortLeft`, `sortRight`, `regexTest`, `regexMatch`, `regexReplace`, `decimal`, `decimalCompare`, `decimalRound`, `queryVars`, `httpStream`, `httpChunk` e `httpChunkIndex`.
+- `ctx.guildFeatures()` copia as features do servidor; `ctx.leaveGuild()` só permite a saída solicitada pelo dono do servidor, com a mesma autorização nos scripts. Ports customizados antigos continuam válidos; ausência do recurso retorna `NATIVE_UNAVAILABLE`.
+- Loops restauram o contexto ao sair; `break` e `continue` atravessam `$try` e afetam o corpo do loop mais próximo. Comparadores usam ordenação estável e orçamento compartilhado. Decimais retornam texto e usam até 1000 dígitos, sem perda por `Number`.
+- Regex roda em workers limitados, com cancelamento, prazo e limites de entrada, correspondências e saída. O worker é incluído no tarball e não executa JavaScript fornecido pelo script.
+- Inclui as otimizações de dispatch, runtime e estado, as APIs nativas de música, a integração Lavalink v4 e a ponte de áudio descritas na entrada 0.1.6. SDK 3.3.0, schema 2 e imports anteriores permanecem compatíveis.
+- Erros do gateway e de shards chegam aos hooks `onError`/`onLog` mesmo sem listeners do usuário. Os listeners padrão permanecem ativos durante o encerramento e preservam os listeners de clients injetados.
+- O parser salta trechos de texto comum mantendo offsets, escapes e diagnósticos. A limpeza de `$httpStream` não bloqueia o comando quando a fonte deixa o cancelamento pendente.
+- Biblioteca e CLI voltam à raiz do repositório, com instalação npm, guias Markdown e exemplos incluídos no pacote. O site fica arquivado para uma etapa futura.
+
 ## v0.1.6 · 22/10/2026
 
 Dispatch, argumentos, runtime e leituras de estado mais rápidos, com ferramentas nativas para música e integração Lavalink v4. Esta atualização da biblioteca Yuzuha foi preparada em 22/10/2026 (v0.1.6).

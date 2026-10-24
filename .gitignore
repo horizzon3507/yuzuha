@@ -9,3 +9,4 @@ data/
 *.log
 artifacts/
 bridges/lavalink/build/
+*.tsbuildinfo
