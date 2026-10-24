@@ -60,6 +60,7 @@ function schedules(value: unknown): boolean {
     if (item['maxAttempts'] !== undefined && (!Number.isSafeInteger(item['maxAttempts']) || Number(item['maxAttempts']) < 1 || Number(item['maxAttempts']) > 100)) return false;
     if (item['retryDelayMs'] !== undefined && (!Number.isSafeInteger(item['retryDelayMs']) || Number(item['retryDelayMs']) < 1)) return false;
     if (item['retryBackoff'] !== undefined && (typeof item['retryBackoff'] !== 'number' || item['retryBackoff'] < 1 || item['retryBackoff'] > 10)) return false;
+    if (item['priority'] !== undefined && (typeof item['priority'] !== 'number' || !Number.isSafeInteger(item['priority']) || item['priority'] < -1000 || item['priority'] > 1000)) return false;
     if (item['retryJitter'] !== undefined && (typeof item['retryJitter'] !== 'number' || !Number.isFinite(item['retryJitter']) || item['retryJitter'] < 0 || item['retryJitter'] > 1)) return false;
     if (item['cron'] !== undefined) {
       if (typeof item['cron'] !== 'string' || typeof item['timezone'] !== 'string' || item['interval'] !== undefined

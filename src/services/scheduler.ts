@@ -7,6 +7,7 @@ import { GuardError, PartialModerationError, YuzuhaError } from '../shared/error
 
 export interface RetryPolicy { maxAttempts?: number; retryDelayMs?: number; retryBackoff?: number; retryJitter?: number }
 export interface ScheduleInput extends RetryPolicy {
+  priority?: number;
   guildID: string;
   channelID: string;
   authorID: string;
@@ -25,6 +26,7 @@ export interface CronScheduleInput extends Omit<ScheduleInput, 'due' | 'interval
   after?: number;
 }
 export interface SchedulePatch extends RetryPolicy {
+  priority?: number;
   command?: string;
   input?: string;
   due?: number;
@@ -57,6 +59,8 @@ export interface SchedulerOptions {
   historyLimit?: number;
   now?: () => number;
   concurrency?: number;
+  /** Shared-store claim ceiling; every scheduler using that store must use the same value. */
+  globalConcurrency?: number;
   random?: () => number;
   onEvent?: (event: SchedulerEvent) => void | Promise<void>;
   onError?: (error: unknown) => void | Promise<void>;
@@ -72,6 +76,7 @@ function assertInput(input: ScheduleInput): void {
   if (!input.command.trim()) throw new YuzuhaError('SCHEDULE', 'Informe o comando a agendar.');
   if (!Number.isFinite(input.due)) throw new YuzuhaError('SCHEDULE', 'Vencimento do agendamento inválido.');
   if (input.interval !== undefined && (!Number.isSafeInteger(input.interval) || input.interval <= 0)) throw new YuzuhaError('SCHEDULE', 'Intervalo do agendamento inválido.');
+  if (input.priority !== undefined && (!Number.isSafeInteger(input.priority) || input.priority < -1000 || input.priority > 1000)) throw new YuzuhaError('SCHEDULE', 'priority deve ser inteiro entre -1000 e 1000.');
   if (input.paused !== undefined && typeof input.paused !== 'boolean') throw new YuzuhaError('SCHEDULE', 'paused deve ser booleano.');
   if (input.maxAttempts !== undefined && (!Number.isSafeInteger(input.maxAttempts) || input.maxAttempts < 1 || input.maxAttempts > 100)) throw new YuzuhaError('SCHEDULE', 'maxAttempts deve estar entre 1 e 100.');
   if (input.retryDelayMs !== undefined && (!Number.isSafeInteger(input.retryDelayMs) || input.retryDelayMs < 1 || input.retryDelayMs > MAX_DELAY)) throw new YuzuhaError('SCHEDULE', 'retryDelayMs deve ser inteiro entre 1 e 604800000.');
@@ -114,6 +119,7 @@ export class Scheduler {
       || !Number.isSafeInteger(this.heartbeatMs) || this.heartbeatMs < 1 || this.heartbeatMs >= this.leaseMs
       || !Number.isSafeInteger(this.historyLimit) || this.historyLimit < 1 || this.historyLimit > 10_000
       || !Number.isSafeInteger(this.concurrency) || this.concurrency < 1 || this.concurrency > 128
+      || (options.globalConcurrency !== undefined && (!Number.isSafeInteger(options.globalConcurrency) || options.globalConcurrency < 1 || options.globalConcurrency > 128))
       || (options.random !== undefined && typeof options.random !== 'function')) {
       throw new YuzuhaError('SCHEDULE_OPTIONS', 'Lease, heartbeat, concorrência ou limite do histórico inválido.');
     }
@@ -146,6 +152,7 @@ export class Scheduler {
     return this.store.update(state => {
       const index = state.schedules.findIndex(item => item.id === id && accessible(item, access));
       if (index < 0) return false;
+      if (this.options.globalConcurrency !== undefined && state.schedules[index]!.runningAt != null) throw new YuzuhaError('SCHEDULE_RUNNING', 'Aguarde a tarefa em execução antes de cancelá-la.');
       state.schedules.splice(index, 1);
       return true;
     });
@@ -170,7 +177,7 @@ export class Scheduler {
   }
 
   edit(id: string, patch: SchedulePatch, access?: ScheduleAccess): Promise<boolean> {
-    const allowed = ['command', 'input', 'due', 'interval', 'maxAttempts', 'retryDelayMs', 'retryBackoff', 'retryJitter', 'cron', 'timezone', 'missedRun'];
+    const allowed = ['command', 'input', 'due', 'interval', 'maxAttempts', 'retryDelayMs', 'retryBackoff', 'retryJitter', 'priority', 'cron', 'timezone', 'missedRun'];
     if (Object.keys(patch).some(key => !allowed.includes(key))) throw new YuzuhaError('SCHEDULE', 'Campo de agendamento desconhecido.');
     return this.change(id, access, item => {
       const { interval, cron, ...fields } = patch;
@@ -219,7 +226,8 @@ export class Scheduler {
   }
   private async runTick(now: number, generation: number): Promise<void> {
     const due = await this.store.read(state => state.schedules
-      .filter(item => !item.paused && item.due <= now && item.runningAt == null).map(item => item.id));
+      .filter(item => !item.paused && item.due <= now && item.runningAt == null)
+      .sort((a, b) => (b.priority ?? 0) - (a.priority ?? 0) || a.due - b.due).map(item => item.id));
     let cursor = 0;
     const workers = Array.from({ length: Math.min(this.concurrency, due.length) }, async () => {
       while (cursor < due.length && generation === this.generation) {
@@ -231,6 +239,7 @@ export class Scheduler {
             item.due = nextCron(item.cron, item.timezone!, Math.floor(now / 60_000) * 60_000 - 1);
             if (item.due > now) return null;
           }
+          if (this.options.globalConcurrency !== undefined && state.schedules.filter(task => task.runningAt != null).length >= this.options.globalConcurrency) return null;
           item.runningAt = now; item.claimID = randomUUID();
           return item;
         });

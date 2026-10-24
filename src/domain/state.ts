@@ -14,6 +14,7 @@ export interface ScheduleRecord {
   due: number;
   interval?: number;
   attempts: number;
+  priority?: number;
   runningAt?: number | null;
   paused?: boolean;
   maxAttempts?: number;

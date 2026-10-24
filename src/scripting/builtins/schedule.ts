@@ -5,40 +5,40 @@ import type { RetryPolicy, SchedulePatch } from '../../services/scheduler.js';
 
 function options(value: unknown): SchedulePatch {
   if (!value || typeof value !== 'object' || Array.isArray(value)) throw new YuzuhaError('SCHEDULE', 'Opções devem ser objeto.');
-  const allowed = ['command', 'input', 'due', 'interval', 'maxAttempts', 'retryDelayMs', 'retryBackoff', 'retryJitter', 'cron', 'timezone', 'missedRun'];
+  const allowed = ['command', 'input', 'due', 'interval', 'maxAttempts', 'retryDelayMs', 'retryBackoff', 'retryJitter', 'priority', 'cron', 'timezone', 'missedRun'];
   if (Object.keys(value).some(key => !allowed.includes(key))) throw new YuzuhaError('SCHEDULE', 'Opção de agendamento desconhecida.');
   return value as SchedulePatch;
 }
 
 export const scheduleFunctions = defineFunctions(fn => {
-  fn('schedule', 'schedule', 2, 4, '[duração;comando;entrada?;retry?]', 'Agenda execução única; retry recebe maxAttempts, retryDelayMs, retryBackoff e retryJitter.', async c => {
+  fn('schedule', 'schedule', 2, 4, '[duração;comando;entrada?;retry?]', 'Agenda execução única; retry recebe maxAttempts, retryDelayMs, retryBackoff, retryJitter e priority (-1000 a 1000).', async c => {
     const scheduler = c.ctx.scheduler;
     const duration = parseDuration(await c.text(0));
     const command = (await c.text(1)).trim();
     const input = c.count > 2 ? await c.text(2) : '';
     const retry = c.count > 3 ? options(await c.arg(3)) : {};
-    if (Object.keys(retry).some(key => !['maxAttempts', 'retryDelayMs', 'retryBackoff', 'retryJitter'].includes(key))) throw new YuzuhaError('SCHEDULE', 'Informe somente opções de retry.');
-    return await scheduler.add({ ...retry as RetryPolicy, guildID: c.ctx.guildID, channelID: c.ctx.message.channelID,
+    if (Object.keys(retry).some(key => !['maxAttempts', 'retryDelayMs', 'retryBackoff', 'retryJitter', 'priority'].includes(key))) throw new YuzuhaError('SCHEDULE', 'Informe somente opções de retry.');
+    return await scheduler.add({ ...retry as RetryPolicy & Pick<SchedulePatch, 'priority'>, guildID: c.ctx.guildID, channelID: c.ctx.message.channelID,
       authorID: c.ctx.authorID, command, input, due: c.ctx.now() + duration });
   });
-  fn('scheduleEvery', 'schedule', 2, 4, '[duração;comando;entrada?;retry?]', 'Agenda execução repetida; retry recebe maxAttempts, retryDelayMs, retryBackoff e retryJitter.', async c => {
+  fn('scheduleEvery', 'schedule', 2, 4, '[duração;comando;entrada?;retry?]', 'Agenda execução repetida; retry recebe maxAttempts, retryDelayMs, retryBackoff, retryJitter e priority (-1000 a 1000).', async c => {
     const scheduler = c.ctx.scheduler;
     const duration = parseDuration(await c.text(0));
     const command = (await c.text(1)).trim();
     const input = c.count > 2 ? await c.text(2) : '';
     const retry = c.count > 3 ? options(await c.arg(3)) : {};
-    if (Object.keys(retry).some(key => !['maxAttempts', 'retryDelayMs', 'retryBackoff', 'retryJitter'].includes(key))) throw new YuzuhaError('SCHEDULE', 'Informe somente opções de retry.');
-    return await scheduler.add({ ...retry as RetryPolicy, guildID: c.ctx.guildID, channelID: c.ctx.message.channelID,
+    if (Object.keys(retry).some(key => !['maxAttempts', 'retryDelayMs', 'retryBackoff', 'retryJitter', 'priority'].includes(key))) throw new YuzuhaError('SCHEDULE', 'Informe somente opções de retry.');
+    return await scheduler.add({ ...retry as RetryPolicy & Pick<SchedulePatch, 'priority'>, guildID: c.ctx.guildID, channelID: c.ctx.message.channelID,
       authorID: c.ctx.authorID, command, input, due: c.ctx.now() + duration, interval: duration });
   });
-  fn('scheduleCron', 'schedule', 3, 5, '[expressão;fuso;comando;entrada?;opções?]', 'Agenda cron de cinco campos em fuso IANA; opções recebem missedRun (run-once ou skip) e retry com jitter.', async c => {
+  fn('scheduleCron', 'schedule', 3, 5, '[expressão;fuso;comando;entrada?;opções?]', 'Agenda cron de cinco campos em fuso IANA; opções recebem missedRun (run-once ou skip) e retry com jitter e priority.', async c => {
     const expression = await c.text(0), timezone = await c.text(1), command = (await c.text(2)).trim();
     const input = c.count > 3 ? await c.text(3) : '';
     const policy = c.count > 4 ? options(await c.arg(4)) : {};
-    if (Object.keys(policy).some(key => !['missedRun', 'maxAttempts', 'retryDelayMs', 'retryBackoff', 'retryJitter'].includes(key))) {
+    if (Object.keys(policy).some(key => !['missedRun', 'maxAttempts', 'retryDelayMs', 'retryBackoff', 'retryJitter', 'priority'].includes(key))) {
       throw new YuzuhaError('SCHEDULE', 'Cron recebe somente missedRun e opções de retry.');
     }
-    return c.ctx.scheduler.addCron({ ...policy as RetryPolicy & Pick<SchedulePatch, 'missedRun'>, expression, timezone,
+    return c.ctx.scheduler.addCron({ ...policy as RetryPolicy & Pick<SchedulePatch, 'missedRun' | 'priority'>, expression, timezone,
       guildID: c.ctx.guildID, channelID: c.ctx.message.channelID, authorID: c.ctx.authorID, command, input });
   });
   fn('unschedule', 'schedule', 1, 1, '[id]', 'Cancela um agendamento; retorna true/false.', async c => {
@@ -58,7 +58,7 @@ export const scheduleFunctions = defineFunctions(fn => {
     const all = await scheduler.list();
     return all.filter(item => item.guildID === guildID)
       .map(item => ({ id: item.id, command: item.command, input: item.input, due: item.due,
-        authorID: item.authorID, paused: item.paused ?? false, maxAttempts: item.maxAttempts ?? 5,
+        authorID: item.authorID, priority: item.priority ?? 0, paused: item.paused ?? false, maxAttempts: item.maxAttempts ?? 5,
         retryDelayMs: item.retryDelayMs ?? 30_000, retryBackoff: item.retryBackoff ?? 1, retryJitter: item.retryJitter ?? 0,
         ...(item.cron === undefined ? {} : { cron: item.cron, timezone: item.timezone, missedRun: item.missedRun ?? 'run-once' }),
         ...(item.interval === undefined ? {} : { interval: item.interval }) }));
