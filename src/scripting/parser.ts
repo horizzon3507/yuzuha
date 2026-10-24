@@ -8,6 +8,7 @@ function nameStart(code: number): boolean {
 export function parse(source: string, file = '<script>'): Program {
   if (source.length > 100_000) throw new ScriptError('SOURCE_LIMIT', 'Script excede 100000 caracteres.', source, 0, file);
   let pos = 0;
+  const delimiters = /[\\$\[\];]/g;
   const fail = (message: string, offset = pos): never => {
     throw new ScriptError('SYNTAX', message, source, offset, file);
   };
@@ -60,7 +61,13 @@ export function parse(source: string, file = '<script>'): Program {
         }
         if (level !== 0) fail('Colchete literal sem fechamento.');
         pos = end + 1;
-      } else pos++;
+      } else {
+        pos++;
+        if (pos - chunk >= 16) {
+          delimiters.lastIndex = pos;
+          pos = delimiters.exec(source)?.index ?? source.length;
+        }
+      }
     }
     flush();
     return nodes;

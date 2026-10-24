@@ -77,6 +77,58 @@ JIT e GC também afetam a série. Repita as medições e conserve o JSON origina
 Não há um limiar de desempenho obrigatório no CI nem medição de latência da
 API/gateway do Fluxer.
 
+## Parsing da 0.1.7
+
+`benchmarks/parser.mjs` mede apenas parsing, sem transporte, evaluator ou dispatch.
+A 0.1.7 procura o próximo delimitador após 16 caracteres de texto comum; trechos
+curtos continuam no percurso por caracteres. O cenário denso protege esse caso.
+
+Para medir o build atual:
+
+```sh
+npm run build
+node benchmarks/parser.mjs > parser-atual.json
+```
+
+Para reproduzir a comparação com o parser anterior, use o mesmo runner para
+ambas as implementações. O arquivo temporário fica junto ao parser para
+preservar seus imports relativos e é removido ao encerrar o shell:
+
+```sh
+(
+  set -eu
+  baseline_file=src/scripting/parser-baseline.tmp.ts
+  trap 'rm -f "$baseline_file"' EXIT
+  git show 98c7f4233fa84889f1e9325b53795533d000363d:src/scripting/parser.ts > "$baseline_file"
+  ./node_modules/.bin/tsx benchmarks/parser.mjs \
+    --parser-module src/scripting/parser.ts \
+    --baseline-module "$baseline_file" > parser-comparacao.json
+)
+```
+
+O runner compara ASTs e erros em 20.000 scripts determinísticos antes de medir.
+Cada implementação recebe 2.000 parses de aquecimento antes de cada amostra;
+são nove amostras de 20.000 parses, alternando a ordem das implementações.
+O relatório conserva todas as amostras e SHA-256 dos dois módulos.
+
+A [rodada preservada](../benchmarks/results/v0.1.7/parser-comparison.json) usa
+Node **26.11.1**, Linux x64 e AMD Ryzen 5 5625U. Tempos abaixo são medianas
+em milissegundos por amostra completa:
+
+| Cenário | Caracteres | Referência | 0.1.7 |
+|---|---:|---:|---:|
+| Texto puro | 8.000 | 1.063,084 | 231,883 |
+| Texto interpolado | 820 | 141,410 | 58,194 |
+| Expressão curta | 22 | 45,428 | 44,917 |
+| Chamadas densas | 260 | 958,666 | 963,572 |
+
+Os ganhos concentram-se nos trechos longos de texto. Os cenários curtos e densos
+ficaram próximos nesta rodada; ela não demonstra ganho nesses casos. São
+microbenchmarks locais com TypeScript carregado pelo tsx, sujeitos a JIT, GC e
+carga da máquina. Não medem latência de rede nem demonstram aceleração do
+despacho completo. Rodadas anteriores exploratórias não tinham relatório raw
+preservado e não são a fonte desta tabela.
+
 ## Cargas adicionais de performance da 0.1.6
 
 ```sh
