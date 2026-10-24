@@ -98,7 +98,7 @@ export default defineCommand({
   code: `
     $reply[$embed[
       $title[Perfil de $username];
-      $color[#FCE300];
+      $color[#EACB1A];
       $field[Usuário;$authorID;true];
       $field[Canal;$channelID;true];
       $footer[Yuzuha]

@@ -1,15 +1,22 @@
-# Primeiro bot em JavaScript ou TypeScript
+# Guia inicial: primeiro bot em JavaScript ou TypeScript
 
-## Requisitos e instalação pelo npm
+Gere um projeto, defina um comando, valide-o sem conectar e execute o bot no
+Fluxer. O pacote é ESM e exige `"type": "module"` no `package.json` do projeto
+consumidor. O scaffold já configura essa opção.
 
-Use Node >=22.13 e npm. O pacote é ESM; o projeto consumidor deve usar
-`"type": "module"` no `package.json`. O scaffold já prepara isso.
+## Instalar e gerar o projeto
 
-Em um projeto ESM existente, execute `npm install yuzuha@0.1.6`. Para gerar um
-bot em uma pasta nova:
+Use Node >=22.13 e npm. Em um projeto ESM existente, instale a versão desta
+documentação:
 
 ```sh
-npx yuzuha@0.1.6 init ./meu-bot --ts
+npm install yuzuha@0.1.7
+```
+
+Para gerar um bot em uma pasta nova, execute:
+
+```sh
+npx yuzuha@0.1.7 init ./meu-bot --ts
 cd meu-bot
 npm install
 npm run check
@@ -17,9 +24,10 @@ npm run typecheck
 npm test
 ```
 
-O `init` declara a versão npm do Yuzuha. O projeto pode ser compartilhado e
-instalado em outra máquina. Use `--js` para JavaScript e omita
-`typecheck`. `--functions` inclui um comando de exemplo de function mode.
+O `init` declara a versão npm da Yuzuha, para que o projeto possa ser
+compartilhado e instalado em outra máquina. Use `--js` para JavaScript e omita
+`npm run typecheck`, pois o scaffold JS não inclui esse script. A opção
+`--functions` acrescenta um comando de exemplo de function mode.
 
 ## Usar uma cópia local da biblioteca
 
@@ -36,15 +44,16 @@ npm run check
 npm run typecheck
 ```
 
-Troque `--ts` por `--js` para JavaScript. O modo TS é o padrão.
-Em JS, não há script `typecheck` no scaffold. Acrescente `--functions` se quiser
-também um exemplo de function mode.
+O modo TS é o padrão. As opções `--js` e `--functions` também valem para o
+scaffold local. Em JavaScript, config e comandos usam `.js`, e não há script
+`typecheck`.
 
-A instalação gerada usa `file:` apontando para a cópia local do Yuzuha.
-Ela depende desse caminho existir. Para adicionar a um projeto ESM já existente,
-compile o Yuzuha e execute `npm install /caminho/absoluto/yuzuha` no consumidor.
+A instalação gerada usa `file:` apontando para a cópia local da Yuzuha e depende
+desse caminho continuar existindo. Para adicionar a biblioteca a um projeto ESM
+já existente, compile a Yuzuha e execute
+`npm install /caminho/absoluto/yuzuha` no consumidor.
 
-## Estrutura gerada
+## Conhecer a estrutura gerada
 
 ```text
 meu-bot/
@@ -62,11 +71,11 @@ meu-bot/
   README.md
 ```
 
-Com `--functions`, `commands/eco.ts` também é criado. Em JavaScript, config e
-comandos terminam em `.js` e não há `tsconfig.json`.
+Com `--functions`, o scaffold também cria `commands/eco.ts`. Em JavaScript, a
+configuração e os comandos terminam em `.js`, e `tsconfig.json` não é criado.
 O nome do diretório define o nome do bot e seu diretório de dados por padrão.
 
-## Configurar
+## Configurar o bot
 
 ```ts
 import { defineConfig } from 'yuzuha';
@@ -78,11 +87,11 @@ export default defineConfig({
 });
 ```
 
-`commands` é relativo à pasta da config. O código funciona em `.js` e `.ts`.
-Você pode usar um array de prefixos, como `['!', '?']`, ou uma função assíncrona
-que escolhe prefixos para cada mensagem.
+O caminho `commands` é relativo à pasta da configuração. O mesmo código funciona
+em `.js` e `.ts`. Você pode usar um array de prefixos, como `['!', '?']`, ou uma
+função assíncrona que escolhe prefixos para cada mensagem.
 
-## Comando nativo JS/TS
+## Criar um comando nativo JS/TS
 
 Crie `commands/somar.ts` ou `commands/somar.js`:
 
@@ -104,16 +113,21 @@ export default defineCommand({
 });
 ```
 
-Uso: `!somar 10 20`. Os argumentos são convertidos antes de `run`.
-Schemas inferem os tipos dos argumentos. Veja moderação, persistência e eventos
-no [guia nativo JS/TS](NATIVE.md).
+Use `!somar 10 20`. Os argumentos são convertidos antes de `run`, e os schemas
+inferem os tipos recebidos pelo handler.
 
-O arquivo deve exportar um comando default ou um array de comandos. Pastas são
-percorridas recursivamente; arquivos ocultos, `node_modules` e `.d.ts` são ignorados.
+Cada arquivo deve exportar um comando default ou um array de comandos. O
+carregador percorre as pastas recursivamente e ignora arquivos ocultos,
+`node_modules` e declarações `.d.ts`.
 
-## Function mode opcional
+Para criar um comando com argumento opcional e testar suas duas respostas, siga
+o [tutorial do comando `!hello`](tutorials/FIRST-COMMAND.md). O
+[guia nativo JS/TS](NATIVE.md) cobre argumentos, moderação, persistência e
+eventos.
 
-Se quiser a sintaxe curta, importe `script` de `yuzuha/functions`:
+## Adicionar function mode opcional
+
+Para usar a sintaxe curta, importe `script` de `yuzuha/functions`:
 
 ```ts
 import { script } from 'yuzuha/functions';
@@ -127,9 +141,13 @@ export default script({
 ```
 
 O runtime de funções é ativado automaticamente no primeiro comando com `code`.
-Para pré-carregar, chame `bot.enableFunctions()`. Um comando executável aceita exatamente um
-entre `code` e `run`. A sintaxe está em [Function mode](LANGUAGE.md).
-Grupos também podem declarar somente `subcommands`; veja [NATIVE.md](NATIVE.md).
+Para pré-carregá-lo, chame `bot.enableFunctions()`. Um comando executável aceita
+exatamente um entre `code` e `run`. Grupos também podem declarar somente
+`subcommands`.
+
+Consulte a [sintaxe do function mode](LANGUAGE.md), o
+[tutorial do primeiro script](tutorials/FUNCTION-MODE.md) e os
+[grupos e subcomandos nativos](NATIVE.md).
 
 ## Validar sem conectar
 
@@ -138,14 +156,18 @@ npm run check
 npm run typecheck
 ```
 
-Execute o segundo comando apenas no scaffold TS. `check` valida nomes, aliases,
-guardas declarativos e scripts; não se conecta nem carrega `.env` automaticamente.
-Config e comandos são importados e executam seu código de inicialização.
-Um `setup` que faz rede continua fazendo rede por conta própria.
+Execute `npm run typecheck` apenas no scaffold TS. O `check` valida nomes,
+aliases, guards declarativos e scripts sem se conectar e sem carregar `.env`
+automaticamente. A configuração e os comandos são importados, portanto seu
+código de inicialização é executado. Um `setup` que faz rede continua fazendo
+rede por conta própria.
 
-Para testar respostas sem token, siga [Testes](TESTING.md).
+Para testar respostas sem token, use o
+[tutorial de testes com fixtures offline](tutorials/TESTING.md).
 
-## Conectar
+## Conectar ao Fluxer
+
+Copie o arquivo de ambiente:
 
 ```sh
 cp .env.example .env
@@ -153,13 +175,15 @@ cp .env.example .env
 
 Preencha `FLUXER_BOT_TOKEN` no `.env` e execute `npm run dev`.
 
-`run` e `dev` leem o `.env` junto da config; variáveis já definidas no processo
-têm prioridade. O token não é salvo no store. `npm start` inicia sem watcher.
+`run` e `dev` leem o `.env` junto da configuração. Variáveis já definidas no
+processo têm prioridade, e o token não é salvo no store. `npm start` inicia o
+bot sem watcher.
 
 O modo `dev` recarrega arquivos de comandos. Se uma nova versão for inválida,
-mantém os comandos anteriores. Comandos registrados por `setup` são preservados.
-Mudanças na config, plugins e dependências importadas podem exigir reinício;
-o watcher não recarrega todo o grafo de módulos.
+os comandos anteriores permanecem ativos. Comandos registrados por `setup`
+também são preservados. Mudanças na configuração, nos plugins e nas
+dependências importadas podem exigir reinício, pois o watcher não recarrega
+todo o grafo de módulos.
 
 ## Usar a biblioteca diretamente
 
@@ -178,6 +202,7 @@ process.once('SIGTERM', () => { void bot.destroy(); });
 await bot.login();
 ```
 
-Nesse modo, você gerencia ambiente e encerramento. `bot.login()` lê
-`FLUXER_BOT_TOKEN` do processo; ele não lê `.env` sozinho. Se fornecer um store,
-feche-o depois de `destroy`. Veja [API](API.md) e [persistência](STORAGE.md).
+Nesse modo, você gerencia o ambiente e o encerramento. `bot.login()` lê
+`FLUXER_BOT_TOKEN` do processo e não lê `.env` sozinho. Se fornecer um store,
+feche-o depois de `destroy`. Consulte a [referência da API](API.md) e o
+[guia de persistência e propriedade dos stores](STORAGE.md).

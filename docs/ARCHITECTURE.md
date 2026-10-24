@@ -6,6 +6,9 @@ demanda. Não há servidor HTTP próprio nem serviço remoto do Yuzuha.
 
 ## Mapa dos módulos
 
+A biblioteca vive na raiz do repositório. Os caminhos abaixo são relativos
+a essa raiz; os guias ficam em `docs/` e a saída compilada em `dist/`.
+
 ```text
 src/
   domain/                  Tipos e regras de valores, mensagens, moderação e estado
@@ -169,7 +172,7 @@ a troca atômica protege o registro, não desfaz efeitos externos do módulo.
 O registro mantém a origem por diretório resolvido. O watcher usa `reload` para
 preservar comandos de `setup` e de outras pastas. Ao compilar o primeiro comando
 com `code`, o framework registra os builtins; bots nativos permanecem sem parser
-e sem as 288 funções.
+e sem as 306 funções.
 Plugins preparam funções em um runtime candidato antes de compilar seus comandos,
 validam eventos nativos e compilam `scriptEvents` antes de aplicar o lote aos
 registros ativos. Comandos com `code` e eventos de script ativam os builtins

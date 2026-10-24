@@ -12,6 +12,8 @@ npm run check
 npm run smoke:package
 ```
 
+Os comandos da tabela abaixo são executados na raiz do repositório.
+
 | Comando | O que verifica |
 |---|---|
 | `npm run typecheck` | TypeScript estrito, incluindo exemplos |

@@ -158,7 +158,7 @@ Separe cada parte por `;`, inclusive quando estiver em outra linha:
 $reply[$embed[
   $title[Perfil];
   $description[Informações do membro];
-  $color[#FCE300];
+  $color[#EACB1A];
   $field[Nome;$username;true];
   $field[ID;$authorID;true];
   $footer[Yuzuha]
@@ -327,7 +327,7 @@ alteram apenas tarefas do mesmo autor e servidor; `$unschedule` segue a mesma re
 (ms ou null para remover repetição) e os três campos de retry. Tarefas em execução
 não podem ser alteradas. `$schedules` inclui `paused`, autor e a política atual.
 
-## Recursos novos da 0.1.2
+## Mensagens, membros e ferramentas de servidor
 
 | Função | Comportamento |
 |---|---|
@@ -363,7 +363,7 @@ $sendAttachments[$channelID;$array[
 Bytes decodificados têm limite de 10 MB no total; o orçamento de saída do runtime
 também limita descritores/base64 antes do envio.
 
-## Recursos novos da 0.1.3
+## TTL, voz e histórico de tarefas
 
 ```text
 $setGuildVar[evento;aberto;60000]
@@ -390,7 +390,7 @@ o gateway e aceitam timeout; os testes simulam os eventos sem conectar.
 `$retrySchedule[idDaExecução;duração?]` cria uma nova tarefa para falha operacional.
 Guards e moderação aplicada ou parcialmente concluída impedem reexecução.
 
-## Conjuntos e formatação da 0.1.4
+## Conjuntos e formatação
 
 | Função | Retorno e limites |
 |---|---|

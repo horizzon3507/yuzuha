@@ -73,6 +73,12 @@ recursos. O runtime de scripts só é registrado quando o function mode é usado
 
 ## Entregas e dependências
 
+A atualização 0.1.7 distribui o conteúdo preparado na 0.1.6 e acrescenta busca
+por nome, alias e descrição em `yuzuha functions --search <termo>`, combinável
+com os filtros e formatos existentes. Acrescenta 18 funções de controle de loops,
+ordenação, regex, decimais e servidor; o catálogo passa a 306. SDK e schema
+permanecem iguais.
+
 A atualização 0.1.6 prioriza o custo de despacho: deduplicação circular,
 prefixos reaproveitados, mensagens ignoradas sem contexto de execução,
 cancelamento compartilhado, serviços/mapas sob demanda e tokenização simples
@@ -85,8 +91,8 @@ e statements SQLite recebem otimizações verificadas contra a 0.1.5.
 usa o pacote oficial de voz sob demanda, sem reimplementar codec, gateway ou
 LiveKit. `FluxerLavalinkBridge` implementa `MusicAudioOutput`: consome a saída
 WebM/Opus do plugin `yuzuha-audio` fornecido em `bridges/lavalink/` e a publica
-pelo SDK oficial. Não depende de credenciais Discord nem de um evento de fim no
-SDK de voz. O plugin usa a API pública do Lavalink 4.2.2, extração ritmada de
+pelo SDK oficial. A ponte usa a conexão de voz do Fluxer e não depende de um evento
+de fim no SDK de voz. O plugin usa a API pública do Lavalink 4.2.2, extração ritmada de
 frames, I/O assíncrono e limite de saídas. A integração local verifica áudio
 sintético e decoder reais; a publicação na sala LiveKit é simulada.
 Contratos, ciclo de vida, capacidades e limites estão em [MUSIC.md](MUSIC.md).
@@ -129,7 +135,7 @@ com metadados gerados e benchmarks locais reproduzíveis. O SDK continua em 3.3.
 | B | Framework nativo de comandos, eventos e plugins | Dispatch, aliases, guards, erros e recarga atômicos |
 | C | Store e serviços de moderação | Persistência, concorrência e falha parcial testadas |
 | D | Recursos do Fluxer | Usuários, cargos, canais, mensagens, threads, webhooks e convites com mocks |
-| E | Function mode isolado | Parser, AST, runtime, 288 funções e ativação sob demanda |
+| E | Function mode isolado | Parser, AST, runtime, 306 funções e ativação sob demanda |
 | F | Agendamentos, HTTP e limites | Cron/fusos, concorrência, retry, recuperação, streaming/multipart e políticas de rede |
 | G | CLI, exemplos e documentação | Scaffolds, lint/catálogos/cenários offline, manutenção de dados e guias nativos |
 | H | Integração e empacotamento | Typecheck, testes, build, tarball e import de consumidor passam |

@@ -5,7 +5,7 @@ Este é o caminho principal do Yuzuha: comandos e eventos em JS/TS, sem funçõe
 transporte, persistência, guards e moderação com os comandos nativos.
 O acesso ao client Fluxer.js continua disponível para recursos específicos do SDK.
 
-Os exemplos usam imports públicos de **Yuzuha 0.1.6**. JavaScript usa os mesmos
+Os exemplos usam imports públicos de **Yuzuha 0.1.7**. JavaScript usa os mesmos
 imports e objetos; TypeScript acrescenta inferência e validação estática.
 
 ## Um comando com argumentos inferidos
@@ -245,9 +245,9 @@ Implementações próprias dos contratos `MessagesResources`, `ThreadsResources`
 as novas operações da 0.1.2. Para testes que exercitam apenas parte dos recursos,
 use `mockResources`, que aceita implementações parciais por método.
 
-## Recursos e estado da 0.1.2
+## Membros, mensagens e transações
 
-### Membros e mensagens na 0.1.2
+### Consulta e gestão de membros e mensagens
 
 `ctx.members.search(nome, limite?, offset?)` retorna `members`, `total`, `hasMore`
 e `indexing`. `ctx.members.setNickname(usuarioOuObjeto, apelidoOuNull, motivo)`
@@ -296,7 +296,7 @@ inválido aborta tudo. Entradas, leituras e retorno são isolados por cópia; gu
 a referência `tx` não permite usá-la depois. Em DM, global/user funcionam;
 acessar guild aborta a transação. Não aguarde I/O dentro do callback.
 
-## Recursos acrescentados na 0.1.3
+## Perfis, voz e execução
 
 ```ts
 await ctx.mod.move('123', { channelID: '456', reason: 'organizar a sala' });
@@ -520,6 +520,12 @@ comando nesse callback de erro. Os handlers podem executar concorrentemente;
 `emit` do client não aguarda suas Promises. Use `bot.signal` em operações de
 listener que aceitem cancelamento.
 
+Erros do gateway emitidos em `Events.Error` e `Events.ShardError` também chegam
+a `onError(error)` sem contexto de comando, mesmo sem um listener do consumidor.
+Quando o SDK emite os dois eventos para a mesma falha de shard, o framework a
+reporta uma vez. Sem `onError`, o tratamento padrão escreve o erro em
+`console.error`; `destroy()` aguarda os relatórios pendentes antes de terminar.
+
 Listeners registrados diretamente em `bot.client.on` continuam sob o ciclo de
 vida e tratamento de erros do consumidor. Prefira `bot.on` quando quiser o
 tratamento oferecido pelo Yuzuha.
@@ -638,7 +644,7 @@ Erros de entrada acrescentam o uso esperado. `hidden` omite comandos da ajuda;
 isso não substitui autorização. Os metadados também estão no JSON de
 `yuzuha check`; veja [CLI.md](CLI.md).
 
-## Recursos acrescentados na 0.1.4
+## Autorização, lotes e streaming
 
 `ctx.resources.roles`, `channels` e `webhooks` compartilham as verificações de
 permissão do autor e do bot com scripts. O acesso direto por `bot.resources` ou

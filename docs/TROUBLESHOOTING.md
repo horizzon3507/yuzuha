@@ -1,7 +1,8 @@
 # Problemas comuns
 
 Comece com `node --version`, `yuzuha --version` e `yuzuha check`. Para erros
-de execução, registre `onError` no seu bot; a mensagem enviada ao usuário
+de execução, configure `onError` para integrar seus logs; sem esse callback,
+o framework escreve os erros em `console.error`. A mensagem enviada ao usuário
 omite detalhes internos.
 
 ## Instalação e runtime
@@ -106,3 +107,12 @@ Para recarga manual preservando outros comandos, use `bot.reload(dir)`.
 `destroy` aguarda execuções ativas. Uma função nativa com promise pendurada
 pode impedir o término, pois o prazo do runtime é cooperativo. Se você injetou
 um store, feche-o após `destroy`; a biblioteca não assume sua propriedade.
+
+## Falhas do gateway
+
+O bot já trata os eventos `error` e `shardError` do client. Eles chegam a
+`onError(error)` sem contexto de comando; teste a presença de `ctx` antes de
+acessar seus campos. Quando o SDK emite ambos para a mesma falha de shard,
+o framework reporta essa falha uma vez. Sem `onError`, confira a saída de erro
+do processo. `destroy()` aguarda callbacks de erro pendentes, portanto um
+callback que nunca termina também impede a conclusão do encerramento.

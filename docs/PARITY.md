@@ -5,8 +5,8 @@ Fontes primárias: [repositório Fluxer.js](https://github.com/fluxerjs/core) e
 [documentação](https://fluxer.js.org). O Yuzuha é um projeto independente.
 
 O produto é o framework nativo sobre o Fluxer.js. A coluna de function mode é
-opcional e existe para quem prefere a sintaxe curta do ForgeScript; ela não é a
-identidade nem a promessa principal do pacote.
+opcional e permite escrever comandos com a sintaxe `$função[argumentos]` do
+Yuzuha. Os dois modos usam o mesmo contexto e os mesmos serviços.
 
 ## O que significa paridade
 
@@ -28,7 +28,7 @@ exports de `yuzuha/sdk` aos da dependência instalada.
 | Embeds e anexos | Builders do SDK, sendBytes e sendAttachments | Embeds, anexos URL/base64 e múltiplos anexos na mesma mensagem |
 | Membros, cargos, canais e permissões | API do SDK e `ctx.members` | User/member, perfil completo, contagens ao vivo, nickname, roles, canais de link, avisos, posição, categorias e overwrites |
 | Ban, kick, timeout, unban e moderação de voz | SDK + `ctx.mod` e `ctx.moderate` | Versões simples e mod* com casos, incluindo move/mute/deafen |
-| Servidor, convites, webhooks e expressões | API do SDK | editGuild, convites/vanity, clonagem e mutações de emojis/stickers, createEmojisBulk; CRUD e envio de webhooks |
+| Servidor, convites, webhooks e expressões | API do SDK e auxiliares autorizados | guildFeatures, leaveGuild, editGuild, convites/vanity, clonagem e mutações de emojis/stickers, createEmojisBulk; CRUD e envio de webhooks |
 | Threads e fóruns | API do SDK | Criação, edição, busca, posts, membros e listagens ativas/arquivadas com paginação |
 | Presença | `client.user.setPresence` | setPresence, setStatus e setActivity |
 | Cache e presença | Opções e métodos do SDK | Acesso nativo |
@@ -39,7 +39,7 @@ exports de `yuzuha/sdk` aos da dependência instalada.
 | Estado e casos | `ctx.data`, TTL, userFor, transaction entre chaves e stores | Variáveis, TTL, incrementos, listas, casos e dataTransaction com operações declarativas |
 | Agendamentos | `ctx.scheduler`, cron/fusos, concorrência limitada, histórico, heartbeat e controles | schedule, scheduleEvery, scheduleCron, controles, histórico, reexecução e retry com jitter |
 | HTTP | `request`, `requestBytes`, `stream`, `multipart`, `withPolicy` e cancelamento | `$http`, `$httpJson`, `$httpMultipart` e download de imagens com política de rede por comando |
-| CLI, plugins, comandos e middleware | Recursos próprios do Yuzuha; lint/catálogos/cenários e manutenção de dados | 288 funções canônicas; comandos e eventos de script |
+| CLI, plugins, comandos e middleware | Recursos próprios do Yuzuha; lint/catálogos/cenários e manutenção de dados | 306 funções canônicas; comandos e eventos de script |
 
 A camada nativa do Yuzuha — o caminho principal — acrescenta schemas de argumentos
 e flags com inferência, subcomandos, ajuda detalhada, checks e middleware por comando, eventos com encaminhamento de
@@ -85,31 +85,28 @@ base64, limitadas a 10 MB decodificados no total, e preserva as listas `success`
 e `failed` do SDK. No contexto, a criação em lote exige `ManageExpressions` de
 ambos os atores. Os lotes são validados por inteiro antes da chamada ao SDK.
 
-## Relação com ForgeScript
+## Contratos do function mode
 
-Referência de ergonomia: [ForgeScript](https://github.com/tryforge/ForgeScript).
-O parser/runtime do Yuzuha é uma implementação original. Não foi copiado código
-do ForgeScript e não há dependência de seu interpretador.
-
-Compatibilidade é **parcial**, voltada à familiaridade da escrita:
+O parser e o runtime são implementações do Yuzuha. Cada função tem assinatura,
+retorno e limites próprios, publicados na referência gerada:
 
 - Usa `$função[argumento;argumento]`, funções aninhadas e texto interpolado.
-- Inclui nomes familiares: `$reply`, `$username`, `$onlyIf`, `$onlyPerms`,
+- Inclui funções de contexto e autorização: `$reply`, `$username`, `$onlyIf`, `$onlyPerms`,
   `$mentioned`, `$message`, `$let`, `$get`, `$ban`.
-- Não promete que aridade, retorno ou comportamento de funções homônimas seja igual.
+- O contrato de cada função é o do catálogo do Yuzuha; nomes iguais em outras linguagens não garantem equivalência.
 - Usa `$if[condição;então;senão]`, sem blocos `$endif` nesta versão.
 - Não executa JavaScript embutido em scripts; funções JS são registradas explicitamente.
-- Não tem slash commands do Discord, modais ou componentes Discord.
+- Comandos de aplicação, modais e componentes interativos dependem de suporte no Fluxer e não estão implementados nesta versão.
 - `mentioned` é 1-based; `message` e `messageSlice` são 0-based.
 - Embeds recebem partes separadas por `;`, preservando objetos tipados.
 - Moderação simples também verifica permissões e hierarquia; funções `mod*`
   acrescentam casos e definem `$caseID`.
 
-Migração de scripts deve ser revisada função por função com a referência gerada
-em [FUNCTIONS.md](FUNCTIONS.md). Funcionalidades disponíveis apenas no Discord não
-são simuladas como se existissem no Fluxer.
+Ao adaptar um script, revise cada chamada com a referência gerada em
+[FUNCTIONS.md](FUNCTIONS.md). Use a matriz acima para distinguir funções de script
+dos recursos acessíveis pelo SDK nativo.
 
-## Extensões futuras
+## Extensões opcionais e ferramentas
 
 Música na 0.1.6 reúne `FluxerVoice`, o protocolo de controle Lavalink v4 e
 `FluxerLavalinkBridge`. O plugin `yuzuha-audio` do Yuzuha fornece a saída de
@@ -127,3 +124,7 @@ O scheduler e a rede têm guias próprios em [SCHEDULER.md](SCHEDULER.md) e
 [STORAGE.md](STORAGE.md). LSP, bibliotecas de canvas e ferramentas
 de migração continuam fora desta versão. Integração ao vivo deve ser validada em
 um servidor de teste antes de distribuir um bot para produção.
+
+`yuzuha/images` oferece transformações opcionais com Sharp. Shards do core podem
+ser configurados em `clientOptions`; gerenciamento de processos usa pacote externo.
+Veja [IMAGES.md](IMAGES.md) e a [auditoria de integrações](INTEGRATIONS.md).

@@ -348,3 +348,43 @@ preservados. Um microbenchmark local aquecido de duas atualizações numéricas 
 transação (5000 operações, 11 amostras, Node 26.8.2) mediu mediana de 50858,7 para
 59746,7 operações/s. É uma medição local desse cenário, não uma promessa de ganho
 para outros payloads, máquinas ou stores persistentes.
+
+## Consultas por prefixo e cursor
+
+```ts
+const page = await ctx.data.guild.query({ prefix: 'ticket:', limit: 25 });
+const next = page.nextCursor === null ? null : await ctx.data.guild.query({
+  prefix: 'ticket:', limit: 25, after: page.nextCursor,
+});
+```
+
+Cada entrada tem `name`, `value` e `ttlMs`: -1 significa persistente, e valores
+positivos representam o tempo restante no instante da consulta. Entradas
+expiradas são omitidas. O padrão de `limit` é 50; aceita inteiros de 1 a 100.
+`prefix` e `after` aceitam até 128 caracteres. O prefixo é literal, inclusive
+`%` e `_`. Nomes seguem ordem ordinal UTF-16, igual a `Array.sort()` sem callback.
+O cursor é exclusivo e a página final retorna `nextCursor: null`.
+
+```text
+$setGuildVar[ticket:001;aberto]
+$reply[$jsonEncode[$queryVars[guild;$object[prefix;ticket:;limit;25]]]]
+```
+
+Escopos aceitos: `guild` exige servidor, `user` consulta o autor atual e `global`
+consulta variáveis globais. `ctx.data.userFor(id).query()` usa as mesmas regras
+de acesso de `userFor`. Resultados são cópias isoladas. Cada página representa
+um snapshot separado: exclusões ou inserções entre consultas podem alterar as
+páginas seguintes; não há cursor que congele o banco inteiro.
+
+SQLite usa uma tabela derivada com chave primária de escopo, sujeito e nome
+codificado em UTF-16 hexadecimal. A primeira consulta após uma escrita reconstrói
+o índice na mesma transação; consultas seguintes leem o intervalo indexado sem
+decodificar o snapshot inteiro. Um trigger invalida o índice mesmo se outra
+conexão, inclusive uma versão anterior do pacote, atualizar `yuzuha_state`.
+Rollback não publica um índice parcial; restauração invalida os dados derivados.
+Isso melhora leituras paginadas repetidas, mas a escrita continua serializando
+o estado integral. Não é um banco de coleções com índices por campos de valores.
+
+Memória, JSON e stores customizados sem `queryVariables` usam uma varredura e
+ordenação do snapshot. O port novo é opcional; implementar `queryVariables`
+exige preservar TTL, ordem, escopos, limite e isolamento dos retornos.

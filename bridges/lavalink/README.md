@@ -17,13 +17,13 @@ npm run music:build-plugin
 ```
 
 O script baixa o Lavalink 4.2.2 oficial, verifica seu SHA-256 e gera
-`bridges/lavalink/build/yuzuha-audio-0.1.6.jar`. Para usar uma cópia já baixada:
+`bridges/lavalink/build/yuzuha-audio-0.1.7.jar`. Para usar uma cópia já baixada:
 
 ```sh
 YUZUHA_LAVALINK_JAR=/caminho/Lavalink.jar npm run music:build-plugin
 ```
 
-Copie apenas `yuzuha-audio-0.1.6.jar` para o diretório `plugins/` do seu Lavalink.
+Copie apenas `yuzuha-audio-0.1.7.jar` para o diretório `plugins/` do seu Lavalink.
 Reinicie esse servidor. O [application.yml](application.yml) de exemplo usa
 `LAVALINK_PASSWORD` no ambiente, limita a saída a 128 conexões e desativa fontes
 de arquivos/HTTP. Ative os source managers e plugins de busca necessários ao bot.
@@ -80,7 +80,7 @@ Veja o [exemplo completo](../../examples/lavalink.ts) e o
   A próxima conexão pode retomar o mesmo player.
 - Há apenas um consumidor por sessão/player (`409`); excesso global retorna
   `429`. Destruir o player/sessão fecha suas saídas. Não conecte o mesmo player
-  simultaneamente à voz Discord: a saída do plugin consome seu áudio.
+  simultaneamente a outro transporte de voz: a saída do plugin consome seu áudio.
 - `Cache-Control: no-store` e `X-Accel-Buffering: no` acompanham a resposta.
   Configure proxies para streaming, sem buffering e com timeout adequado.
 

@@ -1,6 +1,7 @@
 # Contribuir com o Yuzuha
 
-Use Node >=22.13. Instale a árvore fixada com `npm ci`. O projeto usa
+Use Node >=22.13 e npm. Na raiz do repositório, instale com
+`npm ci`. O projeto usa
 TypeScript estrito, saída ESM e declarações de tipos, sem servidor próprio.
 
 ## Preparar e verificar
@@ -11,6 +12,7 @@ npm run check
 npm run smoke:package
 ```
 
+Os comandos seguintes deste guia são executados na raiz do repositório.
 Consulte [TESTING.md](docs/TESTING.md) para o alcance das verificações.
 O smoke instala consumidores temporários e precisa acessar o registry npm.
 Não use tokens ou dados reais nos testes de automação.
@@ -68,7 +70,7 @@ planejado como implementado.
 
 Use a [política de versões](VERSIONING.md) e acrescente mudanças ao
 [CHANGELOG.md](CHANGELOG.md). A série 0.x ainda evolui, mas correções patch
-preservam imports e comandos documentados. Versão desta atualização: **0.1.0**.
+preservam imports e comandos documentados.
 
 ## Antes de enviar
 

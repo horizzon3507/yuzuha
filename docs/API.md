@@ -295,7 +295,24 @@ na leitura. Consulte [STORAGE.md](STORAGE.md) antes de criar um adaptador.
 `yuzuha/music` exporta `LavalinkNode`, `MusicManager`, `MusicPlayer`, `TrackQueue`,
 `FluxerVoice` e `FluxerLavalinkBridge`, além dos tipos de protocolo e ports. A referência de métodos,
 limites, dependência de voz opcional e instalação do plugin de áudio está em
-[MUSIC.md](MUSIC.md). O catálogo do function mode continua em 288 funções.
+[MUSIC.md](MUSIC.md). O catálogo do function mode tem 306 funções.
+
+## Servidor e decimais
+
+`await ctx.guildFeatures()` retorna uma cópia das features do servidor atual.
+Recursos customizados devem fornecer `GuildInfo.features`; a ausência é um erro
+`NATIVE_UNAVAILABLE`, não uma lista vazia presumida.
+
+`await ctx.leaveGuild()` solicita a saída do bot pelo SDK. Exige um contexto de
+servidor e autor identificado como dono; um bot que seja dono não pode sair.
+A operação é opcional em `UsersResources.leaveGuild`. Falhas do transporte são
+propagadas, sem repetição automática. O acesso direto ao recurso permanece uma
+operação nativa confiável; prefira o auxiliar autorizado do contexto.
+
+`decimal(a, operador, b, casas?)`, `decimalCompare(a, b)` e
+`decimalRound(valor, casas)`, exportados por `yuzuha`, operam sobre strings
+decimais com até 1000 dígitos. Não aceitam expoente; retornam texto normalizado,
+exceto a comparação, que retorna -1, 0 ou 1. Veja [operações de dados](LANGUAGE-EXTENSIONS.md).
 
 ## Erros
 
@@ -318,3 +335,18 @@ limites, dependência de voz opcional e instalação do plugin de áudio está e
 No handler de erro, observe `cause` para a causa original.
 Não repita automaticamente moderação após erro parcial. Mais detalhes e
 limitações de prazo em [STORAGE.md](STORAGE.md).
+
+## Consultas, streams e imagens
+
+`ctx.data.guild.query({ prefix, after, limit })` e os escopos user/global retornam
+`VariablePage`, com entradas copiadas, TTL e cursor por nome. `Store.queryVariables`
+é opcional; veja custos do índice SQLite em [STORAGE.md](STORAGE.md).
+
+`ctx.sendStream(source, { name, content?, description?, maxBytes?, timeoutMs? }, channelID?)`
+aceita um ReadableStream de bytes, limita sua leitura e acumula antes do upload.
+O retorno é o ID da mensagem; não transmite multipart continuamente pela rede.
+Veja [IMAGES.md](IMAGES.md) para os limites e o módulo opcional `yuzuha/images`.
+
+`yuzuha/images` exporta `transformImage`, `ImageTransform`, `ImageOptions` e
+`ImageResult`. A raiz não importa Sharp. Não há funções de imagem registradas
+implicitamente no function mode.

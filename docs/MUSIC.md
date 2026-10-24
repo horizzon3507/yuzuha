@@ -1,8 +1,9 @@
 # Música e voz
 
-A 0.1.6 oferece `FluxerVoice` para áudio nativo, cliente Lavalink v4, filas e
+A 0.1.7 inclui o conteúdo de música preparado na 0.1.6: `FluxerVoice` para áudio
+nativo, cliente Lavalink v4, filas e
 `FluxerLavalinkBridge` para transmitir o áudio do Lavalink ao Fluxer. Os imports vivem em `yuzuha/music`.
-São APIs JS/TS; o catálogo de 288 funções de script não inclui reprodução.
+São APIs JS/TS; o catálogo de 306 funções de script não inclui reprodução.
 
 | Integração | Conexão de áudio | Recursos |
 |---|---|---|
@@ -12,7 +13,7 @@ São APIs JS/TS; o catálogo de 288 funções de script não inclui reprodução
 O plugin fornecido pelo Yuzuha extrai os frames Opus do player e os entrega em
 WebM ao SDK de voz do Fluxer. Pausa, seek, filtros, volume e avanço continuam no
 Lavalink. O fluxo de áudio é contínuo entre faixas; não depende de um evento de
-fim do SDK de voz nem de credenciais de voz do Discord. A instalação no servidor
+fim do SDK de voz. A publicação usa a conexão de voz do Fluxer. A instalação no servidor
 está em [bridges/lavalink](../bridges/lavalink/README.md).
 
 ## Áudio nativo do Fluxer
@@ -70,7 +71,7 @@ O SDK continua responsável pelo timeout da conexão de voz.
 ## Lavalink com áudio no Fluxer
 
 No checkout, com JDK 17+ disponível, rode `npm run music:build-plugin`.
-Copie `bridges/lavalink/build/yuzuha-audio-0.1.6.jar` para `plugins/` no Lavalink
+Copie `bridges/lavalink/build/yuzuha-audio-0.1.7.jar` para `plugins/` no Lavalink
 4.2.2 e reinicie o servidor. No bot, instale `@fluxerjs/voice@^3.1.0` e configure:
 
 ```ts
@@ -197,8 +198,8 @@ O limite padrão é 1000 players e 1000 músicas pendentes por fila.
 `LavalinkNode.penalty` usa `playingPlayers + lavalinkLoad × 100`, mais a
 porcentagem de frames perdidos/nulos sobre 3000 frames por minuto. O Lavalink já
 informa a média por player; não há outra divisão pelo número de players.
-Quando há saída de áudio pelo plugin, os contadores do emissor Discord são
-ignorados, pois esse transporte não é utilizado. CPU e players continuam no
+Quando há saída de áudio pelo plugin, os contadores do emissor de voz padrão do
+Lavalink são ignorados, pois a ponte usa outro transporte. CPU e players continuam no
 cálculo. Déficit negativo não penaliza. Estatísticas com mais de 90 segundos deixam de participar
 do cálculo. Essa fórmula é uma política do Yuzuha, baseada nos campos publicados
 pelo Lavalink; não é uma medida de latência de áudio.

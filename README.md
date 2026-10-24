@@ -1,13 +1,13 @@
 # Yuzuha
 
 Framework TypeScript para bots do [Fluxer](https://fluxer.app), com comandos
-tipados em JavaScript/TypeScript e um modo de scripts inspirado no ForgeScript.
+tipados em JavaScript/TypeScript e uma linguagem opcional de scripts.
 Os dois modos compartilham permissões, moderação, estado e recursos.
 
 O Yuzuha usa **Fluxer.js 3.3.0**. Você continua tendo acesso ao client original
 por `bot.client` e aos exports do SDK em `yuzuha/sdk`.
 
-[0.1.6](CHANGELOG.md) · Node **22.13+** · ESM · [MIT](LICENSE)
+[0.1.7](CHANGELOG.md) · Node **22.13+** · ESM · [MIT](LICENSE)
 
 [Começar](#começar) · [Comandos](#escrever-comandos) · [Recursos](#recursos) · [Testes](#testar-sem-token) · [Documentação](#documentação)
 
@@ -16,7 +16,7 @@ por `bot.client` e aos exports do SDK em `yuzuha/sdk`.
 ### Criar um bot
 
 ```sh
-npx yuzuha@0.1.6 init ./meu-bot --ts
+npx yuzuha@0.1.7 init ./meu-bot --ts
 cd meu-bot
 npm install
 npm run check
@@ -42,7 +42,7 @@ para incluir um comando de exemplo com scripts.
 ### Usar em um projeto existente
 
 ```sh
-npm install yuzuha@0.1.6
+npm install yuzuha@0.1.7
 ```
 
 Use `"type": "module"` no `package.json`. O [guia inicial](docs/QUICKSTART.md)
@@ -72,7 +72,7 @@ Schemas `arg.*` inferem os tipos de argumentos e flags. Você também pode decla
 subcomandos, checks e middleware. O [guia nativo](docs/NATIVE.md) cobre esses
 contratos, eventos, moderação e persistência.
 
-### Scripts no estilo ForgeScript
+### Function mode do Yuzuha
 
 ```ts
 import { script } from 'yuzuha/functions';
@@ -84,11 +84,11 @@ export default script({
 });
 ```
 
-O function mode tem **288 funções** para mensagens, guards, moderação, variáveis,
+O function mode tem **306 funções** para mensagens, guards, moderação, variáveis,
 JSON, arrays, loops, eventos e agendamentos. O runtime é ativado ao registrar um
 comando com `code` ou um evento de script.
 
-A sintaxe é inspirada no ForgeScript; a compatibilidade é parcial. Consulte a
+As funções seguem as assinaturas e regras do runtime do Yuzuha. Consulte a
 [linguagem](docs/LANGUAGE.md), as [assinaturas das funções](docs/FUNCTIONS.md)
 e a [cobertura](docs/PARITY.md).
 
@@ -140,6 +140,7 @@ Execute estes comandos no diretório do seu bot:
 | `npx yuzuha doctor` | Diagnosticar ambiente, configuração e store |
 | `npx yuzuha lint commands --json` | Analisar scripts sem importar módulos |
 | `npx yuzuha functions --category moderation` | Consultar funções e assinaturas |
+| `npx yuzuha functions --search mensagem` | Buscar funções por nome, alias ou descrição |
 | `npx yuzuha editor` | Encontrar a extensão VS Code incluída no pacote |
 
 `check` importa configurações e comandos JS/TS de confiança; a verificação de
@@ -190,3 +191,8 @@ node dist/cli.js init ../meu-bot-local --ts --local
 O `init` usa a dependência npm por padrão; `--local` aponta para a instalação
 que executa a CLI. Veja [contribuição](CONTRIBUTING.md) para as regras de código
 e as verificações do projeto.
+
+Transformações opcionais de imagens e entrada de anexos por stream estão em
+[IMAGES.md](docs/IMAGES.md); consultas por prefixo e cursor em
+[STORAGE.md](docs/STORAGE.md), e limites das integrações em
+[INTEGRATIONS.md](docs/INTEGRATIONS.md).

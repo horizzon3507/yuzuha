@@ -116,3 +116,11 @@ nome ou status de bot: `userName` permanece `null` e `userBot` fica `false`;
 está disponível, o escopo de dados de usuário e operações que exigem a autorização
 do autor recusam com guard antes de consultar membros. Dados globais/de servidor
 e `userFor(id)` explícito continuam disponíveis no escopo apropriado.
+
+## Erros do gateway
+
+Além dos erros de scripts, o bot encaminha `Events.Error` e `Events.ShardError`
+do client para `onError(error)`, sem `ctx`. Uma falha de shard emitida nos dois
+eventos é reportada uma vez. Sem callback configurado, o framework usa
+`console.error`. O encerramento aguarda os relatórios pendentes; veja também
+[eventos nativos](NATIVE.md#eventos-tipados-e-erros-assíncronos).

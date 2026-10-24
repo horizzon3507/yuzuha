@@ -123,3 +123,26 @@ Os erros incluem `HTTP_HOST`, `HTTP_PRIVATE`, `HTTP_TIMEOUT`,
 capturado por `$try`.
 
 Veja [guia nativo](NATIVE.md) e [referência de funções](FUNCTIONS.md).
+
+## Streaming em scripts
+
+```text
+$httpStream[GET;https://api.yuzuha.example/export;$reply[Trecho $httpChunkIndex: $httpChunk]]
+```
+
+`httpStream` reavalia o terceiro argumento para cada trecho UTF-8 decodificado.
+Corpo e cabeçalhos opcionais ocupam os argumentos quatro e cinco. O retorno
+concatena as expressões concluídas do callback, sujeito ao limite de saída;
+`reply` envia cada resposta e retorna vazio. O consumidor lê o próximo trecho
+somente depois do callback, sem carregar a resposta inteira na memória.
+
+`httpChunkIndex` começa em zero e `httpChunk` fornece texto literal. A decodificação
+preserva caracteres divididos entre chunks; não cria mensagens SSE, linhas ou
+objetos NDJSON automaticamente. Um trecho pode conter várias linhas ou parte de
+uma. Esses formatos exigem um parser incremental próprio no modo nativo.
+
+Até 1000 chunks de bytes são aceitos, além dos limites de resposta, tempo e
+hosts da política HTTP do comando. Texto e retorno seguem o limite de saída do
+runtime. `break` encerra o stream, `continue` pula o restante do callback e ambos
+atravessam `try`. Streams aninhados restauram o contexto anterior. Cancelamento,
+guards e limites propagam; o reader é cancelado e liberado em qualquer saída.

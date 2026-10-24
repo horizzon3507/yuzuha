@@ -69,6 +69,7 @@ import { Scheduler } from 'yuzuha';
 
 const scheduler = new Scheduler(store, execute, {
   concurrency: 4,
+  globalConcurrency: 8,
   leaseMs: 300_000,
   heartbeatMs: 100_000,
 });
@@ -80,6 +81,22 @@ posterior consulta as tarefas novamente. Cada worker reivindica sua tarefa em
 uma transação imediatamente antes de executar. Instâncias que compartilham um
 store transacional não reivindicam a mesma tarefa simultaneamente. SQLite é a
 opção para processos concorrentes; stores JSON exigem um único processo escritor.
+
+`globalConcurrency` limita de 1 a 128 as claims ativas no store compartilhado.
+O padrão é omitido, preservando apenas o limite local. Todos os processos que
+usam esse store devem configurar o mesmo teto e os mesmos tempos de lease.
+A contagem e a claim são feitas na mesma transação SQLite; JSON continua sendo
+um store de escritor único. Uma vaga ocupada faz o candidato aguardar outro
+tick. Claims órfãs ocupam vagas até `recover()`; `start()` já chama a recuperação.
+Nesse modo, cancelar uma tarefa em execução retorna `SCHEDULE_RUNNING`, mantendo
+a vaga ocupada até o handler terminar. Handlers devem cooperar com cancelamento;
+uma lease recuperada após falha não garante execução exatamente uma vez.
+
+`priority` é um inteiro de -1000 a 1000, padrão 0, persistido na tarefa. Entre
+candidatos vencidos, valores maiores vêm primeiro; empate usa o vencimento mais
+antigo e depois a ordem de inserção. A ordem se aplica à seleção do tick, sem
+interromper handlers ativos. Prioridades altas contínuas podem atrasar tarefas
+baixas. `add`, `addCron`, `edit` e as opções das funções de script aceitam o campo.
 
 A política de retry aceita `maxAttempts` (1–100, padrão 5), `retryDelayMs`
 (1–604800000, padrão 30000), `retryBackoff` (1–10, padrão 1) e `retryJitter`

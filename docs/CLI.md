@@ -2,7 +2,7 @@
 
 A CLI é distribuída com a biblioteca. Após instalar o pacote em um bot,
 use `npx yuzuha` ou os scripts do scaffold. Na árvore da biblioteca, compile
-e execute `node dist/cli.js`.
+e execute `node dist/cli.js` na raiz do repositório.
 
 ## Comandos
 
@@ -12,7 +12,7 @@ e execute `node dist/cli.js`.
 | `yuzuha --version` | Mostra a versão do manifest |
 | `yuzuha init <diretório> [--js \| --ts] [--functions] [--local]` | Cria um projeto em pasta nova; TS por padrão |
 | `yuzuha check [config ou diretório] [--json]` | Importa e valida sem login |
-| `yuzuha functions [--json] [--category nome]` | Lista assinaturas e descrições |
+| `yuzuha functions [--json] [--category nome] [--search termo]` | Lista e busca assinaturas e descrições |
 | `yuzuha functions --catalog [--config arquivo] [--plugins-only]` | Exporta metadados JSON |
 | `yuzuha lint <arquivo ou diretório> [--json] [--catalog arquivo]` | Diagnóstico de texto sem imports |
 | `yuzuha test <cenários.json> [--json]` | Compara comandos/scripts em mocks offline |
@@ -57,7 +57,7 @@ Sucesso produz um objeto na saída padrão:
 ```json
 {
   "valid": true,
-  "version": "0.1.6",
+  "version": "0.1.7",
   "commands": [
     {
       "name": "ping",
@@ -107,11 +107,26 @@ Config e módulos importados são código confiável e podem executar efeitos.
 ```sh
 yuzuha functions --category moderation
 yuzuha functions --category storage --json
+yuzuha functions --search mensagem
+yuzuha functions --search reply --category messages
+yuzuha functions --search '$nickname' --json
 ```
 
 Categorias internas: `context`, `flow`, `guards`, `values`, `messages`, `embeds`,
 `moderation` e `storage`. O filtro é exato. Categoria inexistente produz erro e
 informa as disponíveis.
+
+`--search <termo>` procura trechos nos nomes, aliases e descrições, ignorando
+maiúsculas e minúsculas. Espaços nas extremidades e um `$` inicial são removidos;
+a comparação preserva acentos, sem busca aproximada. Use aspas simples ao passar
+`$` pelo shell. A ordem do catálogo é mantida. O filtro combina com `--category`,
+`--json`, `--catalog` e as opções existentes de plugins, respeitando suas restrições.
+
+Sem resultados, o modo textual mostra `Nenhuma função encontrada.`; `--json`
+retorna `[]` e `--catalog` retorna `{ "version": 1, "functions": [] }`, sempre
+com código de saída `0`. Valor ausente, vazio ou repetição de `--search` produz
+erro `USAGE`. Categoria desconhecida continua produzindo `CATEGORY`, mesmo
+quando a busca não encontra funções.
 
 A listagem usa o registro interno, sem carregar config ou plugins. Em JSON,
 cada função inclui `name`, `aliases` quando presentes, `category`, `description`,
@@ -147,7 +162,7 @@ A pasta deve ser nova. O scaffold inclui três comandos, config, `.env.example`,
 TS inclui `tsconfig.json`, dependências de tipos e `tsx` para os testes;
 o JS roda como ESM diretamente no Node.
 
-Por padrão, a dependência usa `^0.1.6` do npm. A opção `--local` troca essa
+Por padrão, a dependência usa `^0.1.7` do npm. A opção `--local` troca essa
 dependência por `file:` apontando para a instalação que gerou o scaffold.
 Use `--local` para desenvolver a biblioteca; compartilhe projetos com a
 dependência npm. Instale as dependências antes de executar `npm test`. Veja

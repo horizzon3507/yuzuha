@@ -1,8 +1,8 @@
 # Funções que ainda faltam
 
-Inventário da versão **0.1.6**, comparando o registro executável do Yuzuha com os
+Inventário da versão **0.1.7**, comparando o registro executável do Yuzuha com os
 tipos públicos de **@fluxerjs/core 3.3.0**, fixado no lockfile. O inventário tem
-**288 funções canônicas**; aliases não aumentam esse número.
+**306 funções canônicas**; aliases não aumentam esse número.
 
 Este documento distingue funções existentes, wrappers ainda ausentes e recursos
 acessíveis pelo SDK em JavaScript/TypeScript. Os nomes na coluna “Propostas” são
@@ -10,10 +10,10 @@ ideias de API: **não estão registrados e não podem ser usados em scripts**.
 
 ## Cobertura atual
 
-O function mode tem 288 funções canônicas, 19 a mais que na 0.1.3. O SDK continua
+O function mode tem 306 funções canônicas, 18 a mais que na 0.1.6. O SDK continua
 disponível em JS/TS, com recursos injetáveis e testáveis offline.
-Esta tabela é um mapa do que existe hoje; não é uma promessa de paridade com
-ForgeScript.
+Esta tabela é um mapa dos recursos entregues pelo Yuzuha e das APIs nativas
+disponíveis para escrever novos comandos.
 
 | Área | Funções | Cobertura |
 |---|---|---|
@@ -36,8 +36,8 @@ ForgeScript.
 | Agendamentos | `$schedule`, `$scheduleEvery`, `$unschedule`, `$schedules` | Tarefas persistentes, repetíveis e recuperáveis |
 | HTTP | `$http`, `$httpJson`, `$httpMultipart` | Requisições, upload multipart, timeout, limites e políticas de rede |
 
-Assinaturas e aliases estão na [referência gerada](FUNCTIONS.md). A presença de
-um nome familiar não garante a mesma assinatura ou semântica do ForgeScript.
+Assinaturas e aliases estão na [referência gerada](FUNCTIONS.md). Consulte o
+contrato do Yuzuha para conferir argumentos, retorno e limites de cada chamada.
 
 ## Cobertura adicional da 0.1.2
 
@@ -54,7 +54,7 @@ um nome familiar não garante a mesma assinatura ou semântica do ForgeScript.
 
 `ctx.data.transaction` é uma API nativa para operações síncronas entre várias
 chaves. `$dataTransaction` recebe operações declarativas; não executa callbacks
-assíncronos dentro do store. A extensão cobre as 288 funções internas.
+assíncronos dentro do store. A extensão cobre as 306 funções internas.
 
 ## Cobertura adicional da 0.1.3
 
@@ -82,11 +82,35 @@ assíncronos dentro do store. A extensão cobre as 288 funções internas.
 | HTTP | `$httpMultipart`; `HttpService.stream`/`withPolicy` nativos | Upload limitado, streaming cancelável e políticas restritivas por comando; veja [HTTP.md](HTTP.md) |
 | Ferramentas e estado | `lint`, catálogos JSON, cenários offline e `StateMaintenance` | Diagnósticos sem importar módulos; estatísticas, limpeza limitada, backup e restauração simulável; veja [STORAGE.md](STORAGE.md) |
 
+## Cobertura adicional da 0.1.7
+
+- `$guildFeatures` copia os recursos habilitados do servidor; `$leaveGuild` exige
+  o dono do servidor e contexto de servidor.
+- `$while`, `$break` e `$continue` oferecem controle limitado de loops, com
+  restauração de estado e propagação dos erros protegidos.
+- `$arraySortWith`, `$sortLeft` e `$sortRight` permitem comparadores estáveis.
+- `$regexTest`, `$regexMatch` e `$regexReplace` executam em workers com prazo,
+  cancelamento e limites de entrada, saída e concorrência.
+- `$decimal`, `$decimalCompare` e `$decimalRound` usam BigInt para operações
+  decimais em texto, com precisão e arredondamento explícitos.
+
+- `$queryVars` e `ctx.data.*.query` oferecem páginas por prefixo com TTL. SQLite
+  usa índice derivado; o snapshot de escrita ainda é integral.
+- `$httpStream`, `$httpChunk` e `$httpChunkIndex` processam trechos UTF-8 sem
+  carregar a resposta inteira e preservam política HTTP e cancelamento.
+- Agendamentos têm prioridade e capacidade compartilhada por claims SQLite;
+  veja os requisitos de configuração no [guia](SCHEDULER.md).
+
+- `yuzuha/images` transforma PNG/JPEG/WebP por processos isolados com Sharp opcional.
+  `ctx.sendStream` recebe anexos por stream com limite, acumulando antes do upload
+  exigido pelo SDK. Veja [IMAGES.md](IMAGES.md).
+
+Veja contratos e exemplos no [guia de operações de dados](LANGUAGE-EXTENSIONS.md).
+
 ## Wrappers ainda ausentes
 
 | Prioridade | Área | Propostas de funções | Alternativa nativa disponível |
 |---|---|---|---|
-| Média | Gestão adicional de servidor | `$leaveGuild`, `$guildFeatures` | `guild.leave` e propriedades do SDK |
 | Baixa | Componentes | `$button`, `$select`, `$modal` | Dependem de API equivalente no Fluxer |
 
 As prioridades expressam ordem sugerida, sem data prometida. Métodos do SDK usam
@@ -100,35 +124,31 @@ nomes novos para métodos do SDK.
 
 | Área | O que existe | O que falta desenhar e implementar |
 |---|---|---|
-| Texto | split, slice, includes, prefixo/sufixo, padding e escape | Regex com contrato de flags, timeout e proteção contra backtracking; busca e substituição com grupos |
-| Arrays | Construção, composição, callbacks, redução, ordenação estável e conjuntos com igualdade profunda | Comparadores personalizados |
-| Números | Arredondamento, datas, percentuais, bytes e bases 2–36 | Aritmética decimal de precisão arbitrária |
-| Fluxo | `$repeat` e `$forEach` com limite de 1000 | `while`, `break`/`continue` e orçamento de tempo por iteração |
-| Persistência | TTL, operações por chave, transações nativas e declarativas entre chaves/escopos | Índices e consultas sobre grandes coleções persistentes |
-| Agendamentos | Histórico, heartbeat, cron/fusos, concorrência limitada e retry/backoff/jitter | Prioridades e coordenação de capacidade entre processos |
-| HTTP | Respostas textuais/binárias, streaming nativo, multipart e políticas por comando | Streaming de respostas diretamente em scripts |
-| Binários | URL, bytes nativos, base64 em script e envio múltiplo/misto | Manipulação de imagens e streaming de anexos |
+| Persistência | TTL, transações, consulta por prefixo/cursor e índice SQLite por escopo/sujeito/nome | Índices por propriedades dos valores e escritas que não reserializem o snapshot inteiro |
+
+
+| Binários | URL, bytes, base64, entrada por stream limitada e módulo opcional de imagens | Upload contínuo pela rede sem acumular bytes; o SDK atual não aceita esse contrato |
 
 Não há `$eval` de JavaScript nem reinterpretação de texto de usuário como código.
 Funções JS/TS próprias podem ser registradas explicitamente. Para operações
 complexas, use o [guia nativo](NATIVE.md).
 
-## O que não entra na promessa de paridade
+## Limites de escopo do Yuzuha
 
-- ForgeScript trabalha com Discord. Slash commands, interações, botões, selects
-  e modais do Discord não são contratos do Yuzuha. Exigem suporte e APIs
-  equivalentes no Fluxer antes de qualquer implementação.
+- Comandos de aplicação, botões, selects e modais ainda não são contratos do
+  Yuzuha. Exigem suporte e APIs no Fluxer antes de qualquer implementação.
 - Voz e sharding têm pacotes separados no ecossistema Fluxer.js. A 0.1.6 integra
   voz oficial opcional e controle Lavalink em `yuzuha/music`, sem wrappers de
-  reprodução em scripts. O acesso nativo ao core não inclui sharding.
+  reprodução em scripts. O core aceita configuração de shards via clientOptions;
+  gerência de processos exige `@fluxerjs/sharding`, não incluído no pacote.
+  Veja a [auditoria de integrações](INTEGRATIONS.md).
 - Economia, XP, rankings e tickets são sistemas de produto. Ter variáveis,
   moderação ou acesso ao SDK não significa que esses sistemas já estejam prontos.
-- LSP e migração automática do ForgeScript ainda não são ferramentas entregues.
+- LSP e migração automática de scripts de outros runtimes ainda não são ferramentas entregues.
   Autocomplete, hover, assinatura e diagnósticos estão na extensão VS Code incluída.
 
-Não existe uma porcentagem de paridade com ForgeScript: não foi auditado um
-catálogo completo e versionado de suas funções. A comparação verificável aqui é
-com o registro atual do Yuzuha e a dependência instalada.
+A cobertura verificável usa o registro executável do Yuzuha e os tipos da
+dependência instalada. Não mede compatibilidade com catálogos de outros runtimes.
 
 ## Como fechar uma lacuna
 
@@ -147,7 +167,5 @@ Os recursos nativos foram conferidos nas declarações distribuídas em
 por ela, incluindo `Guild`, `GuildMember`, `Channel`, `Message`, `Webhook` e
 `ClientUser`.
 
-Fontes primárias externas: [código do Fluxer.js](https://github.com/fluxerjs/core),
-[documentação Fluxer.js](https://fluxer.js.org) e
-[ForgeScript](https://github.com/tryforge/ForgeScript), usado como referência de
-sintaxe e ergonomia, sem alegação de compatibilidade integral.
+Fontes primárias externas: [código do Fluxer.js](https://github.com/fluxerjs/core)
+e [documentação Fluxer.js](https://fluxer.js.org).
