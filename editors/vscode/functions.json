@@ -548,6 +548,14 @@
     "description": "Modera com guards e hierarquia e cria caso; define $caseID."
   },
   {
+    "name": "queryVars",
+    "category": "storage",
+    "minArgs": 1,
+    "maxArgs": 2,
+    "usage": "$queryVars[escopo;opções?]",
+    "description": "Consulta prefixo de variáveis global/guild/user; opções prefix, after e limit (1–100); retorna entries e nextCursor."
+  },
+  {
     "name": "case",
     "category": "storage",
     "minArgs": 1,
@@ -682,6 +690,22 @@
     "maxArgs": 1,
     "usage": "$dataTransaction[operações]",
     "description": "Executa atomicamente 1–100 operações JSON get/set/delete/increment/expire/ttl entre escopos; retorna resultados na ordem."
+  },
+  {
+    "name": "guildFeatures",
+    "category": "users",
+    "minArgs": 0,
+    "maxArgs": 0,
+    "usage": "$guildFeatures",
+    "description": "Retorna as features do servidor atual como array; exige suporte do recurso."
+  },
+  {
+    "name": "leaveGuild",
+    "category": "users",
+    "minArgs": 0,
+    "maxArgs": 0,
+    "usage": "$leaveGuild",
+    "description": "Remove o bot do servidor atual; somente o dono do servidor pode executar."
   },
   {
     "name": "userProfile",
@@ -1644,6 +1668,30 @@
     "description": "Ordena até 1000 itens por chaves de mesmo tipo, texto ou número; calculadas uma vez por item. Asc/desc preservam empates."
   },
   {
+    "name": "sortLeft",
+    "category": "language",
+    "minArgs": 0,
+    "maxArgs": 0,
+    "usage": "$sortLeft",
+    "description": "Item da esquerda no comparador de arraySortWith; vazio fora dele."
+  },
+  {
+    "name": "sortRight",
+    "category": "language",
+    "minArgs": 0,
+    "maxArgs": 0,
+    "usage": "$sortRight",
+    "description": "Item da direita no comparador de arraySortWith; vazio fora dele."
+  },
+  {
+    "name": "arraySortWith",
+    "category": "language",
+    "minArgs": 2,
+    "maxArgs": 2,
+    "usage": "$arraySortWith[array;comparador]",
+    "description": "Ordenação estável com expressão numérica negativa/zero/positiva; máximo 1000 itens e 10000 comparações."
+  },
+  {
     "name": "split",
     "category": "language",
     "minArgs": 2,
@@ -1730,6 +1778,30 @@
     "maxArgs": 2,
     "usage": "$mention[id;tipo?]",
     "description": "Menciona user, role ou channel; ID deve ser numérico."
+  },
+  {
+    "name": "regexTest",
+    "category": "language",
+    "minArgs": 2,
+    "maxArgs": 4,
+    "usage": "$regexTest[texto;padrão;flags?;timeoutMs?]",
+    "description": "Regex em worker isolado; flags gimsu, prazo padrão 500 ms, até 1000 correspondências e saída limitada."
+  },
+  {
+    "name": "regexMatch",
+    "category": "language",
+    "minArgs": 2,
+    "maxArgs": 4,
+    "usage": "$regexMatch[texto;padrão;flags?;timeoutMs?]",
+    "description": "Regex em worker isolado; flags gimsu, prazo padrão 500 ms, até 1000 correspondências e saída limitada."
+  },
+  {
+    "name": "regexReplace",
+    "category": "language",
+    "minArgs": 3,
+    "maxArgs": 5,
+    "usage": "$regexReplace[texto;padrão;substituição;flags?;timeoutMs?]",
+    "description": "Regex em worker isolado; flags gimsu, prazo padrão 500 ms, até 1000 correspondências e saída limitada."
   },
   {
     "name": "round",
@@ -1842,6 +1914,54 @@
     "maxArgs": 1,
     "usage": "$parseDate[texto]",
     "description": "Converte texto de data em milissegundos; erro se inválido."
+  },
+  {
+    "name": "decimal",
+    "category": "language",
+    "minArgs": 3,
+    "maxArgs": 4,
+    "usage": "$decimal[a;operador;b;casas?]",
+    "description": "Aritmética decimal exata em texto, até 1000 dígitos; divisão usa 18 casas por padrão e empates arredondam para longe de zero."
+  },
+  {
+    "name": "decimalCompare",
+    "category": "language",
+    "minArgs": 2,
+    "maxArgs": 2,
+    "usage": "$decimalCompare[a;b]",
+    "description": "Compara decimais sem conversão para Number; retorna -1, 0 ou 1."
+  },
+  {
+    "name": "decimalRound",
+    "category": "language",
+    "minArgs": 2,
+    "maxArgs": 2,
+    "usage": "$decimalRound[valor;casas]",
+    "description": "Arredonda decimal em texto; empates para longe de zero e zeros finais são removidos."
+  },
+  {
+    "name": "break",
+    "category": "language",
+    "minArgs": 0,
+    "maxArgs": 0,
+    "usage": "$break",
+    "description": "Encerra o loop mais próximo; exige corpo de repeat, forEach ou while."
+  },
+  {
+    "name": "continue",
+    "category": "language",
+    "minArgs": 0,
+    "maxArgs": 0,
+    "usage": "$continue",
+    "description": "Avança para a próxima iteração do loop mais próximo."
+  },
+  {
+    "name": "while",
+    "category": "language",
+    "minArgs": 2,
+    "maxArgs": 32,
+    "usage": "$while[condição;corpo;...]",
+    "description": "Reavalia condição e corpo; máximo 1000 iterações, com cancelamento e orçamento compartilhados."
   },
   {
     "name": "repeat",
@@ -2001,7 +2121,7 @@
     "minArgs": 2,
     "maxArgs": 4,
     "usage": "$schedule[duração;comando;entrada?;retry?]",
-    "description": "Agenda execução única; retry recebe maxAttempts, retryDelayMs, retryBackoff e retryJitter."
+    "description": "Agenda execução única; retry recebe maxAttempts, retryDelayMs, retryBackoff, retryJitter e priority (-1000 a 1000)."
   },
   {
     "name": "scheduleEvery",
@@ -2009,7 +2129,7 @@
     "minArgs": 2,
     "maxArgs": 4,
     "usage": "$scheduleEvery[duração;comando;entrada?;retry?]",
-    "description": "Agenda execução repetida; retry recebe maxAttempts, retryDelayMs, retryBackoff e retryJitter."
+    "description": "Agenda execução repetida; retry recebe maxAttempts, retryDelayMs, retryBackoff, retryJitter e priority (-1000 a 1000)."
   },
   {
     "name": "scheduleCron",
@@ -2017,7 +2137,7 @@
     "minArgs": 3,
     "maxArgs": 5,
     "usage": "$scheduleCron[expressão;fuso;comando;entrada?;opções?]",
-    "description": "Agenda cron de cinco campos em fuso IANA; opções recebem missedRun (run-once ou skip) e retry com jitter."
+    "description": "Agenda cron de cinco campos em fuso IANA; opções recebem missedRun (run-once ou skip) e retry com jitter e priority."
   },
   {
     "name": "unschedule",
@@ -2082,6 +2202,30 @@
     "maxArgs": 2,
     "usage": "$retrySchedule[execução;duração?]",
     "description": "Reagenda uma falha operacional sua; guards e efeitos de moderação impedem reexecução."
+  },
+  {
+    "name": "httpChunk",
+    "category": "network",
+    "minArgs": 0,
+    "maxArgs": 0,
+    "usage": "$httpChunk",
+    "description": "Trecho UTF-8 atual de httpStream; vazio fora do callback."
+  },
+  {
+    "name": "httpChunkIndex",
+    "category": "network",
+    "minArgs": 0,
+    "maxArgs": 0,
+    "usage": "$httpChunkIndex",
+    "description": "Índice do trecho textual de httpStream, começando em zero; vazio fora dele."
+  },
+  {
+    "name": "httpStream",
+    "category": "network",
+    "minArgs": 3,
+    "maxArgs": 5,
+    "usage": "$httpStream[método;url;callback;corpo?;cabeçalhos?]",
+    "description": "Consome resposta por trechos UTF-8 e reavalia callback; até 1000 chunks, com backpressure, cancelamento e política HTTP do comando."
   },
   {
     "name": "httpMultipart",

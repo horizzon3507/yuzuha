@@ -1,7 +1,7 @@
 # Referência das funções
 
 Function mode opcional, importado de `yuzuha/functions`.
-Gerada do registro executável: **288 funções**. Atualize com `npm run docs:generate`.
+Gerada do registro executável: **306 funções**. Atualize com `npm run docs:generate`.
 
 Aliases não contam como funções adicionais. Índices e semântica estão em [LANGUAGE.md](LANGUAGE.md).
 
@@ -153,13 +153,19 @@ Aliases não contam como funções adicionais. Índices e semântica estão em [
 | `$arraySome[array;expressão]` | Retorna true no primeiro item com expressão verdadeira; false se nenhum. Usa $loopValue/$loopIndex; máximo 1000 itens. |  |
 | `$arraySort[array;direção?]` | Ordena cópia do array; direção asc ou desc. |  |
 | `$arraySortBy[array;chave;direção?]` | Ordena até 1000 itens por chaves de mesmo tipo, texto ou número; calculadas uma vez por item. Asc/desc preservam empates. |  |
+| `$arraySortWith[array;comparador]` | Ordenação estável com expressão numérica negativa/zero/positiva; máximo 1000 itens e 10000 comparações. |  |
 | `$arrayUnion[array;outroArray]` | União sem duplicados; preserva a ordem da primeira ocorrência. Máximo de 1000 itens somados. |  |
 | `$arrayUnique[array]` | Remove duplicados, mantendo a primeira ocorrência. |  |
+| `$break` | Encerra o loop mais próximo; exige corpo de repeat, forEach ou while. |  |
 | `$caseCount` | Quantidade de casos do servidor atual. |  |
 | `$caseList[página?;tamanho?]` | Lista casos do servidor; página 1-based, tamanho padrão 10, máximo 100. |  |
 | `$ceil[valor]` | Arredonda para cima. |  |
 | `$clamp[valor;mínimo;máximo]` | Limita valor ao intervalo. |  |
+| `$continue` | Avança para a próxima iteração do loop mais próximo. |  |
 | `$date[timestamp?;formato?;local?]` | Formata data; timestamp em ms, formato date/time/datetime/iso/relative. |  |
+| `$decimal[a;operador;b;casas?]` | Aritmética decimal exata em texto, até 1000 dígitos; divisão usa 18 casas por padrão e empates arredondam para longe de zero. |  |
+| `$decimalCompare[a;b]` | Compara decimais sem conversão para Number; retorna -1, 0 ou 1. |  |
+| `$decimalRound[valor;casas]` | Arredonda decimal em texto; empates para longe de zero e zeros finais são removidos. |  |
 | `$endsWith[texto;sufixo]` | Verifica sufixo do texto. |  |
 | `$escapeMarkdown[texto]` | Escapa caracteres especiais de Markdown. |  |
 | `$fixed[valor;casas?]` | Texto com casas decimais fixas. |  |
@@ -199,6 +205,9 @@ Aliases não contam como funções adicionais. Índices e semântica estão em [
 | `$pushUserVar[nome;valor]` | Adiciona item a array persistente; cria se ausente. |  |
 | `$pushVar[nome;valor]` | Adiciona item a array persistente; cria se ausente. |  |
 | `$range[início;fim;passo?]` | Sequência de números; no máximo 1000 itens. |  |
+| `$regexMatch[texto;padrão;flags?;timeoutMs?]` | Regex em worker isolado; flags gimsu, prazo padrão 500 ms, até 1000 correspondências e saída limitada. |  |
+| `$regexReplace[texto;padrão;substituição;flags?;timeoutMs?]` | Regex em worker isolado; flags gimsu, prazo padrão 500 ms, até 1000 correspondências e saída limitada. |  |
+| `$regexTest[texto;padrão;flags?;timeoutMs?]` | Regex em worker isolado; flags gimsu, prazo padrão 500 ms, até 1000 correspondências e saída limitada. |  |
 | `$relativeTime[timestamp;local?]` | Descreve distância até agora, ex. "há 2 dias". |  |
 | `$repeat[vezes;corpo;...]` | Repete o corpo reavaliando a cada iteração; retorna a concatenação. |  |
 | `$repeatText[texto;vezes]` | Repete texto; no máximo 100000 caracteres. |  |
@@ -207,10 +216,13 @@ Aliases não contam como funções adicionais. Índices e semântica estão em [
 | `$setUserVarPath[nome;caminho;novo]` | Atualiza caminho em objeto persistente de forma atômica; cria a estrutura ausente e retorna o valor completo. |  |
 | `$setVarPath[nome;caminho;novo]` | Atualiza caminho em objeto persistente de forma atômica; cria a estrutura ausente e retorna o valor completo. |  |
 | `$sliceText[texto;início;fim?]` | Fatia caracteres; fim exclusivo. |  |
+| `$sortLeft` | Item da esquerda no comparador de arraySortWith; vazio fora dele. |  |
+| `$sortRight` | Item da direita no comparador de arraySortWith; vazio fora dele. |  |
 | `$split[texto;separador]` | Divide texto; separador vazio retorna caracteres. |  |
 | `$startsWith[texto;prefixo]` | Verifica prefixo do texto. |  |
 | `$toBase[inteiroDecimal;base]` | Converte inteiro seguro ou texto decimal exato para base 2–36; até 1024 dígitos de entrada. |  |
 | `$truncate[texto;limite;sufixo?]` | Corta texto no limite e adiciona sufixo. |  |
+| `$while[condição;corpo;...]` | Reavalia condição e corpo; máximo 1000 iterações, com cancelamento e orçamento compartilhados. |  |
 
 ## messages
 
@@ -263,8 +275,11 @@ Aliases não contam como funções adicionais. Índices e semântica estão em [
 | Função | Descrição | Aliases |
 |---|---|---|
 | `$http[método;url;corpo?;cabeçalhos?]` | Executa requisição HTTP com timeout e limite de resposta; retorna o corpo. |  |
+| `$httpChunk` | Trecho UTF-8 atual de httpStream; vazio fora do callback. |  |
+| `$httpChunkIndex` | Índice do trecho textual de httpStream, começando em zero; vazio fora dele. |  |
 | `$httpJson[método;url;corpo?;cabeçalhos?]` | Como $http, mas decodifica a resposta como JSON. |  |
 | `$httpMultipart[método;url;partes;cabeçalhos?]` | Envia partes de formulário com value textual ou base64 binário; retorna o corpo da resposta. |  |
+| `$httpStream[método;url;callback;corpo?;cabeçalhos?]` | Consome resposta por trechos UTF-8 e reavalia callback; até 1000 chunks, com backpressure, cancelamento e política HTTP do comando. |  |
 
 ## roles
 
@@ -289,9 +304,9 @@ Aliases não contam como funções adicionais. Índices e semântica estão em [
 | `$pauseSchedule[id]` | Pausa seu agendamento, preservando o vencimento e a política de retry. |  |
 | `$resumeSchedule[id;duração?]` | Retoma seu agendamento; duração opcional define novo vencimento a partir de agora. |  |
 | `$retrySchedule[execução;duração?]` | Reagenda uma falha operacional sua; guards e efeitos de moderação impedem reexecução. |  |
-| `$schedule[duração;comando;entrada?;retry?]` | Agenda execução única; retry recebe maxAttempts, retryDelayMs, retryBackoff e retryJitter. |  |
-| `$scheduleCron[expressão;fuso;comando;entrada?;opções?]` | Agenda cron de cinco campos em fuso IANA; opções recebem missedRun (run-once ou skip) e retry com jitter. |  |
-| `$scheduleEvery[duração;comando;entrada?;retry?]` | Agenda execução repetida; retry recebe maxAttempts, retryDelayMs, retryBackoff e retryJitter. |  |
+| `$schedule[duração;comando;entrada?;retry?]` | Agenda execução única; retry recebe maxAttempts, retryDelayMs, retryBackoff, retryJitter e priority (-1000 a 1000). |  |
+| `$scheduleCron[expressão;fuso;comando;entrada?;opções?]` | Agenda cron de cinco campos em fuso IANA; opções recebem missedRun (run-once ou skip) e retry com jitter e priority. |  |
+| `$scheduleEvery[duração;comando;entrada?;retry?]` | Agenda execução repetida; retry recebe maxAttempts, retryDelayMs, retryBackoff, retryJitter e priority (-1000 a 1000). |  |
 | `$scheduleHistory` | Lista o histórico dos seus agendamentos no servidor atual. |  |
 | `$schedules` | Lista agendamentos do servidor atual. |  |
 | `$unschedule[id]` | Cancela um agendamento; retorna true/false. |  |
@@ -311,6 +326,7 @@ Aliases não contam como funções adicionais. Índices e semântica estão em [
 | `$getGuildVar[nome;padrão?]` | Lê variável persistente do escopo. |  |
 | `$getUserVar[nome;padrão?]` | Lê variável persistente do escopo. |  |
 | `$getVar[nome;padrão?]` | Lê variável persistente do escopo. |  |
+| `$queryVars[escopo;opções?]` | Consulta prefixo de variáveis global/guild/user; opções prefix, after e limit (1–100); retorna entries e nextCursor. |  |
 | `$setGuildVar[nome;valor;ttlMs?]` | Salva variável do escopo; TTL opcional em milissegundos. Sem TTL, o valor é persistente. |  |
 | `$setUserVar[nome;valor;ttlMs?]` | Salva variável do escopo; TTL opcional em milissegundos. Sem TTL, o valor é persistente. |  |
 | `$setVar[nome;valor;ttlMs?]` | Salva variável do escopo; TTL opcional em milissegundos. Sem TTL, o valor é persistente. |  |
@@ -349,7 +365,9 @@ Aliases não contam como funções adicionais. Índices e semântica estão em [
 | `$guild[propriedade?]` | Servidor atual, ou uma propriedade própria. |  |
 | `$guildBanner[tamanho?]` | URL do banner do servidor atual; vazio se ausente. |  |
 | `$guildCounts[timeout?]` | Solicita contagens ao vivo de membros e online ao gateway; timeout em milissegundos. |  |
+| `$guildFeatures` | Retorna as features do servidor atual como array; exige suporte do recurso. |  |
 | `$guildIcon[tamanho?]` | URL do ícone do servidor atual; vazio se ausente. |  |
+| `$leaveGuild` | Remove o bot do servidor atual; somente o dono do servidor pode executar. |  |
 | `$member[id;propriedade?]` | Membro do servidor atual, ou propriedade; vazio se não existir. |  |
 | `$memberCount` | Total de membros do servidor atual. |  |
 | `$members[limite?]` | Membros do servidor atual; padrão 50, máximo 1000. |  |
