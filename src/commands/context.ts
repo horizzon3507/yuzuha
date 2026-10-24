@@ -9,6 +9,8 @@ import type { Transport } from '../ports/transport.js';
 import type { NativeAccess } from '../ports/native.js';
 import type { Resources } from '../ports/resources.js';
 import type { Scheduler } from '../services/scheduler.js';
+import { sendStreamAttachment } from '../services/attachments.js';
+import type { StreamAttachmentOptions } from '../services/attachments.js';
 import { bindHttp } from '../services/http.js';
 import type { HttpService } from '../services/http.js';
 import { AuthorizationService, requireGuild } from '../services/authorization.js';
@@ -199,6 +201,10 @@ export class CommandContext {
 
   send(payload: string | Payload, channelID = this.message.channelID): Promise<string> {
     return this.transport.send(channelID, typeof payload === 'string' ? { content: payload } : payload);
+  }
+
+  sendStream(source: ReadableStream<Uint8Array>, options: StreamAttachmentOptions, channelID = this.message.channelID): Promise<string> {
+    return sendStreamAttachment(this.resources.messages, channelID, source, options, this.signal);
   }
 
   edit(messageID: string, payload: string | Payload, channelID = this.message.channelID): Promise<void> {
