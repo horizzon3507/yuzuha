@@ -132,6 +132,17 @@ export class CommandContext {
   get vars(): Map<string, unknown> { return this.localVars ??= new Map(); }
   get args(): ArgumentBag { return this.argumentsBag ??= new ArgumentBag(); }
   get flags(): ArgumentBag { return this.flagsBag ??= new ArgumentBag(); }
+  async guildFeatures(): Promise<string[]> {
+    const info = await this.resources.users.guild(this.requireGuild());
+    if (!info.features) throw new YuzuhaError('NATIVE_UNAVAILABLE', 'O recurso de servidor não fornece features.');
+    return [...info.features];
+  }
+
+  async leaveGuild(): Promise<void> {
+    const guildID = await this.authorization.requireGuildDeparture();
+    if (!this.resources.users.leaveGuild) throw new YuzuhaError('NATIVE_UNAVAILABLE', 'O recurso de servidor não implementa leaveGuild.');
+    await this.resources.users.leaveGuild(guildID);
+  }
   get mod(): NativeModeration {
     return this.nativeMod ??= new NativeModeration((action, target, reason, options) => this.moderate(action, target, reason, options));
   }

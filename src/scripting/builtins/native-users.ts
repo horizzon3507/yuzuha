@@ -75,6 +75,11 @@ async function activityName(c: FunctionCall, index: number): Promise<string> {
 }
 
 export const userFunctions = defineFunctions(fn => {
+  fn('guildFeatures', 'users', 0, 0, '', 'Retorna as features do servidor atual como array; exige suporte do recurso.', c => c.ctx.guildFeatures());
+  fn('leaveGuild', 'users', 0, 0, '', 'Remove o bot do servidor atual; somente o dono do servidor pode executar.', async c => {
+    await c.ctx.leaveGuild();
+    return '';
+  });
   fn('userProfile', 'users', 1, 1, '[usuário]', 'Busca usuário, perfil global e perfil/membro do servidor atual quando disponível.', async c => {
     return c.ctx.resources.users.profile(userID(await c.text(0)), c.ctx.guildID || undefined);
   });

@@ -181,7 +181,7 @@ test('adaptador mapeia membros, apelidos e edição de servidor sem requisiçõe
     displayAvatarURL: () => null, bannerURL: () => null,
     async edit(input: { nick: string | null; reason: string }) { calls.push(['nickname', input]); this.nick = input.nick; return this; },
   };
-  const guild = { id: '100', name: 'servidor', ownerId: '1', memberCount: 2, createdTimestamp: 0,
+  const guild = { id: '100', name: 'servidor', ownerId: '1', memberCount: 2, createdTimestamp: 0, features: [],
     iconURL: () => null, bannerURL: () => null,
     members: {
       async fetch(id: string, input: unknown) { calls.push(['fetch', id, input]); return nativeMember; },

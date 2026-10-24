@@ -104,11 +104,16 @@ function toGuildInfo(guild: Guild): GuildInfo {
     bannerURL: guild.bannerURL(),
     memberCount: guild.memberCount,
     createdTimestamp: guild.createdTimestamp,
+    features: [...guild.features],
   };
 }
 
 export function createUsersResources(client: Client): UsersResources {
   return {
+    async leaveGuild(guildID) {
+      if (!client.user) throw new YuzuhaError('NATIVE_UNAVAILABLE', 'O client ainda não possui um usuário autenticado.');
+      await client.user.leaveGuild(guildID);
+    },
     async profile(userID, guildID) {
       const result = await client.users.fetchWithProfile(userID, { guildId: guildID });
       return { user: toUserInfo(result.user), member: result.member ? toMemberInfo(result.member) : null,

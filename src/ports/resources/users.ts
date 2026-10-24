@@ -26,6 +26,7 @@ export interface GuildInfo {
   bannerURL: string | null;
   memberCount: number | null;
   createdTimestamp: number;
+  features?: string[];
 }
 
 export interface BanInfo {
@@ -58,6 +59,7 @@ export interface UsersResources {
   searchMembers(guildID: string, query: string, limit?: number, offset?: number): Promise<MemberSearchPage>;
   setNickname(guildID: string, userID: string, nickname: string | null, reason: string): Promise<MemberInfo>;
   editGuild(guildID: string, input: GuildEditInput): Promise<GuildInfo>;
+  leaveGuild?(guildID: string): Promise<void>;
 }
 
 export interface ProfileInfo {

@@ -22,6 +22,15 @@ export function requireActor(authorID: string): string {
 export class AuthorizationService {
   constructor(private readonly transport: Transport, private readonly scope: ActorScope) {}
 
+  async requireGuildDeparture(): Promise<string> {
+    const guildID = requireGuild(this.scope.guildID);
+    const author = await this.transport.member(guildID, requireActor(this.scope.authorID));
+    if (!author.owner) throw new GuardError('Somente o dono do servidor pode remover o bot por este comando.');
+    const bot = await this.transport.member(guildID, this.transport.botID);
+    if (bot.owner) throw new GuardError('O bot não pode sair de um servidor do qual é dono.');
+    return guildID;
+  }
+
   async requirePermission(name: string, bot = false, message?: string, channelID?: string): Promise<void> {
     const guildID = requireGuild(this.scope.guildID);
     const authorID = bot ? this.transport.botID : requireActor(this.scope.authorID);
