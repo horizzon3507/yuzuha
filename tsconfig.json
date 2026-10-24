@@ -27,6 +27,9 @@
       ],
       "yuzuha/music": [
         "./src/music.ts"
+      ],
+      "yuzuha/images": [
+        "./src/images.ts"
       ]
     }
   },

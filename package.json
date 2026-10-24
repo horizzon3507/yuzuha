@@ -41,6 +41,10 @@
     "./music": {
       "types": "./dist/music.d.ts",
       "import": "./dist/music.js"
+    },
+    "./images": {
+      "types": "./dist/images.d.ts",
+      "import": "./dist/images.js"
     }
   },
   "bin": {
@@ -91,13 +95,18 @@
     "@types/node": "^22.0.0",
     "@types/vscode": "^1.140.0",
     "@types/ws": "^8.18.2",
-    "typescript": "^5.9.0"
+    "typescript": "^5.9.0",
+    "sharp": "0.35.5"
   },
   "peerDependencies": {
-    "@fluxerjs/voice": "^3.1.0"
+    "@fluxerjs/voice": "^3.1.0",
+    "sharp": "^0.35.5"
   },
   "peerDependenciesMeta": {
     "@fluxerjs/voice": {
+      "optional": true
+    },
+    "sharp": {
       "optional": true
     }
   }

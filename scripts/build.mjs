@@ -11,6 +11,7 @@ try {
     [createRequire(import.meta.url).resolve('typescript/bin/tsc'), '-p', 'tsconfig.build.json'], { cwd: root });
   if (stdout) process.stdout.write(stdout);
   if (stderr) process.stderr.write(stderr);
+  await copyFile(new URL('../src/infrastructure/images/worker.mjs', import.meta.url), new URL('../dist/infrastructure/images/worker.mjs', import.meta.url));
   await copyFile(new URL('../src/scripting/regex-worker.mjs', import.meta.url), new URL('../dist/scripting/regex-worker.mjs', import.meta.url));
   await copyFile(new URL('../dist/tooling/language.js', import.meta.url), new URL('../editors/vscode/language.mjs', import.meta.url));
   await copyFile(new URL('../dist/tooling/language.js.map', import.meta.url), new URL('../editors/vscode/language.js.map', import.meta.url));
