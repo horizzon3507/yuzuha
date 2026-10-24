@@ -4,6 +4,7 @@ import type { CallNode, Node, Program } from './ast.js';
 import type { FunctionRegistry } from './registry.js';
 import type { Limits } from './types.js';
 import { text } from './values.js';
+import { LoopControl } from './control-flow.js';
 
 export class Evaluator {
   private calls = 0;
@@ -104,7 +105,7 @@ export class Evaluator {
       this.checkOutput(result, node.offset);
       return result;
     } catch (error) {
-      if (error instanceof GuardError || error instanceof StopExecution || error instanceof ScriptError || error instanceof PartialModerationError) throw error;
+      if (error instanceof GuardError || error instanceof StopExecution || error instanceof ScriptError || error instanceof PartialModerationError || error instanceof LoopControl) throw error;
       if (error instanceof YuzuhaError && ['EXECUTION_LIMIT', 'OUTPUT_LIMIT', 'EXECUTION_ABORTED'].includes(error.code)) {
         throw this.error(error.code, error.message, node.offset);
       }

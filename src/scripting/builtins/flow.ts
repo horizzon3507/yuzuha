@@ -1,6 +1,7 @@
 import { GuardError, PartialModerationError, ScriptError, StopExecution, YuzuhaError } from '../../errors.js';
 import { truthy } from '../values.js';
 import { defineFunctions } from './definition.js';
+import { LoopControl } from '../control-flow.js';
 
 export const flowFunctions = defineFunctions(fn => {
   fn('let', 'flow', 2, 2, '[nome;valor]', 'Define variável local sem produzir texto.', async c => {
@@ -15,7 +16,7 @@ export const flowFunctions = defineFunctions(fn => {
   fn('try', 'flow', 2, 2, '[operação;fallback]', 'Captura erros de operações; guards, limites e ações parciais continuam sendo erros.', async c => {
     try { return await c.arg(0); }
     catch (error) {
-      if (error instanceof GuardError || error instanceof StopExecution || error instanceof PartialModerationError
+      if (error instanceof GuardError || error instanceof StopExecution || error instanceof PartialModerationError || error instanceof LoopControl
         || (error instanceof ScriptError && ['EXECUTION_LIMIT', 'OUTPUT_LIMIT', 'EXECUTION_ABORTED'].includes(error.code))) throw error;
       return c.arg(1);
     }
