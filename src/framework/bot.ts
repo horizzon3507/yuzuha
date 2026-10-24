@@ -64,6 +64,23 @@ export class Yuzuha {
   private loginTask?: Promise<void>;
   private loginAbort?: AbortController;
   private readonly listener: (message: Message) => void;
+  private readonly gatewayErrors = new WeakSet<Error>();
+  private readonly gatewayReports = new Set<Promise<void>>();
+  private readonly errorListener = (error: Error): void => {
+    if (this.gatewayErrors.delete(error)) return;
+    this.reportGatewayError(error);
+  };
+  private readonly shardErrorListener = (_shardID: number, error: Error): void => {
+    // The SDK emits shardError followed synchronously by error for the same failure.
+    this.gatewayErrors.add(error);
+    queueMicrotask(() => this.gatewayErrors.delete(error));
+    this.reportGatewayError(error);
+  };
+  private reportGatewayError(error: Error): void {
+    const task = this.execution.run(true, () => reportError(this.options, error));
+    this.gatewayReports.add(task);
+    void task.then(() => this.gatewayReports.delete(task), () => this.gatewayReports.delete(task));
+  }
   private prefixSource?: string | string[];
   private prefixes: string[] = [];
   private readonly contextCooldown = (key: string, duration: number) => this.limits.cooldown(key, duration);
@@ -92,6 +109,8 @@ export class Yuzuha {
     this.events = new NativeEvents(this.client, work => this.scheduleEvent(work));
     if (typeof options.prefix !== 'function') this.resolvePrefixes(options.prefix ?? '!');
     this.listener = message => { void this.handle(incoming(message)).catch(error => reportError(this.options, error)); };
+    this.client.on(Events.Error, this.errorListener);
+    this.client.on(Events.ShardError, this.shardErrorListener);
   }
 
   /** Ativa o function mode (parser, evaluator e builtins) antes de usar `code`. */
@@ -236,7 +255,16 @@ export class Yuzuha {
       this.client.off(Events.MessageCreate, this.listener); this.listening = false;
       this.scheduler?.stop();
       await this.scheduler?.drain();
-      await this.client.destroy();
+      const needsErrorListener = !this.client.listeners(Events.Error).includes(this.errorListener);
+      const needsShardListener = !this.client.listeners(Events.ShardError).includes(this.shardErrorListener);
+      if (needsErrorListener) this.client.on(Events.Error, this.errorListener);
+      if (needsShardListener) this.client.on(Events.ShardError, this.shardErrorListener);
+      try { await this.client.destroy(); }
+      finally {
+        if (needsErrorListener) this.client.off(Events.Error, this.errorListener);
+        if (needsShardListener) this.client.off(Events.ShardError, this.shardErrorListener);
+        await Promise.allSettled([...this.gatewayReports]);
+      }
       throw error;
     });
     this.loginTask = task;
@@ -262,8 +290,13 @@ export class Yuzuha {
         if (failures.length) throw new AggregateError(failures.map(item => item.reason), 'Falha ao encerrar música ou voz.');
       }
       finally {
-        await this.client.destroy();
-        if (!this.options.store) await this.store.close?.();
+        try { await this.client.destroy(); }
+        finally {
+          this.client.off(Events.Error, this.errorListener);
+          this.client.off(Events.ShardError, this.shardErrorListener);
+          await Promise.allSettled([...this.gatewayReports]);
+          if (!this.options.store) await this.store.close?.();
+        }
       }
     })();
     return this.execution.getStore() ? Promise.resolve() : this.closeTask;

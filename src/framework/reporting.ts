@@ -14,6 +14,6 @@ export async function reportError(options: YuzuhaOptions, error: unknown, ctx?: 
   await emitLog(options, { event: 'error', errorCode: errorCode(error), ...(ctx ? { executionID: ctx.executionID, command: ctx.command.name } : {}) });
   try {
     if (options.onError) await options.onError(error, ctx);
-    else console.error(`[yuzuha] ${error instanceof YuzuhaError ? error.code : 'UNEXPECTED_ERROR'}`);
+    else console.error(`[yuzuha] ${error instanceof YuzuhaError ? error.code : 'UNEXPECTED_ERROR'}`, error);
   } catch { console.error('[yuzuha] ERROR_HANDLER_FAILED'); }
 }
