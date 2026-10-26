@@ -128,3 +128,7 @@ um servidor de teste antes de distribuir um bot para produção.
 `yuzuha/images` oferece transformações opcionais com Sharp. Shards do core podem
 ser configurados em `clientOptions`; gerenciamento de processos usa pacote externo.
 Veja [IMAGES.md](IMAGES.md) e a [auditoria de integrações](INTEGRATIONS.md).
+
+A CLI também gera sete bases nativas JS/TS com testes offline específicos;
+`templates` lista as opções sem configuração. Esses comandos de bot não são
+novos wrappers de script nem ampliam a paridade do SDK. Veja [BOT-BASES.md](BOT-BASES.md).

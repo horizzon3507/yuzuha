@@ -66,3 +66,5 @@ não são subpaths novos do pacote.
 Consulte também os guias de [loops, regex e decimais](LANGUAGE-EXTENSIONS.md),
 [imagens e streams de anexos](IMAGES.md) e
 [integrações e sharding](INTEGRATIONS.md).
+
+As sete bases JS/TS da CLI, seus comandos e testes estão em [BOT-BASES.md](BOT-BASES.md).

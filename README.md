@@ -196,3 +196,18 @@ Transformações opcionais de imagens e entrada de anexos por stream estão em
 [IMAGES.md](docs/IMAGES.md); consultas por prefixo e cursor em
 [STORAGE.md](docs/STORAGE.md), e limites das integrações em
 [INTEGRATIONS.md](docs/INTEGRATIONS.md).
+
+### Bases de bots
+
+Sete opções: `simple`, `multifunctional`, `moderation`, `community`, `economy`,
+`entertainment` e `utility`. Na cópia local compilada:
+
+```sh
+node dist/cli.js templates
+node dist/cli.js init ../bot-comunidade --template community --ts --local
+```
+
+A multifuncional reúne 24 comandos raiz com embeds e subcomandos, incluindo
+moderação com casos, regras, sugestões, enquetes, moedas virtuais, diversão
+e notas pessoais em DM. Todas as bases aceitam JS/TS e `--functions`, com README
+e testes offline próprios. Veja [BOT-BASES.md](docs/BOT-BASES.md).

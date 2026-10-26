@@ -53,6 +53,22 @@ desse caminho continuar existindo. Para adicionar a biblioteca a um projeto ESM
 já existente, compile a Yuzuha e execute
 `npm install /caminho/absoluto/yuzuha` no consumidor.
 
+## Escolher uma base
+
+Na árvore local compilada, liste as bases e escolha com `--template`:
+
+```sh
+node dist/cli.js templates
+node dist/cli.js init ../bot-comunidade --template community --ts --local
+node dist/cli.js init ../bot-multifuncional --template multifunctional --js --local
+```
+
+São sete bases: simple, multifunctional, moderation, community, economy,
+entertainment e utility. Todas incluem testes offline e aceitam `--functions`.
+A multifuncional reúne 24 comandos raiz e subcomandos. Veja exemplos, limites,
+embeds e permissões em [BOT-BASES.md](BOT-BASES.md).
+Sem `--template`, a estrutura original abaixo continua igual.
+
 ## Conhecer a estrutura gerada
 
 ```text

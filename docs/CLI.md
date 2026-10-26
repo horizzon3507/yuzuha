@@ -10,7 +10,8 @@ e execute `node dist/cli.js` na raiz do repositório.
 |---|---|
 | `yuzuha`, `yuzuha help` ou `yuzuha --help` | Mostra ajuda |
 | `yuzuha --version` | Mostra a versão do manifest |
-| `yuzuha init <diretório> [--js \| --ts] [--functions] [--local]` | Cria um projeto em pasta nova; TS por padrão |
+| `yuzuha init <diretório> [--js \| --ts] [--functions] [--local] [--template nome]` | Cria um projeto em pasta nova; TS por padrão |
+| `yuzuha templates [--json]` | Lista nomes, descrições e comandos das bases |
 | `yuzuha check [config ou diretório] [--json]` | Importa e valida sem login |
 | `yuzuha functions [--json] [--category nome] [--search termo]` | Lista e busca assinaturas e descrições |
 | `yuzuha functions --catalog [--config arquivo] [--plugins-only]` | Exporta metadados JSON |
@@ -167,6 +168,28 @@ dependência por `file:` apontando para a instalação que gerou o scaffold.
 Use `--local` para desenvolver a biblioteca; compartilhe projetos com a
 dependência npm. Instale as dependências antes de executar `npm test`. Veja
 [QUICKSTART.md](QUICKSTART.md).
+
+## Bases de bots
+
+Na árvore compilada, liste as opções e gere uma pasta nova:
+
+```sh
+node dist/cli.js templates
+node dist/cli.js templates --json
+node dist/cli.js init ../bot-comunidade --template community --ts --local
+```
+
+Bases: `simple`, `multifunctional`, `moderation`, `community`, `economy`,
+`entertainment` e `utility`. Cada uma aceita `--js`, `--ts`, `--functions`
+e `--local`. A multifuncional reúne todos os conjuntos: 24 arquivos de comandos,
+com subcomandos de regras, sugestões, enquetes e notas. As bases incluem embeds,
+README com exemplos e testes offline próprios.
+
+`templates` não importa configuração nem conecta. Em JSON, retorna uma lista
+com `name`, `description` e `commands` (caminhos dos comandos raiz).
+Sem `--template`, `init` mantém o scaffold original com `ping`, `hello` e `ban`.
+As opções novas dependem desta árvore compilada até a próxima publicação.
+Consulte comandos, limites e permissões em [BOT-BASES.md](BOT-BASES.md).
 
 ## Lint sem imports
 

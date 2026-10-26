@@ -139,3 +139,12 @@ com metadados gerados e benchmarks locais reproduzíveis. O SDK continua em 3.3.
 | F | Agendamentos, HTTP e limites | Cron/fusos, concorrência, retry, recuperação, streaming/multipart e políticas de rede |
 | G | CLI, exemplos e documentação | Scaffolds, lint/catálogos/cenários offline, manutenção de dados e guias nativos |
 | H | Integração e empacotamento | Typecheck, testes, build, tarball e import de consumidor passam |
+
+## Bases de bots na CLI
+
+O gerador oferece simple, multifunctional, moderation, community, economy,
+entertainment e utility, listadas por `yuzuha templates`. A multifuncional reúne
+24 comandos raiz e subcomandos. Enquetes, regras, sugestões, notas e moedas
+virtuais usam os serviços de estado; moderação usa autorização e casos existentes.
+Todos os projetos incluem testes offline, JS/TS e function mode opcional.
+Não há mudança no catálogo de funções ou no SDK. Veja [BOT-BASES.md](BOT-BASES.md).
