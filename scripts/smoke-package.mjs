@@ -406,6 +406,40 @@ try {
     `], directory);
     console.log(`PASS: scaffold ${language.toUpperCase()}, instalação, check e execução offline.`);
   }
+  const templates = JSON.parse(await run(process.execPath, [cli, 'templates', '--json'], consumer));
+  assert.equal(templates.length, 7);
+  for (const base of templates) {
+    const template = base.name;
+    for (const language of ['js', 'ts']) {
+      const directory = join(temporary, `bot-${template}-${language}`);
+      await run(process.execPath, [cli, 'init', directory, '--template', template, `--${language}`, '--local', '--functions'], consumer);
+      await run('npm', ['install', '--ignore-scripts', '--no-audit', '--no-fund'], directory);
+      await run('npm', ['test'], directory);
+      const check = JSON.parse(await run(process.execPath, [cli, 'check', '--json'], directory));
+      assert.equal(check.commands.length, base.commands.length + 1);
+      if (language === 'ts') await run(process.execPath, [join(directory, 'node_modules/typescript/bin/tsc'), '--noEmit'], directory);
+      await run(process.execPath, [...(language === 'ts' ? ['--import', 'tsx'] : []), '--input-type=module', '-e', `
+        import assert from 'node:assert/strict';
+        import { createTestBot } from 'yuzuha/testing';
+        const fixture = createTestBot();
+        try {
+          await fixture.bot.load('./commands');
+          assert.equal(await fixture.send('!ping'), 'success');
+          assert.equal(fixture.messages.at(-1).payload.content, 'Pong! 12 ms');
+          assert.equal(await fixture.send('!ajuda'), 'success');
+          assert.match(fixture.messages.at(-1).payload.embeds[0].description, /ping/);
+          assert.equal(await fixture.send('!eco oi'), 'success');
+          assert.equal(fixture.messages.at(-1).payload.content, 'oi');
+          if (${JSON.stringify(base.commands.includes('moderation/ban'))}) {
+            assert.equal(await fixture.send('!ban <@2> spam'), 'success');
+            assert.equal(fixture.transport.actions.length, 1);
+          } else assert.equal(await fixture.send('!ban <@2> spam'), 'ignored');
+          assert.deepEqual(fixture.errors, []);
+        } finally { await fixture.destroy(); }
+      `], directory);
+      console.log(`PASS: template ${template} ${language}, testes, check, tipos e dispatch offline.`);
+    }
+  }
   const functionsDirectory = join(temporary, 'bot-functions');
   await run(process.execPath, [cli, 'init', functionsDirectory, '--ts', '--functions', '--local'], consumer);
   await run('npm', ['install', '--ignore-scripts', '--no-audit', '--no-fund'], functionsDirectory);
