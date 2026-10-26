@@ -6,6 +6,7 @@ import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
+import { botTemplates } from '../src/cli/bot-template-catalog.js';
 import { parseArguments } from '../src/cli/arguments.js';
 import { packageRoot, VERSION } from '../src/cli/version.js';
 
@@ -132,4 +133,52 @@ test('init --local explicitly links the generating installation and preserves fu
     assert.match(await readFile(join(directory, 'README.md'), 'utf8'), /A dependência local/);
     assert.match(await readFile(join(directory, 'commands/eco.js'), 'utf8'), /yuzuha\/functions/);
   } finally { await rm(parent, { recursive: true }); }
+});
+
+test('init accepts named templates and rejects invalid or repeated selections', () => {
+  for (const template of Object.keys(botTemplates) as (keyof typeof botTemplates)[]) {
+    assert.deepEqual(parseArguments(['init', 'bot', '--template', template, '--js', '--functions', '--local']),
+      { action: 'init', directory: 'bot', language: 'js', functions: true, local: true, template });
+  }
+  for (const flags of [['--template'], ['--template', ''], ['--template', 'music'], ['--template', 'constructor'], ['--template', '__proto__'],
+    ['--template', '--js'], ['--template', 'simple', '--template', 'simple'], ['--template=simple']]) {
+    assert.throws(() => parseArguments(['init', 'bot', ...flags]), { code: 'USAGE' });
+  }
+});
+
+for (const template of Object.keys(botTemplates) as (keyof typeof botTemplates)[]) {
+  for (const language of ['js', 'ts']) {
+    test(`init ${template} ${language} creates the documented command structure`, async () => {
+      const parent = await mkdtemp(join(tmpdir(), 'yuzuha-template-'));
+      const directory = join(parent, 'bot');
+      try {
+        await invoke(['init', directory, '--template', template, `--${language}`, '--functions']);
+        const { readdir } = await import('node:fs/promises');
+        const paths = await readdir(join(directory, 'commands'), { recursive: true });
+        const commands = paths.filter(path => path.endsWith(`.${language}`)).sort();
+        const expected = [...botTemplates[template].paths.map(path => template === 'simple' ? path.slice(path.indexOf('/') + 1) : path), 'eco'];
+        assert.deepEqual(commands, expected.map(path => `${path}.${language}`).sort());
+        const sample = await readFile(join(directory, `test/commands.test.${language}`), 'utf8');
+        assert.ok(sample.includes(template === 'simple' ? '../commands/avatar.js' : '../commands/utilities/avatar.js'));
+        const readme = await readFile(join(directory, 'README.md'), 'utf8');
+        assert.match(readme, /!ajuda/);
+        assert.match(readme, /!eco texto/);
+      } finally { await rm(parent, { recursive: true }); }
+    });
+  }
+}
+
+test('templates lists the available bases without loading config', async () => {
+  assert.deepEqual(parseArguments(['templates']), { action: 'templates', json: false });
+  assert.deepEqual(parseArguments(['templates', '--json']), { action: 'templates', json: true });
+  for (const flags of [['--ts'], ['extra'], ['--json', '--json']]) {
+    assert.throws(() => parseArguments(['templates', ...flags]), { code: 'USAGE' });
+  }
+  const templates = JSON.parse((await invoke(['templates', '--json'])).stdout);
+  assert.deepEqual(templates.map((value: { name: string }) => value.name),
+    ['simple', 'multifunctional', 'moderation', 'community', 'economy', 'entertainment', 'utility']);
+  await assert.rejects(invoke(['templates', '--json', 'extra']), (error: unknown) => {
+    assert.equal(JSON.parse((error as { stderr: string }).stderr).code, 'USAGE'); return true;
+  });
+  assert.ok(templates.every((value: { commands: string[] }) => value.commands.length >= 4));
 });

@@ -1,9 +1,12 @@
 import { YuzuhaError } from '../errors.js';
+import { botTemplates, isBotTemplate } from './bot-template-catalog.js';
+import type { BotTemplate } from './bot-template-catalog.js';
 import { NODE_REQUIREMENT, VERSION } from './version.js';
 
 export const usage = `Yuzuha ${VERSION}
 
-yuzuha init <diretório> [--js | --ts] [--functions] [--local] Cria um projeto de bot
+yuzuha init <diretório> [--js | --ts] [--functions] [--local] [--template nome] Cria um projeto de bot
+yuzuha templates [--json]                 Lista bases de bots e comandos
 yuzuha check [config ou diretório] [--json] Valida comandos sem login
 yuzuha functions [--json] [--category nome] [--search termo] Lista funções e assinaturas
 yuzuha lint <arquivo|diretório> [--json] [--catalog arquivo] Valida texto sem importar
@@ -15,18 +18,21 @@ yuzuha editor                             Mostra o caminho da extensão VS Code
 yuzuha run [config]                        Carrega .env e conecta
 yuzuha dev [config]                        Recarrega comandos ao editar
 
+Bases: ${Object.keys(botTemplates).join(', ')}.
+
 Config padrão: yuzuha.config.ts ou yuzuha.config.js. Node ${NODE_REQUIREMENT}.
 init usa o pacote npm; --local vincula a instalação atual para desenvolvimento.
 `;
 
 export type CLIArguments = { action: 'help' } | { action: 'version' }
-  | { action: 'init'; directory: string; language: 'js' | 'ts'; functions: boolean; local: boolean }
+  | { action: 'init'; directory: string; language: 'js' | 'ts'; functions: boolean; local: boolean; template?: BotTemplate }
   | { action: 'functions'; json: boolean; category?: string; search?: string; catalog?: boolean; config?: string; pluginsOnly?: boolean }
   | { action: 'lint'; input: string; json: boolean; catalogs: string[] }
   | { action: 'test'; input: string; json: boolean }
   | { action: 'data'; operation: 'stats' | 'cleanup' | 'backup' | 'restore'; input: string; json: boolean;
       limit?: number; cursor?: string; file?: string; policy?: 'replace' | 'merge'; apply: boolean }
   | { action: 'check' | 'doctor'; input?: string; json: boolean }
+  | { action: 'templates'; json: boolean }
   | { action: 'editor' }
   | { action: 'run' | 'dev'; input?: string };
 
@@ -39,14 +45,27 @@ export function parseArguments(args: string[]): CLIArguments {
   }
   if (action === '--version') { if (rest.length) fail(); return { action: 'version' }; }
   if (action === 'editor') { if (rest.length) fail(); return { action }; }
+  if (action === 'templates') {
+    if (rest.length > 1 || (rest.length === 1 && rest[0] !== '--json')) fail();
+    return { action, json: rest[0] === '--json' };
+  }
   if (action === 'init') {
     const [directory, ...flags] = rest;
-    if (!directory) return fail('Use init <diretório> [--js | --ts] [--functions] [--local].');
-    if (directory.startsWith('-') || flags.some(flag => !['--js', '--ts', '--functions', '--local'].includes(flag))
-      || new Set(flags).size !== flags.length || flags.filter(flag => flag === '--js' || flag === '--ts').length > 1) {
-      fail('Use init <diretório> [--js | --ts] [--functions] [--local].');
+    if (!directory) return fail('Use init <diretório> [--js | --ts] [--functions] [--local] [--template nome].');
+    if (directory.startsWith('-')) fail();
+    let language: 'js' | 'ts' | undefined, functions = false, local = false, template: BotTemplate | undefined;
+    for (let i = 0; i < flags.length; i++) {
+      const flag = flags[i];
+      if ((flag === '--js' || flag === '--ts') && language === undefined) language = flag === '--js' ? 'js' : 'ts';
+      else if (flag === '--functions' && !functions) functions = true;
+      else if (flag === '--local' && !local) local = true;
+      else if (flag === '--template' && template === undefined) {
+        const value = flags[++i];
+        if (!isBotTemplate(value)) return fail(`Escolha --template ${Object.keys(botTemplates).join(' | ')}.`);
+        template = value;
+      } else fail();
     }
-    return { action, directory, language: flags.includes('--js') ? 'js' : 'ts', functions: flags.includes('--functions'), local: flags.includes('--local') };
+    return { action, directory, language: language ?? 'ts', functions, local, ...(template ? { template } : {}) };
   }
   if (action === 'functions') {
     let json = false, category: string | undefined, search: string | undefined, catalog = false, config: string | undefined, pluginsOnly = false;

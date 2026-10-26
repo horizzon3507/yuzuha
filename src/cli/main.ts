@@ -1,3 +1,4 @@
+import { botTemplates } from './bot-template-catalog.js';
 import { lint } from './lint.js';
 import { runScenarios } from './scenarios.js';
 import { dataCommand } from './data.js';
@@ -18,6 +19,11 @@ import { commandCatalog } from './command-catalog.js';
 export async function main(args = process.argv.slice(2)): Promise<void> {
   const options = parseArguments(args);
   if (options.action === 'help') { console.log(usage); return; }
+  if (options.action === 'templates') {
+    const templates = Object.entries(botTemplates).map(([name, value]) => ({ name, description: value.description, commands: value.paths }));
+    console.log(options.json ? JSON.stringify(templates, null, 2) : templates.map(value => `${value.name.padEnd(16)} ${value.description} (${value.commands.length} arquivos de comandos)`).join('\n'));
+    return;
+  }
   if (options.action === 'version') { console.log(VERSION); return; }
   if (options.action === 'editor') { console.log(resolve(packageRoot, 'editors/vscode')); return; }
   if (options.action === 'lint') {
@@ -45,7 +51,7 @@ export async function main(args = process.argv.slice(2)): Promise<void> {
     if (!report.ok) process.exitCode = 1;
     return;
   }
-  if (options.action === 'init') { await scaffold(options.directory, options.language, options.functions, options.local); return; }
+  if (options.action === 'init') { await scaffold(options.directory, options.language, options.functions, options.local, options.template); return; }
   if (options.action === 'functions') {
     let catalogBot: Yuzuha | undefined;
     let all;
