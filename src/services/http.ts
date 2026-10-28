@@ -174,7 +174,7 @@ export class HttpService {
         if (value) {
           total += value.length;
           if (total > this.maxBytes) throw new YuzuhaError('HTTP_BODY_TOO_LARGE', `Resposta excede o limite de ${this.maxBytes} bytes.`);
-          chunks.push(value);
+          chunks.push(new Uint8Array(value));
         }
       }
     } finally {
@@ -265,7 +265,9 @@ export class HttpService {
         let finished = false, bytes = 0;
         let abort: () => void;
         const finish = (): void => { finished = true; clearTimeout(timer); signal.removeEventListener('abort', abort); };
-        const cancel = (): void => { if (reader) void reader.cancel().finally(() => reader.releaseLock()).catch(() => {}); };
+        const cancel = (): void => {
+          if (reader) { void reader.cancel().catch(() => {}); reader.releaseLock(); }
+        };
         const body = new ReadableStream<Uint8Array>({
           start(output) {
             abort = () => { if (!finished) { finish(); cancel(); output.error(aborted()); } };
