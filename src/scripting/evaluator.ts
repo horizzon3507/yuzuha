@@ -1,3 +1,4 @@
+import { performance } from 'node:perf_hooks';
 import type { CommandContext } from '../commands/context.js';
 import { GuardError, PartialModerationError, ScriptError, StopExecution, YuzuhaError } from '../errors.js';
 import type { CallNode, Node, Program } from './ast.js';
@@ -9,6 +10,8 @@ import { LoopControl } from './control-flow.js';
 export class Evaluator {
   private calls = 0;
   private deadline: number;
+  private waits = 0;
+  private waitStarted = 0;
 
   constructor(
     private readonly program: Program,
@@ -16,7 +19,7 @@ export class Evaluator {
     private readonly registry: FunctionRegistry,
     private readonly limits: Readonly<Limits>,
   ) {
-    this.deadline = Date.now() + limits.timeoutMs;
+    this.deadline = performance.now() + limits.timeoutMs;
   }
 
   async run(): Promise<unknown> {
@@ -26,7 +29,7 @@ export class Evaluator {
 
   private check(offset: number, depth: number): void {
     if (this.ctx.signal.aborted) throw this.error('EXECUTION_ABORTED', 'Execução cancelada.', offset);
-    if (this.calls > this.limits.calls || depth > this.limits.depth || Date.now() > this.deadline) {
+    if (this.calls > this.limits.calls || depth > this.limits.depth || performance.now() > this.deadline) {
       throw this.error('EXECUTION_LIMIT', 'Limite de execução excedido.', offset);
     }
   }
@@ -96,9 +99,14 @@ export class Evaluator {
           return result;
         },
         wait: async <T>(operation: Promise<T>): Promise<T> => {
-          const started = Date.now();
+          if (this.waits++ === 0) this.waitStarted = performance.now();
           try { return await operation; }
-          finally { this.deadline += Date.now() - started; }
+          finally {
+            const finished = performance.now();
+            this.deadline += finished - this.waitStarted;
+            this.waitStarted = finished;
+            this.waits--;
+          }
         },
       });
       this.check(node.offset, depth);
