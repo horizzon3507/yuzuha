@@ -1,6 +1,6 @@
 # Música e voz
 
-A 0.1.7 inclui o conteúdo de música preparado na 0.1.6: `FluxerVoice` para áudio
+A 0.1.8 inclui o conteúdo de música preparado na 0.1.6: `FluxerVoice` para áudio
 nativo, cliente Lavalink v4, filas e
 `FluxerLavalinkBridge` para transmitir o áudio do Lavalink ao Fluxer. Os imports vivem em `yuzuha/music`.
 São APIs JS/TS; o catálogo de 310 funções de script não inclui reprodução.
@@ -71,7 +71,7 @@ O SDK continua responsável pelo timeout da conexão de voz.
 ## Lavalink com áudio no Fluxer
 
 No checkout, com JDK 17+ disponível, rode `npm run music:build-plugin`.
-Copie `bridges/lavalink/build/yuzuha-audio-0.1.7.jar` para `plugins/` no Lavalink
+Copie `bridges/lavalink/build/yuzuha-audio-0.1.8.jar` para `plugins/` no Lavalink
 4.2.2 e reinicie o servidor. No bot, instale `@fluxerjs/voice@^3.1.0` e configure:
 
 ```ts

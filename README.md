@@ -7,7 +7,7 @@ Os dois modos compartilham permissões, moderação, estado e recursos.
 O Yuzuha usa **Fluxer.js 3.3.0**. Você continua tendo acesso ao client original
 por `bot.client` e aos exports do SDK em `yuzuha/sdk`.
 
-[0.1.7](CHANGELOG.md) · Node **22.13+** · ESM · [MIT](LICENSE)
+[0.1.8](CHANGELOG.md) · Node **22.13+** · ESM · [MIT](LICENSE)
 
 [Começar](#começar) · [Comandos](#escrever-comandos) · [Recursos](#recursos) · [Testes](#testar-sem-token) · [Documentação](#documentação)
 
@@ -16,7 +16,7 @@ por `bot.client` e aos exports do SDK em `yuzuha/sdk`.
 ### Criar um bot
 
 ```sh
-npx yuzuha@0.1.7 init ./meu-bot --ts
+npx yuzuha@0.1.8 init ./meu-bot --ts
 cd meu-bot
 npm install
 npm run check
@@ -42,7 +42,7 @@ para incluir um comando de exemplo com scripts.
 ### Usar em um projeto existente
 
 ```sh
-npm install yuzuha@0.1.7
+npm install yuzuha@0.1.8
 ```
 
 Use `"type": "module"` no `package.json`. O [guia inicial](docs/QUICKSTART.md)

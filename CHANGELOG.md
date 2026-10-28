@@ -21,6 +21,26 @@ documentos. Veja a [política completa](VERSIONING.md).
 
 </details>
 
+## v0.1.8 · 28/10/2026
+
+Bases de bots, buscas e páginas do Fluxer.js, com autorização compartilhada e correções de limites, streams e cooldowns. Esta atualização da biblioteca Yuzuha foi preparada em 28/10/2026 (v0.1.8).
+
+- A CLI oferece sete bases JS/TS com `templates` e `init --template`: simple, multifunctional, moderation, community, economy, entertainment e utility. A multifuncional reúne 24 comandos raiz; os projetos incluem configuração, exemplos e testes offline. O scaffold padrão e `--functions` continuam disponíveis.
+- A distribuição preserva o modo executável da CLI e testa a instalação, os tipos e o dispatch dos 14 pares de base/linguagem a partir do tarball.
+- Quatro funções novas levam o catálogo de 306 a **310**: `$searchMessagesAdvanced`, `$pinnedMessagesPage`, `$reactionUsersPage` e `$threadMember`. Seus recursos e tipos também estão disponíveis na API nativa.
+- A busca aceita filtros de conteúdo, frases, autores, canais, menções, anexos, IDs e ordenação sem exigir texto. A validação é compartilhada entre scripts e adaptador, copia arrays e limita as opções a 32 KiB; a busca anterior continua disponível, incluindo cursor vazio.
+- Páginas de fixadas preservam ordem de fixação, timestamps, `hasMore` e cursor ISO. Páginas de reações preservam `hasMore`/`nextAfter`, incluindo respostas legadas em array. A consulta individual de membros de threads inclui flags e metadados de mute, com o autor do contexto como padrão nos scripts.
+- Mutações de emojis e stickers pelo contexto exigem `ManageExpressions` de autor e bot no servidor atual. Criar emoji verifica as permissões antes do download e revalida antes de criar o recurso. Guards não são capturados por `$try`.
+- `$jsonEncode` preserva guards, limites, cancelamento, controle de loops e `PartialModerationError`. Incrementos, remoções/inclusões em arrays e atualizações por caminho verificam a saída antes do commit, preservando valor, TTL e ausência quando recusados.
+- O prazo cooperativo do runtime usa relógio monotônico. Esperas externas sobrepostas ou aninhadas descontam seu intervalo uma única vez, sem conceder tempo duplicado.
+- HTTP valida sub-redes IPv4/IPv6, inclusive IPv4 mapeado, link-local e redes especiais. Literais IPv6 públicos funcionam sem consulta DNS; credenciais na URL e corpos em GET/HEAD são recusados.
+- Redirects preservam os métodos conforme o padrão Fetch e removem cabeçalhos de conteúdo quando descartam o corpo. Respostas binárias copiam chunks reutilizados; cancelamento libera readers mesmo quando a fonte não conclui a limpeza.
+- Anexos por stream mantêm os metadados validados durante a leitura e não deixam um timeout agendado quando a fonte já está bloqueada por outro reader.
+- Deduplicação de mensagens e consultas de cooldown ativo deixam de varrer o mapa de cooldowns. A coleta considera vencimentos e pressão de capacidade; renovação e admissão reutilizam entradas expiradas, mantendo o teto de 100 mil. Flags malformadas geram `GuardError` antes do handler.
+- Um benchmark reproduzível compara a implementação anterior e a atual com amostras intercaladas. O ganho é localizado na manutenção removida; cenários comuns tiveram resultados mistos, registrados sem alegação de aceleração geral.
+- Referências, catálogo do editor, guias e consumidores JS/TS acompanham os novos contratos. O SDK continua fixado em 3.3.0, o schema persistido em 2 e os sete entrypoints permanecem disponíveis.
+- **Adaptação de integrações:** implementações completas próprias de `MessagesResources` devem acrescentar `pinnedPage` e `reactionUsersPage`; `ThreadsResources` deve acrescentar `member`. Comandos antes autorizados apenas pelo bot podem receber `GuardError` nas mutações de expressões. Apesar da numeração patch, esta entrega altera esses contratos; veja [VERSIONING.md](VERSIONING.md) antes de atualizar.
+
 ## v0.1.7 · 23/10/2026
 
 Loops controláveis, comparadores de arrays, regex isolada, decimais exatos e busca pela CLI, com o conteúdo preparado na 0.1.6. Esta atualização da biblioteca Yuzuha foi preparada em 23/10/2026 (v0.1.7).

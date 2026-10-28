@@ -10,13 +10,13 @@ Use Node >=22.13 e npm. Em um projeto ESM existente, instale a versão desta
 documentação:
 
 ```sh
-npm install yuzuha@0.1.7
+npm install yuzuha@0.1.8
 ```
 
 Para gerar um bot em uma pasta nova, execute:
 
 ```sh
-npx yuzuha@0.1.7 init ./meu-bot --ts
+npx yuzuha@0.1.8 init ./meu-bot --ts
 cd meu-bot
 npm install
 npm run check

@@ -4,8 +4,8 @@ A CLI gera sete bases JS/TS. Cada projeto contém comandos nativos, configuraç�
 `.env.example`, `.gitignore`, README com exemplos, scripts e testes offline.
 Não é necessário configurar banco externo nem instalar dependências de voz.
 
-As opções desta página estão na árvore local; precisam de uma publicação para
-ficarem disponíveis no npm. Na raiz da biblioteca:
+As bases são distribuídas a partir da versão 0.1.8. Para usá-las a partir de uma
+cópia local da biblioteca:
 
 ```sh
 npm run build

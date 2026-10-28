@@ -5,7 +5,7 @@ Este é o caminho principal do Yuzuha: comandos e eventos em JS/TS, sem funçõe
 transporte, persistência, guards e moderação com os comandos nativos.
 O acesso ao client Fluxer.js continua disponível para recursos específicos do SDK.
 
-Os exemplos usam imports públicos de **Yuzuha 0.1.7**. JavaScript usa os mesmos
+Os exemplos usam imports públicos de **Yuzuha 0.1.8**. JavaScript usa os mesmos
 imports e objetos; TypeScript acrescenta inferência e validação estática.
 
 ## Um comando com argumentos inferidos

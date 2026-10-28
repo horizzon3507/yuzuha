@@ -1,5 +1,23 @@
 # Validação local
 
+## Preparação da 0.1.8 (28/10/2026)
+
+Linux x64, Node **26.11.1**, npm **12.2.1**. Biblioteca, CLI e extensão incluída
+alinhadas em **0.1.8**; SDK **3.3.0**, schema **2** e sete entrypoints.
+
+| Verificação | Resultado |
+|---|---|
+| `npm run check` | PASS: **613 testes**, tipos, arquitetura de **181 módulos**, build, editor, **310 funções** e links de **39 arquivos Markdown** |
+| `npm run smoke:package` | PASS: tarball instalado, consumidores JS/TS, paridade de exports do SDK, CLI 0.1.8, catálogo do editor, 14 pares de base/linguagem e function mode |
+| Histórico em commits | PASS: 17 snapshots intermediários verificados isoladamente com typecheck e build antes dos metadados da release |
+| Migração | Novos métodos de recursos customizados, autorização de expressões e restrições HTTP documentados em [VERSIONING.md](../VERSIONING.md) |
+
+Esta seção registra a validação anterior à publicação. Os testes usam mocks e
+stores temporários, sem login nem ações reais no Fluxer. As medições de
+cooldowns permanecem locais e não comprovam aceleração geral; veja
+[BENCHMARKS.md](BENCHMARKS.md). A revisão anterior em Node 22/26 está preservada
+abaixo com as versões e os fatos originais.
+
 ## Revisão local após a 0.1.7 (28/10/2026)
 
 Linux x64, npm **12.2.1**, Node **26.11.1** e **22.22.3**. O pacote continua

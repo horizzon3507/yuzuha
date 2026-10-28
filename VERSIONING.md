@@ -1,16 +1,16 @@
 # Versionamento
 
 O Yuzuha aplica o formato Hory ao histórico e usa **SemVer simples** no pacote.
-A versão desta atualização é **0.1.7**.
+A versão desta atualização é **0.1.8**.
 
 ## Pacote e histórico
 
 | Lugar | Formato nesta versão |
 |---|---|
-| `package.json` e entrada raiz de `package-lock.json` | `0.1.7` |
-| Pacote npm e saída de `yuzuha --version` | `0.1.7` |
-| Título do changelog | `## v0.1.7 · 23/10/2026` |
-| Eventual tag Git | `v0.1.7` |
+| `package.json` e entrada raiz de `package-lock.json` | `0.1.8` |
+| Pacote npm e saída de `yuzuha --version` | `0.1.8` |
+| Título do changelog | `## v0.1.8 · 28/10/2026` |
+| Tag Git | `v0.1.8` |
 
 O SDK e a CLI pertencem ao mesmo pacote. Para bibliotecas, a convenção Hory mantém
 SemVer sem `m`, sem seções por superfície e sem sufixos de canal.
@@ -39,6 +39,34 @@ A versão do SDK é fixada separadamente. Atualizá-la exige revisar
 gerado por `init` pertence ao consumidor e não precisa acompanhar a biblioteca.
 
 ## Preparar uma atualização
+
+### Migrar para 0.1.8
+
+A 0.1.8 é uma exceção pontual à regra de versões minor para mudanças de
+contrato na série 0.x. Embora use numeração patch, requer adaptação de
+implementações completas próprias de `Resources` e revisão das autorizações
+de comandos. A regra de compatibilidade acima continua valendo para as
+próximas versões.
+
+- Acrescente `messages.pinnedPage`, `messages.reactionUsersPage` e
+  `threads.member` aos adaptadores completos. Os tipos de retorno são
+  `PinnedMessagesPage`, `ReactionUsersPage` e `ThreadMemberDetails`, exportados
+  pela raiz. `mockResources` continua aceitando overrides parciais.
+- Mutações de emojis/stickers por `ctx.resources.expressions` exigem
+  `ManageExpressions` de autor e bot no servidor do contexto. Código confiável
+  que precisa operar diretamente com a autoridade do bot continua usando
+  `bot.resources` ou `bot.client` explicitamente.
+- HTTP recusa credenciais embutidas na URL, corpos GET/HEAD e destinos nas
+  redes locais/especiais bloqueadas, incluindo IPv4 mapeado em IPv6. Use
+  `Authorization` para autenticação; rede privada exige `allowPrivate: true`
+  explícito. Redirects 301/302 preservam PUT/PATCH/DELETE e 303 preserva HEAD;
+  cabeçalhos de conteúdo são removidos quando o corpo é descartado.
+- As opções de busca recebem validação compartilhada de tipos, IDs, cursores
+  e limites. Texto é opcional na API nativa e em `$searchMessagesAdvanced`;
+  `$searchMessages` mantém sua assinatura e aceita cursor vazio.
+- O catálogo passa a 310 funções. Imports, SDK 3.3.0 e schema 2 permanecem;
+  não há migração de dados em disco. As sete bases da CLI são aditivas e não
+  reescrevem projetos existentes. A extensão incluída acompanha a versão 0.1.8.
 
 ### Migrar para 0.1.7
 

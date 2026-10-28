@@ -7,7 +7,7 @@ a biblioteca de imagens nem inicia processos.
 ## Instalação e transformação
 
 ```sh
-npm install yuzuha@0.1.7 sharp@^0.35.5
+npm install yuzuha@0.1.8 sharp@^0.35.5
 ```
 
 ```ts

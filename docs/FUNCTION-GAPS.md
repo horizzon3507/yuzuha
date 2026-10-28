@@ -1,6 +1,6 @@
 # Funções que ainda faltam
 
-Inventário local após a versão **0.1.7**, comparando o registro executável do Yuzuha com os
+Inventário da versão **0.1.8**, comparando o registro executável do Yuzuha com os
 tipos públicos de **@fluxerjs/core 3.3.0**, fixado no lockfile. O inventário tem
 **310 funções canônicas**; aliases não aumentam esse número.
 

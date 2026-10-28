@@ -73,7 +73,7 @@ recursos. O runtime de scripts só é registrado quando o function mode é usado
 
 ## Entregas e dependências
 
-A revisão local após a 0.1.7 amplia buscas com filtros do SDK, paginação de
+A atualização 0.1.8 amplia buscas com filtros do SDK, paginação de
 fixadas por timestamp, paginação de usuários de reações e consulta individual
 de membros de threads. O catálogo passa a 310 funções, preservando os exports
 do SDK 3.3.0. A mesma revisão corrige
@@ -82,7 +82,8 @@ operações de estado, autorização de expressões, endereços IPv6 e redirects
 HTTP, ciclo de vida dos leitores de streams, prazo monotônico do evaluator e
 limpeza/admissão dos cooldowns. A deduplicação de mensagens deixa de varrer
 cooldowns; a coleta só ocorre quando há expiração possível ou pressão de capacidade.
-Essas alterações não representam uma publicação ou atualização de versão.
+A entrega inclui as sete bases JS/TS da CLI e documenta os requisitos de
+adaptação de recursos customizados em [VERSIONING.md](../VERSIONING.md).
 
 A atualização 0.1.7 distribui o conteúdo preparado na 0.1.6 e acrescenta busca
 por nome, alias e descrição em `yuzuha functions --search <termo>`, combinável
