@@ -72,18 +72,49 @@ export function bindAuthorizedResources(source: Resources, transport: Transport,
     guild(target.guildID);
     await channel(target.channelID, 'ManageWebhooks');
   };
+  const expressions = async (guildID: string) => {
+    guild(guildID);
+    await allowed('ManageExpressions');
+  };
   return { users: source.users, messages: source.messages, collectors: source.collectors,
     threads: source.threads, invites: source.invites, expressions: {
     emoji: source.expressions.emoji.bind(source.expressions), emojis: source.expressions.emojis.bind(source.expressions),
-    createEmoji: source.expressions.createEmoji.bind(source.expressions), deleteEmoji: source.expressions.deleteEmoji.bind(source.expressions),
     sticker: source.expressions.sticker.bind(source.expressions), stickers: source.expressions.stickers.bind(source.expressions),
-    editEmoji: source.expressions.editEmoji.bind(source.expressions), createSticker: source.expressions.createSticker.bind(source.expressions),
-    editSticker: source.expressions.editSticker.bind(source.expressions), deleteSticker: source.expressions.deleteSticker.bind(source.expressions),
-    cloneEmoji: source.expressions.cloneEmoji.bind(source.expressions), cloneSticker: source.expressions.cloneSticker.bind(source.expressions),
+    async createEmoji(...args) {
+      await expressions(args[0]);
+      return source.expressions.createEmoji(...args);
+    },
+    async editEmoji(...args) {
+      await expressions(args[0]);
+      return source.expressions.editEmoji(...args);
+    },
+    async deleteEmoji(...args) {
+      await expressions(args[0]);
+      return source.expressions.deleteEmoji(...args);
+    },
+    async createSticker(...args) {
+      await expressions(args[0]);
+      return source.expressions.createSticker(...args);
+    },
+    async editSticker(...args) {
+      await expressions(args[0]);
+      return source.expressions.editSticker(...args);
+    },
+    async deleteSticker(...args) {
+      await expressions(args[0]);
+      return source.expressions.deleteSticker(...args);
+    },
+    async cloneEmoji(...args) {
+      await expressions(args[0]);
+      return source.expressions.cloneEmoji(...args);
+    },
+    async cloneSticker(...args) {
+      await expressions(args[0]);
+      return source.expressions.cloneSticker(...args);
+    },
     async createEmojisBulk(guildID, inputs) {
       const batch = emojiBatch(inputs);
-      guild(guildID);
-      await allowed('ManageExpressions');
+      await expressions(guildID);
       return source.expressions.createEmojisBulk(guildID, batch);
     },
   }, roles: {

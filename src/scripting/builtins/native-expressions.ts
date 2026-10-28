@@ -87,10 +87,12 @@ export const expressionFunctions = defineFunctions(fn => {
   });
   fn('emojis', 'expressions', 0, 0, '', 'Lista emojis do servidor atual.', async c =>
     c.ctx.resources.expressions.emojis(c.ctx.requireGuild()));
-  fn('createEmoji', 'expressions', 2, 2, '[nome;url]', 'Baixa imagem por HTTP com a política de rede configurada, converte para base64 e cria emoji no servidor.', async c => {
+  fn('createEmoji', 'expressions', 2, 2, '[nome;url]', 'Exige ManageExpressions de autor e bot antes de baixar a imagem por HTTP, converter para base64 e criar emoji no servidor.', async c => {
     const guildID = c.ctx.requireGuild();
     const name = validEmojiName(await c.text(0));
     const url = validImageURL(await c.text(1));
+    await c.ctx.requirePermission('ManageExpressions');
+    await c.ctx.requirePermission('ManageExpressions', true);
     const response = await c.wait(c.ctx.http.requestBytes({ method: 'GET', url }));
     if (!response.ok) throw new YuzuhaError('EMOJI_IMAGE', `Não foi possível baixar a imagem: HTTP ${response.status}.`);
     return c.ctx.resources.expressions.createEmoji(guildID, name, Buffer.from(response.body).toString('base64'));
