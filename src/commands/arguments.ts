@@ -154,9 +154,9 @@ export function parseFlags(definitions: readonly ArgumentDefinition[] | undefine
     if (terminated) { positional.push(token); continue; }
     if (token === '--') { terminated = true; continue; }
     if (!(token.startsWith('--') || /^-[^\d.]/u.test(token)) || token === '-') { positional.push(token); continue; }
-    const match = /^--?([^=]+)(?:=([\s\S]*))?$/.exec(token)!;
-    const definition = lookup.get(match[1]!);
-    if (!definition) throw new GuardError(`Flag desconhecida: ${token.split('=')[0]}.`);
+    const match = /^--?([^=]+)(?:=([\s\S]*))?$/.exec(token);
+    const definition = match && lookup.get(match[1]!);
+    if (!match || !definition) throw new GuardError(`Flag desconhecida: ${token.split('=')[0]}.`);
     if (values.has(definition.name)) throw new GuardError(`Flag repetida: --${definition.name}.`);
     let input = match[2];
     if (input === undefined) {
