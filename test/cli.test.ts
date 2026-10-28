@@ -46,7 +46,7 @@ test('CLI search arguments normalize terms and reject missing, empty or repeated
 
 test('CLI searches names, aliases and descriptions while preserving order and metadata', async () => {
   const all = JSON.parse((await invoke(['functions', '--json'])).stdout) as { name: string; category: string; usage: string; description: string }[];
-  assert.equal(all.length, 306);
+  assert.equal(all.length, 310);
   const named = JSON.parse((await invoke(['functions', '--search', '  $NiCkNaMe ', '--json'])).stdout);
   assert.deepEqual(named, all.filter(fn => fn.name === 'nickname'));
   assert.equal(named.length, 1);

@@ -1,7 +1,7 @@
 # Referência das funções
 
 Function mode opcional, importado de `yuzuha/functions`.
-Gerada do registro executável: **306 funções**. Atualize com `npm run docs:generate`.
+Gerada do registro executável: **310 funções**. Atualize com `npm run docs:generate`.
 
 Aliases não contam como funções adicionais. Índices e semântica estão em [LANGUAGE.md](LANGUAGE.md).
 
@@ -82,7 +82,7 @@ Aliases não contam como funções adicionais. Índices e semântica estão em [
 |---|---|---|
 | `$cloneEmoji[idOrigem]` | Clona expressão de outro servidor para o atual; exige ManageExpressions. |  |
 | `$cloneSticker[idOrigem]` | Clona expressão de outro servidor para o atual; exige ManageExpressions. |  |
-| `$createEmoji[nome;url]` | Baixa imagem por HTTP com a política de rede configurada, converte para base64 e cria emoji no servidor. |  |
+| `$createEmoji[nome;url]` | Exige ManageExpressions de autor e bot antes de baixar a imagem por HTTP, converter para base64 e criar emoji no servidor. |  |
 | `$createEmojisBulk[emojis]` | Cria de 1 a 50 emojis com name e image em base64; retorna success e failed sem ocultar falhas parciais. |  |
 | `$createSticker[nome;imagemBase64;descrição?;tags?;motivo?]` | Cria sticker com imagem em base64; tags separadas por vírgula. |  |
 | `$deleteEmoji[nomeOuID]` | Apaga emoji do servidor. |  |
@@ -239,12 +239,15 @@ Aliases não contam como funções adicionais. Índices e semântica estão em [
 | `$messages[canal;limite?;before?;after?;around?]` | Lista mensagens, da mais recente para a mais antiga; aceita somente um cursor por chamada. |  |
 | `$pin[mensagem;canal?]` | Fixa uma mensagem no canal. |  |
 | `$pinnedMessages[canal?;limite?]` | Lista mensagens fixadas, da mais recente para a mais antiga. |  |
+| `$pinnedMessagesPage[canal?;limite?;before?]` | Pagina mensagens por data de fixação; retorna messages, pinnedAt, hasMore e nextBefore. Cursor ISO da página anterior. |  |
 | `$preloadMessages[canais]` | Busca a última mensagem de até 100 canais; recebe array de IDs e retorna objeto por canal. |  |
 | `$react[emoji]` | Reage à mensagem que executou o comando. |  |
 | `$reactionUsers[mensagem;emoji;limite?;após?;canal?]` | Lista IDs de usuários que reagiram; limite de 1 a 100 e cursor por usuário. |  |
+| `$reactionUsersPage[mensagem;emoji;limite?;após?;canal?]` | Retorna users com IDs, hasMore e nextAfter; limite de 1 a 100 e cursor por usuário. |  |
 | `$removeReaction[mensagem;emoji;usuário?;canal?]` | Remove a reação do bot ou de um usuário da mensagem. |  |
 | `$reply[texto ou embed]` | Responde sem pings e sem produzir texto adicional. |  |
 | `$searchMessages[texto;canal?;limite?;cursor?;autor?]` | Busca mensagens; retorna indexing, messages, total e cursor. Cursor é array retornado pela página anterior. |  |
+| `$searchMessagesAdvanced[opções]` | Busca por filtros de conteúdo, IDs, autores, menções, anexos, datas e ordem; texto é opcional. Até 100 resultados, opções de até 32 KiB; page ou cursor exclusivos. |  |
 | `$sendAttachments[canal;array;conteúdo?]` | Envia de 1 a 10 anexos URL/base64 na mesma mensagem, com até 10 MB de bytes. |  |
 | `$sendFileBase64[canal;base64;nome;conteúdo?]` | Decodifica base64 e envia um anexo binário, retornando o ID. |  |
 | `$sendFiles[canal;url;nome?;conteudo?]` | Envia um anexo e retorna o ID da mensagem. |  |
@@ -349,6 +352,7 @@ Aliases não contam como funções adicionais. Índices e semântica estão em [
 | `$leaveThread[thread]` | Faz o bot sair da thread. |  |
 | `$removeThreadMember[thread;usuário]` | Adiciona ou remove um membro da thread. |  |
 | `$searchThreads[canal;nome?;limite?;offset?]` | Busca threads; retorna threads, total, hasMore, indexing e retryAfter. |  |
+| `$threadMember[thread;usuário?]` | Busca um membro da thread com flags e estado de mute; usuário padrão é o autor. |  |
 | `$threadMembers[thread;limite?;após?]` | Lista membros da thread com limite de 1 a 100 e cursor por usuário. |  |
 | `$unarchiveThread[thread]` | Desarquiva thread. |  |
 

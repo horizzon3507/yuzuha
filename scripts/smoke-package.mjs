@@ -12,7 +12,8 @@ const manifest = JSON.parse(await readFile(join(root, 'package.json'), 'utf8'));
 const temporary = await mkdtemp(join(tmpdir(), 'yuzuha-consumer-'));
 const newFunctions = ['arrayUnion', 'arrayIntersection', 'arrayDifference', 'formatBytes', 'percent', 'toBase', 'fromBase',
   'scheduleCron', 'preloadMessages', 'createEmojisBulk', 'httpMultipart', 'eventName', 'eventUserID', 'eventGuildID',
-  'eventChannelID', 'eventMessageID', 'eventContent', 'eventOldContent', 'eventEmoji'];
+  'eventChannelID', 'eventMessageID', 'eventContent', 'eventOldContent', 'eventEmoji',
+  'pinnedMessagesPage', 'searchMessagesAdvanced', 'reactionUsersPage', 'threadMember'];
 const options = cwd => ({ cwd, env: { ...process.env, FLUXER_BOT_TOKEN: '' }, timeout: 120_000, maxBuffer: 4_000_000 });
 async function run(binary, args, cwd) {
   try { return (await exec(binary, args, options(cwd))).stdout; }
@@ -84,9 +85,20 @@ try {
     const runtime = registerBuiltins(new Runtime());
     const context = new CommandContext({ message: mockMessage('!extras'), command: { name: 'extras', code: '' },
       transport: new MockTransport(), store: new MemoryStore(), cooldown: () => 0,
-      resources: mockResources({ messages: { async reactionUsers() { return ['2']; } } }) });
+      resources: mockResources({ messages: {
+        async reactionUsers() { return ['2']; },
+        async pinnedPage() { return { messages: [], pinnedAt: [], hasMore: false, nextBefore: null }; },
+        async reactionUsersPage() { return { users: ['2'], hasMore: true, nextAfter: '2' }; },
+        async search(input) { assert.equal(input.pinned, true); return { indexing: false, messages: [], total: 0, cursor: [] }; },
+      } }) });
     assert.equal(await runtime.execute(runtime.compile('$arrayReduce[$range[1;4];0;$math[$loopAccumulator;+;$loopValue]]'), context), 10);
     assert.deepEqual(await runtime.execute(runtime.compile('$reactionUsers[1;👍]'), context), ['2']);
+    assert.deepEqual(await runtime.execute(runtime.compile('$pinnedMessagesPage'), context),
+      { messages: [], pinnedAt: [], hasMore: false, nextBefore: null });
+    assert.deepEqual(await runtime.execute(runtime.compile('$reactionUsersPage[1;👍]'), context),
+      { users: ['2'], hasMore: true, nextAfter: '2' });
+    assert.deepEqual(await runtime.execute(runtime.compile('$searchMessagesAdvanced[$object[pinned;true]]'), context),
+      { indexing: false, messages: [], total: 0, cursor: [] });
     assert.deepEqual(await runtime.execute(runtime.compile('$arrayUnion[$range[1;3];$range[3;4]]'), context), [1, 2, 3, 4]);
     assert.deepEqual(await runtime.execute(runtime.compile('$arrayIntersection[$range[1;3];$range[3;4]]'), context), [3]);
     assert.deepEqual(await runtime.execute(runtime.compile('$arrayDifference[$range[1;3];$range[3;4]]'), context), [1, 2]);
@@ -241,7 +253,7 @@ try {
   const editor = (await run(process.execPath, [cli, 'editor'], consumer)).trim();
   const metadata = JSON.parse(await readFile(join(editor, 'functions.json'), 'utf8'));
   assert.ok(metadata.some(fn => fn.name === 'searchMessages'));
-  assert.equal(metadata.length, 306);
+  assert.equal(metadata.length, 310);
   for (const name of newFunctions) assert.ok(metadata.some(fn => fn.name === name), name);
   assert.ok(metadata.some(fn => fn.name === 'modMuteMember'));
   const catalog = JSON.parse(await run(process.execPath, [cli, 'functions', '--catalog'], consumer));
@@ -320,7 +332,8 @@ try {
         import { LavalinkNode, MusicManager, FluxerVoice, FluxerLavalinkBridge, TrackQueue } from 'yuzuha/music';
         import type { MusicTrack, MusicVoiceAdapter, MusicAudioOutput, MusicAudioStream, MusicBackend, MusicNodeEvent, LavalinkSocket, LavalinkDiagnostics } from 'yuzuha/music';
         import type { DataTransaction, MessageSearchPage, MemberSearchPage, ThreadSearchPage, NativeMoveOptions, CaseRecord, UserProfileInfo, ThreadListPage, ScheduleExecutionRecord,
-          ScriptEventDefinition, CronScheduleInput, HttpPolicy, HttpMultipartPart, StateBackup, EmojiCreateInput, EmojiBulkResult } from 'yuzuha';
+          ScriptEventDefinition, CronScheduleInput, HttpPolicy, HttpMultipartPart, StateBackup, EmojiCreateInput, EmojiBulkResult,
+          PinnedMessagesPage, ReactionUsersPage, ThreadMemberDetails } from 'yuzuha';
         import { complete, signatureAt, diagnose, documentDiagnostics, parseFunctionCatalog } from 'yuzuha/tooling';
         const typed = defineCommand({ name: 'typed-flags', args: { member: arg.user().required() },
           flags: { count: arg.integer().alias('c').default(1), mode: arg.text().choices(['fast', 'slow']).required() },
@@ -362,6 +375,11 @@ try {
           void [music, stream, current, LavalinkNode, FluxerVoice, page, position, pending, lifecycle, decode, diagnostics];
           const members: MemberSearchPage = await ctx.members.search('Ana');
           const search: MessageSearchPage = await ctx.resources.messages.search({ content: 'teste', guildID: ctx.guildID });
+          const filtered: MessageSearchPage = await ctx.resources.messages.search({ pinned: true, authorType: ['bot'], has: ['image'], page: 0 });
+          const pins: PinnedMessagesPage = await ctx.resources.messages.pinnedPage('200', { limit: 2 });
+          const reactions: ReactionUsersPage = await ctx.resources.messages.reactionUsersPage('200', '1', '👍', 10);
+          const threadMember: ThreadMemberDetails = await ctx.resources.threads.member('200', '1');
+          void [filtered, pins, reactions, threadMember];
           const threads: ThreadSearchPage = await ctx.resources.threads.search('200', { limit: 10 });
           await ctx.resources.messages.sendBytes('200', [{ name: 'a.bin', data: new Uint8Array([0, 255]) }]);
           complete('$rep', 4, []); signatureAt('$reply[', 7, []);
