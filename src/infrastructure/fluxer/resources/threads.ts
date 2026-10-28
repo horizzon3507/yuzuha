@@ -1,6 +1,7 @@
 import type { Client, FetchedThreads, ThreadAutoArchiveDuration, ThreadChannel, ThreadManager } from '@fluxerjs/core';
 import type { ForumPostInput, ThreadCreateInput, ThreadInfo, ThreadsResources } from '../../../ports/resources/threads.js';
 import { YuzuhaError } from '../../../errors.js';
+import { userID as parseUserID } from '../../../domain/values.js';
 
 type FetchedChannel = Awaited<ReturnType<Client['channels']['fetch']>>;
 
@@ -115,6 +116,14 @@ export function createThreadsResources(client: Client): ThreadsResources {
         threadID: member.id, userID: member.userId,
         joinedTimestamp: member.joinedAt.getTime(), flags: member.flags,
       }));
+    },
+    async member(threadID, userID) {
+      const id = parseUserID(userID);
+      const thread = asThread(await client.channels.fetch(threadID));
+      const member = await thread.members.fetchOne(id);
+      return { threadID: member.id, userID: member.userId,
+        joinedTimestamp: member.joinedAt.getTime(), flags: member.flags,
+        muted: member.muted, muteEndTime: member.muteEndTime, muteWindow: member.muteWindow };
     },
     async edit(threadID, input) {
       const thread = asThread(await client.channels.fetch(threadID));

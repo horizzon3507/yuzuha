@@ -22,6 +22,12 @@ export interface ThreadMemberInfo {
   flags: number;
 }
 
+export interface ThreadMemberDetails extends ThreadMemberInfo {
+  muted: boolean | null;
+  muteEndTime: string | null;
+  muteWindow: number | null;
+}
+
 export interface ForumPostInput {
   name: string;
   content: string;
@@ -38,6 +44,7 @@ export interface ThreadsResources {
   addMember(threadID: string, userID: string): Promise<void>;
   removeMember(threadID: string, userID: string): Promise<void>;
   members(threadID: string, limit?: number, after?: string): Promise<ThreadMemberInfo[]>;
+  member(threadID: string, userID: string): Promise<ThreadMemberDetails>;
   edit(threadID: string, input: ThreadEditInput): Promise<ThreadInfo>;
   join(threadID: string): Promise<void>;
   leave(threadID: string): Promise<void>;

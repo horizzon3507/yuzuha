@@ -32,7 +32,7 @@ export type { AttachmentInfo, MessageInfo, MessagesResources, MessageCursor, Mes
 export type { AwaitMessageInput, CollectedMessageInfo, CollectorsResources, ReactionVote } from './ports/resources/collectors.js';
 export type { WebhookInfo, WebhookSendInput, WebhooksResources } from './ports/resources/webhooks.js';
 export type { EmojiInfo, EmojiCreateInput, EmojiBulkResult, StickerInfo, StickerCreateInput, StickerEditInput, ExpressionsResources } from './ports/resources/expressions.js';
-export type { ThreadInfo, ThreadMemberInfo, ThreadCreateInput, ForumPostInput, ThreadsResources, ThreadEditInput, ThreadSearchInput, ThreadSearchPage, ArchivedThreadsInput, ThreadListPage } from './ports/resources/threads.js';
+export type { ThreadInfo, ThreadMemberInfo, ThreadMemberDetails, ThreadCreateInput, ForumPostInput, ThreadsResources, ThreadEditInput, ThreadSearchInput, ThreadSearchPage, ArchivedThreadsInput, ThreadListPage } from './ports/resources/threads.js';
 export type { InviteInfo, InviteCreateInput, InvitesResources } from './ports/resources/invites.js';
 export type { AttachmentSpec, BinaryAttachmentSpec, PresenceStatus, ActivityType, ActivityInfo } from './ports/resources/common.js';
 export { NativeModeration } from './services/native-moderation.js';

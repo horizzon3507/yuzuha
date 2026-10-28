@@ -59,6 +59,13 @@ export const threadFunctions = defineFunctions(fn => {
     const after = c.count > 2 ? (await c.text(2)).trim() || undefined : undefined;
     return c.ctx.resources.threads.members(threadID, limit, after);
   });
+  fn('threadMember', 'threads', 1, 2, '[thread;usuário?]', 'Busca um membro da thread com flags e estado de mute; usuário padrão é o autor.', async c => {
+    c.ctx.requireGuild();
+    const threadID = (await c.text(0)).trim();
+    if (!threadID) throw new YuzuhaError('THREAD_ID', 'ID da thread é obrigatório.');
+    const rawUserID = c.count > 1 ? (await c.text(1)).trim() : '';
+    return c.ctx.resources.threads.member(threadID, userID(rawUserID || c.ctx.authorID));
+  });
   fn('createThread', 'threads', 1, 4, '[nome;canal?;mensagem?;arquivamento?]', 'Cria thread no canal atual ou informado.', async c => {
     c.ctx.requireGuild();
     const name = await c.text(0);
