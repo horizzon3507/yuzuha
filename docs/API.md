@@ -187,6 +187,12 @@ Os retornos são objetos serializáveis, não classes do SDK. As áreas e assina
 estão em `src/ports/resources/` e nas declarações distribuídas; a referência de
 uso por script fica em [FUNCTIONS.md](FUNCTIONS.md).
 
+Implementações próprias de `MessagesResources` precisam fornecer `pinnedPage`
+e `reactionUsersPage`; `ThreadsResources` inclui `member`. Os retornos mantêm
+os metadados de paginação e de associação definidos nesses ports. Para fixtures,
+`mockResources` continua aceitando overrides parciais, sem implementar áreas
+que o teste não utiliza.
+
 | Classe | Contrato |
 |---|---|
 | `FluxerResources` | Implementação sobre `Client`; criada pelo bot |
@@ -255,7 +261,10 @@ Instale com `bot.plugin(saudacoes)` antes de carregar um script que use
 `$saudar`. As funções recebem argumentos lazy, memoizados por chamada:
 `arg(i)` preserva tipo, `text(i)` converte para texto, `all()` avalia em ordem.
 `count` informa aridade e `ctx` dá acesso ao contexto. `wait(promise)` aguarda
-uma operação externa sem consumir o prazo de `limits.timeoutMs`.
+uma operação externa sem consumir o prazo de `limits.timeoutMs`. O prazo usa
+relógio monotônico; esperas simultâneas ou aninhadas descontam o intervalo
+compartilhado uma única vez. Callbacks executados enquanto uma espera está
+pendente continuam sujeitos às verificações de prazo.
 `fresh(i)` reavalia o argumento, para funções de iteração; não compila texto
 retornado por ele. `checkOutput(valor)` verifica saídas intermediárias e lança
 `OUTPUT_LIMIT` quando necessário, inclusive dentro de `$try`.
@@ -295,7 +304,7 @@ na leitura. Consulte [STORAGE.md](STORAGE.md) antes de criar um adaptador.
 `yuzuha/music` exporta `LavalinkNode`, `MusicManager`, `MusicPlayer`, `TrackQueue`,
 `FluxerVoice` e `FluxerLavalinkBridge`, além dos tipos de protocolo e ports. A referência de métodos,
 limites, dependência de voz opcional e instalação do plugin de áudio está em
-[MUSIC.md](MUSIC.md). O catálogo do function mode tem 306 funções.
+[MUSIC.md](MUSIC.md). O catálogo do function mode tem 310 funções.
 
 ## Servidor e decimais
 

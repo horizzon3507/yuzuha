@@ -206,17 +206,29 @@ await ctx.reply(`${membro.displayName}: ${canais.length} canais, ${fixadas.lengt
 | `users` | `user`, `member`, `members`, `memberCount`, `guild`, `bans`, `auditLogs`, `setPresence`, `searchMembers`, `setNickname`, `editGuild` |
 | `roles` | `list`, `resolve`, `has`, `create`, `edit`, `delete`, `add`, `remove`, `move` |
 | `channels` | `list`, `get`, `create`, `edit`, `delete`, `setSlowmode`, `overwrite`, `permissionsFor`, `move`, `setCategory` |
-| `messages` | Histórico com cursores, fixados, reações, `dm`, `forward`, `search`, `sendFiles`, `sendBytes`, `sendAttachments` |
+| `messages` | Histórico com cursores, `pinnedPage`, `reactionUsersPage`, `dm`, `forward`, `search` com filtros avançados, `sendFiles`, `sendBytes`, `sendAttachments` |
 | `collectors` | `awaitMessage`, `awaitReaction` |
 | `webhooks` | `list`, `create`, `send`, `edit`, `delete` |
 | `expressions` | CRUD de emojis/stickers, `cloneEmoji`, `cloneSticker` |
-| `threads` | `create`, `archive`, `unarchive`, `forumPost`, `addMember`, `removeMember`, `members`, `edit`, `join`, `leave`, `search` |
+| `threads` | `create`, `archive`, `unarchive`, `forumPost`, `addMember`, `removeMember`, `members`, `member`, `edit`, `join`, `leave`, `search` |
 | `invites` | `get`, `create`, `delete`, `list`, `vanity`, `setVanity` |
 
 Os retornos são objetos normalizados e serializáveis (`UserInfo`, `MemberInfo`,
 `MessageInfo` etc.), não instâncias do SDK. Isso mantém os mesmos dados nos
 scripts, nos testes e no contexto nativo. Para métodos não cobertos, use
 `ctx.client`; a lista de lacunas está em [FUNCTION-GAPS.md](FUNCTION-GAPS.md).
+
+`messages.pinnedPage(canal, { limit, before })` mantém a ordem de fixação e retorna
+`messages`, `pinnedAt`, `hasMore` e `nextBefore`. `messages.reactionUsersPage`
+recebe os mesmos argumentos de `reactionUsers` e retorna `users` como IDs,
+`hasMore` e `nextAfter`. Os métodos anteriores continuam retornando arrays.
+`threads.member(threadID, userID)` retorna um membro individual com flags e
+metadados de mute. Adaptadores próprios que implementam os contratos completos
+devem fornecer esses métodos; `mockResources` continua aceitando substituições parciais.
+
+Todas as mutações de `ctx.resources.expressions` exigem `ManageExpressions` do
+autor e do bot no servidor do contexto. O acesso direto por `bot.resources` ou
+`ctx.client` mantém a autoridade do código nativo confiável.
 
 Um bot real cria `FluxerResources` automaticamente. A opção `resources` permite
 substituir a implementação; sem ela, `ctx.resources` lança `NATIVE_UNAVAILABLE`.

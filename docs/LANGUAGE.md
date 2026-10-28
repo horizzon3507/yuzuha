@@ -335,11 +335,15 @@ não podem ser alteradas. `$schedules` inclui `paused`, autor e a política atua
 | `$forward[destino;origem;mensagem]` | Encaminha e retorna novo ID |
 | `$messages[canal;limite?;before?;after?;around?]` | Histórico; use somente um cursor |
 | `$searchMessages[texto;canal?;limite?;cursor?;autor?]` | Página com `indexing`, `messages`, `total` e `cursor` |
+| `$searchMessagesAdvanced[opções]` | Busca com filtros do SDK e texto opcional, com a mesma página de retorno |
+| `$pinnedMessagesPage[canal?;limite?;before?]` | Página em ordem de fixação com `messages`, `pinnedAt`, `hasMore` e `nextBefore` |
+| `$reactionUsersPage[mensagem;emoji;limite?;após?;canal?]` | IDs de usuários em `users`, `hasMore` e `nextAfter`; limite padrão 100 |
 | `$searchMembers[nome;limite?;offset?]` | Página com membros, total, hasMore e indexing |
 | `$nickname[usuário;apelido;motivo]` | Permissões/hierarquia compartilhadas com `ctx.members`; vazio remove |
 | `$editGuild[opções]` | Nome, icon, banner, systemChannelID, afkChannelID e afkTimeout |
 | `$editThread[thread;opções]` | Nome, archived, locked, autoArchiveDuration, slowmode, tags e reason |
 | `$joinThread[thread]`, `$leaveThread[thread]` | Entrada/saída do bot |
+| `$threadMember[thread;usuário?]` | Membro individual com flags, timestamp e estado de mute; usuário padrão é o autor |
 | `$searchThreads[canal;nome?;limite?;offset?]` | Até 25 itens, com indexação e paginação |
 | `$invites`, `$vanity`, `$setVanity[código]` | Convites e vanity; código vazio remove |
 | `$cloneEmoji[id]`, `$cloneSticker[id]` | Clona expressão para o servidor atual |
@@ -352,6 +356,39 @@ Opções de edição são objetos tipados, por exemplo
 exige `ManageGuild`, edição de thread exige `ManageChannels` e clonagem exige
 `ManageExpressions`, para autor e bot. Busca ainda em indexação deve ser tentada
 novamente pelo chamador. Cursor de mensagens é o array da página anterior.
+
+`searchMessagesAdvanced` recebe um objeto com os filtros `content`, `contents`,
+`exactPhrases`, `channelID`, `channelIDs`, `excludeChannelIDs`, `authorID`,
+`authorIDs`, `excludeAuthorIDs`, `authorType`, `excludeAuthorType`, `mentions`,
+`excludeMentions`, `mentionEveryone`, `pinned`, `includeNsfw`, `has`, `excludeHas`,
+`minID`, `maxID`, `sortBy`, `sortOrder`, `limit`, `page` e `cursor`. O servidor é
+definido pelo contexto. Em DM, a busca sem canal explícito usa o canal atual.
+`page` começa em zero e não pode ser combinado com `cursor`; `authorID` e
+`authorIDs` também são exclusivos. `minID`/`maxID` delimitam IDs de mensagens,
+permitindo recortes temporais sem converter os IDs para números imprecisos.
+
+```text
+$searchMessagesAdvanced[$object[pinned;true;authorType;$array[bot];has;$array[image];limit;10]]
+```
+
+Limites: até 100 resultados por página, 100 IDs por filtro, 20 textos/tipos por
+filtro, 10 partes no cursor e 32 KiB nas opções codificadas em UTF-8. Conteúdo,
+frases e partes do cursor têm até 2000 caracteres; outros textos, até 100.
+IDs são textos numéricos de até 20 dígitos; `sortOrder` aceita `asc` ou `desc`.
+
+`pinnedMessagesPage` usa limite padrão 50, entre 1 e 100. `before` é um timestamp
+ISO com fuso, obtido de `nextBefore` na página anterior. A ordem segue a data da
+fixação, que pode diferir da criação da mensagem. `pinnedAt` corresponde às
+mensagens na mesma ordem e `nextBefore` é null quando `hasMore` é false.
+`pinnedMessages` mantém seu retorno anterior de array.
+
+`reactionUsersPage` preserva `hasMore` e `nextAfter` do SDK, incluindo a
+normalização de respostas antigas em array. O cursor `após` é um ID de usuário,
+o limite deve estar entre 1 e 100 e `reactionUsers` mantém o retorno de array.
+
+`threadMember` usa o autor do contexto quando o usuário é omitido. O retorno
+inclui `threadID`, `userID`, `joinedTimestamp`, `flags`, `muted`, `muteEndTime` e
+`muteWindow`; campos desconhecidos do SDK continuam null.
 
 ```text
 $sendAttachments[$channelID;$array[

@@ -258,8 +258,10 @@ Limites padrão por execução:
 `new Yuzuha({ limits: { calls: 500, timeoutMs: 3000 } })` altera os limites de
 runtime. O prazo é verificado antes/depois de funções e durante avaliações; não
 interrompe uma promise pendurada, um loop síncrono de plugin ou request já enviado.
+O prazo usa relógio monotônico e não muda com ajustes de `Date.now`.
 Funções nativas que esperam I/O podem usar `call.wait(promise)` para não consumir
-o prazo; coletores e `$http` já fazem isso. O prazo não é um sandbox de CPU/memória
+o prazo; esperas sobrepostas descontam o tempo uma única vez. Coletores e `$http`
+já fazem isso. O prazo não é um sandbox de CPU/memória
 nem um mecanismo de cancelamento de API.
 
 Guards de moderação consultam membros e cargos atuais via REST. Entre a checagem

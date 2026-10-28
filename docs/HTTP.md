@@ -6,6 +6,24 @@ e bloqueia endereços privados, loopback e metadados de rede. Redirects passam
 novamente pela política de hosts; credenciais são removidas ao mudar de origem.
 O sinal do contexto cancela todas essas operações durante o encerramento.
 
+O bloqueio usa sub-redes IPv4/IPv6 e inclui IPv4 mapeado em IPv6, toda a faixa
+link-local `fe80::/10`, rede compartilhada `100.64.0.0/10`, redes de benchmark,
+multicast e endereços reservados IPv4. Literais IPv6 públicos são aceitos sem
+consulta DNS. `allowPrivate: true` permite rede local explicitamente e mantém
+a lista de hosts permitidos. URLs com usuário ou senha são recusadas; use
+`Authorization` para autenticar.
+
+GET e HEAD não aceitam corpo. Redirects 301/302 convertem POST em GET e
+preservam os demais métodos; 303 converte métodos diferentes de GET/HEAD em
+GET. Quando o corpo é descartado, os cabeçalhos de conteúdo também são
+removidos, incluindo `Content-Type` e `Content-Length`. 307/308 preservam método
+e corpo. Essas regras seguem o [padrão Fetch](https://fetch.spec.whatwg.org/#http-redirect-fetch).
+
+A validação DNS ocorre antes do fetch e em cada redirect; a conexão do fetch
+faz sua própria resolução. Isso não fixa o endereço validado na conexão nem
+elimina DNS rebinding. Para destinos controlados por terceiros, configure
+`allowedHosts` e restrições de saída de rede compatíveis com sua implantação.
+
 ## Respostas e streaming
 
 ```ts
