@@ -77,6 +77,41 @@ JIT e GC também afetam a série. Repita as medições e conserve o JSON origina
 Não há um limiar de desempenho obrigatório no CI nem medição de latência da
 API/gateway do Fluxer.
 
+## Cooldowns e deduplicação após a 0.1.7
+
+`benchmarks/rate-limits.mjs` compara o build atual com a implementação congelada
+do commit `a227759f726420471ade044a3cf9600a6359a668`. O baseline acompanha o
+runner; não depende de Git durante a execução. As amostras alternam a ordem
+das implementações e verificam resultados equivalentes. Não há rede ou bot.
+
+```sh
+npm run build
+node --expose-gc benchmarks/rate-limits.mjs --samples 15 --normal-iterations 90000 --json > resultado.json
+```
+
+O [relatório local](../benchmarks/results/rate-limits-comparison.json) registra
+Node, CPU, parâmetros, amostras e hashes do runner e das implementações.
+Na medição de 28/10/2026, Node 26.11.1, as medianas foram:
+
+| Cenário | Operações | Antes | Depois |
+|---|---:|---:|---:|
+| Deduplicação, mesmo tick | 90.000 | 83,919 ms | 90,966 ms |
+| Novos cooldowns, mesmo tick | 90.000 | 65,651 ms | 68,182 ms |
+| Cooldown ativo, mesmo tick | 90.000 | 5,040 ms | 4,217 ms |
+| Deduplicação, 25.000 cooldowns ativos | 1.000 | 352,340 ms | 0,630 ms |
+| Consulta de cooldown, 25.000 ativos | 1.000 | 332,808 ms | 0,159 ms |
+
+Os dois últimos cenários avançam o relógio fictício em 1 segundo a cada operação,
+forçando os pontos de limpeza da implementação anterior. Eles demonstram o
+custo removido da manutenção: mensagens e consultas de cooldown ativo deixam
+de varrer o mapa. Não representam throughput geral de despacho ou latência do
+Fluxer. Os cenários do mesmo tick incluem variações de +8,4%, +3,9% e −16,3%
+no tempo medido; não comprovam melhora geral.
+
+Entradas expiradas podem permanecer até uma nova tentativa de cooldown. O mapa
+continua limitado a 100.000 entradas; ao atingir o teto, a inserção coleta
+entradas vencidas antes de recusar uma chave nova.
+
 ## Parsing da 0.1.7
 
 `benchmarks/parser.mjs` mede apenas parsing, sem transporte, evaluator ou dispatch.
