@@ -5,6 +5,7 @@ import type { AttachmentSpec, BinaryAttachmentSpec } from '../../../ports/resour
 import { YuzuhaError } from '../../../errors.js';
 import type { MessageInfo, MessagesResources } from '../../../ports/resources/messages.js';
 import { preloadChannels } from '../../../domain/resource-batches.js';
+import { messageSearchInput, pinnedMessagesInput } from '../../../domain/message-query.js';
 
 function info(message: Message): MessageInfo {
   return {
@@ -62,12 +63,21 @@ export function createMessagesResources(client: Client): MessagesResources {
       await (await client.channels.fetchMessage(channelID, messageID)).unpin();
     },
     async pinned(channelID: string, limit?: number): Promise<MessageInfo[]> {
+      if (limit !== undefined) limit = pinnedMessagesInput({ limit }).limit;
       const channel = await client.channels.fetch(channelID, { force: true });
       if (!channel.isTextBased()) throw new YuzuhaError('CHANNEL_TEXT', 'Canal sem suporte a mensagens.');
       const messages = limit === undefined
         ? await channel.fetchPinnedMessages()
         : await channel.fetchPinnedMessagesPage({ limit }).then(page => page.messages);
       return order(messages.map(info));
+    },
+    async pinnedPage(channelID, input) {
+      const options = pinnedMessagesInput(input);
+      const channel = await client.channels.fetch(channelID, { force: true });
+      if (!channel.isTextBased()) throw new YuzuhaError('CHANNEL_TEXT', 'Canal sem suporte a mensagens.');
+      const page = await channel.fetchPinnedMessagesPage(options);
+      return { messages: page.messages.map(info), pinnedAt: [...page.pinnedAt], hasMore: page.hasMore,
+        nextBefore: page.hasMore ? page.pinnedAt.at(-1) ?? null : null };
     },
     sendFiles: send,
     async dm(userID, content): Promise<string> {
@@ -80,12 +90,31 @@ export function createMessagesResources(client: Client): MessagesResources {
         allowedMentions: { parse: [], repliedUser: false },
       })).id;
     },
-    async search(input) {
+    async search(rawInput) {
+      const input = messageSearchInput(rawInput);
       const result = await client.searchMessages({ content: input.content,
         contextGuildId: input.guildID, contextChannelId: input.channelID,
-        channelIds: input.channelID ? [input.channelID] : undefined,
-        authorIds: input.authorID ? [input.authorID] : undefined,
-        hitsPerPage: limitOf(input.limit, 25, 100), cursor: input.cursor });
+        channelIds: input.channelIDs ?? (input.channelID ? [input.channelID] : undefined),
+        authorIds: input.authorIDs ?? (input.authorID ? [input.authorID] : undefined),
+        hitsPerPage: limitOf(input.limit, 25, 100), cursor: input.cursor,
+        ...(input.contents === undefined ? {} : { contents: input.contents }),
+        ...(input.exactPhrases === undefined ? {} : { exactPhrases: input.exactPhrases }),
+        ...(input.excludeChannelIDs === undefined ? {} : { excludeChannelIds: input.excludeChannelIDs }),
+        ...(input.excludeAuthorIDs === undefined ? {} : { excludeAuthorIds: input.excludeAuthorIDs }),
+        ...(input.authorType === undefined ? {} : { authorType: input.authorType }),
+        ...(input.excludeAuthorType === undefined ? {} : { excludeAuthorType: input.excludeAuthorType }),
+        ...(input.mentions === undefined ? {} : { mentions: input.mentions }),
+        ...(input.excludeMentions === undefined ? {} : { excludeMentions: input.excludeMentions }),
+        ...(input.mentionEveryone === undefined ? {} : { mentionEveryone: input.mentionEveryone }),
+        ...(input.pinned === undefined ? {} : { pinned: input.pinned }),
+        ...(input.includeNsfw === undefined ? {} : { includeNsfw: input.includeNsfw }),
+        ...(input.has === undefined ? {} : { has: input.has }),
+        ...(input.excludeHas === undefined ? {} : { excludeHas: input.excludeHas }),
+        ...(input.minID === undefined ? {} : { minId: input.minID }),
+        ...(input.maxID === undefined ? {} : { maxId: input.maxID }),
+        ...(input.sortBy === undefined ? {} : { sortBy: input.sortBy }),
+        ...(input.sortOrder === undefined ? {} : { sortOrder: input.sortOrder }),
+        ...(input.page === undefined ? {} : { page: input.page }) });
       if ('indexing' in result) return { indexing: true, messages: [], total: 0, cursor: null };
       return { indexing: false, messages: result.messages.map(data => info(new Message(client, data))),
         total: result.total, cursor: result.cursor ?? null };

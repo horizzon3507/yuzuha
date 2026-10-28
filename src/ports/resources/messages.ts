@@ -1,4 +1,6 @@
 import type { AttachmentSpec, BinaryAttachmentSpec } from './common.js';
+import type { MessageSearchInput, PinnedMessagesInput } from '../../domain/message-query.js';
+export type { MessageSearchInput, PinnedMessagesInput } from '../../domain/message-query.js';
 
 export interface AttachmentInfo {
   id: string;
@@ -26,6 +28,7 @@ export interface MessagesResources {
   pin(channelID: string, messageID: string): Promise<void>;
   unpin(channelID: string, messageID: string): Promise<void>;
   pinned(channelID: string, limit?: number): Promise<MessageInfo[]>;
+  pinnedPage(channelID: string, input?: PinnedMessagesInput): Promise<PinnedMessagesPage>;
   sendFiles(channelID: string, files: AttachmentSpec[], content?: string): Promise<string>;
   removeReaction(channelID: string, messageID: string, emoji: string, userID?: string): Promise<void>;
   clearReactions(channelID: string, messageID: string, emoji?: string): Promise<void>;
@@ -38,13 +41,11 @@ export interface MessagesResources {
 }
 
 export interface MessageCursor { before?: string; after?: string; around?: string }
-export interface MessageSearchInput {
-  content: string;
-  guildID?: string;
-  channelID?: string;
-  authorID?: string;
-  limit?: number;
-  cursor?: string[];
+export interface PinnedMessagesPage {
+  messages: MessageInfo[];
+  pinnedAt: string[];
+  hasMore: boolean;
+  nextBefore: string | null;
 }
 export interface MessageSearchPage {
   indexing: boolean;
