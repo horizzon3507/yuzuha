@@ -5,7 +5,7 @@ import type { AttachmentSpec, BinaryAttachmentSpec } from '../../../ports/resour
 import { YuzuhaError } from '../../../errors.js';
 import type { MessageInfo, MessagesResources } from '../../../ports/resources/messages.js';
 import { preloadChannels } from '../../../domain/resource-batches.js';
-import { messageSearchInput, pinnedMessagesInput } from '../../../domain/message-query.js';
+import { messageSearchInput, pinnedMessagesInput, reactionUsersInput } from '../../../domain/message-query.js';
 
 function info(message: Message): MessageInfo {
   return {
@@ -135,6 +135,13 @@ export function createMessagesResources(client: Client): MessagesResources {
       }
       const message = await client.channels.fetchMessage(channelID, messageID);
       return (await message.fetchReactionUsers(emoji, { limit, after })).map(user => user.id);
+    },
+    async reactionUsersPage(channelID, messageID, emoji, limit, after) {
+      const input = reactionUsersInput({ limit, after });
+      if (!emoji.trim()) throw new YuzuhaError('MESSAGE_ARGUMENT', 'Emoji é obrigatório.');
+      const message = await client.channels.fetchMessage(channelID, messageID);
+      const page = await message.fetchReactionUsersPage(emoji, input);
+      return { users: page.users.map(user => user.id), hasMore: page.hasMore, nextAfter: page.nextAfter };
     },
   };
 }

@@ -28,7 +28,7 @@ export type {
   ChannelInfo, ChannelCreateInput, ChannelEditInput, ChannelOverwriteInput, ChannelsResources,
 } from './ports/resources/channels.js';
 export type { AttachmentInfo, MessageInfo, MessagesResources, MessageCursor, MessageSearchInput, MessageSearchPage,
-  PinnedMessagesInput, PinnedMessagesPage } from './ports/resources/messages.js';
+  PinnedMessagesInput, PinnedMessagesPage, ReactionUsersPage } from './ports/resources/messages.js';
 export type { AwaitMessageInput, CollectedMessageInfo, CollectorsResources, ReactionVote } from './ports/resources/collectors.js';
 export type { WebhookInfo, WebhookSendInput, WebhooksResources } from './ports/resources/webhooks.js';
 export type { EmojiInfo, EmojiCreateInput, EmojiBulkResult, StickerInfo, StickerCreateInput, StickerEditInput, ExpressionsResources } from './ports/resources/expressions.js';

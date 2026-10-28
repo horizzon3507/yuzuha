@@ -33,6 +33,7 @@ export interface MessagesResources {
   removeReaction(channelID: string, messageID: string, emoji: string, userID?: string): Promise<void>;
   clearReactions(channelID: string, messageID: string, emoji?: string): Promise<void>;
   reactionUsers(channelID: string, messageID: string, emoji: string, limit?: number, after?: string): Promise<string[]>;
+  reactionUsersPage(channelID: string, messageID: string, emoji: string, limit?: number, after?: string): Promise<ReactionUsersPage>;
   dm(userID: string, content: string): Promise<string>;
   forward(channelID: string, sourceChannelID: string, messageID: string): Promise<string>;
   search(input: MessageSearchInput): Promise<MessageSearchPage>;
@@ -46,6 +47,11 @@ export interface PinnedMessagesPage {
   pinnedAt: string[];
   hasMore: boolean;
   nextBefore: string | null;
+}
+export interface ReactionUsersPage {
+  users: string[];
+  hasMore: boolean;
+  nextAfter: string | null;
 }
 export interface MessageSearchPage {
   indexing: boolean;

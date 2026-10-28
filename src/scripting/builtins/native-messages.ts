@@ -2,7 +2,7 @@ import type { MessageInfo } from '../../ports/resources/messages.js';
 import { YuzuhaError } from '../../errors.js';
 import { defineFunctions } from './definition.js';
 import { preloadChannels } from '../../domain/resource-batches.js';
-import { pinnedMessagesInput } from '../../domain/message-query.js';
+import { pinnedMessagesInput, reactionUsersInput } from '../../domain/message-query.js';
 
 const PROPERTIES: Record<string, (info: MessageInfo) => unknown> = {
   id: info => info.id,
@@ -75,6 +75,15 @@ export const resourceMessageFunctions = defineFunctions(fn => {
     const after = c.count > 3 ? (await c.text(3)).trim() || undefined : undefined;
     const channelID = c.count > 4 ? (await c.text(4)).trim() || c.ctx.message.channelID : c.ctx.message.channelID;
     return c.ctx.resources.messages.reactionUsers(channelID, messageID, emoji, limit, after);
+  });
+  fn('reactionUsersPage', 'messages', 2, 5, '[mensagem;emoji;limite?;após?;canal?]', 'Retorna users com IDs, hasMore e nextAfter; limite de 1 a 100 e cursor por usuário.', async c => {
+    const messageID = required(await c.text(0), 'ID da mensagem');
+    const emoji = required(await c.text(1), 'Emoji');
+    const rawLimit = c.count > 2 ? (await c.text(2)).trim() : '';
+    const rawAfter = c.count > 3 ? (await c.text(3)).trim() || undefined : undefined;
+    const { limit, after } = reactionUsersInput({ limit: rawLimit ? Number(rawLimit) : undefined, after: rawAfter });
+    const channelID = c.count > 4 ? (await c.text(4)).trim() || c.ctx.message.channelID : c.ctx.message.channelID;
+    return c.ctx.resources.messages.reactionUsersPage(channelID, messageID, emoji, limit, after);
   });
   fn('fetchMessage', 'messages', 2, 3, '[canal;mensagem;propriedade?]', 'Busca uma mensagem e retorna objeto ou propriedade.', async c => {
     const channelID = (await c.text(0)).trim(), messageID = (await c.text(1)).trim();
