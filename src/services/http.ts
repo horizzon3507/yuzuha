@@ -1,5 +1,5 @@
 import { lookup } from 'node:dns/promises';
-import { isIP } from 'node:net';
+import { BlockList, isIP } from 'node:net';
 import { YuzuhaError } from '../shared/errors.js';
 import { abortable } from './cancellation.js';
 
@@ -41,36 +41,20 @@ const DEFAULT_TIMEOUT_MS = 5000;
 const DEFAULT_MAX_BYTES = 1_000_000;
 const MAX_REDIRECTS = 5;
 
-function privateIPv4(address: string): boolean {
-  const parts = address.split('.').map(Number);
-  if (parts.length !== 4 || parts.some(n => !Number.isInteger(n) || n < 0 || n > 255)) return false;
-  const [a, b] = parts as [number, number, number, number];
-  if (a === 10) return true;
-  if (a === 172 && b >= 16 && b <= 31) return true;
-  if (a === 192 && b === 168) return true;
-  if (a === 127) return true;
-  if (a === 169 && b === 254) return true;
-  if (a === 0) return true;
-  return false;
-}
-
-function privateIPv6(address: string): boolean {
-  const lower = address.toLowerCase();
-  if (lower === '::1' || lower === '::') return true;
-  if (lower.startsWith('fc') || lower.startsWith('fd')) return true;
-  if (lower.startsWith('fe80:') || lower.startsWith('fe90:') || lower.startsWith('fea0:')
-    || lower.startsWith('feb0:') || lower === 'fe80::') return true;
-  if (lower.startsWith('::ffff:')) {
-    const embedded = lower.slice('::ffff:'.length);
-    if (embedded.includes('.')) return privateIPv4(embedded);
-  }
-  return false;
-}
+const privateNetworks = new BlockList();
+for (const [network, prefix] of [
+  ['0.0.0.0', 8], ['10.0.0.0', 8], ['100.64.0.0', 10], ['127.0.0.0', 8],
+  ['169.254.0.0', 16], ['172.16.0.0', 12], ['192.168.0.0', 16],
+  ['198.18.0.0', 15], ['224.0.0.0', 4], ['240.0.0.0', 4],
+] as const) privateNetworks.addSubnet(network, prefix, 'ipv4');
+for (const [network, prefix] of [
+  ['::', 128], ['::1', 128], ['fc00::', 7], ['fe80::', 10], ['ff00::', 8],
+] as const) privateNetworks.addSubnet(network, prefix, 'ipv6');
 
 function privateIP(address: string): boolean {
   const family = isIP(address);
-  if (family === 4) return privateIPv4(address);
-  if (family === 6) return privateIPv6(address);
+  if (family === 4) return privateNetworks.check(address, 'ipv4');
+  if (family === 6) return privateNetworks.check(address, 'ipv6');
   return false;
 }
 
@@ -147,8 +131,9 @@ export class HttpService {
     }
     if (this.allowPrivate) return;
     if (host === 'localhost') throw new YuzuhaError('HTTP_PRIVATE', 'Host privado bloqueado.');
-    if (isIP(host)) {
-      if (privateIP(host)) throw new YuzuhaError('HTTP_PRIVATE', 'Host privado bloqueado.');
+    const address = host.startsWith('[') && host.endsWith(']') ? host.slice(1, -1) : host;
+    if (isIP(address)) {
+      if (privateIP(address)) throw new YuzuhaError('HTTP_PRIVATE', 'Host privado bloqueado.');
       return;
     }
     let addresses: { address: string }[];
@@ -172,6 +157,7 @@ export class HttpService {
     if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
       throw new YuzuhaError('HTTP_URL', 'URL inválida. Use http:// ou https://.');
     }
+    if (parsed.username || parsed.password) throw new YuzuhaError('HTTP_URL', 'Credenciais na URL não são permitidas. Use o cabeçalho Authorization.');
     await this.checkHost(parsed.hostname);
     return parsed;
   }
@@ -214,6 +200,7 @@ export class HttpService {
   async stream(input: HttpRequest): Promise<HttpStreamResponse> {
     const method = input.method.trim().toUpperCase();
     if (!/^[A-Z]+$/.test(method)) throw new YuzuhaError('HTTP_METHOD', 'Método HTTP inválido.');
+    if ((method === 'GET' || method === 'HEAD') && input.body !== undefined) throw new YuzuhaError('HTTP_BODY', `${method} não aceita corpo.`);
     let currentURL = input.url;
     let currentMethod = method;
     let currentBody = input.body;
@@ -257,9 +244,13 @@ export class HttpService {
               if (['authorization', 'proxy-authorization', 'cookie'].includes(key.toLowerCase())) delete headers[key];
             }
           }
-          if (response.status === 303 || ((response.status === 301 || response.status === 302) && currentMethod !== 'GET' && currentMethod !== 'HEAD')) {
+          if ((response.status === 303 && currentMethod !== 'GET' && currentMethod !== 'HEAD')
+            || ((response.status === 301 || response.status === 302) && currentMethod === 'POST')) {
             currentMethod = 'GET';
             currentBody = undefined;
+            for (const key of Object.keys(headers)) {
+              if (['content-encoding', 'content-language', 'content-location', 'content-type', 'content-length'].includes(key.toLowerCase())) delete headers[key];
+            }
           }
           currentURL = next.toString();
           continue;
