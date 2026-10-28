@@ -168,8 +168,9 @@ export const objectFunctions = defineFunctions(fn => {
     return result;
   });
   fn('jsonEncode', 'language', 1, 1, '[valor]', 'Codifica valor como texto JSON.', async c => {
+    const value = await c.arg(0);
     try {
-      const encoded = JSON.stringify(await c.arg(0));
+      const encoded = JSON.stringify(value);
       return encoded === undefined ? '' : encoded;
     } catch (cause) {
       throw new YuzuhaError('JSON_ENCODE', 'Valor não pode ser codificado como JSON.', { cause });
