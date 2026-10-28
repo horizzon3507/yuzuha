@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { getEventListeners } from 'node:events';
 import { CommandContext, MemoryStore } from '../src/index.js';
+import { sendStreamAttachment } from '../src/services/attachments.js';
 import { MockTransport, mockMessage, mockResources } from '../src/testing.js';
 
 function fixture() {
@@ -46,4 +47,41 @@ test('stream attachment validation precedes consumption and source failures do n
   const failed = new ReadableStream<Uint8Array>({ pull(c) { c.error(new Error('source failed')); } });
   await assert.rejects(f.ctx.sendStream(failed, { name: 'data.bin' }), /source failed/);
   assert.deepEqual(f.files, []); assert.equal(failed.locked, false);
+});
+
+test('stream attachment keeps validated metadata while the source is pending', async () => {
+  const options = { name: 'export.bin', description: 'exportação', content: 'arquivo' };
+  let received: unknown;
+  const messages = mockResources({ messages: { sendBytes: async (_id, files, content) => {
+    received = { files, content }; return 'sent';
+  } } }).messages;
+  const stream = new ReadableStream<Uint8Array>({ pull(controller) {
+    options.name = 'invalid\r\nname'; options.description = 'alterada'; options.content = 'alterado';
+    controller.enqueue(new Uint8Array([1])); controller.close();
+  } }, { highWaterMark: 0 });
+  assert.equal(await sendStreamAttachment(messages, 'channel', stream, options), 'sent');
+  assert.deepEqual(received, { files: [{ data: new Uint8Array([1]), name: 'export.bin', description: 'exportação' }], content: 'arquivo' });
+});
+
+test('a locked attachment source does not leave a timeout scheduled', async t => {
+  const f = fixture();
+  const stream = new ReadableStream<Uint8Array>();
+  const reader = stream.getReader();
+  const timer = t.mock.method(globalThis, 'setTimeout');
+  await assert.rejects(f.ctx.sendStream(stream, { name: 'export.bin' }), TypeError);
+  assert.equal(timer.mock.callCount(), 0);
+  assert.deepEqual(f.files, []);
+  await reader.cancel(); reader.releaseLock();
+});
+
+test('attachment cancellation releases the reader when the source never finishes cleanup', async () => {
+  const f = fixture(); let cancelled = false;
+  const stream = new ReadableStream<Uint8Array>({ cancel() {
+    cancelled = true; return new Promise<void>(() => {});
+  } });
+  const pending = assert.rejects(f.ctx.sendStream(stream, { name: 'export.bin' }), { code: 'EXECUTION_ABORTED' });
+  f.abort.abort();
+  await pending;
+  assert.equal(cancelled, true); assert.equal(stream.locked, false);
+  assert.deepEqual(f.files, []);
 });

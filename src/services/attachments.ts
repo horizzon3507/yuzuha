@@ -12,16 +12,18 @@ export interface StreamAttachmentOptions {
 
 export async function sendStreamAttachment(messages: MessagesResources, channelID: string, source: ReadableStream<Uint8Array>,
   options: StreamAttachmentOptions, signal?: AbortSignal): Promise<string> {
-  if (!options || typeof options.name !== 'string' || !options.name.trim() || options.name.length > 255
-    || /[\r\n]/.test(options.name)) throw new YuzuhaError('ATTACHMENT_NAME', 'Nome de anexo deve ter de 1 a 255 caracteres, sem quebras de linha.');
+  const name = options?.name;
+  if (typeof name !== 'string' || !name.trim() || name.length > 255
+    || /[\r\n]/.test(name)) throw new YuzuhaError('ATTACHMENT_NAME', 'Nome de anexo deve ter de 1 a 255 caracteres, sem quebras de linha.');
+  const { description, content } = options;
   const maxBytes = options.maxBytes ?? 10_000_000, timeoutMs = options.timeoutMs ?? 5000;
   if (!Number.isSafeInteger(maxBytes) || maxBytes < 1 || maxBytes > 10_000_000
     || !Number.isSafeInteger(timeoutMs) || timeoutMs < 1 || timeoutMs > 30_000) throw new YuzuhaError('ATTACHMENTS', 'maxBytes deve ser de 1 a 10000000 e timeoutMs de 1 a 30000.');
   if (signal?.aborted) throw new YuzuhaError('EXECUTION_ABORTED', 'Anexo cancelado.');
+  const reader = source.getReader(), chunks: Uint8Array[] = [];
   const controller = new AbortController();
   const combined = signal ? AbortSignal.any([controller.signal, signal]) : controller.signal;
   const timer = setTimeout(() => controller.abort(), timeoutMs);
-  const reader = source.getReader(), chunks: Uint8Array[] = [];
   let size = 0, count = 0;
   try {
     for (;;) {
@@ -45,5 +47,5 @@ export async function sendStreamAttachment(messages: MessagesResources, channelI
   const data = new Uint8Array(size);
   let offset = 0;
   for (const chunk of chunks) { data.set(chunk, offset); offset += chunk.byteLength; }
-  return messages.sendBytes(channelID, [{ data, name: options.name, description: options.description }], options.content);
+  return messages.sendBytes(channelID, [{ data, name, description }], content);
 }
