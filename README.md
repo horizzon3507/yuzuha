@@ -84,7 +84,7 @@ export default script({
 });
 ```
 
-O function mode tem **306 funções** para mensagens, guards, moderação, variáveis,
+O function mode tem **310 funções** para mensagens, guards, moderação, variáveis,
 JSON, arrays, loops, eventos e agendamentos. O runtime é ativado ao registrar um
 comando com `code` ou um evento de script.
 

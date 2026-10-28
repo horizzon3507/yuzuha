@@ -23,13 +23,13 @@ exports de `yuzuha/sdk` aos da dependência instalada.
 |---|---|---|
 | Gateway, conexão, heartbeat e reconexão | Herdado do SDK | Via inicialização do bot |
 | Eventos | `bot.on/once/off`, `bot.event`, `bot.scriptEvent` e `bot.client.on` | Eventos de membros, edição/exclusão de mensagens e reações, com contexto próprio |
-| Mensagens e replies | API completa do SDK | reply, sendMessage, editMessage, deleteMessage, fetchMessage, messages com cursores, pin/unpin, dm, forward, searchMessages e preloadMessages |
-| Reações e collectors | API do SDK | react, removeReaction, clearReactions, reactionUsers paginado, awaitMessage, awaitReaction, confirm |
+| Mensagens e replies | API completa do SDK | reply, sendMessage, editMessage, deleteMessage, fetchMessage, messages com cursores, pin/unpin, pinnedMessagesPage, dm, forward, searchMessages, searchMessagesAdvanced e preloadMessages |
+| Reações e collectors | API do SDK | react, removeReaction, clearReactions, reactionUsers e reactionUsersPage com metadados de paginação, awaitMessage, awaitReaction, confirm |
 | Embeds e anexos | Builders do SDK, sendBytes e sendAttachments | Embeds, anexos URL/base64 e múltiplos anexos na mesma mensagem |
 | Membros, cargos, canais e permissões | API do SDK e `ctx.members` | User/member, perfil completo, contagens ao vivo, nickname, roles, canais de link, avisos, posição, categorias e overwrites |
 | Ban, kick, timeout, unban e moderação de voz | SDK + `ctx.mod` e `ctx.moderate` | Versões simples e mod* com casos, incluindo move/mute/deafen |
 | Servidor, convites, webhooks e expressões | API do SDK e auxiliares autorizados | guildFeatures, leaveGuild, editGuild, convites/vanity, clonagem e mutações de emojis/stickers, createEmojisBulk; CRUD e envio de webhooks |
-| Threads e fóruns | API do SDK | Criação, edição, busca, posts, membros e listagens ativas/arquivadas com paginação |
+| Threads e fóruns | API do SDK | Criação, edição, busca, posts, membros, threadMember e listagens ativas/arquivadas com paginação |
 | Presença | `client.user.setPresence` | setPresence, setStatus e setActivity |
 | Cache e presença | Opções e métodos do SDK | Acesso nativo |
 | Instância própria/discovery | `Client.fromDiscovery`, client injetado | Mesmo adaptador do client |
@@ -39,7 +39,7 @@ exports de `yuzuha/sdk` aos da dependência instalada.
 | Estado e casos | `ctx.data`, TTL, userFor, transaction entre chaves e stores | Variáveis, TTL, incrementos, listas, casos e dataTransaction com operações declarativas |
 | Agendamentos | `ctx.scheduler`, cron/fusos, concorrência limitada, histórico, heartbeat e controles | schedule, scheduleEvery, scheduleCron, controles, histórico, reexecução e retry com jitter |
 | HTTP | `request`, `requestBytes`, `stream`, `multipart`, `withPolicy` e cancelamento | `$http`, `$httpJson`, `$httpMultipart` e download de imagens com política de rede por comando |
-| CLI, plugins, comandos e middleware | Recursos próprios do Yuzuha; lint/catálogos/cenários e manutenção de dados | 306 funções canônicas; comandos e eventos de script |
+| CLI, plugins, comandos e middleware | Recursos próprios do Yuzuha; lint/catálogos/cenários e manutenção de dados | 310 funções canônicas; comandos e eventos de script |
 
 A camada nativa do Yuzuha — o caminho principal — acrescenta schemas de argumentos
 e flags com inferência, subcomandos, ajuda detalhada, checks e middleware por comando, eventos com encaminhamento de
@@ -59,7 +59,7 @@ adaptador, consumidores JS/TS e paridade de exports antes de alterar esta tabela
 
 ## Autorização dos recursos de contexto
 
-Mutações de `ctx.resources.roles`, `channels` e `webhooks` passam pelo mesmo
+Mutações de `ctx.resources.roles`, `channels`, `webhooks` e `expressions` passam pelo mesmo
 serviço em comandos JS/TS e scripts. Cargos exigem `ManageRoles` de autor e bot,
 hierarquia sobre o cargo e o membro, proteção de `@everyone` e metadado
 `managed: false` conhecido. Permissões concedidas por cargo ou overwrite devem
@@ -76,7 +76,10 @@ locais vêm de `transport.member(guildID, userID, channelID)`.
 Criação, listagem, consulta, envio, edição e exclusão de webhooks exigem
 `ManageWebhooks` efetivo para autor e bot no canal do webhook. Mesmo com token,
 o webhook precisa ser consultável pela autenticação do bot e pertencer ao
-servidor atual. `bot.resources` e `bot.client` preservam a autoridade direta do
+servidor atual. Criação, edição, exclusão e clonagem de emojis/stickers exigem
+`ManageExpressions` de autor e bot no servidor atual. `$createEmoji` verifica
+ambos antes do download, e o contexto revalida antes da mutação.
+`bot.resources` e `bot.client` preservam a autoridade direta do
 SDK; seu uso é uma decisão explícita do código nativo confiável.
 
 `messages.preload` recebe de 1 a 100 IDs e retorna a última mensagem normalizada

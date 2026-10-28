@@ -73,6 +73,17 @@ recursos. O runtime de scripts só é registrado quando o function mode é usado
 
 ## Entregas e dependências
 
+A revisão local após a 0.1.7 amplia buscas com filtros do SDK, paginação de
+fixadas por timestamp, paginação de usuários de reações e consulta individual
+de membros de threads. O catálogo passa a 310 funções, preservando os exports
+do SDK 3.3.0. A mesma revisão corrige
+propagação de erros protegidos no JSON, validação de saída antes de persistir
+operações de estado, autorização de expressões, endereços IPv6 e redirects no
+HTTP, ciclo de vida dos leitores de streams, prazo monotônico do evaluator e
+limpeza/admissão dos cooldowns. A deduplicação de mensagens deixa de varrer
+cooldowns; a coleta só ocorre quando há expiração possível ou pressão de capacidade.
+Essas alterações não representam uma publicação ou atualização de versão.
+
 A atualização 0.1.7 distribui o conteúdo preparado na 0.1.6 e acrescenta busca
 por nome, alias e descrição em `yuzuha functions --search <termo>`, combinável
 com os filtros e formatos existentes. Acrescenta 18 funções de controle de loops,
@@ -135,7 +146,7 @@ com metadados gerados e benchmarks locais reproduzíveis. O SDK continua em 3.3.
 | B | Framework nativo de comandos, eventos e plugins | Dispatch, aliases, guards, erros e recarga atômicos |
 | C | Store e serviços de moderação | Persistência, concorrência e falha parcial testadas |
 | D | Recursos do Fluxer | Usuários, cargos, canais, mensagens, threads, webhooks e convites com mocks |
-| E | Function mode isolado | Parser, AST, runtime, 306 funções e ativação sob demanda |
+| E | Function mode isolado | Parser, AST, runtime, 310 funções e ativação sob demanda |
 | F | Agendamentos, HTTP e limites | Cron/fusos, concorrência, retry, recuperação, streaming/multipart e políticas de rede |
 | G | CLI, exemplos e documentação | Scaffolds, lint/catálogos/cenários offline, manutenção de dados e guias nativos |
 | H | Integração e empacotamento | Typecheck, testes, build, tarball e import de consumidor passam |

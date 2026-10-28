@@ -1,8 +1,8 @@
 # Funções que ainda faltam
 
-Inventário da versão **0.1.7**, comparando o registro executável do Yuzuha com os
+Inventário local após a versão **0.1.7**, comparando o registro executável do Yuzuha com os
 tipos públicos de **@fluxerjs/core 3.3.0**, fixado no lockfile. O inventário tem
-**306 funções canônicas**; aliases não aumentam esse número.
+**310 funções canônicas**; aliases não aumentam esse número.
 
 Este documento distingue funções existentes, wrappers ainda ausentes e recursos
 acessíveis pelo SDK em JavaScript/TypeScript. Os nomes na coluna “Propostas” são
@@ -10,7 +10,7 @@ ideias de API: **não estão registrados e não podem ser usados em scripts**.
 
 ## Cobertura atual
 
-O function mode tem 306 funções canônicas, 18 a mais que na 0.1.6. O SDK continua
+O function mode tem 310 funções canônicas, 22 a mais que na 0.1.6. O SDK continua
 disponível em JS/TS, com recursos injetáveis e testáveis offline.
 Esta tabela é um mapa dos recursos entregues pelo Yuzuha e das APIs nativas
 disponíveis para escrever novos comandos.
@@ -20,12 +20,12 @@ disponíveis para escrever novos comandos.
 | Usuários e servidor | `$user`, `$member`, `$members`, `$memberCount`, `$avatar`, `$displayName`, `$guild`, `$guildIcon`, `$guildBanner`, `$bans`, `$auditLogs`, `$setPresence`, `$setStatus`, `$setActivity` | Leitura de usuário, membro, servidor, banimentos, auditoria e presença |
 | Cargos | `$role`, `$roles`, `$hasRole`, `$addRole`, `$removeRole`, `$createRole`, `$editRole`, `$deleteRole`, `$moveRole` | Resolução por nome, ID ou menção, mutações e posição |
 | Canais | `$channel`, `$channels`, `$createChannel`, `$editChannel`, `$deleteChannel`, `$channelPerms`, `$channelPermsOf`, `$slowmode`, `$moveChannel`, `$setCategory` | Criação, edição, exclusão, posição, categoria, overwrites e permissões efetivas |
-| Mensagens | `$fetchMessage`, `$messages`, `$pin`, `$unpin`, `$pinnedMessages`, `$sendFiles`, `$removeReaction`, `$clearReactions`, `$reactionUsers` | Histórico, fixados, anexos por URL e reações com paginação |
+| Mensagens | `$fetchMessage`, `$messages`, `$pin`, `$unpin`, `$pinnedMessages`, `$pinnedMessagesPage`, `$searchMessagesAdvanced`, `$sendFiles`, `$removeReaction`, `$clearReactions`, `$reactionUsers`, `$reactionUsersPage` | Histórico, páginas de fixadas por timestamp, busca com filtros do SDK, anexos por URL e reações com metadados de paginação |
 | Coletores | `$awaitMessage`, `$awaitReaction`, `$confirm` | Espera com timeout, filtro por autor e múltiplos emojis |
 | Servidor e convites | `$invite`, `$createInvite`, `$deleteInvite` | Convite por código/URL e criação com duração |
 | Webhooks | `$webhooks`, `$createWebhook`, `$sendWebhook`, `$editWebhook`, `$deleteWebhook` | CRUD e envio com ou sem token |
 | Emojis e stickers | `$emoji`, `$emojis`, `$createEmoji`, `$editEmoji`, `$deleteEmoji`, `$sticker`, `$stickers`, `$createSticker`, `$editSticker`, `$deleteSticker` | Resolução por nome, ID ou menção e mutações; emoji por URL com download validado, sticker por base64 |
-| Threads e fóruns | `$createThread`, `$archiveThread`, `$unarchiveThread`, `$forumPost`, `$addThreadMember`, `$removeThreadMember`, `$threadMembers` | Threads de canal, posts de fórum/mídia e membros com paginação |
+| Threads e fóruns | `$createThread`, `$archiveThread`, `$unarchiveThread`, `$forumPost`, `$addThreadMember`, `$removeThreadMember`, `$threadMembers`, `$threadMember` | Threads de canal, posts de fórum/mídia, membros com paginação e consulta individual com estado de mute |
 | JSON e objetos | `$object`, `$jsonEncode`, `$jsonDecode`, `$jsonGet`, `$jsonSet`, `$jsonDelete`, `$jsonMerge`, `$jsonKeys`, `$jsonValues`, `$jsonEntries`, `$hasProp` | Construção, serialização, navegação por propriedades próprias, mesclagem e remoção por caminho |
 | Arrays | `$array`, `$arrayPush`, `$arrayGet`, `$arrayLength`, `$arraySlice`, `$arrayIncludes`, `$arrayIndexOf`, `$arrayJoin`, `$arraySort`, `$arrayReverse`, `$arrayUnique`, `$arrayConcat`, `$arrayFlat`, `$arrayChunk`, `$range`, `$paginate` | Construção, consulta, composição, ordenação e paginação |
 | Callbacks de arrays | `$arrayMap`, `$arrayFilter`, `$arraySome`, `$arrayEvery`, `$arrayFind`, `$arrayReduce`, `$arraySortBy` | Expressões reavaliadas por item, curto-circuito e chaves estáveis, sem compilar dados como código |
@@ -54,7 +54,7 @@ contrato do Yuzuha para conferir argumentos, retorno e limites de cada chamada.
 
 `ctx.data.transaction` é uma API nativa para operações síncronas entre várias
 chaves. `$dataTransaction` recebe operações declarativas; não executa callbacks
-assíncronos dentro do store. A extensão cobre as 306 funções internas.
+assíncronos dentro do store. A extensão cobre as 310 funções internas.
 
 ## Cobertura adicional da 0.1.3
 

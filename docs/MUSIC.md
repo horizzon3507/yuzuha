@@ -3,7 +3,7 @@
 A 0.1.7 inclui o conteúdo de música preparado na 0.1.6: `FluxerVoice` para áudio
 nativo, cliente Lavalink v4, filas e
 `FluxerLavalinkBridge` para transmitir o áudio do Lavalink ao Fluxer. Os imports vivem em `yuzuha/music`.
-São APIs JS/TS; o catálogo de 306 funções de script não inclui reprodução.
+São APIs JS/TS; o catálogo de 310 funções de script não inclui reprodução.
 
 | Integração | Conexão de áudio | Recursos |
 |---|---|---|

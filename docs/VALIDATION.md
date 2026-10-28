@@ -1,5 +1,26 @@
 # Validação local
 
+## Revisão local após a 0.1.7 (28/10/2026)
+
+Linux x64, npm **12.2.1**, Node **26.11.1** e **22.22.3**. O pacote continua
+em 0.1.7, com o SDK fixado em 3.3.0 e o schema de estado preservado.
+
+| Verificação | Resultado |
+|---|---|
+| `npm ci` | PASS: lockfile instalado, auditoria sem vulnerabilidades reportadas |
+| `npm run check` em Node 26 e Node 22 | PASS em ambos: **613 testes**, tipos, arquitetura de **181 módulos**, build, editor, **310 funções** e links locais |
+| `npm run smoke:package` em Node 26 e Node 22 | PASS em ambos: pacote instalado, consumidores JS/TS, SDK, CLI, editor, 14 templates e function mode |
+| Paridade de recursos | PASS: páginas de fixadas/reações, filtros avançados e membro individual de thread preservam metadados; testes com SDK e REST simulados |
+| Autorização | PASS: todas as mutações de expressões exigem autor/bot e servidor do contexto; download de emoji é recusado antes do HTTP quando falta permissão |
+| Runtime e persistência | PASS: erros protegidos atravessam JSON e `$try`, atualizações validam saída antes de persistir, prazo monotônico e intervalos de espera sem crédito duplicado |
+| HTTP e anexos | PASS: IPv6 e redes especiais, redirects, cópia de buffers reutilizados, cancelamento pendente, metadados estáveis e readers liberados |
+| Cooldowns | PASS: expiração, capacidade, renovação e deduplicação; resultados comparativos e limites da medição em [BENCHMARKS.md](BENCHMARKS.md) |
+
+Os testes usam mocks, fontes sintéticas e stores temporários, sem login ou
+ações reais de bot. A validação DNS anterior à conexão não elimina DNS
+rebinding; o contrato e as restrições estão em [HTTP.md](HTTP.md).
+Essas mudanças não publicam pacote, release, tag ou bot.
+
 ## Preparação final da 0.1.7 — 24/10/2026
 
 Biblioteca e CLI na raiz, instaladas com `npm ci` e `package-lock.json`.
