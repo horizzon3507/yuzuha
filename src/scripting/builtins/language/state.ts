@@ -21,6 +21,7 @@ export const stateFunctions = defineFunctions(fn => {
         if (typeof base !== 'number' || !Number.isFinite(base)) throw new YuzuhaError('INCREMENT', 'Variável atual não é um número.');
         const next = base + delta;
         if (!Number.isFinite(next)) throw new YuzuhaError('INCREMENT', 'Resultado não é um número finito.');
+        c.checkOutput(next);
         return next;
       }, null);
     });
@@ -28,25 +29,31 @@ export const stateFunctions = defineFunctions(fn => {
       const name = await c.text(0);
       const item = typedScalar(toJson(await c.arg(1))) as JsonValue;
       return c.ctx.data[property].update(name, current => {
-        if (current === null) return [item];
-        if (!Array.isArray(current)) throw new YuzuhaError('PUSH', 'Variável atual não é um array.');
-        return [...current, item];
+        if (current !== null && !Array.isArray(current)) throw new YuzuhaError('PUSH', 'Variável atual não é um array.');
+        const next = current === null ? [item] : [...current, item];
+        c.checkOutput(next);
+        return next;
       }, null);
     });
     fn(`pull${suffix}`, 'language', 2, 2, '[nome;valor]', 'Remove todas as ocorrências do valor em array persistente.', async c => {
       const name = await c.text(0);
       const target = typedScalar(toJson(await c.arg(1))) as JsonValue;
       return c.ctx.data[property].update(name, current => {
-        if (current === null) return [];
-        if (!Array.isArray(current)) throw new YuzuhaError('PULL', 'Variável atual não é um array.');
-        return current.filter(item => !deepEqual(item, target));
+        if (current !== null && !Array.isArray(current)) throw new YuzuhaError('PULL', 'Variável atual não é um array.');
+        const next = current === null ? [] : current.filter(item => !deepEqual(item, target));
+        c.checkOutput(next);
+        return next;
       }, null);
     });
     fn(`set${suffix}Path`, 'language', 3, 3, '[nome;caminho;novo]', 'Atualiza caminho em objeto persistente de forma atômica; cria a estrutura ausente e retorna o valor completo.', async c => {
       const name = await c.text(0);
       const segments = parsePath(await c.text(1));
       const fresh = typedScalar(toJson(await c.arg(2)));
-      return c.ctx.data[property].update(name, current => setJsonPath(current, segments, fresh), null);
+      return c.ctx.data[property].update(name, current => {
+        const next = setJsonPath(current, segments, fresh);
+        c.checkOutput(next);
+        return next;
+      }, null);
     });
   }
   fn('caseList', 'language', 0, 2, '[página?;tamanho?]', 'Lista casos do servidor; página 1-based, tamanho padrão 10, máximo 100.', async c => {

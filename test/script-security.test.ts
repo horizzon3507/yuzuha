@@ -49,3 +49,75 @@ test('jsonEncode preserves loop control and still allows serialization failures 
   assert.equal(await run('$try[$jsonEncode[$bigint];fallback]'), 'fallback');
   assert.equal(await run('$jsonEncode[$object[x;1]]'), '{"x":1}');
 });
+
+for (const [suffix, scope] of [['Var', 'global'], ['GuildVar', 'guild'], ['UserVar', 'user']] as const) {
+  test(`increment${suffix} rejects excessive output before persisting or changing TTL`, async () => {
+    const { run, ctx, transport } = harness({ output: 1 });
+    await ctx.data[scope].set('n', 9, { ttlMs: 1000 });
+    await assert.rejects(run(`$try[$increment${suffix}[n];$reply[f]]`),
+      (error: unknown) => error instanceof ScriptError && error.code === 'OUTPUT_LIMIT');
+    assert.equal(await ctx.data[scope].get('n'), 9);
+    assert.equal(await ctx.data[scope].ttl('n'), 1000);
+    assert.equal(await run(`$increment${suffix}[x]`), 1);
+    assert.equal(await ctx.data[scope].get('x'), 1);
+    assert.equal(transport.messages.length, 0);
+    const missing = harness({ output: 3 });
+    await assert.rejects(missing.run(`$increment${suffix}[new;1e9]`),
+      (error: unknown) => error instanceof ScriptError && error.code === 'OUTPUT_LIMIT');
+    assert.equal(await missing.ctx.data[scope].get('new'), null);
+    assert.equal(await missing.ctx.data[scope].ttl('new'), -2);
+  });
+
+  test(`pull${suffix} rejects excessive output before persisting or changing TTL`, async () => {
+    const { run, ctx, transport } = harness({ output: 1 });
+    const original = [1, 2];
+    await ctx.data[scope].set('n', original, { ttlMs: 1000 });
+    await assert.rejects(run(`$try[$pull${suffix}[n;1];$reply[f]]`),
+      (error: unknown) => error instanceof ScriptError && error.code === 'OUTPUT_LIMIT');
+    assert.deepEqual(await ctx.data[scope].get('n'), original);
+    assert.equal(await ctx.data[scope].ttl('n'), 1000);
+    await assert.rejects(run(`$pull${suffix}[z;1]`),
+      (error: unknown) => error instanceof ScriptError && error.code === 'OUTPUT_LIMIT');
+    assert.equal(await ctx.data[scope].get('z'), null);
+    assert.equal(await ctx.data[scope].ttl('z'), -2);
+    assert.equal(transport.messages.length, 0);
+    const valid = harness({ output: 2 });
+    await valid.ctx.data[scope].set('ok', [1]);
+    assert.deepEqual(await valid.run(`$pull${suffix}[ok;1]`), []);
+    assert.deepEqual(await valid.ctx.data[scope].get('ok'), []);
+  });
+
+  test(`push${suffix} rejects excessive output before persisting or changing TTL`, async () => {
+    const { run, ctx, transport } = harness({ output: 32 });
+    const original = ['a'.repeat(20)];
+    await ctx.data[scope].set('items', original, { ttlMs: 1000 });
+    await assert.rejects(run(`$try[$push${suffix}[items;${'b'.repeat(20)}];$reply[fallback]]`),
+      (error: unknown) => error instanceof ScriptError && error.code === 'OUTPUT_LIMIT');
+    assert.deepEqual(await ctx.data[scope].get('items'), original);
+    assert.equal(await ctx.data[scope].ttl('items'), 1000);
+    await assert.rejects(run(`$push${suffix}[missing;${'b'.repeat(31)}]`),
+      (error: unknown) => error instanceof ScriptError && error.code === 'OUTPUT_LIMIT');
+    assert.equal(await ctx.data[scope].get('missing'), null);
+    assert.equal(await ctx.data[scope].ttl('missing'), -2);
+    assert.deepEqual(await run(`$push${suffix}[ok;x]`), ['x']);
+    assert.deepEqual(await ctx.data[scope].get('ok'), ['x']);
+    assert.equal(transport.messages.length, 0);
+  });
+
+  test(`set${suffix}Path rejects excessive output before persisting or changing TTL`, async () => {
+    const { run, ctx, transport } = harness({ output: 32 });
+    const original = { a: 'a'.repeat(20) };
+    await ctx.data[scope].set('record', original, { ttlMs: 1000 });
+    await assert.rejects(run(`$try[$set${suffix}Path[record;b;${'b'.repeat(20)}];$reply[fallback]]`),
+      (error: unknown) => error instanceof ScriptError && error.code === 'OUTPUT_LIMIT');
+    assert.deepEqual(await ctx.data[scope].get('record'), original);
+    assert.equal(await ctx.data[scope].ttl('record'), 1000);
+    await assert.rejects(run(`$set${suffix}Path[missing;a.b.c;${'b'.repeat(20)}]`),
+      (error: unknown) => error instanceof ScriptError && error.code === 'OUTPUT_LIMIT');
+    assert.equal(await ctx.data[scope].get('missing'), null);
+    assert.equal(await ctx.data[scope].ttl('missing'), -2);
+    assert.deepEqual(await run(`$set${suffix}Path[ok;a;x]`), { a: 'x' });
+    assert.deepEqual(await ctx.data[scope].get('ok'), { a: 'x' });
+    assert.equal(transport.messages.length, 0);
+  });
+}
