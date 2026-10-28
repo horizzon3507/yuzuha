@@ -2,6 +2,7 @@ import type { MessageInfo } from '../../ports/resources/messages.js';
 import { YuzuhaError } from '../../errors.js';
 import { defineFunctions } from './definition.js';
 import { preloadChannels } from '../../domain/resource-batches.js';
+import { pinnedMessagesInput } from '../../domain/message-query.js';
 
 const PROPERTIES: Record<string, (info: MessageInfo) => unknown> = {
   id: info => info.id,
@@ -114,6 +115,12 @@ export const resourceMessageFunctions = defineFunctions(fn => {
     const first = c.count > 0 ? (await c.text(0)).trim() : '';
     const channelID = first ? first : c.ctx.message.channelID;
     return c.ctx.resources.messages.pinned(channelID, c.count > 1 ? messageLimit(await c.text(1), 20) : undefined);
+  });
+  fn('pinnedMessagesPage', 'messages', 0, 3, '[canal?;limite?;before?]', 'Pagina mensagens por data de fixação; retorna messages, pinnedAt, hasMore e nextBefore. Cursor ISO da página anterior.', async c => {
+    const channelID = c.count > 0 ? (await c.text(0)).trim() || c.ctx.message.channelID : c.ctx.message.channelID;
+    const limit = c.count > 1 ? messageLimit(await c.text(1), 50) : 50;
+    const before = c.count > 2 ? (await c.text(2)).trim() || undefined : undefined;
+    return c.ctx.resources.messages.pinnedPage(channelID, pinnedMessagesInput({ limit, before }));
   });
   fn('sendFiles', 'messages', 2, 4, '[canal;url;nome?;conteudo?]', 'Envia um anexo e retorna o ID da mensagem.', async c => {
     const channelID = (await c.text(0)).trim();

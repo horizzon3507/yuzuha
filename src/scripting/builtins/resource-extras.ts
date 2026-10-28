@@ -5,6 +5,7 @@ import type { GuildEditInput } from '../../ports/resources/users.js';
 import type { ThreadEditInput } from '../../ports/resources/threads.js';
 import type { FunctionCall } from '../types.js';
 import { defineFunctions } from './definition.js';
+import { messageSearchInput } from '../../domain/message-query.js';
 
 async function required(c: FunctionCall, index: number, label: string): Promise<string> {
   const value = (await c.text(index)).trim();
@@ -57,8 +58,14 @@ export const resourceExtras = defineFunctions(fn => {
     const rawCursor = c.count > 3 ? await c.arg(3) : '';
     if (rawCursor !== '' && (!Array.isArray(rawCursor) || rawCursor.some(item => typeof item !== 'string'))) throw new YuzuhaError('MESSAGE_CURSOR', 'Cursor de busca deve ser array de textos.');
     const author = c.count > 4 ? (await c.text(4)).trim() : '';
-    return c.ctx.resources.messages.search({ content, channelID, guildID: c.ctx.guildID || undefined, limit,
-      cursor: rawCursor === '' ? undefined : rawCursor as string[], authorID: author ? userID(author) : undefined });
+    return c.ctx.resources.messages.search(messageSearchInput({ content, channelID, guildID: c.ctx.guildID || undefined, limit,
+      cursor: rawCursor === '' ? undefined : rawCursor as string[], authorID: author ? userID(author) : undefined }));
+  });
+  fn('searchMessagesAdvanced', 'messages', 1, 1, '[opções]', 'Busca por filtros de conteúdo, IDs, autores, menções, anexos, datas e ordem; texto é opcional. Até 100 resultados, opções de até 32 KiB; page ou cursor exclusivos.', async c => {
+    const input = messageSearchInput(await c.arg(0));
+    if (input.guildID !== undefined) throw new YuzuhaError('MESSAGE_OPTIONS', 'guildID é definido pelo contexto do comando.');
+    return c.ctx.resources.messages.search({ ...input, guildID: c.ctx.guildID || undefined,
+      ...(!c.ctx.guildID && input.channelID === undefined ? { channelID: c.ctx.message.channelID } : {}) });
   });
   fn('fileBase64', 'messages', 2, 3, '[base64;nome;descrição?]', 'Monta um anexo base64 para $sendAttachments, sem enviá-lo.', async c => {
     const file = { base64: await c.text(0), name: await c.text(1), description: c.count > 2 ? await c.text(2) : undefined };
