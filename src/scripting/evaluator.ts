@@ -3,15 +3,17 @@ import type { CommandContext } from '../commands/context.js';
 import { GuardError, PartialModerationError, ScriptError, StopExecution, YuzuhaError } from '../errors.js';
 import type { CallNode, Node, Program } from './ast.js';
 import type { FunctionRegistry } from './registry.js';
-import type { Limits } from './types.js';
+import type { FunctionCall, Limits } from './types.js';
 import { text } from './values.js';
 import { LoopControl } from './control-flow.js';
+import { associateCanvasExecution, clearCanvasExecution, createCanvasExecutionState, releaseCanvasExecutionCall } from './canvas-execution.js';
 
 export class Evaluator {
   private calls = 0;
   private deadline: number;
   private waits = 0;
   private waitStarted = 0;
+  private readonly canvasExecution = createCanvasExecutionState();
 
   constructor(
     private readonly program: Program,
@@ -25,6 +27,7 @@ export class Evaluator {
   async run(): Promise<unknown> {
     try { return await this.evaluate(this.program.nodes, 0); }
     catch (error) { if (error instanceof StopExecution) return ''; throw error; }
+    finally { clearCanvasExecution(this.canvasExecution); }
   }
 
   private check(offset: number, depth: number): void {
@@ -85,8 +88,7 @@ export class Evaluator {
       values ??= [];
       return values[index] ??= fresh(index);
     };
-    try {
-      const result = await fn.execute({
+    const call: FunctionCall = {
         ctx: this.ctx,
         count: node.args.length,
         arg,
@@ -108,7 +110,10 @@ export class Evaluator {
             this.waits--;
           }
         },
-      });
+      };
+    associateCanvasExecution(call, this.canvasExecution);
+    try {
+      const result = await fn.execute(call);
       this.check(node.offset, depth);
       this.checkOutput(result, node.offset);
       return result;
@@ -117,8 +122,11 @@ export class Evaluator {
       if (error instanceof YuzuhaError && ['EXECUTION_LIMIT', 'OUTPUT_LIMIT', 'EXECUTION_ABORTED'].includes(error.code)) {
         throw this.error(error.code, error.message, node.offset);
       }
+      if (error instanceof YuzuhaError && error.code.startsWith('CANVAS_')) {
+        throw new ScriptError(error.code, error.message, this.program.source, node.offset, this.program.file, { cause: error });
+      }
       throw new ScriptError('FUNCTION_ERROR', `Falha em $${node.name}: ${error instanceof YuzuhaError ? error.message : 'a operação não pôde ser concluída'}.`,
         this.program.source, node.offset, this.program.file, { cause: error });
-    }
+    } finally { releaseCanvasExecutionCall(call); }
   }
 }
