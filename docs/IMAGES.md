@@ -7,7 +7,7 @@ a biblioteca de imagens nem inicia processos.
 ## Instalação e transformação
 
 ```sh
-npm install yuzuha@0.1.8 sharp@^0.35.5
+npm install yuzuha@0.1.9 sharp@^0.35.5
 ```
 
 ```ts
@@ -47,16 +47,17 @@ implicitamente. Para girar, informe `rotate`.
 imagens menores; `contain` pode acrescentar bordas ao canvas solicitado.
 Os pixels de entrada são limitados a 16777216 e cada entrada/saída a 10 MB.
 
-Até dois processos de transformação podem executar simultaneamente por processo
-do bot. Não há fila implícita. O prazo padrão é 5000 ms; aceita 10–30000 ms e
-inclui inicialização, transformação e encerramento. Cancelamento ou prazo encerra
-o processo filho, incluindo o processamento nativo, e libera a vaga depois de
+Canvas também executa renderização em processo filho; Sharp e Canvas compartilham
+duas vagas por processo do bot, sem fila implícita. O prazo padrão do Sharp é
+5000 ms; aceita 10–30000 ms e inclui inicialização, transformação e encerramento.
+Cancelamento ou prazo encerra o processo filho, incluindo o processamento nativo,
+e libera a vaga depois de
 confirmar seu fechamento. A entrada é copiada e não é transferida ou alterada.
 
 Cada filho usa um thread de processamento, cache Sharp desabilitado e heap JS
 limitado a 128 MB. Memória nativa do decoder é limitada indiretamente por bytes,
-pixels e concorrência; isso não constitui um teto rígido de RSS. Não há
-composição com canvas, texto, fontes ou acesso ao sistema de arquivos na API.
+pixels e concorrência; isso não constitui um teto rígido de RSS. Esta API de
+transformação não compõe cenas nem oferece texto, fontes ou acesso ao filesystem.
 
 ## Erros
 
@@ -68,7 +69,11 @@ composição com canvas, texto, fontes ou acesso ao sistema de arquivos na API.
 - `EXECUTION_LIMIT`: prazo, concorrência ou tamanho da saída excedidos.
 - `EXECUTION_ABORTED`: sinal cancelado.
 
-O peer opcional permite usar o restante do Yuzuha sem instalar Sharp. O sistema
+O peer opcional permite usar o restante do Yuzuha sem instalar Sharp. Para compor
+cartões com texto, avatares, fontes, gradientes, badges ou barras, use o módulo
+separado [`yuzuha/canvas`](CANVAS.md), que tem seu próprio peer opcional. Sharp
+transforma uma imagem existente; Canvas monta uma cena nova. Ambos compartilham
+o limite de dois processos simultâneos. O sistema
 operacional e a arquitetura precisam ser suportados pelos binários da versão
 instalada. Veja a [instalação do Sharp](https://sharp.pixelplumbing.com/install/)
 e sua [API de saída](https://sharp.pixelplumbing.com/api-output/).
