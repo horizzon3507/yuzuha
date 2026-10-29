@@ -73,6 +73,14 @@ recursos. O runtime de scripts só é registrado quando o function mode é usado
 
 ## Entregas e dependências
 
+A atualização 0.1.9 acrescenta `yuzuha/canvas`, um peer opcional baseado em
+`@napi-rs/canvas` para cartões em JS/TS e function mode. O builder compõe texto,
+imagens, formas, gradientes, sombras, badges e progresso e envia anexos pelo
+contexto; o backend roda em processo filho com limites e cancelamento. As 12
+funções `$canvas*` elevam o catálogo a 322. Sharp e Canvas compartilham um
+orçamento de dois processos. O SDK permanece em 3.3.0 e o schema em 2; detalhes,
+limites e validação estão em [CANVAS.md](CANVAS.md).
+
 A atualização 0.1.8 amplia buscas com filtros do SDK, paginação de
 fixadas por timestamp, paginação de usuários de reações e consulta individual
 de membros de threads. O catálogo passa a 310 funções, preservando os exports
@@ -147,7 +155,7 @@ com metadados gerados e benchmarks locais reproduzíveis. O SDK continua em 3.3.
 | B | Framework nativo de comandos, eventos e plugins | Dispatch, aliases, guards, erros e recarga atômicos |
 | C | Store e serviços de moderação | Persistência, concorrência e falha parcial testadas |
 | D | Recursos do Fluxer | Usuários, cargos, canais, mensagens, threads, webhooks e convites com mocks |
-| E | Function mode isolado | Parser, AST, runtime, 310 funções e ativação sob demanda |
+| E | Function mode isolado | Parser, AST, runtime, 322 funções e ativação sob demanda |
 | F | Agendamentos, HTTP e limites | Cron/fusos, concorrência, retry, recuperação, streaming/multipart e políticas de rede |
 | G | CLI, exemplos e documentação | Scaffolds, lint/catálogos/cenários offline, manutenção de dados e guias nativos |
 | H | Integração e empacotamento | Typecheck, testes, build, tarball e import de consumidor passam |

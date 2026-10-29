@@ -39,7 +39,8 @@ exports de `yuzuha/sdk` aos da dependência instalada.
 | Estado e casos | `ctx.data`, TTL, userFor, transaction entre chaves e stores | Variáveis, TTL, incrementos, listas, casos e dataTransaction com operações declarativas |
 | Agendamentos | `ctx.scheduler`, cron/fusos, concorrência limitada, histórico, heartbeat e controles | schedule, scheduleEvery, scheduleCron, controles, histórico, reexecução e retry com jitter |
 | HTTP | `request`, `requestBytes`, `stream`, `multipart`, `withPolicy` e cancelamento | `$http`, `$httpJson`, `$httpMultipart` e download de imagens com política de rede por comando |
-| CLI, plugins, comandos e middleware | Recursos próprios do Yuzuha; lint/catálogos/cenários e manutenção de dados | 310 funções canônicas; comandos e eventos de script |
+| CLI, plugins, comandos e middleware | Recursos próprios do Yuzuha; lint/catálogos/cenários e manutenção de dados | 322 funções canônicas; comandos e eventos de script |
+| Composição de cartões | `ctx.canvas` e `yuzuha/canvas`, com peer opcional `@napi-rs/canvas`; envio pelo contexto | 12 funções `$canvas*` para cenas privadas por execução; envio sem retorno automático |
 
 A camada nativa do Yuzuha — o caminho principal — acrescenta schemas de argumentos
 e flags com inferência, subcomandos, ajuda detalhada, checks e middleware por comando, eventos com encaminhamento de
@@ -48,6 +49,11 @@ e comandos nativos, e `ctx.scheduler`/`ctx.http` expõem agendamento e rede sem
 duplicar regras. Veja o [guia nativo](NATIVE.md) e o
 [inventário de lacunas](FUNCTION-GAPS.md), que separa wrappers ausentes de
 recursos já acessíveis no SDK.
+
+Canvas é um módulo de composição com builder, imagens, texto e formas. Ele não
+transforma imagens existentes como `yuzuha/images`/Sharp: use [CANVAS.md](CANVAS.md)
+para criar cartões e [IMAGES.md](IMAGES.md) para redimensionar, converter ou
+aplicar transformações a bytes de imagem.
 
 `createTestBot`, em `yuzuha/testing`, facilita testes nativos sobre mocks com
 relógio controlável; não conecta ao gateway. Os cenários JSON de `yuzuha test`
@@ -124,11 +130,12 @@ Logs opcionais e correlação estão documentados em [OBSERVABILITY.md](OBSERVAB
 A CLI inclui lint textual, exportação de catálogos e cenários JSON offline.
 O scheduler e a rede têm guias próprios em [SCHEDULER.md](SCHEDULER.md) e
 [HTTP.md](HTTP.md); estatísticas, limpeza, backups e restauração estão em
-[STORAGE.md](STORAGE.md). LSP, bibliotecas de canvas e ferramentas
-de migração continuam fora desta versão. Integração ao vivo deve ser validada em
+[STORAGE.md](STORAGE.md). Ferramentas de migração continuam fora desta versão.
+Integração ao vivo deve ser validada em
 um servidor de teste antes de distribuir um bot para produção.
 
-`yuzuha/images` oferece transformações opcionais com Sharp. Shards do core podem
+`yuzuha/images` oferece transformações opcionais com Sharp; `yuzuha/canvas`
+oferece composição opcional com `@napi-rs/canvas`. Shards do core podem
 ser configurados em `clientOptions`; gerenciamento de processos usa pacote externo.
 Veja [IMAGES.md](IMAGES.md) e a [auditoria de integrações](INTEGRATIONS.md).
 
