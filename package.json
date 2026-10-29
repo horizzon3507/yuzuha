@@ -1,6 +1,6 @@
 {
   "name": "yuzuha",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "description": "Fluxer bots with simple scripts and typed JavaScript/TypeScript.",
   "type": "module",
   "license": "MIT",
@@ -45,6 +45,10 @@
     "./images": {
       "types": "./dist/images.d.ts",
       "import": "./dist/images.js"
+    },
+    "./canvas": {
+      "types": "./dist/canvas.d.ts",
+      "import": "./dist/canvas.js"
     }
   },
   "bin": {
@@ -57,6 +61,7 @@
     "examples",
     "LICENSE",
     "src",
+    "assets/canvas",
     "CHANGELOG.md",
     "VERSIONING.md",
     "editors/vscode",
@@ -72,6 +77,7 @@
     "build": "node scripts/build.mjs",
     "typecheck": "tsc --noEmit",
     "test": "tsx --test test/*.test.ts",
+    "examples:canvas": "npm run build && tsx examples/canvas/render.ts",
     "check": "npm run typecheck && npm run check:architecture && npm test && npm run build && npm run check:editor && node scripts/generate-functions.mjs --check && npm run check:docs",
     "prepack": "npm run build",
     "docs:generate": "npm run build && node scripts/generate-functions.mjs",
@@ -92,14 +98,16 @@
     "ws": "^8.22.0"
   },
   "devDependencies": {
+    "@napi-rs/canvas": "1.0.13",
     "@types/node": "^22.0.0",
     "@types/vscode": "^1.140.0",
     "@types/ws": "^8.18.2",
-    "typescript": "^5.9.0",
-    "sharp": "0.35.5"
+    "sharp": "0.35.5",
+    "typescript": "^5.9.0"
   },
   "peerDependencies": {
     "@fluxerjs/voice": "^3.1.0",
+    "@napi-rs/canvas": "^1.0.13",
     "sharp": "^0.35.5"
   },
   "peerDependenciesMeta": {
@@ -107,6 +115,9 @@
       "optional": true
     },
     "sharp": {
+      "optional": true
+    },
+    "@napi-rs/canvas": {
       "optional": true
     }
   }
