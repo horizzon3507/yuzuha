@@ -1,7 +1,7 @@
 import { AsyncLocalStorage } from 'node:async_hooks';
 import { setMaxListeners } from 'node:events';
 import { Client, Events, Message } from '@fluxerjs/core';
-import type { ClientEventName } from '@fluxerjs/core';
+import type { ClientEventName, ClientEvents } from '@fluxerjs/core';
 import { FluxerTransport, incoming } from '../adapter.js';
 import { FluxerResources } from '../infrastructure/fluxer/resources.js';
 import type { Resources } from '../ports/resources.js';
@@ -23,18 +23,19 @@ import { RateLimits } from './rate-limits.js';
 import { reportError, userError } from './reporting.js';
 import { route, validatePrefixes } from './routing.js';
 import { defineEvent, NativeEvents } from './events.js';
-import type { NativeEvent, NativeListener } from './events.js';
+import type { ContextEventDefinition, NativeEvent, NativeListener } from './events.js';
 import { ScheduleExecutionError, Scheduler } from '../services/scheduler.js';
 import type { ScheduleRecord } from '../domain/state.js';
 import { HttpService } from '../services/http.js';
 import { emitLog } from './logging.js';
 import { cancellationError } from '../services/cancellation.js';
 import { EventContext } from '../commands/event-context.js';
-import { adaptScriptEvent, validateScriptEvent } from './script-events.js';
+import { adaptScriptEvent, scriptEventNames, validateScriptEvent } from './script-events.js';
 import type { ScriptEventDefinition } from './script-events.js';
 import type { Program } from '../scripting/ast.js';
 import type { MusicManager } from '../services/music.js';
 import type { NativeVoice } from '../ports/voice.js';
+import { canvasRenderer } from '../infrastructure/canvas/render.js';
 
 type RoutedCommand = { compiled: CompiledCommand; input: string; prefix: string };
 const ignored: Promise<DispatchResult> = Promise.resolve('ignored');
@@ -177,6 +178,28 @@ export class Yuzuha {
   }
   event(event: NativeEvent): this { this.events.add(event); return this; }
 
+  contextEvent<K extends import('../domain/events.js').ScriptEventName>(definition: ContextEventDefinition<K>): this {
+    if (this.closing) throw new YuzuhaError('BOT_CLOSED', 'O bot está encerrado.');
+    if (!scriptEventNames.includes(definition.event) || typeof definition.run !== 'function' || (definition.once !== undefined && typeof definition.once !== 'boolean')
+      || (definition.ignoreBots !== undefined && typeof definition.ignoreBots !== 'boolean')
+      || [definition.channelID, definition.actorID].some(id => id !== undefined && (typeof id !== 'string' || !/^\d+$/.test(id)))) {
+      throw new YuzuhaError('EVENT', 'Evento com contexto ou opções inválidos.');
+    }
+    if (definition.http) (this.http ?? new HttpService()).withPolicy(definition.http);
+    this.events.add({ event: definition.event, once: definition.once ?? false, invoke: async (args: unknown[]) => {
+      const source = adaptScriptEvent(definition.event, args);
+      if ((definition.ignoreBots ?? true) && source.event.userBot) return;
+      const ctx = new EventContext({ ...source, channelID: definition.channelID, actorID: definition.actorID,
+        policy: definition.http, transport: this.transport, store: this.store, resources: this.resources,
+        scheduler: this.scheduler, http: this.http, music: this.music, voice: this.voice,
+        canvas: { renderer: canvasRenderer, config: this.options.canvas }, now: this.options.now,
+        cooldown: this.contextCooldown, signal: this.shutdown.signal });
+      try { await definition.run(ctx, ...args as ClientEvents[K]); }
+      catch (error) { await reportError(this.options, error, ctx); }
+    } });
+    return this;
+  }
+
   scriptEvent(definition: ScriptEventDefinition): this {
     if (this.closing) throw new YuzuhaError('BOT_CLOSED', 'O bot está encerrado.');
     this.enableFunctions();
@@ -196,7 +219,8 @@ export class Yuzuha {
     const signal = this.shutdown.signal;
     const ctx = new EventContext({ ...source, channelID: definition.channelID, actorID: definition.actorID,
       policy: definition.http, transport: this.transport, store: this.store, resources: this.resources,
-      scheduler: this.scheduler, http: this.http, music: this.music, voice: this.voice, now: this.options.now, cooldown: this.contextCooldown, signal });
+      scheduler: this.scheduler, http: this.http, music: this.music, voice: this.voice,
+      canvas: { renderer: canvasRenderer, config: this.options.canvas }, now: this.options.now, cooldown: this.contextCooldown, signal });
     const started = this.options.onLog ? performance.now() : 0;
     let outcome: DispatchResult = 'success';
     try {
@@ -358,7 +382,8 @@ export class Yuzuha {
         input: resolved.input, prefix, lineage: compiled.lineage,
         help: this.contextHelp, cooldown: this.contextCooldown,
         native: { client: this.client, message: message.raw instanceof Message ? message.raw : undefined },
-        resources: this.resources, scheduler: this.scheduler, http: this.http, music: this.music, voice: this.voice, now: this.options.now, signal, executionID });
+        resources: this.resources, scheduler: this.scheduler, http: this.http, music: this.music, voice: this.voice,
+        canvas: { renderer: canvasRenderer, config: this.options.canvas }, now: this.options.now, signal, executionID });
       if (this.options.onLog) await emitLog(this.options, { event: 'command.start', executionID: ctx.executionID, command: ctx.command.name });
       if (signal.aborted) throw cancellationError();
       await ctx.prepare();

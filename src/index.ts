@@ -10,7 +10,7 @@ export { ArgumentBag } from './commands/typed-arguments.js';
 export type { TypedArguments } from './commands/typed-arguments.js';
 export type { NativeCommandContext, NativeCommandDefinition, CommandCheck, CommandMiddleware } from './commands/definition.js';
 export { defineEvent } from './framework/events.js';
-export type { EventDefinition, NativeEvent, NativeListener } from './framework/events.js';
+export type { ContextEventDefinition, EventDefinition, NativeEvent, NativeListener } from './framework/events.js';
 export type { LogRecord } from './framework/logging.js';
 export { EventContext } from './commands/event-context.js';
 export type { EventContextOptions } from './commands/event-context.js';

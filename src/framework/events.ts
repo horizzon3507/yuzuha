@@ -1,6 +1,9 @@
 import { Events } from '@fluxerjs/core';
 import type { Client, ClientEventName, ClientEvents } from '@fluxerjs/core';
 import { YuzuhaError } from '../errors.js';
+import type { ScriptEventName } from '../domain/events.js';
+import type { EventContext } from '../commands/event-context.js';
+import type { HttpPolicy } from '../services/http.js';
 
 export type NativeListener<K extends ClientEventName> = (...args: ClientEvents[K]) => unknown | Promise<unknown>;
 export interface EventDefinition<K extends ClientEventName> {
@@ -12,6 +15,15 @@ export interface NativeEvent {
   readonly event: ClientEventName;
   readonly once: boolean;
   readonly invoke: (args: unknown[]) => unknown | Promise<unknown>;
+}
+export interface ContextEventDefinition<K extends ScriptEventName = ScriptEventName> {
+  event: K;
+  once?: boolean;
+  channelID?: string;
+  actorID?: string;
+  ignoreBots?: boolean;
+  http?: HttpPolicy;
+  run: (ctx: EventContext, ...args: ClientEvents[K]) => unknown | Promise<unknown>;
 }
 
 const knownEvents = new Set<string>(Object.values(Events));

@@ -2,6 +2,12 @@ import { arg, assert, defineCommand, defineEvent, Yuzuha } from '../src/index.js
 import { Events } from '@fluxerjs/core';
 import type { Command } from '../src/commands/definition.js';
 import type { HttpResponse, StickerCreateInput, ThreadMemberInfo } from '../src/index.js';
+import { createCanvas } from '../src/canvas.js';
+import type { CanvasBuilder, CanvasResult } from '../src/canvas.js';
+
+const card: CanvasBuilder = createCanvas(64, 32, { scale: 2 }).text('Olá', { x: 4, y: 4, maxWidth: 56 });
+const renderedCard: Promise<CanvasResult> = card.render();
+void renderedCard;
 
 const native: Command = defineCommand({
   name: 'typed',
@@ -78,6 +84,10 @@ bot.on(Events.MessageCreate, message => {
   message.nonexistentProperty;
   void content;
 });
+bot.contextEvent({ event: 'guildMemberAdd', channelID: '1234567890', run(ctx, member) {
+  const canvasResult: Promise<CanvasResult> = ctx.canvas.create(100, 50).text(member.user.username, { x: 4, y: 4 }).render();
+  void canvasResult;
+} });
 bot.event(defineEvent({ event: Events.GuildMemberAdd, run(member) {
   const id: string = member.id;
   void id;
