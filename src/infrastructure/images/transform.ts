@@ -1,5 +1,6 @@
 import { fork } from 'node:child_process';
 import { YuzuhaError } from '../../shared/errors.js';
+import { acquireImageProcess } from '../process-budget.js';
 
 export interface ImageTransform {
   format?: 'png' | 'jpeg' | 'webp';
@@ -13,7 +14,6 @@ export interface ImageTransform {
 export interface ImageOptions { timeoutMs?: number; signal?: AbortSignal }
 export interface ImageResult { data: Uint8Array; format: 'png' | 'jpeg' | 'webp'; width: number; height: number }
 type Reply = { result: ImageResult } | { error: { code: string; message: string } };
-let active = 0;
 
 export async function transformImage(data: Uint8Array, transform: ImageTransform = {}, options: ImageOptions = {}): Promise<ImageResult> {
   if (!(data instanceof Uint8Array) || !data.byteLength || data.byteLength > 10_000_000) throw new YuzuhaError('IMAGE_INPUT', 'Imagem deve conter de 1 byte a 10 MB.');
@@ -30,12 +30,17 @@ export async function transformImage(data: Uint8Array, transform: ImageTransform
   const timeoutMs = options.timeoutMs ?? 5000;
   if (!Number.isSafeInteger(timeoutMs) || timeoutMs < 10 || timeoutMs > 30_000) throw new YuzuhaError('IMAGE_OPTIONS', 'Prazo deve ser de 10 a 30000 ms.');
   if (options.signal?.aborted) throw new YuzuhaError('EXECUTION_ABORTED', 'Imagem cancelada.');
-  if (active >= 2) throw new YuzuhaError('EXECUTION_LIMIT', 'Limite de duas imagens simultâneas atingido.');
-  const child = fork(new URL('./worker.mjs', import.meta.url), [], {
-    serialization: 'advanced', execArgv: ['--max-old-space-size=128'], stdio: ['ignore', 'ignore', 'ignore', 'ipc'],
-    env: { ...process.env, VIPS_CONCURRENCY: '1' },
-  });
-  active++;
+  const releaseProcess = acquireImageProcess();
+  let child;
+  try {
+    child = fork(new URL('./worker.mjs', import.meta.url), [], {
+      serialization: 'advanced', execArgv: ['--max-old-space-size=128'], stdio: ['ignore', 'ignore', 'ignore', 'ipc'],
+      env: { ...process.env, VIPS_CONCURRENCY: '1' },
+    });
+  } catch (cause) {
+    releaseProcess();
+    throw new YuzuhaError('IMAGE_PROCESS', 'Não foi possível iniciar o processo de imagem.', { cause });
+  }
   return new Promise<ImageResult>((resolve, reject) => {
     let result: ImageResult | undefined, failure: Error | undefined, settled = false;
     const stop = (error?: Error) => {
@@ -47,7 +52,7 @@ export async function transformImage(data: Uint8Array, transform: ImageTransform
     const timer = setTimeout(() => stop(new YuzuhaError('EXECUTION_LIMIT', 'Imagem excedeu o prazo.')), timeoutMs);
     const finish = () => {
       if (settled) return;
-      settled = true; clearTimeout(timer); options.signal?.removeEventListener('abort', abort); active--;
+      settled = true; clearTimeout(timer); options.signal?.removeEventListener('abort', abort); releaseProcess();
       child.removeAllListeners();
       if (failure) reject(failure);
       else if (result) resolve(result);
