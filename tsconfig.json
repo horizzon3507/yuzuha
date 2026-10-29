@@ -30,6 +30,9 @@
       ],
       "yuzuha/images": [
         "./src/images.ts"
+      ],
+      "yuzuha/canvas": [
+        "./src/canvas.ts"
       ]
     }
   },
