@@ -1,5 +1,21 @@
 # Validação local
 
+## Preparação da 0.1.9 (29/10/2026)
+
+Linux x64, Node **26.11.1**, npm **12.2.1**. Manifest e lockfile alinhados em
+**0.1.9**; SDK **3.3.0** e schema **2** preservados.
+
+| Verificação | Resultado |
+|---|---|
+| `npm run docs:generate` | PASS: catálogo, referência e autocomplete atualizados para **322 funções** |
+| `npm run check` | PASS: **626 testes**, tipos, arquitetura de **189 módulos**, build, editor e links de **40 arquivos Markdown** |
+| `npm run smoke:package` | PASS: tarball instalado; imports sem Canvas; Canvas real sem Sharp; Sharp real sem Canvas; consumidores JS/TS, CLI, editor e 14 pares de templates |
+| `npm run examples:canvas` | PASS: nove PNGs offline em JS, TS e function mode para perfil, boas-vindas e ranking; inspeção visual sem cortes |
+| Rede e gateway | PASS: HTTP de assets validado com fetch mockado; sem login ou ações reais no Fluxer |
+
+O smoke também decodifica a imagem criada no tarball instalado e verifica a
+falha `CANVAS_DEPENDENCY` quando o peer está ausente.
+
 ## Preparação da 0.1.8 (28/10/2026)
 
 Linux x64, Node **26.11.1**, npm **12.2.1**. Biblioteca, CLI e extensão incluída

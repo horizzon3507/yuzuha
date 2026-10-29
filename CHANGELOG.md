@@ -21,6 +21,18 @@ documentos. Veja a [política completa](VERSIONING.md).
 
 </details>
 
+## v0.1.9 · 29/10/2026
+
+Composição opcional de cartões para comandos, eventos e function mode, com fontes locais e renderização isolada. Esta atualização da biblioteca Yuzuha foi preparada em 29/10/2026 (v0.1.9).
+
+- `yuzuha/canvas` oferece builder tipado para texto, imagens, avatares, formas, gradientes, sombras, badges e progresso. A raiz e o function mode continuam importáveis sem instalar `@napi-rs/canvas`; o backend carrega somente no processo filho durante a renderização.
+- `ctx.canvas.send` e `bot.contextEvent` permitem anexar imagens em comandos e eventos sem mensagem. O canal é explícito quando o evento não o fornece.
+- Doze funções `$canvas*` mantêm cenas privadas por execução e elevam o catálogo canônico de 310 para **322**. Quotas, cancelamento e limites atravessam `$try`.
+- Inter 4.1 Regular e Bold acompanham os arquivos originais e a licença OFL. Fontes próprias podem vir de bytes, aliases configurados ou HTTP submetido à política do contexto.
+- Canvas e Sharp compartilham no máximo dois processos simultâneos, sem fila implícita. Canvas não depende de Sharp; `yuzuha/images` preserva seu contrato.
+- Perfil, boas-vindas e ranking têm versões JS, TS e function mode e geram nove PNGs offline. O tarball verifica imports sem os peers e renderização real com Canvas sem Sharp.
+- SDK 3.3.0, Node >=22.13 e schema persistido 2 permanecem compatíveis.
+
 ## v0.1.8 · 28/10/2026
 
 Bases de bots, buscas e páginas do Fluxer.js, com autorização compartilhada e correções de limites, streams e cooldowns. Esta atualização da biblioteca Yuzuha foi preparada em 28/10/2026 (v0.1.8).

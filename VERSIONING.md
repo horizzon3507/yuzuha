@@ -1,16 +1,16 @@
 # Versionamento
 
 O Yuzuha aplica o formato Hory ao histórico e usa **SemVer simples** no pacote.
-A versão desta atualização é **0.1.8**.
+A versão desta atualização é **0.1.9**.
 
 ## Pacote e histórico
 
 | Lugar | Formato nesta versão |
 |---|---|
-| `package.json` e entrada raiz de `package-lock.json` | `0.1.8` |
-| Pacote npm e saída de `yuzuha --version` | `0.1.8` |
-| Título do changelog | `## v0.1.8 · 28/10/2026` |
-| Tag Git | `v0.1.8` |
+| `package.json` e entrada raiz de `package-lock.json` | `0.1.9` |
+| Pacote npm e saída de `yuzuha --version` | `0.1.9` |
+| Título do changelog | `## v0.1.9 · 29/10/2026` |
+| Tag Git | `v0.1.9` |
 
 O SDK e a CLI pertencem ao mesmo pacote. Para bibliotecas, a convenção Hory mantém
 SemVer sem `m`, sem seções por superfície e sem sufixos de canal.
@@ -30,7 +30,8 @@ estivermos em `0.x`. Ao chegar a `1.0.0`, mudanças incompatíveis exigem major;
 novas funcionalidades compatíveis, minor; correções compatíveis, patch.
 
 Os exports públicos são `yuzuha`, `yuzuha/functions`, `yuzuha/sdk`,
-`yuzuha/testing`, `yuzuha/tooling`, `yuzuha/music` e `yuzuha/images`. A organização interna de `src/` não cria estabilidade de deep
+`yuzuha/testing`, `yuzuha/tooling`, `yuzuha/music`, `yuzuha/images` e
+`yuzuha/canvas`. A organização interna de `src/` não cria estabilidade de deep
 imports. Schema persistido,
 gramática e funções documentadas também fazem parte da compatibilidade.
 
@@ -39,6 +40,27 @@ A versão do SDK é fixada separadamente. Atualizá-la exige revisar
 gerado por `init` pertence ao consumidor e não precisa acompanhar a biblioteca.
 
 ## Preparar uma atualização
+
+### Migrar para 0.1.9
+
+A 0.1.9 acrescenta `yuzuha/canvas`, `ctx.canvas` e `bot.contextEvent`, além de
+12 funções de script da categoria `canvas`. O pacote continua utilizável sem
+Canvas; para renderizar, instale `@napi-rs/canvas@^1.0.13`. Sem o peer, somente
+a chamada de renderização falha com `CANVAS_DEPENDENCY`. Sharp continua sendo
+opcional e independente. O envio usa `resources.messages.sendBytes` e eventos
+sem canal precisam fornecer `channelID` em `ctx.canvas.send`.
+
+`CanvasConfig` pode registrar bytes de assets e fontes TTF/OTF. As respostas
+HTTP continuam sujeitas à política e ao limite configurado no bot. Canvas e
+transformações Sharp compartilham duas vagas de processo. O schema persistido
+permanece em 2 e o SDK em 3.3.0; não há migração de dados.
+
+```sh
+npm install yuzuha@0.1.9 @napi-rs/canvas@^1.0.13
+```
+
+Veja [CANVAS.md](docs/CANVAS.md) para opções, limites, fontes e exemplos. A
+extensão incluída acompanha a versão 0.1.9.
 
 ### Migrar para 0.1.8
 
