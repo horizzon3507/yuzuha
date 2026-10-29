@@ -25,6 +25,9 @@ import { bindAuthorizedResources } from '../services/resource-authorization.js';
 import { MemberService } from '../services/members.js';
 import type { MusicManager } from '../services/music.js';
 import type { NativeVoice } from '../ports/voice.js';
+import type { CanvasConfig } from '../domain/canvas.js';
+import type { CanvasRenderer } from '../ports/canvas.js';
+import { CanvasService } from '../services/canvas.js';
 import { GuardError, PartialModerationError, YuzuhaError } from '../shared/errors.js';
 import { parseArguments, parseFlags, tokenize } from './arguments.js';
 import { commandUsage } from './help.js';
@@ -48,6 +51,7 @@ export interface ContextOptions {
   http?: HttpService;
   music?: MusicManager;
   voice?: NativeVoice;
+  canvas?: { renderer: CanvasRenderer; config?: CanvasConfig };
   signal?: AbortSignal;
   executionID?: string;
   event?: Readonly<ScriptEventData>;
@@ -91,6 +95,9 @@ export class CommandContext {
   private readonly httpService?: HttpService;
   private readonly musicService?: MusicManager;
   private readonly voiceService?: NativeVoice;
+  private readonly canvasRenderer?: CanvasRenderer;
+  private readonly canvasConfig?: CanvasConfig;
+  private canvasService?: CanvasService;
   private scopedHttp?: HttpService;
   private scopedResources?: Resources;
 
@@ -121,6 +128,8 @@ export class CommandContext {
     this.httpService = options.http;
     this.musicService = options.music;
     this.voiceService = options.voice;
+    this.canvasRenderer = options.canvas?.renderer;
+    this.canvasConfig = options.canvas?.config;
     this.nativeResources = options.resources;
   }
 
@@ -195,6 +204,12 @@ export class CommandContext {
   get voice(): NativeVoice {
     if (!this.voiceService) throw new YuzuhaError('NATIVE_UNAVAILABLE', 'O serviço de voz não foi fornecido a este contexto.');
     return this.voiceService;
+  }
+  get canvas(): CanvasService {
+    if (!this.canvasRenderer) throw new YuzuhaError('NATIVE_UNAVAILABLE', 'O renderer de Canvas não foi fornecido a este contexto.');
+    return this.canvasService ??= new CanvasService({ renderer: this.canvasRenderer, ...this.canvasConfig,
+      signal: this.signal, http: this.httpService ? this.http : undefined,
+      channelID: this.channelID, messages: this.resources.messages });
   }
   get http(): HttpService {
     if (!this.httpService) throw new YuzuhaError('NATIVE_UNAVAILABLE', 'O serviço HTTP não foi fornecido a este contexto.');
