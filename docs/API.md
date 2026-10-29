@@ -304,7 +304,7 @@ na leitura. Consulte [STORAGE.md](STORAGE.md) antes de criar um adaptador.
 `yuzuha/music` exporta `LavalinkNode`, `MusicManager`, `MusicPlayer`, `TrackQueue`,
 `FluxerVoice` e `FluxerLavalinkBridge`, além dos tipos de protocolo e ports. A referência de métodos,
 limites, dependência de voz opcional e instalação do plugin de áudio está em
-[MUSIC.md](MUSIC.md). O catálogo do function mode tem 310 funções.
+[MUSIC.md](MUSIC.md). O catálogo do function mode tem 322 funções.
 
 ## Servidor e decimais
 
@@ -355,6 +355,8 @@ limitações de prazo em [STORAGE.md](STORAGE.md).
 aceita um ReadableStream de bytes, limita sua leitura e acumula antes do upload.
 O retorno é o ID da mensagem; não transmite multipart continuamente pela rede.
 Veja [IMAGES.md](IMAGES.md) para os limites e o módulo opcional `yuzuha/images`.
+Para compor cartões, consulte [CANVAS.md](CANVAS.md) e o subpath opcional
+`yuzuha/canvas`.
 
 `yuzuha/images` exporta `transformImage`, `ImageTransform`, `ImageOptions` e
 `ImageResult`. A raiz não importa Sharp. Não há funções de imagem registradas

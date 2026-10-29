@@ -5,7 +5,7 @@ Este é o caminho principal do Yuzuha: comandos e eventos em JS/TS, sem funçõe
 transporte, persistência, guards e moderação com os comandos nativos.
 O acesso ao client Fluxer.js continua disponível para recursos específicos do SDK.
 
-Os exemplos usam imports públicos de **Yuzuha 0.1.8**. JavaScript usa os mesmos
+Os exemplos usam imports públicos de **Yuzuha 0.1.9**. JavaScript usa os mesmos
 imports e objetos; TypeScript acrescenta inferência e validação estática.
 
 ## Um comando com argumentos inferidos
@@ -498,6 +498,27 @@ cooperativo: não desfaz uma ação de moderação já confirmada nem interrompe
 Promise automaticamente. O bot aguarda trabalho rastreado antes de encerrar.
 
 ## Eventos tipados e erros assíncronos
+
+Para handlers que precisam de serviços do contexto — por exemplo, enviar um
+cartão de boas-vindas sem uma mensagem de entrada — use `bot.contextEvent`:
+
+```ts
+bot.contextEvent({
+  event: 'guildMemberAdd',
+  channelID: '1234567890',
+  async run(ctx, membro) {
+    const card = ctx.canvas.create(900, 260, { background: '#101722' })
+      .text(`Bem-vindo, ${membro.displayName}!`, {
+        x: 36, y: 40, maxWidth: 820, fontSize: 38, minFontSize: 24, weight: 700,
+      });
+    await ctx.canvas.send(card, { name: 'boas-vindas.png' });
+  },
+});
+```
+
+O canal padrão vem de `channelID`; eventos sem canal devem passá-lo a
+`ctx.canvas.send`. `ctx.canvas` usa o sinal e a política HTTP do evento. Consulte
+[CANVAS.md](CANVAS.md) para instalação, formatos e exemplos.
 
 Com o `bot` criado, registre listeners usando os nomes do SDK:
 
