@@ -13,6 +13,7 @@ try {
   if (stderr) process.stderr.write(stderr);
   await chmod(new URL('../dist/cli.js', import.meta.url), 0o755);
   await copyFile(new URL('../src/infrastructure/images/worker.mjs', import.meta.url), new URL('../dist/infrastructure/images/worker.mjs', import.meta.url));
+  await copyFile(new URL('../src/infrastructure/canvas/worker.mjs', import.meta.url), new URL('../dist/infrastructure/canvas/worker.mjs', import.meta.url));
   await copyFile(new URL('../src/scripting/regex-worker.mjs', import.meta.url), new URL('../dist/scripting/regex-worker.mjs', import.meta.url));
   await copyFile(new URL('../dist/tooling/language.js', import.meta.url), new URL('../editors/vscode/language.mjs', import.meta.url));
   await copyFile(new URL('../dist/tooling/language.js.map', import.meta.url), new URL('../editors/vscode/language.js.map', import.meta.url));
