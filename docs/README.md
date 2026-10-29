@@ -1,6 +1,6 @@
 # Documentação da Yuzuha
 
-Esta documentação cobre a Yuzuha 0.1.8, em JavaScript ESM e TypeScript, para
+Esta documentação cobre a Yuzuha 0.1.9, em JavaScript ESM e TypeScript, para
 Node >=22.13. O pacote usa `@fluxerjs/core` 3.3.0.
 
 JS/TS é o caminho principal da biblioteca. Function mode (`$...`) é opcional e
@@ -32,6 +32,7 @@ conectam ao Fluxer.
 | [Eventos de scripts](EVENTS.md) | Payloads, contexto, guards e ciclo de vida |
 | [Agendamentos](SCHEDULER.md) | Cron, fusos, concorrência, atrasos e retry |
 | [HTTP](HTTP.md) | Streaming, multipart, cancelamento e políticas por comando |
+| [Canvas](CANVAS.md) | Composição opcional de cartões, fontes, imagens e envio de anexos |
 | [Música e voz](MUSIC.md) | Lavalink v4, plugin e ponte de áudio para Fluxer, filas e recuperação |
 | [Logs e correlação](OBSERVABILITY.md) | Eventos estruturados opcionais, duração, erros e privacidade |
 | [Cobertura](PARITY.md) | Acesso ao SDK, contratos do function mode e limites |
@@ -64,7 +65,7 @@ Os exemplos usam imports públicos de `yuzuha`, `yuzuha/functions`, `yuzuha/sdk`
 não são subpaths novos do pacote.
 
 Consulte também os guias de [loops, regex e decimais](LANGUAGE-EXTENSIONS.md),
-[imagens e streams de anexos](IMAGES.md) e
+[transformação de imagens e streams de anexos](IMAGES.md) e
 [integrações e sharding](INTEGRATIONS.md).
 
 As sete bases JS/TS da CLI, seus comandos e testes estão em [BOT-BASES.md](BOT-BASES.md).
