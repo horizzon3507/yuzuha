@@ -14,6 +14,8 @@ const newFunctions = ['arrayUnion', 'arrayIntersection', 'arrayDifference', 'for
   'scheduleCron', 'preloadMessages', 'createEmojisBulk', 'httpMultipart', 'eventName', 'eventUserID', 'eventGuildID',
   'eventChannelID', 'eventMessageID', 'eventContent', 'eventOldContent', 'eventEmoji',
   'pinnedMessagesPage', 'searchMessagesAdvanced', 'reactionUsersPage', 'threadMember'];
+newFunctions.push('canvasCreate', 'canvasFont', 'canvasRect', 'canvasCircle', 'canvasLine', 'canvasImage',
+  'canvasAvatar', 'canvasText', 'canvasBadges', 'canvasProgress', 'canvasSend', 'canvasDispose');
 const options = cwd => ({ cwd, env: { ...process.env, FLUXER_BOT_TOKEN: '' }, timeout: 120_000, maxBuffer: 4_000_000 });
 async function run(binary, args, cwd) {
   try { return (await exec(binary, args, options(cwd))).stdout; }
@@ -30,7 +32,13 @@ try {
   assert.ok(info.files.some(file => file.path === 'dist/tooling.d.ts'));
   assert.ok(info.files.some(file => file.path === 'dist/music.d.ts'));
   assert.ok(info.files.some(file => file.path === 'dist/images.d.ts'));
+  assert.ok(info.files.some(file => file.path === 'dist/canvas.d.ts'));
   assert.ok(info.files.some(file => file.path === 'dist/infrastructure/images/worker.mjs'));
+  assert.ok(info.files.some(file => file.path === 'dist/infrastructure/canvas/worker.mjs'));
+  assert.ok(info.files.some(file => file.path === 'assets/canvas/Inter-Regular.ttf'));
+  assert.ok(info.files.some(file => file.path === 'assets/canvas/Inter-Bold.ttf'));
+  assert.ok(info.files.some(file => file.path === 'assets/canvas/OFL.txt'));
+  assert.ok(info.files.some(file => file.path === 'assets/canvas/ORIGIN.md'));
   assert.ok(info.files.some(file => file.path === 'dist/scripting/regex-worker.mjs'));
   assert.ok(info.files.some(file => file.path === 'bridges/lavalink/build.mjs'));
   assert.ok(info.files.some(file => file.path === 'bridges/lavalink/src/AudioController.java'));
@@ -52,6 +60,8 @@ try {
     import { script } from 'yuzuha/functions';
     import { transformImage } from 'yuzuha/images';
     await assert.rejects(transformImage(new Uint8Array([1])), { code: 'IMAGE_DEPENDENCY' });
+    const canvas = await import('yuzuha/canvas');
+    await assert.rejects(canvas.createCanvas(1, 1).render(), { code: 'CANVAS_DEPENDENCY' });
     import { Yuzuha, MemoryStore, arg } from 'yuzuha';
     import { MockTransport, mockMessage, mockResources, createTestBot } from 'yuzuha/testing';
     import { Runtime, registerBuiltins } from 'yuzuha/functions';
@@ -236,12 +246,34 @@ try {
       assert.deepEqual(fixture.errors, []);
     } finally { await fixture.destroy(); }
   `], consumer);
+  const canvasConsumer = join(temporary, 'canvas-consumer');
+  await mkdir(canvasConsumer);
+  await writeFile(join(canvasConsumer, 'package.json'), JSON.stringify({ private: true, type: 'module',
+    dependencies: { yuzuha: `file:${tarball}`, '@napi-rs/canvas': '1.0.13' } }));
+  await run('npm', ['install', '--ignore-scripts', '--no-audit', '--no-fund'], canvasConsumer);
+  await run(process.execPath, ['--input-type=module', '-e', `
+    import assert from 'node:assert/strict';
+    import { createCanvas, loadImage } from '@napi-rs/canvas';
+    import { createCanvas as createYuzuhaCanvas } from 'yuzuha/canvas';
+    import { transformImage } from 'yuzuha/images';
+    await assert.rejects(import('sharp'), { code: 'ERR_MODULE_NOT_FOUND' });
+    const result = await createYuzuhaCanvas(24, 16, { scale: 2, background: '#183047' })
+      .text('Yuzuha 0.1.9', { x: 2, y: 2, maxWidth: 20, fontSize: 6, minFontSize: 4 })
+      .render();
+    assert.equal(result.width, 48); assert.equal(result.height, 32); assert.equal(result.format, 'png');
+    const decoded = await loadImage(result.data); assert.equal(decoded.width, 48); assert.equal(decoded.height, 32);
+    await assert.rejects(transformImage(new Uint8Array([1])), { code: 'IMAGE_DEPENDENCY' });
+    const metadata = await (async () => { const image = await loadImage(result.data); return [image.width, image.height]; })();
+    assert.deepEqual(metadata, [48, 32]);
+  `], canvasConsumer);
   const cli = join(consumer, 'node_modules/yuzuha/dist/cli.js');
   await run('npm', ['install', '--ignore-scripts', '--no-audit', '--no-fund', '--no-save', 'sharp@0.35.5'], consumer);
   await run(process.execPath, ['--input-type=module', '-e', `
     import assert from 'node:assert/strict';
     import sharp from 'sharp';
     import { transformImage } from 'yuzuha/images';
+    const canvas = await import('yuzuha/canvas');
+    await assert.rejects(canvas.createCanvas(1, 1).render(), { code: 'CANVAS_DEPENDENCY' });
     const bytes = await sharp({ create: { width: 20, height: 10, channels: 3, background: '#eacb1a' } }).png().toBuffer();
     const result = await transformImage(bytes, { width: 10, format: 'webp' });
     assert.equal(result.width, 10); assert.equal(result.height, 5);
@@ -253,7 +285,7 @@ try {
   const editor = (await run(process.execPath, [cli, 'editor'], consumer)).trim();
   const metadata = JSON.parse(await readFile(join(editor, 'functions.json'), 'utf8'));
   assert.ok(metadata.some(fn => fn.name === 'searchMessages'));
-  assert.equal(metadata.length, 310);
+  assert.equal(metadata.length, 322);
   for (const name of newFunctions) assert.ok(metadata.some(fn => fn.name === name), name);
   assert.ok(metadata.some(fn => fn.name === 'modMuteMember'));
   const catalog = JSON.parse(await run(process.execPath, [cli, 'functions', '--catalog'], consumer));
@@ -327,7 +359,12 @@ try {
         import { MockMusicBackend, mockTrack } from 'yuzuha/testing';
         import { transformImage } from 'yuzuha/images';
         import type { ImageResult } from 'yuzuha/images';
+        import { createCanvas } from 'yuzuha/canvas';
+        import type { CanvasBuilder, CanvasResult } from 'yuzuha/canvas';
         const image: Promise<ImageResult> = transformImage(new Uint8Array([1]));
+        const card: CanvasBuilder = createCanvas(10, 10).text('teste', { x: 0, y: 0 });
+        const rendered: Promise<CanvasResult> = card.render();
+        void rendered;
         void image;
         import { LavalinkNode, MusicManager, FluxerVoice, FluxerLavalinkBridge, TrackQueue } from 'yuzuha/music';
         import type { MusicTrack, MusicVoiceAdapter, MusicAudioOutput, MusicAudioStream, MusicBackend, MusicNodeEvent, LavalinkSocket, LavalinkDiagnostics } from 'yuzuha/music';
