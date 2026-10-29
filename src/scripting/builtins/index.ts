@@ -22,6 +22,7 @@ import { storageFunctions } from './storage.js';
 import { valueFunctions } from './values.js';
 import { resourceExtras } from './resource-extras.js';
 import { eventFunctions } from './events.js';
+import { canvasFunctions } from './canvas.js';
 
 export const builtinFunctions: FunctionDefinition[] = [
   ...contextFunctions, ...flowFunctions, ...guardFunctions, ...valueFunctions,
@@ -30,6 +31,7 @@ export const builtinFunctions: FunctionDefinition[] = [
   ...collectorFunctions, ...webhookFunctions, ...expressionFunctions, ...threadFunctions,
   ...inviteFunctions, ...languageFunctions, ...scheduleFunctions, ...httpFunctions,
   ...resourceExtras,
+  ...canvasFunctions,
   ...eventFunctions,
 ];
 
