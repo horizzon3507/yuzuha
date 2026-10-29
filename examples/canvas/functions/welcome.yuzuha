@@ -1,0 +1,10 @@
+$canvasCreate[welcome;980;300;$object[background;#111923]]
+$canvasRect[welcome;0;0;12;300;$object[fill;#d8a36b]]
+$canvasAvatar[welcome;asset:avatar;42;74;152;$object[border;$object[color;#f0c38c;width;3]]]
+$canvasText[welcome;A NEW VOICE IN THE ROOM;232;42;$object[maxWidth;700;fontSize;13;weight;700;color;#e9b87e]]
+$canvasText[welcome;$username;232;72;$object[maxWidth;700;fontSize;42;minFontSize;28;weight;700;color;#f4f2ed]]
+$canvasText[welcome;Bem-vindo à comunidade.
+Sua próxima conversa começa aqui.;232;136;$object[maxWidth;650;fontSize;22;color;#c1c8cd;wrap;word;maxLines;2]]
+$canvasLine[welcome;232;230;920;230;$object[color;#34414b]]
+$canvasText[welcome;Os dados deste cartão são demonstrativos.;232;250;$object[maxWidth;650;fontSize;13;color;#8997a1]]
+$canvasSend[welcome;$object[name;welcome-function.png]]
