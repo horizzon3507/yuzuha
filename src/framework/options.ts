@@ -11,6 +11,7 @@ import type { LogRecord } from './logging.js';
 import type { ScriptEventDefinition } from './script-events.js';
 import type { MusicManager } from '../services/music.js';
 import type { NativeVoice } from '../ports/voice.js';
+import type { CanvasConfig } from '../domain/canvas.js';
 
 export type DispatchResult = 'ignored' | 'success' | 'guarded' | 'error';
 export type Middleware = (ctx: CommandContext, next: () => Promise<void>) => Promise<void>;
@@ -37,6 +38,7 @@ export interface YuzuhaOptions {
   http?: HttpService | false;
   music?: MusicManager;
   voice?: NativeVoice;
+  canvas?: CanvasConfig;
   onError?: (error: unknown, ctx?: CommandContext) => void | Promise<void>;
   onCommand?: (ctx: CommandContext, outcome: DispatchResult) => void | Promise<void>;
   onLog?: (record: LogRecord) => void | Promise<void>;
