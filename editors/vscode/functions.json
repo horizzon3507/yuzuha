@@ -2428,6 +2428,102 @@
     "description": "Clona expressão de outro servidor para o atual; exige ManageExpressions."
   },
   {
+    "name": "canvasCreate",
+    "category": "canvas",
+    "minArgs": 3,
+    "maxArgs": 4,
+    "usage": "$canvasCreate[id;largura;altura;opções?]",
+    "description": "Cria um canvas de composição privado à execução atual."
+  },
+  {
+    "name": "canvasFont",
+    "category": "canvas",
+    "minArgs": 3,
+    "maxArgs": 4,
+    "usage": "$canvasFont[id;família;fonte;opções?]",
+    "description": "Registra uma fonte TTF/OTF na cena sem expor seus bytes às variáveis."
+  },
+  {
+    "name": "canvasRect",
+    "category": "canvas",
+    "minArgs": 5,
+    "maxArgs": 6,
+    "usage": "$canvasRect[id;x;y;largura;altura;opções?]",
+    "description": "Desenha um retângulo preenchido ou com borda."
+  },
+  {
+    "name": "canvasCircle",
+    "category": "canvas",
+    "minArgs": 4,
+    "maxArgs": 5,
+    "usage": "$canvasCircle[id;x;y;raio;opções?]",
+    "description": "Desenha um círculo pelo centro e raio."
+  },
+  {
+    "name": "canvasLine",
+    "category": "canvas",
+    "minArgs": 5,
+    "maxArgs": 6,
+    "usage": "$canvasLine[id;x1;y1;x2;y2;opções?]",
+    "description": "Desenha uma linha com largura e acabamento opcionais."
+  },
+  {
+    "name": "canvasImage",
+    "category": "canvas",
+    "minArgs": 6,
+    "maxArgs": 7,
+    "usage": "$canvasImage[id;fonte;x;y;largura;altura;opções?]",
+    "description": "Desenha imagem local configurada, bytes ou URL permitida pelo serviço HTTP."
+  },
+  {
+    "name": "canvasAvatar",
+    "category": "canvas",
+    "minArgs": 5,
+    "maxArgs": 6,
+    "usage": "$canvasAvatar[id;fonte;x;y;tamanho;opções?]",
+    "description": "Desenha uma imagem quadrada com recorte circular e borda opcional."
+  },
+  {
+    "name": "canvasText",
+    "category": "canvas",
+    "minArgs": 4,
+    "maxArgs": 5,
+    "usage": "$canvasText[id;texto;x;y;opções?]",
+    "description": "Desenha texto com ajuste, quebra e overflow por grafemas."
+  },
+  {
+    "name": "canvasBadges",
+    "category": "canvas",
+    "minArgs": 5,
+    "maxArgs": 6,
+    "usage": "$canvasBadges[id;itens;x;y;larguraMáxima;opções?]",
+    "description": "Compõe badges medidos e reserva espaço para o contador +N."
+  },
+  {
+    "name": "canvasProgress",
+    "category": "canvas",
+    "minArgs": 7,
+    "maxArgs": 8,
+    "usage": "$canvasProgress[id;x;y;largura;altura;valor;máximo;opções?]",
+    "description": "Desenha progresso limitado a zero e ao máximo informado."
+  },
+  {
+    "name": "canvasSend",
+    "category": "canvas",
+    "minArgs": 1,
+    "maxArgs": 2,
+    "usage": "$canvasSend[id;opções?]",
+    "description": "Renderiza e envia uma imagem sem produzir uma resposta automática adicional."
+  },
+  {
+    "name": "canvasDispose",
+    "category": "canvas",
+    "minArgs": 1,
+    "maxArgs": 1,
+    "usage": "$canvasDispose[id]",
+    "description": "Descarta o canvas da execução para liberar sua vaga e reutilizar o ID."
+  },
+  {
     "name": "eventName",
     "category": "events",
     "minArgs": 0,

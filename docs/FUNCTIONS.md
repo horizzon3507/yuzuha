@@ -1,9 +1,26 @@
 # Referência das funções
 
 Function mode opcional, importado de `yuzuha/functions`.
-Gerada do registro executável: **310 funções**. Atualize com `npm run docs:generate`.
+Gerada do registro executável: **322 funções**. Atualize com `npm run docs:generate`.
 
 Aliases não contam como funções adicionais. Índices e semântica estão em [LANGUAGE.md](LANGUAGE.md).
+
+## canvas
+
+| Função | Descrição | Aliases |
+|---|---|---|
+| `$canvasAvatar[id;fonte;x;y;tamanho;opções?]` | Desenha uma imagem quadrada com recorte circular e borda opcional. |  |
+| `$canvasBadges[id;itens;x;y;larguraMáxima;opções?]` | Compõe badges medidos e reserva espaço para o contador +N. |  |
+| `$canvasCircle[id;x;y;raio;opções?]` | Desenha um círculo pelo centro e raio. |  |
+| `$canvasCreate[id;largura;altura;opções?]` | Cria um canvas de composição privado à execução atual. |  |
+| `$canvasDispose[id]` | Descarta o canvas da execução para liberar sua vaga e reutilizar o ID. |  |
+| `$canvasFont[id;família;fonte;opções?]` | Registra uma fonte TTF/OTF na cena sem expor seus bytes às variáveis. |  |
+| `$canvasImage[id;fonte;x;y;largura;altura;opções?]` | Desenha imagem local configurada, bytes ou URL permitida pelo serviço HTTP. |  |
+| `$canvasLine[id;x1;y1;x2;y2;opções?]` | Desenha uma linha com largura e acabamento opcionais. |  |
+| `$canvasProgress[id;x;y;largura;altura;valor;máximo;opções?]` | Desenha progresso limitado a zero e ao máximo informado. |  |
+| `$canvasRect[id;x;y;largura;altura;opções?]` | Desenha um retângulo preenchido ou com borda. |  |
+| `$canvasSend[id;opções?]` | Renderiza e envia uma imagem sem produzir uma resposta automática adicional. |  |
+| `$canvasText[id;texto;x;y;opções?]` | Desenha texto com ajuste, quebra e overflow por grafemas. |  |
 
 ## channels
 
