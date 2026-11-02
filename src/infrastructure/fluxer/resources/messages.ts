@@ -1,11 +1,31 @@
 import { AttachmentBuilder, Message } from '@fluxerjs/core';
-import type { Client } from '@fluxerjs/core';
+import type { Client, MessageEmbed, MessageEmbedMedia } from '@fluxerjs/core';
+import type { ReceivedEmbed, ReceivedEmbedMedia } from '../../../domain/messages.js';
 import { limitOf } from '../../../ports/resources/common.js';
 import type { AttachmentSpec, BinaryAttachmentSpec } from '../../../ports/resources/common.js';
 import { YuzuhaError } from '../../../errors.js';
 import type { MessageInfo, MessagesResources } from '../../../ports/resources/messages.js';
 import { preloadChannels } from '../../../domain/resource-batches.js';
 import { messageSearchInput, pinnedMessagesInput, reactionUsersInput } from '../../../domain/message-query.js';
+
+function receivedMedia(media: MessageEmbedMedia | null): ReceivedEmbedMedia | null {
+  return media && { url: media.url, proxyURL: media.proxyUrl, contentType: media.contentType,
+    width: media.width, height: media.height, description: media.description };
+}
+
+function receivedEmbed(embed: MessageEmbed): ReceivedEmbed {
+  return {
+    type: embed.type, url: embed.url, title: embed.title, color: embed.color,
+    timestamp: embed.timestamp ? embed.timestamp.toISOString() : null, description: embed.description,
+    author: embed.author && { name: embed.author.name, url: embed.author.url, iconURL: embed.author.iconUrl },
+    image: receivedMedia(embed.image), thumbnail: receivedMedia(embed.thumbnail),
+    footer: embed.footer && { text: embed.footer.text, iconURL: embed.footer.iconUrl },
+    fields: embed.fields.map(field => ({ name: field.name, value: field.value, inline: field.inline })),
+    provider: embed.provider && { name: embed.provider.name, url: embed.provider.url, iconURL: embed.provider.iconUrl },
+    video: receivedMedia(embed.video), audio: receivedMedia(embed.audio), nsfw: embed.nsfw,
+    children: embed.children.map(receivedEmbed), html: embed.html, htmlWidth: embed.htmlWidth, htmlHeight: embed.htmlHeight,
+  };
+}
 
 function info(message: Message): MessageInfo {
   return {
@@ -16,6 +36,7 @@ function info(message: Message): MessageInfo {
       id: attachment.id, name: attachment.filename, url: attachment.url ?? '',
       size: attachment.size, contentType: attachment.contentType,
     })),
+    embeds: message.embeds.map(receivedEmbed),
   };
 }
 

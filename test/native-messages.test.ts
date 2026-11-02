@@ -15,7 +15,7 @@ import { ScriptError } from '../src/errors.js';
 function info(id: string, overrides: Partial<MessageInfo> = {}): MessageInfo {
   return {
     id, channelID: '200', authorID: '1', authorName: 'Hory', content: `conteúdo ${id}`,
-    createdTimestamp: Number(id) * 1000, pinned: false, attachments: [],
+    createdTimestamp: Number(id) * 1000, pinned: false, attachments: [], embeds: [],
     ...overrides,
   };
 }

@@ -17,7 +17,7 @@ function harness(resources: MockResourceOverrides, dm = false) {
 }
 
 const message: MessageInfo = { id: '1', channelID: '200', authorID: '2', authorName: 'ana',
-  content: 'fixada', createdTimestamp: 1, pinned: true, attachments: [] };
+  content: 'fixada', createdTimestamp: 1, pinned: true, attachments: [], embeds: [] };
 
 test('página de fixadas preserva os timestamps e o cursor entre script e recurso', async () => {
   const calls: unknown[][] = [];
@@ -45,9 +45,9 @@ test('adaptador pagina fixadas em ordem de fixação e valida opções antes do 
       calls.push(input);
       return { messages: [
         { id: '1', channelId: '200', author: { id: '2', username: 'ana' }, content: 'antiga',
-          createdAt: new Date(1), pinned: true, attachments: new Map() },
+          createdAt: new Date(1), pinned: true, attachments: new Map(), embeds: [] },
         { id: '2', channelId: '200', author: { id: '2', username: 'ana' }, content: 'nova',
-          createdAt: new Date(2), pinned: true, attachments: new Map() },
+          createdAt: new Date(2), pinned: true, attachments: new Map(), embeds: [] },
       ], pinnedAt, hasMore };
     } };
   });
