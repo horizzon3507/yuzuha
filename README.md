@@ -7,7 +7,7 @@ Os dois modos compartilham permissões, moderação, estado e recursos.
 O Yuzuha usa **Fluxer.js 3.3.0**. Você continua tendo acesso ao client original
 por `bot.client` e aos exports do SDK em `yuzuha/sdk`.
 
-[0.1.9](CHANGELOG.md) · Node **22.13+** · ESM · [MIT](LICENSE)
+[0.2.0](CHANGELOG.md) · Node **22.13+** · ESM · [MIT](LICENSE)
 
 [Começar](#começar) · [Comandos](#escrever-comandos) · [Recursos](#recursos) · [Testes](#testar-sem-token) · [Documentação](#documentação)
 
@@ -16,7 +16,7 @@ por `bot.client` e aos exports do SDK em `yuzuha/sdk`.
 ### Criar um bot
 
 ```sh
-npx yuzuha@0.1.9 init ./meu-bot --ts
+npx yuzuha@0.2.0 init ./meu-bot --ts
 cd meu-bot
 npm install
 npm run check
@@ -42,7 +42,7 @@ para incluir um comando de exemplo com scripts.
 ### Usar em um projeto existente
 
 ```sh
-npm install yuzuha@0.1.9
+npm install yuzuha@0.2.0
 ```
 
 Use `"type": "module"` no `package.json`. O [guia inicial](docs/QUICKSTART.md)
@@ -84,7 +84,7 @@ export default script({
 });
 ```
 
-O function mode tem **322 funções** para mensagens, guards, moderação, variáveis,
+O function mode tem **336 funções** para mensagens, guards, moderação, variáveis,
 JSON, arrays, loops, eventos e agendamentos. O runtime é ativado ao registrar um
 comando com `code` ou um evento de script.
 

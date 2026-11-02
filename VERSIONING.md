@@ -1,16 +1,16 @@
 # Versionamento
 
 O Yuzuha aplica o formato Hory ao histórico e usa **SemVer simples** no pacote.
-A versão desta atualização é **0.1.9**.
+A versão desta atualização é **0.2.0**.
 
 ## Pacote e histórico
 
 | Lugar | Formato nesta versão |
 |---|---|
-| `package.json` e entrada raiz de `package-lock.json` | `0.1.9` |
-| Pacote npm e saída de `yuzuha --version` | `0.1.9` |
-| Título do changelog | `## v0.1.9 · 29/10/2026` |
-| Tag Git | `v0.1.9` |
+| `package.json` e entrada raiz de `package-lock.json` | `0.2.0` |
+| Pacote npm e saída de `yuzuha --version` | `0.2.0` |
+| Título do changelog | `## v0.2.0 · 02/11/2026` |
+| Tag Git | `v0.2.0` |
 
 O SDK e a CLI pertencem ao mesmo pacote. Para bibliotecas, a convenção Hory mantém
 SemVer sem `m`, sem seções por superfície e sem sufixos de canal.
@@ -40,6 +40,28 @@ A versão do SDK é fixada separadamente. Atualizá-la exige revisar
 gerado por `init` pertence ao consumidor e não precisa acompanhar a biblioteca.
 
 ## Preparar uma atualização
+
+### Migrar para 0.2.0
+
+A 0.2.0 acrescenta campos a `Embed` (`url`, `timestamp`, `author`, `footer.iconURL`,
+alt text em imagem e miniatura), `allowedMentions`, `tts`, `stickerIds`, `flags` e
+`reply` em `Payload`, além de 14 funções de script e a leitura normalizada de embeds
+em `$fetchMessage` e `$messages`. Os exports públicos continuam os mesmos.
+
+Há duas mudanças de contrato, por isso a versão é minor na série `0.x`:
+
+- `MessageInfo.embeds` passou a ser obrigatório. Quem implementa `MessagesResources`
+  própria deve devolver `embeds` (use `[]` se não houver embeds).
+- Objetos de mensagem em script (`$reply`, `$sendMessage`, `$editMessage`) aceitam
+  somente as chaves `content`, `embeds`, `tts`, `stickerIds`, `flags` e `allowedMentions`.
+  Antes, qualquer objeto virava embed sem validação; agora campos desconhecidos são erro.
+
+Menções só relaxam com a permissão `MentionEveryone` do autor, e TTS exige
+`SendTtsMessages`. O padrão continua sem menções e sem ping ao autor respondido.
+
+```sh
+npm install yuzuha@0.2.0
+```
 
 ### Migrar para 0.1.9
 

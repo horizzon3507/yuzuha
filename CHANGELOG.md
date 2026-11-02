@@ -21,6 +21,18 @@ documentos. Veja a [política completa](VERSIONING.md).
 
 </details>
 
+## v0.2.0 · 02/11/2026
+
+Embeds completos em uma API só, nos modos nativo e function mode, com uma matriz automática de paridade com o SDK. Esta atualização da biblioteca Yuzuha foi preparada em 02/11/2026 (v0.2.0); a tag Git `v0.2.0` aponta para esta versão.
+
+- `Embed` aceita `url`, `timestamp`, `author` com ícone e link, `footer.iconURL`, texto alternativo em imagem e miniatura, e `fields[].inline` opcional. Na função `$color` e em `$embedFromObject`, a cor aceita `#RRGGBB`, tupla `r,g,b` ou nome simples; o tipo `Embed` nativo continua recebendo número. `embed()` valida um embed tipado na API nativa e `yuzuha/sdk` continua expondo o `EmbedBuilder` do SDK.
+- Mensagens aceitam até 10 embeds, `tts`, `stickerIds`, `flags`, `allowedMentions` e `reply` na API nativa. O padrão continua sem menções e sem ping ao autor respondido. Relaxar menções exige `MentionEveryone` do autor, e TTS exige `SendTtsMessages`.
+- Catorze funções novas: `$url`, `$embedTimestamp`, `$author`, `$footerIcon`, `$imageAlt`, `$thumbnailAlt`, `$fields`, `$addField`, `$removeField`, `$editField`, `$embedFromObject`, `$embeds`, `$addEmbed` e `$messageOptions`. `$field` aceita valor vazio quando é inline.
+- `$fetchMessage` e `$messages` devolvem `embeds` normalizados, com `type`, `provider`, `video`, `audio`, `nsfw` e `children` somente leitura.
+- Mudança incompatível: `MessageInfo.embeds` é obrigatório para implementações próprias de `MessagesResources`. Objetos de mensagem em script rejeitam chaves desconhecidas, que antes viravam embed sem validação. Veja [VERSIONING.md](VERSIONING.md#migrar-para-020).
+- `npm run docs:generate` gera [PARITY-MATRIX.md](docs/PARITY-MATRIX.md), que classifica cada export do SDK como coberto por script, coberto pelo código nativo, só-SDK ou lacuna. Um teste falha quando o SDK ganha export sem área.
+- Catálogo do function mode: de 322 para **336** funções. [FUNCTION-GAPS.md](docs/FUNCTION-GAPS.md) foi atualizado com a contagem real.
+
 ## v0.1.9 · 29/10/2026
 
 Composição opcional de cartões para comandos, eventos e function mode, com fontes locais e renderização isolada. Esta atualização da biblioteca Yuzuha foi preparada em 29/10/2026 (v0.1.9).
