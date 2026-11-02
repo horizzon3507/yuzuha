@@ -73,6 +73,16 @@ recursos. O runtime de scripts só é registrado quando o function mode é usado
 
 ## Entregas e dependências
 
+A atualização 0.2.0 completa os embeds: `url`, `timestamp`, `author`, ícones, alt
+text em imagem e miniatura, campos incrementais e `$embedFromObject`. Mensagens
+passam a aceitar até 10 embeds, `tts`, `stickerIds`, `flags` e `allowedMentions`
+com autorização (`MentionEveryone` e `SendTtsMessages`). `$fetchMessage` e
+`$messages` devolvem os embeds recebidos em formato normalizado, com campos de
+resposta somente leitura. O catálogo passa a 336 funções. Detalhes em
+[EMBEDS.md](EMBEDS.md). Gerada por `scripts/parity-matrix.mjs`, a
+[matriz de paridade](PARITY-MATRIX.md) marca as lacunas restantes; eventos do
+function mode e reprodução de áudio ficam para o próximo lote.
+
 A atualização 0.1.9 acrescenta `yuzuha/canvas`, um peer opcional baseado em
 `@napi-rs/canvas` para cartões em JS/TS e function mode. O builder compõe texto,
 imagens, formas, gradientes, sombras, badges e progresso e envia anexos pelo

@@ -10,6 +10,8 @@ Yuzuha. Os dois modos usam o mesmo contexto e os mesmos serviços.
 
 ## O que significa paridade
 
+A [matriz automática](PARITY-MATRIX.md) lista cada export e membro público de `@fluxerjs/core`, `@fluxerjs/builders` e `@fluxerjs/types`, com o status de cobertura de cada um. Ela é gerada por `npm run docs:generate`. Um teste falha quando o SDK ganha um export sem área, o que serve de gatilho ao atualizar o SDK.
+
 `yuzuha/sdk` executa `export * from '@fluxerjs/core'`. Isso preserva os exports
 públicos da raiz do pacote e seus tipos. `bot.client` é uma instância real de
 `Client`; `SDK` na raiz do Yuzuha é um namespace do mesmo pacote. O acesso nativo
@@ -25,7 +27,7 @@ exports de `yuzuha/sdk` aos da dependência instalada.
 | Eventos | `bot.on/once/off`, `bot.event`, `bot.scriptEvent` e `bot.client.on` | Eventos de membros, edição/exclusão de mensagens e reações, com contexto próprio |
 | Mensagens e replies | API completa do SDK | reply, sendMessage, editMessage, deleteMessage, fetchMessage, messages com cursores, pin/unpin, pinnedMessagesPage, dm, forward, searchMessages, searchMessagesAdvanced e preloadMessages |
 | Reações e collectors | API do SDK | react, removeReaction, clearReactions, reactionUsers e reactionUsersPage com metadados de paginação, awaitMessage, awaitReaction, confirm |
-| Embeds e anexos | Builders do SDK, sendBytes e sendAttachments | Embeds, anexos URL/base64 e múltiplos anexos na mesma mensagem |
+| Embeds e anexos | Builders do SDK, sendBytes e sendAttachments | Embeds completos (autor, link, data, campos, alt text e rodapé com ícone), até 10 embeds, opções de envio com autorização, anexos URL/base64 e múltiplos anexos; leitura normalizada em `$fetchMessage` |
 | Membros, cargos, canais e permissões | API do SDK e `ctx.members` | User/member, perfil completo, contagens ao vivo, nickname, roles, canais de link, avisos, posição, categorias e overwrites |
 | Ban, kick, timeout, unban e moderação de voz | SDK + `ctx.mod` e `ctx.moderate` | Versões simples e mod* com casos, incluindo move/mute/deafen |
 | Servidor, convites, webhooks e expressões | API do SDK e auxiliares autorizados | guildFeatures, leaveGuild, editGuild, convites/vanity, clonagem e mutações de emojis/stickers, createEmojisBulk; CRUD e envio de webhooks |
@@ -39,7 +41,7 @@ exports de `yuzuha/sdk` aos da dependência instalada.
 | Estado e casos | `ctx.data`, TTL, userFor, transaction entre chaves e stores | Variáveis, TTL, incrementos, listas, casos e dataTransaction com operações declarativas |
 | Agendamentos | `ctx.scheduler`, cron/fusos, concorrência limitada, histórico, heartbeat e controles | schedule, scheduleEvery, scheduleCron, controles, histórico, reexecução e retry com jitter |
 | HTTP | `request`, `requestBytes`, `stream`, `multipart`, `withPolicy` e cancelamento | `$http`, `$httpJson`, `$httpMultipart` e download de imagens com política de rede por comando |
-| CLI, plugins, comandos e middleware | Recursos próprios do Yuzuha; lint/catálogos/cenários e manutenção de dados | 322 funções canônicas; comandos e eventos de script |
+| CLI, plugins, comandos e middleware | Recursos próprios do Yuzuha; lint/catálogos/cenários e manutenção de dados | 336 funções canônicas; comandos e eventos de script |
 | Composição de cartões | `ctx.canvas` e `yuzuha/canvas`, com peer opcional `@napi-rs/canvas`; envio pelo contexto | 12 funções `$canvas*` para cenas privadas por execução; envio sem retorno automático |
 
 A camada nativa do Yuzuha — o caminho principal — acrescenta schemas de argumentos
