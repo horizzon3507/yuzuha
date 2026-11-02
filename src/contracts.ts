@@ -1,4 +1,4 @@
-export type { Embed, Payload, IncomingMessage } from './domain/messages.js';
+export type { AllowedMentionsPolicy, Embed, EmbedAuthor, EmbedField, EmbedFooter, EmbedMedia, EmbedType, IncomingMessage, MentionParse, Payload, ReceivedEmbed, ReceivedEmbedMedia, ReplyTarget } from './domain/messages.js';
 export type { CaseRecord, ModerationAction, ModerationMember, ModerationOptions, VoiceModerationOptions } from './domain/moderation.js';
 export type { JsonValue, State, VariableScope } from './domain/state.js';
 export type { Store } from './ports/store.js';
