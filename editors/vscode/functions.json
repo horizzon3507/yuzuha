@@ -404,28 +404,76 @@
     "description": "Parte de embed."
   },
   {
+    "name": "url",
+    "category": "embeds",
+    "minArgs": 1,
+    "maxArgs": 1,
+    "usage": "$url[url]",
+    "description": "URL clicável do título do embed (HTTP/HTTPS)."
+  },
+  {
+    "name": "embedTimestamp",
+    "category": "embeds",
+    "minArgs": 1,
+    "maxArgs": 1,
+    "usage": "$embedTimestamp[iso|agora]",
+    "description": "Data do embed em ISO-8601 com fuso, ou \"agora\" para o instante atual."
+  },
+  {
+    "name": "footerIcon",
+    "category": "embeds",
+    "minArgs": 1,
+    "maxArgs": 1,
+    "usage": "$footerIcon[iconURL]",
+    "description": "Ícone do rodapé do embed (HTTP/HTTPS). Use depois de $footer."
+  },
+  {
+    "name": "author",
+    "category": "embeds",
+    "minArgs": 1,
+    "maxArgs": 3,
+    "usage": "$author[nome;url?;iconURL?]",
+    "description": "Autor do embed, com link e ícone opcionais (HTTP/HTTPS)."
+  },
+  {
     "name": "image",
     "category": "embeds",
     "minArgs": 1,
     "maxArgs": 1,
-    "usage": "$image[texto]",
-    "description": "Parte de embed."
+    "usage": "$image[url]",
+    "description": "Imagem ou miniatura do embed (HTTP/HTTPS)."
+  },
+  {
+    "name": "imageAlt",
+    "category": "embeds",
+    "minArgs": 1,
+    "maxArgs": 1,
+    "usage": "$imageAlt[descrição]",
+    "description": "Texto alternativo da imagem do embed."
   },
   {
     "name": "thumbnail",
     "category": "embeds",
     "minArgs": 1,
     "maxArgs": 1,
-    "usage": "$thumbnail[texto]",
-    "description": "Parte de embed."
+    "usage": "$thumbnail[url]",
+    "description": "Imagem ou miniatura do embed (HTTP/HTTPS)."
+  },
+  {
+    "name": "thumbnailAlt",
+    "category": "embeds",
+    "minArgs": 1,
+    "maxArgs": 1,
+    "usage": "$thumbnailAlt[descrição]",
+    "description": "Texto alternativo da miniatura do embed."
   },
   {
     "name": "color",
     "category": "embeds",
     "minArgs": 1,
     "maxArgs": 1,
-    "usage": "$color[#RRGGBB]",
-    "description": "Cor RGB hexadecimal."
+    "usage": "$color[#RRGGBB|r,g,b|nome]",
+    "description": "Cor do embed: #RRGGBB, tupla r,g,b (0 a 255) ou nome simples (red, blue, green...)."
   },
   {
     "name": "field",
@@ -433,7 +481,71 @@
     "minArgs": 2,
     "maxArgs": 3,
     "usage": "$field[nome;valor;inline?]",
-    "description": "Campo de embed."
+    "description": "Campo de embed. O valor pode ser vazio quando o campo é inline."
+  },
+  {
+    "name": "fields",
+    "category": "embeds",
+    "minArgs": 1,
+    "maxArgs": 1,
+    "usage": "$fields[array]",
+    "description": "Campos de embed a partir de um array de objetos {name, value, inline} ou de arrays [nome, valor, inline?]."
+  },
+  {
+    "name": "addField",
+    "category": "embeds",
+    "minArgs": 3,
+    "maxArgs": 4,
+    "usage": "$addField[embed;nome;valor;inline?]",
+    "description": "Retorna cópia do embed com um campo adicionado ao final."
+  },
+  {
+    "name": "removeField",
+    "category": "embeds",
+    "minArgs": 2,
+    "maxArgs": 2,
+    "usage": "$removeField[embed;índice]",
+    "description": "Retorna cópia do embed sem o campo de índice indicado, começando em 0."
+  },
+  {
+    "name": "editField",
+    "category": "embeds",
+    "minArgs": 4,
+    "maxArgs": 5,
+    "usage": "$editField[embed;índice;nome;valor;inline?]",
+    "description": "Retorna cópia do embed com o campo de índice substituído. Sem inline, mantém o valor anterior."
+  },
+  {
+    "name": "embedFromObject",
+    "category": "embeds",
+    "minArgs": 1,
+    "maxArgs": 1,
+    "usage": "$embedFromObject[objeto|json]",
+    "description": "Monta um embed a partir de objeto ou texto JSON, com as mesmas regras de $embed. Campos de resposta do Fluxer são descartados."
+  },
+  {
+    "name": "embeds",
+    "category": "embeds",
+    "minArgs": 1,
+    "maxArgs": 10,
+    "usage": "$embeds[embed;embed;...]",
+    "description": "Monta lista de até 10 embeds validados, para $reply, $sendMessage ou $editMessage."
+  },
+  {
+    "name": "addEmbed",
+    "category": "embeds",
+    "minArgs": 2,
+    "maxArgs": 2,
+    "usage": "$addEmbed[lista;embed]",
+    "description": "Retorna nova lista de embeds com o embed no final, respeitando o limite de 10."
+  },
+  {
+    "name": "messageOptions",
+    "category": "messages",
+    "minArgs": 1,
+    "maxArgs": 3,
+    "usage": "$messageOptions[tts?;stickerIds?;flags?]",
+    "description": "Opções de envio para mesclar com $jsonMerge e um payload com conteúdo ou embeds. TTS exige SendTtsMessages; menções, MentionEveryone."
   },
   {
     "name": "moveMember",

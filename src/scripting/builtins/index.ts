@@ -11,6 +11,7 @@ import { userFunctions } from './native-users.js';
 import { webhookFunctions } from './native-webhooks.js';
 import { contextFunctions } from './context.js';
 import { embedFunctions } from './embeds.js';
+import { payloadFunctions } from './payload.js';
 import { flowFunctions } from './flow.js';
 import { guardFunctions } from './guards.js';
 import { httpFunctions } from './http.js';
@@ -26,7 +27,7 @@ import { canvasFunctions } from './canvas.js';
 
 export const builtinFunctions: FunctionDefinition[] = [
   ...contextFunctions, ...flowFunctions, ...guardFunctions, ...valueFunctions,
-  ...messageFunctions, ...embedFunctions, ...moderationFunctions, ...storageFunctions,
+  ...messageFunctions, ...embedFunctions, ...payloadFunctions, ...moderationFunctions, ...storageFunctions,
   ...userFunctions, ...roleFunctions, ...channelFunctions, ...resourceMessageFunctions,
   ...collectorFunctions, ...webhookFunctions, ...expressionFunctions, ...threadFunctions,
   ...inviteFunctions, ...languageFunctions, ...scheduleFunctions, ...httpFunctions,

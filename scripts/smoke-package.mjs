@@ -13,7 +13,9 @@ const temporary = await mkdtemp(join(tmpdir(), 'yuzuha-consumer-'));
 const newFunctions = ['arrayUnion', 'arrayIntersection', 'arrayDifference', 'formatBytes', 'percent', 'toBase', 'fromBase',
   'scheduleCron', 'preloadMessages', 'createEmojisBulk', 'httpMultipart', 'eventName', 'eventUserID', 'eventGuildID',
   'eventChannelID', 'eventMessageID', 'eventContent', 'eventOldContent', 'eventEmoji',
-  'pinnedMessagesPage', 'searchMessagesAdvanced', 'reactionUsersPage', 'threadMember'];
+  'pinnedMessagesPage', 'searchMessagesAdvanced', 'reactionUsersPage', 'threadMember',
+  'url', 'embedTimestamp', 'author', 'footerIcon', 'imageAlt', 'thumbnailAlt', 'fields', 'addField', 'removeField',
+  'editField', 'embedFromObject', 'embeds', 'addEmbed', 'messageOptions'];
 newFunctions.push('canvasCreate', 'canvasFont', 'canvasRect', 'canvasCircle', 'canvasLine', 'canvasImage',
   'canvasAvatar', 'canvasText', 'canvasBadges', 'canvasProgress', 'canvasSend', 'canvasDispose');
 const options = cwd => ({ cwd, env: { ...process.env, FLUXER_BOT_TOKEN: '' }, timeout: 120_000, maxBuffer: 4_000_000 });
@@ -285,7 +287,7 @@ try {
   const editor = (await run(process.execPath, [cli, 'editor'], consumer)).trim();
   const metadata = JSON.parse(await readFile(join(editor, 'functions.json'), 'utf8'));
   assert.ok(metadata.some(fn => fn.name === 'searchMessages'));
-  assert.equal(metadata.length, 322);
+  assert.equal(metadata.length, 336);
   for (const name of newFunctions) assert.ok(metadata.some(fn => fn.name === name), name);
   assert.ok(metadata.some(fn => fn.name === 'modMuteMember'));
   const catalog = JSON.parse(await run(process.execPath, [cli, 'functions', '--catalog'], consumer));
