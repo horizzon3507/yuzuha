@@ -1,7 +1,7 @@
 import { Client, Message } from '@fluxerjs/core';
 import type { IncomingMessage, ModerationAction, ModerationMember, Payload, Transport } from '../../contracts.js';
 import { YuzuhaError } from '../../errors.js';
-import { safePayload as safe } from './payload.js';
+import { replyTarget, safePayload as safe } from './payload.js';
 import type { VoiceModerationOptions } from '../../domain/moderation.js';
 
 export class FluxerTransport implements Transport {
@@ -9,14 +9,18 @@ export class FluxerTransport implements Transport {
   get botID(): string { return this.client.user?.id ?? ''; }
   get ping(): number { return this.client.readyAt ? this.client.ws.ping : -1; }
   async reply(message: IncomingMessage, payload: Payload): Promise<string> {
-    if (message.raw instanceof Message) return (await message.raw.reply(safe(payload))).id;
-    return (await this.client.channels.send(message.channelID, { ...safe(payload), replyTo: { channelId: message.channelID, messageId: message.id, guildId: message.guildID } })).id;
+    if (message.raw instanceof Message && !payload.reply) return (await message.raw.reply(safe(payload))).id;
+    const replyTo = payload.reply ? replyTarget(payload.reply) : { channelId: message.channelID, messageId: message.id, guildId: message.guildID };
+    return (await this.client.channels.send(message.channelID, { ...safe(payload), replyTo })).id;
   }
   async send(channelID: string, payload: Payload): Promise<string> {
-    return (await this.client.channels.send(channelID, safe(payload))).id;
+    const replyTo = payload.reply ? replyTarget(payload.reply) : undefined;
+    return (await this.client.channels.send(channelID, { ...safe(payload), ...(replyTo ? { replyTo } : {}) })).id;
   }
   async edit(channelID: string, messageID: string, payload: Payload): Promise<void> {
-    await (await this.client.channels.fetchMessage(channelID, messageID)).edit(safe(payload));
+    // Edição não aceita resposta, TTS nem stickers: esses campos são descartados aqui.
+    const { tts: _tts, stickerIds: _stickers, ...options } = safe(payload);
+    await (await this.client.channels.fetchMessage(channelID, messageID)).edit(options);
   }
   async delete(channelID: string, messageID: string): Promise<void> {
     await (await this.client.channels.fetchMessage(channelID, messageID)).delete();
