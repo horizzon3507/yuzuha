@@ -1,16 +1,16 @@
 # Versionamento
 
 O Yuzuha aplica o formato Hory ao histórico e usa **SemVer simples** no pacote.
-A versão desta atualização é **0.1.9**.
+A versão desta atualização é **0.2.1**.
 
 ## Pacote e histórico
 
 | Lugar | Formato nesta versão |
 |---|---|
-| `package.json` e entrada raiz de `package-lock.json` | `0.1.9` |
-| Pacote npm e saída de `yuzuha --version` | `0.1.9` |
-| Título do changelog | `## v0.1.9 · 29/10/2026` |
-| Tag Git | `v0.1.9` |
+| `package.json` e entrada raiz de `package-lock.json` | `0.2.1` |
+| Pacote npm e saída de `yuzuha --version` | `0.2.1` |
+| Título do changelog | `## v0.2.1 · 03/11/2026` |
+| Tag Git | `v0.2.1` |
 
 O SDK e a CLI pertencem ao mesmo pacote. Para bibliotecas, a convenção Hory mantém
 SemVer sem `m`, sem seções por superfície e sem sufixos de canal.
@@ -30,8 +30,9 @@ estivermos em `0.x`. Ao chegar a `1.0.0`, mudanças incompatíveis exigem major;
 novas funcionalidades compatíveis, minor; correções compatíveis, patch.
 
 Os exports públicos são `yuzuha`, `yuzuha/functions`, `yuzuha/sdk`,
-`yuzuha/testing`, `yuzuha/tooling`, `yuzuha/music`, `yuzuha/images` e
-`yuzuha/canvas`. A organização interna de `src/` não cria estabilidade de deep
+`yuzuha/sdk/*`, `yuzuha/testing`, `yuzuha/tooling`, `yuzuha/music`,
+`yuzuha/images` e `yuzuha/canvas`. A organização interna de `src/` não cria
+estabilidade de deep
 imports. Schema persistido,
 gramática e funções documentadas também fazem parte da compatibilidade.
 
@@ -40,6 +41,27 @@ A versão do SDK é fixada separadamente. Atualizá-la exige revisar
 gerado por `init` pertence ao consumidor e não precisa acompanhar a biblioteca.
 
 ## Preparar uma atualização
+
+### Migrar para 0.2.1
+
+A 0.2.1 amplia a paridade nativa com o Fluxer.js. Os subpaths `yuzuha/sdk/*`
+espelham `@fluxerjs/core/*` e os pacotes satélites `@fluxerjs/types`, `/rest`,
+`/ws`, `/builders`, `/collection` e `/util`, que viram dependências diretas.
+`yuzuha/sdk/voice` e `yuzuha/sdk/sharding` reexportam peers opcionais; instale-os
+para usar esses caminhos. `@fluxerjs/sharding` declara peer exato em
+`@fluxerjs/core` 3.0.0: consumidores precisam de `overrides` apontando o core
+fixado, como no manifesto do próprio Yuzuha.
+
+`ctx.resources` ganha quatro áreas novas — `gateway`, `instance`, `self` e
+`cache` — e `collectors` ganha os streams `collectMessages`/`collectReactions`.
+`messages` ganha `bulkFetch` e `searchAll`. Implementações completas próprias de
+`Resources` precisam fornecer as novas áreas; `mockResources` continua aceitando
+parciais. O schema persistido permanece em 2 e o SDK em 3.3.0; não há migração
+de dados.
+
+```sh
+npm install yuzuha@0.2.1
+```
 
 ### Migrar para 0.1.9
 

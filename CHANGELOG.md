@@ -21,6 +21,18 @@ documentos. Veja a [política completa](VERSIONING.md).
 
 </details>
 
+## v0.2.1 · 03/11/2026
+
+Paridade nativa ampliada com o Fluxer.js: subpaths do SDK espelhados, pacotes satélites reexportados e novas áreas de recursos para gateway, instância, usuário autenticado e cache. Esta atualização da biblioteca Yuzuha foi preparada em 03/11/2026 (v0.2.1).
+
+- `yuzuha/sdk` passa a espelhar os subpaths de `@fluxerjs/core`: `yuzuha/sdk/client`, `/errors`, `/message`, `/cluster` e `/internal`. O teste de consumidor agora compara os exports de cada subpath ao pacote correspondente.
+- Os pacotes satélites do monorepo são reexportados como `yuzuha/sdk/types` (com `/routes`), `yuzuha/sdk/rest` (com `/request-manager`), `yuzuha/sdk/ws`, `yuzuha/sdk/builders`, `yuzuha/sdk/collection` e `yuzuha/sdk/util`, que viram dependências diretas. `yuzuha/sdk/voice` e `yuzuha/sdk/sharding` reexportam os peers opcionais homônimos.
+- Quatro áreas novas em `ctx.resources` e `bot.resources`: `gateway` envia pedidos brutos ao gateway (membros, contagens, não lidos de fórum, assinatura de threads e payload por shard); `instance` descreve a instância, o gateway, a aplicação e metadados de emoji/sticker; `self` cobre o usuário autenticado com verificação sudo; `cache` expõe estatísticas, limites e limpezas.
+- `collectors.collectMessages` e `collectReactions` devolvem `AsyncIterable` sobre os coletores do SDK, com limites `timeMs`/`max`/`signal` e limpeza garantida. Reações exigem `messageID`, como no coletor do SDK. `ReactionVote` ganha `messageID` opcional.
+- `messages.bulkFetch` busca janelas de mensagens por canal com hidratação por padrão ou payloads brutos com `hydrate: false`. `messages.searchAll` usa a busca global do client com os mesmos filtros e paginação de `search`.
+- As novas áreas passam pela autorização compartilhada como autoridade direta, mesmo contrato de `users` e `messages`; o sinal do comando cancela os streams.
+- **Adaptação de integrações:** implementações completas próprias de `Resources` devem fornecer `gateway`, `instance`, `self` e `cache`; `CollectorsResources` e `MessagesResources` ganharam métodos. `@fluxerjs/sharding` declara peer exato em `@fluxerjs/core` 3.0.0 — consumidores que o instalarem precisam de `overrides` para o core fixado. Veja [VERSIONING.md](VERSIONING.md) antes de atualizar.
+
 ## v0.1.9 · 29/10/2026
 
 Composição opcional de cartões para comandos, eventos e function mode, com fontes locais e renderização isolada. Esta atualização da biblioteca Yuzuha foi preparada em 29/10/2026 (v0.1.9).
