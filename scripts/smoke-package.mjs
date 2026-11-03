@@ -50,7 +50,11 @@ try {
   assert.ok(!info.files.some(file => file.path.includes('node_modules') || file.path === '.env'));
   const consumer = join(temporary, 'consumer');
   await mkdir(consumer);
-  await writeFile(join(consumer, 'package.json'), JSON.stringify({ private: true, type: 'module', dependencies: { yuzuha: `file:${tarball}` } }));
+  await writeFile(join(consumer, 'package.json'), JSON.stringify({ private: true, type: 'module',
+    dependencies: { yuzuha: `file:${tarball}`, '@fluxerjs/builders': '3.0.0', '@fluxerjs/collection': '3.0.0',
+      '@fluxerjs/core': '3.3.0', '@fluxerjs/rest': '3.1.0', '@fluxerjs/sharding': '3.0.0', '@fluxerjs/types': '3.3.0',
+      '@fluxerjs/util': '3.1.0', '@fluxerjs/voice': '3.1.0', '@fluxerjs/ws': '3.1.0' },
+    overrides: { '@fluxerjs/sharding': { '@fluxerjs/core': '3.3.0' } } }));
   await run('npm', ['install', '--ignore-scripts', '--no-audit', '--no-fund'], consumer);
   await run(process.execPath, ['--input-type=module', '-e', `
     import assert from 'node:assert/strict';
@@ -70,6 +74,16 @@ try {
     import { LavalinkNode, MusicManager, FluxerVoice, FluxerLavalinkBridge, TrackQueue } from 'yuzuha/music';
     import { MockMusicBackend, mockTrack } from 'yuzuha/testing';
     assert.deepEqual(Object.keys(sdk).sort(), Object.keys(upstream).sort());
+    for (const [mirror, origin] of [
+      ['yuzuha/sdk/client', '@fluxerjs/core/client'], ['yuzuha/sdk/errors', '@fluxerjs/core/errors'],
+      ['yuzuha/sdk/message', '@fluxerjs/core/message'], ['yuzuha/sdk/cluster', '@fluxerjs/core/cluster'],
+      ['yuzuha/sdk/internal', '@fluxerjs/core/internal'], ['yuzuha/sdk/types', '@fluxerjs/types'],
+      ['yuzuha/sdk/types/routes', '@fluxerjs/types/routes'], ['yuzuha/sdk/rest', '@fluxerjs/rest'],
+      ['yuzuha/sdk/rest/request-manager', '@fluxerjs/rest/request-manager'], ['yuzuha/sdk/ws', '@fluxerjs/ws'],
+      ['yuzuha/sdk/builders', '@fluxerjs/builders'], ['yuzuha/sdk/collection', '@fluxerjs/collection'],
+      ['yuzuha/sdk/util', '@fluxerjs/util'], ['yuzuha/sdk/sharding', '@fluxerjs/sharding'],
+      ['yuzuha/sdk/voice', '@fluxerjs/voice']])
+      assert.deepEqual(Object.keys(await import(mirror)).sort(), Object.keys(await import(origin)).sort(), mirror);
     assert.equal('Runtime' in native, false);
     assert.equal('LavalinkNode' in native, false);
     const node = new LavalinkNode({ url: 'http://localhost:2333', password: 'mock', userID: '999' });

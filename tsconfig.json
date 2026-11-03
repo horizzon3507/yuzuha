@@ -22,6 +22,9 @@
       "yuzuha/sdk": [
         "./src/sdk.ts"
       ],
+      "yuzuha/sdk/*": [
+        "./src/sdk/*"
+      ],
       "yuzuha/functions": [
         "./src/functions.ts"
       ],
