@@ -1,7 +1,7 @@
 # Referência das funções
 
 Function mode opcional, importado de `yuzuha/functions`.
-Gerada do registro executável: **322 funções**. Atualize com `npm run docs:generate`.
+Gerada do registro executável: **336 funções**. Atualize com `npm run docs:generate`.
 
 Aliases não contam como funções adicionais. Índices e semântica estão em [LANGUAGE.md](LANGUAGE.md).
 
@@ -71,14 +71,27 @@ Aliases não contam como funções adicionais. Índices e semântica estão em [
 
 | Função | Descrição | Aliases |
 |---|---|---|
-| `$color[#RRGGBB]` | Cor RGB hexadecimal. |  |
+| `$addEmbed[lista;embed]` | Retorna nova lista de embeds com o embed no final, respeitando o limite de 10. |  |
+| `$addField[embed;nome;valor;inline?]` | Retorna cópia do embed com um campo adicionado ao final. |  |
+| `$author[nome;url?;iconURL?]` | Autor do embed, com link e ícone opcionais (HTTP/HTTPS). |  |
+| `$color[#RRGGBB\|r,g,b\|nome]` | Cor do embed: #RRGGBB, tupla r,g,b (0 a 255) ou nome simples (red, blue, green...). |  |
 | `$description[texto]` | Parte de embed. |  |
+| `$editField[embed;índice;nome;valor;inline?]` | Retorna cópia do embed com o campo de índice substituído. Sem inline, mantém o valor anterior. |  |
 | `$embed[parte;parte;...]` | Combina partes tipadas de embed. Separe-as por ponto e vírgula. |  |
-| `$field[nome;valor;inline?]` | Campo de embed. |  |
+| `$embedFromObject[objeto\|json]` | Monta um embed a partir de objeto ou texto JSON, com as mesmas regras de $embed. Campos de resposta do Fluxer são descartados. |  |
+| `$embeds[embed;embed;...]` | Monta lista de até 10 embeds validados, para $reply, $sendMessage ou $editMessage. |  |
+| `$embedTimestamp[iso\|agora]` | Data do embed em ISO-8601 com fuso, ou "agora" para o instante atual. |  |
+| `$field[nome;valor;inline?]` | Campo de embed. O valor pode ser vazio quando o campo é inline. |  |
+| `$fields[array]` | Campos de embed a partir de um array de objetos {name, value, inline} ou de arrays [nome, valor, inline?]. |  |
 | `$footer[texto]` | Parte de embed. |  |
-| `$image[texto]` | Parte de embed. |  |
-| `$thumbnail[texto]` | Parte de embed. |  |
+| `$footerIcon[iconURL]` | Ícone do rodapé do embed (HTTP/HTTPS). Use depois de $footer. |  |
+| `$image[url]` | Imagem ou miniatura do embed (HTTP/HTTPS). |  |
+| `$imageAlt[descrição]` | Texto alternativo da imagem do embed. |  |
+| `$removeField[embed;índice]` | Retorna cópia do embed sem o campo de índice indicado, começando em 0. |  |
+| `$thumbnail[url]` | Imagem ou miniatura do embed (HTTP/HTTPS). |  |
+| `$thumbnailAlt[descrição]` | Texto alternativo da miniatura do embed. |  |
 | `$title[texto]` | Parte de embed. |  |
+| `$url[url]` | URL clicável do título do embed (HTTP/HTTPS). |  |
 
 ## events
 
@@ -253,6 +266,7 @@ Aliases não contam como funções adicionais. Índices e semântica estão em [
 | `$fetchMessage[canal;mensagem;propriedade?]` | Busca uma mensagem e retorna objeto ou propriedade. |  |
 | `$fileBase64[base64;nome;descrição?]` | Monta um anexo base64 para $sendAttachments, sem enviá-lo. |  |
 | `$forward[destino;canalOrigem;mensagem]` | Encaminha uma mensagem para outro canal e retorna o novo ID. |  |
+| `$messageOptions[tts?;stickerIds?;flags?]` | Opções de envio para mesclar com $jsonMerge e um payload com conteúdo ou embeds. TTS exige SendTtsMessages; menções, MentionEveryone. |  |
 | `$messages[canal;limite?;before?;after?;around?]` | Lista mensagens, da mais recente para a mais antiga; aceita somente um cursor por chamada. |  |
 | `$pin[mensagem;canal?]` | Fixa uma mensagem no canal. |  |
 | `$pinnedMessages[canal?;limite?]` | Lista mensagens fixadas, da mais recente para a mais antiga. |  |

@@ -1,6 +1,7 @@
 import type { AttachmentSpec, BinaryAttachmentSpec } from './common.js';
 import type { APIMessage } from '@fluxerjs/types';
 import type { MessageSearchInput, PinnedMessagesInput } from '../../domain/message-query.js';
+import type { ReceivedEmbed } from '../../domain/messages.js';
 export type { MessageSearchInput, PinnedMessagesInput } from '../../domain/message-query.js';
 
 export interface AttachmentInfo {
@@ -20,6 +21,8 @@ export interface MessageInfo {
   createdTimestamp: number;
   pinned: boolean;
   attachments: AttachmentInfo[];
+  /** Embeds recebidos, normalizados em camelCase e somente leitura. */
+  embeds: ReceivedEmbed[];
 }
 
 export interface MessagesResources {

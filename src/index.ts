@@ -67,5 +67,6 @@ export { loadCommands, commandFiles } from './loader.js';
 export * from './errors.js';
 export * as SDK from '@fluxerjs/core';
 export { decimal, decimalCompare, decimalRound } from './domain/decimal.js';
+export { embed } from './domain/embeds.js';
 export type { VariableQueryOptions, VariableQuery, VariableEntry, VariablePage } from './domain/variable-query.js';
 export type { StreamAttachmentOptions } from './services/attachments.js';

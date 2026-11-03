@@ -63,6 +63,28 @@ de dados.
 npm install yuzuha@0.2.1
 ```
 
+### Migrar para 0.2.0
+
+A 0.2.0 acrescenta campos a `Embed` (`url`, `timestamp`, `author`, `footer.iconURL`,
+alt text em imagem e miniatura), `allowedMentions`, `tts`, `stickerIds`, `flags` e
+`reply` em `Payload`, além de 14 funções de script e a leitura normalizada de embeds
+em `$fetchMessage` e `$messages`. Os exports públicos continuam os mesmos.
+
+Há duas mudanças de contrato, por isso a versão é minor na série `0.x`:
+
+- `MessageInfo.embeds` passou a ser obrigatório. Quem implementa `MessagesResources`
+  própria deve devolver `embeds` (use `[]` se não houver embeds).
+- Objetos de mensagem em script (`$reply`, `$sendMessage`, `$editMessage`) aceitam
+  somente as chaves `content`, `embeds`, `tts`, `stickerIds`, `flags` e `allowedMentions`.
+  Antes, qualquer objeto virava embed sem validação; agora campos desconhecidos são erro.
+
+Menções só relaxam com a permissão `MentionEveryone` do autor, e TTS exige
+`SendTtsMessages`. O padrão continua sem menções e sem ping ao autor respondido.
+
+```sh
+npm install yuzuha@0.2.0
+```
+
 ### Migrar para 0.1.9
 
 A 0.1.9 acrescenta `yuzuha/canvas`, `ctx.canvas` e `bot.contextEvent`, além de

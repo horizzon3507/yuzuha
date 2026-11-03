@@ -1,6 +1,6 @@
 # Documentação da Yuzuha
 
-Esta documentação cobre a Yuzuha 0.1.9, em JavaScript ESM e TypeScript, para
+Esta documentação cobre a Yuzuha 0.2.0, em JavaScript ESM e TypeScript, para
 Node >=22.13. O pacote usa `@fluxerjs/core` 3.3.0.
 
 JS/TS é o caminho principal da biblioteca. Function mode (`$...`) é opcional e
@@ -36,6 +36,8 @@ conectam ao Fluxer.
 | [Música e voz](MUSIC.md) | Lavalink v4, plugin e ponte de áudio para Fluxer, filas e recuperação |
 | [Logs e correlação](OBSERVABILITY.md) | Eventos estruturados opcionais, duração, erros e privacidade |
 | [Cobertura](PARITY.md) | Acesso ao SDK, contratos do function mode e limites |
+| [Matriz de paridade](PARITY-MATRIX.md) | Status automático de cada export e membro do SDK 3.3.0 |
+| [Embeds e mensagens](EMBEDS.md) | Modelo, funções, limites, menções e leitura de embeds |
 
 ## Testar e diagnosticar
 

@@ -304,7 +304,7 @@ na leitura. Consulte [STORAGE.md](STORAGE.md) antes de criar um adaptador.
 `yuzuha/music` exporta `LavalinkNode`, `MusicManager`, `MusicPlayer`, `TrackQueue`,
 `FluxerVoice` e `FluxerLavalinkBridge`, além dos tipos de protocolo e ports. A referência de métodos,
 limites, dependência de voz opcional e instalação do plugin de áudio está em
-[MUSIC.md](MUSIC.md). O catálogo do function mode tem 322 funções.
+[MUSIC.md](MUSIC.md). O catálogo do function mode tem 336 funções.
 
 ## Servidor e decimais
 

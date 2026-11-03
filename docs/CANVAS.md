@@ -10,7 +10,7 @@ com Sharp.
 O backend é um peer opcional. Instale-o somente nos bots que renderizam Canvas:
 
 ```sh
-npm install yuzuha@0.1.9 @napi-rs/canvas@^1.0.13
+npm install yuzuha@0.2.0 @napi-rs/canvas@^1.0.13
 ```
 
 Os imports `yuzuha`, `yuzuha/functions` e `yuzuha/canvas` continuam disponíveis
@@ -188,7 +188,7 @@ afetam renderizações futuras.
 ## Function mode
 
 O function mode oferece 12 funções da categoria `canvas`, levando o catálogo a
-322 funções. Elas retornam texto vazio, inclusive `$canvasSend`, para impedir
+322 funções na 0.1.9. Elas retornam texto vazio, inclusive `$canvasSend`, para impedir
 uma resposta automática além do anexo. IDs são únicos por execução, aceitam de 1
 a 64 letras, números, `_` ou `-`, e podem ser reutilizados depois de
 `$canvasDispose`. Enviar não descarta o builder; cada tentativa é explícita.

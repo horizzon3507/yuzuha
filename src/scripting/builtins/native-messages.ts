@@ -20,6 +20,7 @@ const PROPERTIES: Record<string, (info: MessageInfo) => unknown> = {
   pinned: info => info.pinned,
   anexos: info => info.attachments,
   attachments: info => info.attachments,
+  embeds: info => info.embeds,
 };
 
 function attachmentUrl(raw: string): string {
