@@ -77,7 +77,8 @@ export function bindAuthorizedResources(source: Resources, transport: Transport,
     await allowed('ManageExpressions');
   };
   return { users: source.users, messages: source.messages, collectors: source.collectors,
-    threads: source.threads, invites: source.invites, expressions: {
+    threads: source.threads, invites: source.invites, gateway: source.gateway,
+    instance: source.instance, self: source.self, cache: source.cache, expressions: {
     emoji: source.expressions.emoji.bind(source.expressions), emojis: source.expressions.emojis.bind(source.expressions),
     sticker: source.expressions.sticker.bind(source.expressions), stickers: source.expressions.stickers.bind(source.expressions),
     async createEmoji(...args) {

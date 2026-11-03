@@ -28,12 +28,18 @@ export type {
   ChannelInfo, ChannelCreateInput, ChannelEditInput, ChannelOverwriteInput, ChannelsResources,
 } from './ports/resources/channels.js';
 export type { AttachmentInfo, MessageInfo, MessagesResources, MessageCursor, MessageSearchInput, MessageSearchPage,
-  PinnedMessagesInput, PinnedMessagesPage, ReactionUsersPage } from './ports/resources/messages.js';
-export type { AwaitMessageInput, CollectedMessageInfo, CollectorsResources, ReactionVote } from './ports/resources/collectors.js';
+  PinnedMessagesInput, PinnedMessagesPage, ReactionUsersPage,
+  BulkFetchRequest, BulkFetchInput, BulkFetchRawChannel } from './ports/resources/messages.js';
+export type { AwaitMessageInput, CollectedMessageInfo, CollectMessagesInput, CollectReactionsInput, CollectorsResources, ReactionVote } from './ports/resources/collectors.js';
 export type { WebhookInfo, WebhookSendInput, WebhooksResources } from './ports/resources/webhooks.js';
 export type { EmojiInfo, EmojiCreateInput, EmojiBulkResult, StickerInfo, StickerCreateInput, StickerEditInput, ExpressionsResources } from './ports/resources/expressions.js';
 export type { ThreadInfo, ThreadMemberInfo, ThreadMemberDetails, ThreadCreateInput, ForumPostInput, ThreadsResources, ThreadEditInput, ThreadSearchInput, ThreadSearchPage, ArchivedThreadsInput, ThreadListPage } from './ports/resources/threads.js';
 export type { InviteInfo, InviteCreateInput, InvitesResources } from './ports/resources/invites.js';
+export type { GatewayMembersRequest, ChannelCountsRequest, ForumUnreadsRequest, ThreadSubscriptionInput, GatewayResources } from './ports/resources/gateway.js';
+export type { InstanceEndpointsInfo, InstanceFeaturesInfo, InstanceServicesInfo, InstanceInfo, GatewayInfo, ApplicationInfo,
+  EmojiMetadataInfo, StickerMetadataInfo, EmojiReference, InstanceResources } from './ports/resources/instance.js';
+export type { SudoVerification, SelfGuildInfo, SelfResources } from './ports/resources/self.js';
+export type { CacheLimitsInfo, CacheStatsInfo, MessageSweepInput, MemberSweepInput, CacheResources } from './ports/resources/cache.js';
 export type { AttachmentSpec, BinaryAttachmentSpec, PresenceStatus, ActivityType, ActivityInfo } from './ports/resources/common.js';
 export { NativeModeration } from './services/native-moderation.js';
 export type { NativeModerationOptions, NativeBanOptions, NativeTimeoutOptions, NativeMoveOptions, NativeVoiceOptions, ModerationTarget } from './services/native-moderation.js';

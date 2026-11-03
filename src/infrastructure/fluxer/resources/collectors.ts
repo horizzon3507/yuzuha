@@ -1,7 +1,10 @@
 import type { Client, Message } from '@fluxerjs/core';
 import { MessageCollector, ReactionCollector } from '@fluxerjs/core';
-import type { AwaitMessageInput, CollectedMessageInfo, CollectorsResources, ReactionVote } from '../../../ports/resources/collectors.js';
+import type { AwaitMessageInput, CollectedMessageInfo, CollectMessagesInput, CollectReactionsInput, CollectorsResources, ReactionVote } from '../../../ports/resources/collectors.js';
 import { cancellationError } from '../../../services/cancellation.js';
+import { YuzuhaError } from '../../../errors.js';
+
+type ReactionLike = { emojiIdentifier: string; emoji: { name: string }; messageId: string };
 
 function info(message: Message): CollectedMessageInfo {
   return { id: message.id, channelID: message.channelId, authorID: message.author.id, content: message.content };
@@ -11,11 +14,47 @@ function targets(emojis: string | string[]): string[] {
   return (Array.isArray(emojis) ? emojis : [emojis]).map(value => value.trim().toLowerCase()).filter(Boolean);
 }
 
-function vote(reaction: { emojiIdentifier: string; emoji: { name: string } }, userID: string, wanted: string[]): ReactionVote | null {
+function matches(reaction: ReactionLike, wanted: string[]): boolean {
   const identifier = reaction.emojiIdentifier.toLowerCase();
   const name = reaction.emoji.name.toLowerCase();
-  if (!wanted.includes(identifier) && !wanted.includes(name)) return null;
-  return { userID, emoji: reaction.emoji.name };
+  return wanted.includes(identifier) || wanted.includes(name);
+}
+
+function voteInfo(reaction: ReactionLike, userID: string): ReactionVote {
+  return { userID, emoji: reaction.emoji.name, messageID: reaction.messageId };
+}
+
+function vote(reaction: ReactionLike, userID: string, wanted: string[]): ReactionVote | null {
+  return matches(reaction, wanted) ? voteInfo(reaction, userID) : null;
+}
+
+function positiveBound(value: number | undefined): number {
+  return value !== undefined && Number.isFinite(value) && value > 0 ? value : 0;
+}
+
+function requireBounds(time: number, max: number, signal: AbortSignal | undefined): void {
+  if (time <= 0 && max <= 0 && signal === undefined) {
+    throw new YuzuhaError('COLLECTOR_BOUNDS', 'Informe um limite para o coletor: timeMs, max ou signal.');
+  }
+}
+
+/** Itera itens de um coletor do SDK: enfileira 'collect', encerra no 'end' e limpa ao sair. */
+async function* pump<T>(attach: (push: (item: T) => void, finish: () => void) => () => void): AsyncGenerator<T, void> {
+  const queue: T[] = [];
+  let ended = false;
+  let waiting: (() => void) | undefined;
+  const notify = (): void => { const wake = waiting; waiting = undefined; wake?.(); };
+  const detach = attach(item => { queue.push(item); notify(); }, () => { ended = true; notify(); });
+  try {
+    for (;;) {
+      const item = queue.shift();
+      if (item !== undefined) { yield item; continue; }
+      if (ended) return;
+      await new Promise<void>(resolve => { waiting = resolve; });
+    }
+  } finally {
+    detach();
+  }
 }
 
 export function createCollectorsResources(client: Client): CollectorsResources {
@@ -83,6 +122,50 @@ export function createCollectorsResources(client: Client): CollectorsResources {
         });
         signal?.addEventListener('abort', abort, { once: true });
         if (signal?.aborted) abort();
+      });
+    },
+    collectMessages(channelID: string, input: CollectMessagesInput): AsyncIterable<CollectedMessageInfo> {
+      const time = positiveBound(input.timeMs);
+      const max = positiveBound(input.max);
+      requireBounds(time, max, input.signal);
+      const filter = input.userID === undefined && input.contains === undefined
+        ? undefined
+        : (message: Message) =>
+          (input.userID === undefined || message.author.id === input.userID) &&
+          (input.contains === undefined || message.content.includes(input.contains));
+      const signal = input.signal;
+      return pump<CollectedMessageInfo>((push, finish) => {
+        // O SDK exige time ou max; com só signal o teto de max é inalcançável e o abort encerra.
+        const collector = new MessageCollector(client, channelID, {
+          filter, time, max: time > 0 || max > 0 ? max : Number.MAX_SAFE_INTEGER,
+        });
+        const abort = (): void => collector.stop('user');
+        collector.on('collect', message => push(info(message)));
+        collector.on('end', () => finish());
+        signal?.addEventListener('abort', abort, { once: true });
+        if (signal?.aborted) collector.stop('user');
+        return () => { signal?.removeEventListener('abort', abort); collector.stop('user'); };
+      });
+    },
+    collectReactions(channelID: string, input: CollectReactionsInput): AsyncIterable<ReactionVote> {
+      const time = positiveBound(input.timeMs);
+      const max = positiveBound(input.max);
+      requireBounds(time, max, input.signal);
+      if (!input.messageID) throw new YuzuhaError('COLLECTOR_MESSAGE', 'Informe a mensagem (messageID) para coletar reações.');
+      const wanted = targets(input.emojis ?? []);
+      const signal = input.signal;
+      return pump<ReactionVote>((push, finish) => {
+        const collector = new ReactionCollector(client, input.messageID, channelID, {
+          time, max,
+          filter: (reaction, user) => (input.userID === undefined || user.id === input.userID)
+            && (wanted.length === 0 || matches(reaction, wanted)),
+        });
+        const abort = (): void => collector.stop('user');
+        collector.on('collect', (reaction, user) => push(voteInfo(reaction, user.id)));
+        collector.on('end', () => finish());
+        signal?.addEventListener('abort', abort, { once: true });
+        if (signal?.aborted) collector.stop('user');
+        return () => { signal?.removeEventListener('abort', abort); collector.stop('user'); };
       });
     },
   };

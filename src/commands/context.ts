@@ -186,11 +186,16 @@ export class CommandContext {
     const source = bindAuthorizedResources(this.nativeResources, this.transport, { guildID: this.guildID, authorID: this.authorID }), collectors = source.collectors;
     return this.scopedResources = { users: source.users, roles: source.roles, channels: source.channels,
       messages: source.messages, webhooks: source.webhooks, expressions: source.expressions,
-      threads: source.threads, invites: source.invites, collectors: {
+      threads: source.threads, invites: source.invites, gateway: source.gateway,
+      instance: source.instance, self: source.self, cache: source.cache, collectors: {
         awaitMessage: (channelID, input) => collectors.awaitMessage(channelID, { ...input,
           signal: input.signal ? AbortSignal.any([this.signal, input.signal]) : this.signal }),
         awaitReaction: (channelID, messageID, emojis, timeMs, userID, signal) => collectors.awaitReaction(
           channelID, messageID, emojis, timeMs, userID, signal ? AbortSignal.any([this.signal, signal]) : this.signal),
+        collectMessages: (channelID, input) => collectors.collectMessages(channelID, { ...input,
+          signal: input.signal ? AbortSignal.any([this.signal, input.signal]) : this.signal }),
+        collectReactions: (channelID, input) => collectors.collectReactions(channelID, { ...input,
+          signal: input.signal ? AbortSignal.any([this.signal, input.signal]) : this.signal }),
       } };
   }
   get scheduler(): Scheduler {

@@ -35,6 +35,10 @@ export function mockResources(overrides: MockResourceOverrides = {}): Resources 
     expressions: resource('expressions'),
     threads: resource('threads'),
     invites: resource('invites'),
+    gateway: resource('gateway'),
+    instance: resource('instance'),
+    self: resource('self'),
+    cache: resource('cache'),
   };
 }
 
