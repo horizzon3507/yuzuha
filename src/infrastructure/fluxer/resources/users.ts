@@ -65,7 +65,7 @@ function snowflakeTimestamp(id: string): number {
   return Number((BigInt(id) >> 22n) + FLUXER_EPOCH);
 }
 
-function toUserInfo(user: User): UserInfo {
+export function toUserInfo(user: User): UserInfo {
   return {
     id: user.id,
     username: user.username,
@@ -77,7 +77,7 @@ function toUserInfo(user: User): UserInfo {
   };
 }
 
-function toMemberInfo(member: GuildMember): MemberInfo {
+export function toMemberInfo(member: GuildMember): MemberInfo {
   const user = member.user;
   return {
     id: member.id,
