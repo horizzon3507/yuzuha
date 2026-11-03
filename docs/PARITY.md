@@ -15,27 +15,39 @@ públicos da raiz do pacote e seus tipos. `bot.client` é uma instância real de
 `Client`; `SDK` na raiz do Yuzuha é um namespace do mesmo pacote. O acesso nativo
 não é uma reprodução parcial do client.
 
-Isso não significa que cada método tem uma função `$...`, nem que pacotes opcionais
-ou subpaths do SDK foram incorporados à raiz. O teste de consumidor compara os
-exports de `yuzuha/sdk` aos da dependência instalada.
+Os subpaths do pacote e os pacotes satélites do monorepo também são espelhados:
+`yuzuha/sdk/client`, `yuzuha/sdk/errors`, `yuzuha/sdk/message`,
+`yuzuha/sdk/cluster` e `yuzuha/sdk/internal` equivalem a `@fluxerjs/core/*`;
+`yuzuha/sdk/types`, `yuzuha/sdk/types/routes`, `yuzuha/sdk/rest`,
+`yuzuha/sdk/rest/request-manager`, `yuzuha/sdk/ws`, `yuzuha/sdk/builders`,
+`yuzuha/sdk/collection` e `yuzuha/sdk/util` reexportam os pacotes homônimos, que
+passam a ser dependências diretas do Yuzuha. `yuzuha/sdk/voice` e
+`yuzuha/sdk/sharding` reexportam os pacotes opcionais homônimos, exigindo o peer
+instalado. O teste de consumidor compara os exports de cada subpath `yuzuha/sdk*`
+aos do pacote correspondente instalado.
+
+Isso não significa que cada método tem uma função `$...`. `@fluxerjs/sharding`
+declara peer em `@fluxerjs/core` 3.0.0 exato; consumidores que o instalarem
+precisam de `overrides` para o core fixado, como no manifesto do Yuzuha.
 
 | Área | JS/TS pelo client/SDK | Function mode |
 |---|---|---|
-| Gateway, conexão, heartbeat e reconexão | Herdado do SDK | Via inicialização do bot |
+| Gateway, conexão, heartbeat e reconexão | Herdado do SDK; pedidos brutos por `ctx.resources.gateway` (membros, contagens, não lidos de fórum, assinatura de threads, envio por shard) | Via inicialização do bot |
 | Eventos | `bot.on/once/off`, `bot.event`, `bot.scriptEvent` e `bot.client.on` | Eventos de membros, edição/exclusão de mensagens e reações, com contexto próprio |
 | Mensagens e replies | API completa do SDK | reply, sendMessage, editMessage, deleteMessage, fetchMessage, messages com cursores, pin/unpin, pinnedMessagesPage, dm, forward, searchMessages, searchMessagesAdvanced e preloadMessages |
-| Reações e collectors | API do SDK | react, removeReaction, clearReactions, reactionUsers e reactionUsersPage com metadados de paginação, awaitMessage, awaitReaction, confirm |
+| Reações e collectors | API do SDK; streams `collectMessages`/`collectReactions` como `AsyncIterable` | react, removeReaction, clearReactions, reactionUsers e reactionUsersPage com metadados de paginação, awaitMessage, awaitReaction, confirm |
 | Embeds e anexos | Builders do SDK, sendBytes e sendAttachments | Embeds, anexos URL/base64 e múltiplos anexos na mesma mensagem |
 | Membros, cargos, canais e permissões | API do SDK e `ctx.members` | User/member, perfil completo, contagens ao vivo, nickname, roles, canais de link, avisos, posição, categorias e overwrites |
 | Ban, kick, timeout, unban e moderação de voz | SDK + `ctx.mod` e `ctx.moderate` | Versões simples e mod* com casos, incluindo move/mute/deafen |
 | Servidor, convites, webhooks e expressões | API do SDK e auxiliares autorizados | guildFeatures, leaveGuild, editGuild, convites/vanity, clonagem e mutações de emojis/stickers, createEmojisBulk; CRUD e envio de webhooks |
 | Threads e fóruns | API do SDK | Criação, edição, busca, posts, membros, threadMember e listagens ativas/arquivadas com paginação |
 | Presença | `client.user.setPresence` | setPresence, setStatus e setActivity |
-| Cache e presença | Opções e métodos do SDK | Acesso nativo |
-| Instância própria/discovery | `Client.fromDiscovery`, client injetado | Mesmo adaptador do client |
+| Cache e presença | `ctx.resources.cache` (estatísticas, limites e limpezas) e opções do SDK | Acesso nativo |
+| Usuário autenticado | `ctx.resources.self` (fetch, guilds, saída e limpeza com verificação sudo) | setPresence, setStatus, setActivity e leaveGuild |
+| Instância e aplicação | `ctx.resources.instance` (describe, gatewayInfo, application, oauthApplications, metadados de emoji/sticker, resolveEmoji); `Client.fromDiscovery`, client injetado | Mesmo adaptador do client |
 | Áudio em voz | `FluxerVoice` sobre `@fluxerjs/voice` opcional; Lavalink v4 com plugin de áudio, `FluxerLavalinkBridge`, filas editáveis e recuperação em `yuzuha/music` | Sem wrappers de reprodução; moderação de membros usa o SDK core |
-| Sharding | Pacote separado `@fluxerjs/sharding` | Sem coordenação própria |
-| Cluster/subpaths | Imports diretos de `@fluxerjs/core/cluster` | Sem wrapper próprio |
+| Sharding | `yuzuha/sdk/sharding` reexporta `@fluxerjs/sharding` (peer opcional) | Sem coordenação própria |
+| Cluster/subpaths | `yuzuha/sdk/cluster` e demais subpaths `yuzuha/sdk/*` espelham `@fluxerjs/core/*` e os pacotes satélites | Sem wrapper próprio |
 | Estado e casos | `ctx.data`, TTL, userFor, transaction entre chaves e stores | Variáveis, TTL, incrementos, listas, casos e dataTransaction com operações declarativas |
 | Agendamentos | `ctx.scheduler`, cron/fusos, concorrência limitada, histórico, heartbeat e controles | schedule, scheduleEvery, scheduleCron, controles, histórico, reexecução e retry com jitter |
 | HTTP | `request`, `requestBytes`, `stream`, `multipart`, `withPolicy` e cancelamento | `$http`, `$httpJson`, `$httpMultipart` e download de imagens com política de rede por comando |

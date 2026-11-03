@@ -1,8 +1,8 @@
 # Funções que ainda faltam
 
-Inventário da versão **0.1.8**, comparando o registro executável do Yuzuha com os
+Inventário da versão **0.2.1**, comparando o registro executável do Yuzuha com os
 tipos públicos de **@fluxerjs/core 3.3.0**, fixado no lockfile. O inventário tem
-**310 funções canônicas**; aliases não aumentam esse número.
+**322 funções canônicas**; aliases não aumentam esse número.
 
 Este documento distingue funções existentes, wrappers ainda ausentes e recursos
 acessíveis pelo SDK em JavaScript/TypeScript. Os nomes na coluna “Propostas” são
@@ -10,10 +10,15 @@ ideias de API: **não estão registrados e não podem ser usados em scripts**.
 
 ## Cobertura atual
 
-O function mode tem 310 funções canônicas, 22 a mais que na 0.1.6. O SDK continua
+O function mode tem 322 funções canônicas. O SDK continua
 disponível em JS/TS, com recursos injetáveis e testáveis offline.
 Esta tabela é um mapa dos recursos entregues pelo Yuzuha e das APIs nativas
-disponíveis para escrever novos comandos.
+disponíveis para escrever novos comandos. Desde a 0.2.1, `ctx.resources` inclui
+as áreas `gateway` (pedidos brutos), `instance` (descoberta e aplicação), `self`
+(usuário autenticado com verificação sudo) e `cache` (estatísticas e limpezas);
+`collectors` ganhou streams `AsyncIterable` e `messages` ganhou `bulkFetch` e
+`searchAll`. Os subpaths `yuzuha/sdk/*` espelham `@fluxerjs/core/*` e os pacotes
+satélites do monorepo.
 
 | Área | Funções | Cobertura |
 |---|---|---|

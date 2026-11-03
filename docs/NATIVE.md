@@ -187,6 +187,15 @@ Yuzuha. Chamadas diretas ao client exigem mocks ou fixtures próprios.
 importar `Events`, `AttachmentBuilder`, `EmbedBuilder` e os tipos do Fluxer.js.
 A assinatura completa dessas classes pertence ao SDK fixado em 3.3.0.
 
+Os subpaths do SDK também são espelhados: `yuzuha/sdk/client`, `yuzuha/sdk/errors`,
+`yuzuha/sdk/message`, `yuzuha/sdk/cluster` e `yuzuha/sdk/internal` equivalem aos
+caminhos homônimos de `@fluxerjs/core`. Os pacotes satélites aparecem como
+`yuzuha/sdk/types` (com `yuzuha/sdk/types/routes`), `yuzuha/sdk/rest` (com
+`yuzuha/sdk/rest/request-manager`), `yuzuha/sdk/ws`, `yuzuha/sdk/builders`,
+`yuzuha/sdk/collection` e `yuzuha/sdk/util`. `yuzuha/sdk/voice` e
+`yuzuha/sdk/sharding` reexportam os pacotes opcionais homônimos e só funcionam
+quando o peer correspondente está instalado.
+
 ## Recursos nativos
 
 As funções `$...` de usuários, cargos, canais, mensagens, coletores, webhooks,
@@ -206,8 +215,12 @@ await ctx.reply(`${membro.displayName}: ${canais.length} canais, ${fixadas.lengt
 | `users` | `user`, `member`, `members`, `memberCount`, `guild`, `bans`, `auditLogs`, `setPresence`, `searchMembers`, `setNickname`, `editGuild` |
 | `roles` | `list`, `resolve`, `has`, `create`, `edit`, `delete`, `add`, `remove`, `move` |
 | `channels` | `list`, `get`, `create`, `edit`, `delete`, `setSlowmode`, `overwrite`, `permissionsFor`, `move`, `setCategory` |
-| `messages` | Histórico com cursores, `pinnedPage`, `reactionUsersPage`, `dm`, `forward`, `search` com filtros avançados, `sendFiles`, `sendBytes`, `sendAttachments` |
-| `collectors` | `awaitMessage`, `awaitReaction` |
+| `messages` | Histórico com cursores, `pinnedPage`, `reactionUsersPage`, `dm`, `forward`, `search`/`searchAll` com filtros avançados, `bulkFetch`, `sendFiles`, `sendBytes`, `sendAttachments` |
+| `collectors` | `awaitMessage`, `awaitReaction`, streams `collectMessages`/`collectReactions` (AsyncIterable) |
+| `gateway` | `requestMembers`, `requestGuildCounts`, `requestChannelCounts`, `requestForumUnreads`, `subscribeThreads`, `send` (fire-and-forget) |
+| `instance` | `describe`, `gatewayInfo`, `application`, `oauthApplications`, `emojiMetadata`, `stickerMetadata`, `resolveEmoji` |
+| `self` | `fetch`, `guilds`, `leaveGuild` e `deleteMyMessages` com verificação sudo |
+| `cache` | `stats`, `sweepMessages`, `sweepMembers` |
 | `webhooks` | `list`, `create`, `send`, `edit`, `delete` |
 | `expressions` | CRUD de emojis/stickers, `cloneEmoji`, `cloneSticker` |
 | `threads` | `create`, `archive`, `unarchive`, `forumPost`, `addMember`, `removeMember`, `members`, `member`, `edit`, `join`, `leave`, `search` |
@@ -252,9 +265,23 @@ o SDK. `$createEmoji[nome;url]` faz o download e a conversão com `ctx.http`;
 `$createSticker` recebe base64 diretamente. Edição de sticker suporta nome,
 descrição e motivo; tags são aceitas na criação.
 
-Implementações próprias dos contratos `MessagesResources`, `ThreadsResources`,
-`ExpressionsResources`, `UsersResources`, `InvitesResources`, `ChannelsResources` e `RolesResources` precisam fornecer
-as novas operações da 0.1.2. Para testes que exercitam apenas parte dos recursos,
+`collectors.collectMessages` e `collectors.collectReactions` retornam um
+`AsyncIterable` que emite cada item coletado até o limite (`timeMs`, `max` ou
+`signal`) ou o cancelamento do comando. Reações exigem `messageID`: o coletor do
+SDK é por mensagem. Iteradores são de uso único; cada chamada cria um novo stream.
+
+`messages.bulkFetch` agrupa pedidos de janela por canal e hidrata as mensagens
+por padrão; `hydrate: false` devolve os payloads brutos da API. `searchAll` é a
+busca global do client com os mesmos filtros e paginação de `search`.
+
+`gateway` envia pedidos brutos ao gateway sem aguardar resposta — os resultados
+chegam pelos eventos do client. `users.guildCounts` e `users.channelCounts`
+continuam sendo o caminho quando se espera o valor de volta.
+
+Implementações próprias dos contratos `Resources` devem fornecer as áreas
+`gateway`, `instance`, `self` e `cache` além das anteriores; `CollectorsResources`
+ganhou `collectMessages`/`collectReactions` e `MessagesResources` ganhou
+`searchAll`/`bulkFetch`. Para testes que exercitam apenas parte dos recursos,
 use `mockResources`, que aceita implementações parciais por método.
 
 ## Membros, mensagens e transações
