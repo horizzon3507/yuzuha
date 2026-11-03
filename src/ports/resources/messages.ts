@@ -1,4 +1,5 @@
 import type { AttachmentSpec, BinaryAttachmentSpec } from './common.js';
+import type { APIMessage } from '@fluxerjs/types';
 import type { MessageSearchInput, PinnedMessagesInput } from '../../domain/message-query.js';
 export type { MessageSearchInput, PinnedMessagesInput } from '../../domain/message-query.js';
 
@@ -37,6 +38,8 @@ export interface MessagesResources {
   dm(userID: string, content: string): Promise<string>;
   forward(channelID: string, sourceChannelID: string, messageID: string): Promise<string>;
   search(input: MessageSearchInput): Promise<MessageSearchPage>;
+  searchAll(input: MessageSearchInput): Promise<MessageSearchPage>;
+  bulkFetch(requests: BulkFetchRequest[], input?: BulkFetchInput): Promise<MessageInfo[] | BulkFetchRawChannel[]>;
   sendBytes(channelID: string, files: BinaryAttachmentSpec[], content?: string): Promise<string>;
   sendAttachments(channelID: string, files: (AttachmentSpec | BinaryAttachmentSpec)[], content?: string): Promise<string>;
 }
@@ -58,4 +61,24 @@ export interface MessageSearchPage {
   messages: MessageInfo[];
   total: number;
   cursor: string[] | null;
+}
+
+/** Janela de mensagens de um canal dentro de um `bulkFetch`. */
+export interface BulkFetchRequest {
+  channelID: string;
+  limit: number;
+  before?: string;
+  after?: string;
+  around?: string;
+}
+
+export interface BulkFetchInput {
+  /** `false` retorna o payload bruto da API; o padrão hidrata e normaliza. */
+  hydrate?: boolean;
+}
+
+/** Canal do retorno bruto de `bulkFetch` quando `hydrate` é `false`. */
+export interface BulkFetchRawChannel {
+  channelID: string;
+  messages: APIMessage[];
 }

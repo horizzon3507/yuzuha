@@ -3,11 +3,11 @@ import type { Client } from '@fluxerjs/core';
 import { limitOf } from '../../../ports/resources/common.js';
 import type { AttachmentSpec, BinaryAttachmentSpec } from '../../../ports/resources/common.js';
 import { YuzuhaError } from '../../../errors.js';
-import type { MessageInfo, MessagesResources } from '../../../ports/resources/messages.js';
+import type { BulkFetchRawChannel, MessageInfo, MessageSearchInput, MessageSearchPage, MessagesResources } from '../../../ports/resources/messages.js';
 import { preloadChannels } from '../../../domain/resource-batches.js';
 import { messageSearchInput, pinnedMessagesInput, reactionUsersInput } from '../../../domain/message-query.js';
 
-function info(message: Message): MessageInfo {
+export function toMessageInfo(message: Message): MessageInfo {
   return {
     id: message.id, channelID: message.channelId, authorID: message.author.id,
     authorName: message.author.username, content: message.content,
@@ -38,14 +38,43 @@ export function createMessagesResources(client: Client): MessagesResources {
       allowedMentions: { parse: [], repliedUser: false },
     })).id;
   };
+  const search = async (rawInput: MessageSearchInput): Promise<MessageSearchPage> => {
+    const input = messageSearchInput(rawInput);
+    const result = await client.searchMessages({ content: input.content,
+      contextGuildId: input.guildID, contextChannelId: input.channelID,
+      channelIds: input.channelIDs ?? (input.channelID ? [input.channelID] : undefined),
+      authorIds: input.authorIDs ?? (input.authorID ? [input.authorID] : undefined),
+      hitsPerPage: limitOf(input.limit, 25, 100), cursor: input.cursor,
+      ...(input.contents === undefined ? {} : { contents: input.contents }),
+      ...(input.exactPhrases === undefined ? {} : { exactPhrases: input.exactPhrases }),
+      ...(input.excludeChannelIDs === undefined ? {} : { excludeChannelIds: input.excludeChannelIDs }),
+      ...(input.excludeAuthorIDs === undefined ? {} : { excludeAuthorIds: input.excludeAuthorIDs }),
+      ...(input.authorType === undefined ? {} : { authorType: input.authorType }),
+      ...(input.excludeAuthorType === undefined ? {} : { excludeAuthorType: input.excludeAuthorType }),
+      ...(input.mentions === undefined ? {} : { mentions: input.mentions }),
+      ...(input.excludeMentions === undefined ? {} : { excludeMentions: input.excludeMentions }),
+      ...(input.mentionEveryone === undefined ? {} : { mentionEveryone: input.mentionEveryone }),
+      ...(input.pinned === undefined ? {} : { pinned: input.pinned }),
+      ...(input.includeNsfw === undefined ? {} : { includeNsfw: input.includeNsfw }),
+      ...(input.has === undefined ? {} : { has: input.has }),
+      ...(input.excludeHas === undefined ? {} : { excludeHas: input.excludeHas }),
+      ...(input.minID === undefined ? {} : { minId: input.minID }),
+      ...(input.maxID === undefined ? {} : { maxId: input.maxID }),
+      ...(input.sortBy === undefined ? {} : { sortBy: input.sortBy }),
+      ...(input.sortOrder === undefined ? {} : { sortOrder: input.sortOrder }),
+      ...(input.page === undefined ? {} : { page: input.page }) });
+    if ('indexing' in result) return { indexing: true, messages: [], total: 0, cursor: null };
+    return { indexing: false, messages: result.messages.map(data => toMessageInfo(new Message(client, data))),
+      total: result.total, cursor: result.cursor ?? null };
+  };
   return {
     async preload(channelIDs) {
       const ids = preloadChannels(channelIDs);
       const result = await client.preloadMessages(ids);
-      return Object.fromEntries(ids.map(id => [id, result[id] ? info(new Message(client, result[id])) : null]));
+      return Object.fromEntries(ids.map(id => [id, result[id] ? toMessageInfo(new Message(client, result[id])) : null]));
     },
     async fetch(channelID: string, messageID: string): Promise<MessageInfo> {
-      return info(await client.channels.fetchMessage(channelID, messageID));
+      return toMessageInfo(await client.channels.fetchMessage(channelID, messageID));
     },
     async list(channelID, limit, cursor = {}): Promise<MessageInfo[]> {
       if (Object.values(cursor).filter(value => value !== undefined).length > 1) {
@@ -54,7 +83,7 @@ export function createMessagesResources(client: Client): MessagesResources {
       const channel = await client.channels.fetch(channelID, { force: true });
       if (!channel.isTextBased()) throw new YuzuhaError('CHANNEL_TEXT', 'Canal sem suporte a mensagens.');
       const messages = await channel.messages.fetch({ limit: limitOf(limit, 20, 100), ...cursor });
-      return order([...messages.values()].map(info));
+      return order([...messages.values()].map(toMessageInfo));
     },
     async pin(channelID: string, messageID: string): Promise<void> {
       await (await client.channels.fetchMessage(channelID, messageID)).pin();
@@ -69,14 +98,14 @@ export function createMessagesResources(client: Client): MessagesResources {
       const messages = limit === undefined
         ? await channel.fetchPinnedMessages()
         : await channel.fetchPinnedMessagesPage({ limit }).then(page => page.messages);
-      return order(messages.map(info));
+      return order(messages.map(toMessageInfo));
     },
     async pinnedPage(channelID, input) {
       const options = pinnedMessagesInput(input);
       const channel = await client.channels.fetch(channelID, { force: true });
       if (!channel.isTextBased()) throw new YuzuhaError('CHANNEL_TEXT', 'Canal sem suporte a mensagens.');
       const page = await channel.fetchPinnedMessagesPage(options);
-      return { messages: page.messages.map(info), pinnedAt: [...page.pinnedAt], hasMore: page.hasMore,
+      return { messages: page.messages.map(toMessageInfo), pinnedAt: [...page.pinnedAt], hasMore: page.hasMore,
         nextBefore: page.hasMore ? page.pinnedAt.at(-1) ?? null : null };
     },
     sendFiles: send,
@@ -90,34 +119,19 @@ export function createMessagesResources(client: Client): MessagesResources {
         allowedMentions: { parse: [], repliedUser: false },
       })).id;
     },
-    async search(rawInput) {
-      const input = messageSearchInput(rawInput);
-      const result = await client.searchMessages({ content: input.content,
-        contextGuildId: input.guildID, contextChannelId: input.channelID,
-        channelIds: input.channelIDs ?? (input.channelID ? [input.channelID] : undefined),
-        authorIds: input.authorIDs ?? (input.authorID ? [input.authorID] : undefined),
-        hitsPerPage: limitOf(input.limit, 25, 100), cursor: input.cursor,
-        ...(input.contents === undefined ? {} : { contents: input.contents }),
-        ...(input.exactPhrases === undefined ? {} : { exactPhrases: input.exactPhrases }),
-        ...(input.excludeChannelIDs === undefined ? {} : { excludeChannelIds: input.excludeChannelIDs }),
-        ...(input.excludeAuthorIDs === undefined ? {} : { excludeAuthorIds: input.excludeAuthorIDs }),
-        ...(input.authorType === undefined ? {} : { authorType: input.authorType }),
-        ...(input.excludeAuthorType === undefined ? {} : { excludeAuthorType: input.excludeAuthorType }),
-        ...(input.mentions === undefined ? {} : { mentions: input.mentions }),
-        ...(input.excludeMentions === undefined ? {} : { excludeMentions: input.excludeMentions }),
-        ...(input.mentionEveryone === undefined ? {} : { mentionEveryone: input.mentionEveryone }),
-        ...(input.pinned === undefined ? {} : { pinned: input.pinned }),
-        ...(input.includeNsfw === undefined ? {} : { includeNsfw: input.includeNsfw }),
-        ...(input.has === undefined ? {} : { has: input.has }),
-        ...(input.excludeHas === undefined ? {} : { excludeHas: input.excludeHas }),
-        ...(input.minID === undefined ? {} : { minId: input.minID }),
-        ...(input.maxID === undefined ? {} : { maxId: input.maxID }),
-        ...(input.sortBy === undefined ? {} : { sortBy: input.sortBy }),
-        ...(input.sortOrder === undefined ? {} : { sortOrder: input.sortOrder }),
-        ...(input.page === undefined ? {} : { page: input.page }) });
-      if ('indexing' in result) return { indexing: true, messages: [], total: 0, cursor: null };
-      return { indexing: false, messages: result.messages.map(data => info(new Message(client, data))),
-        total: result.total, cursor: result.cursor ?? null };
+    search,
+    searchAll: search,
+    async bulkFetch(requests, input): Promise<MessageInfo[] | BulkFetchRawChannel[]> {
+      const options = requests.map(request => ({ channelId: request.channelID, limit: request.limit,
+        ...(request.before === undefined ? {} : { before: request.before }),
+        ...(request.after === undefined ? {} : { after: request.after }),
+        ...(request.around === undefined ? {} : { around: request.around }) }));
+      if (input?.hydrate === false) {
+        const raw = await client.bulkFetchMessages(options, { hydrate: false });
+        return raw.channels.map(channel => ({ channelID: channel.channel_id, messages: channel.messages }));
+      }
+      const result = await client.bulkFetchMessages(options);
+      return result.channels.flatMap(channel => [...channel.messages.values()].map(toMessageInfo));
     },
     sendBytes: send,
     sendAttachments: send,
