@@ -5,9 +5,12 @@ tipados em JavaScript/TypeScript e uma linguagem opcional de scripts.
 Os dois modos compartilham permissões, moderação, estado e recursos.
 
 O Yuzuha usa **Fluxer.js 3.3.0**. Você continua tendo acesso ao client original
-por `bot.client` e aos exports do SDK em `yuzuha/sdk`.
+por `bot.client`, aos exports do SDK em `yuzuha/sdk` e a todos os subpaths e
+pacotes satélites por `yuzuha/sdk/*` (client, errors, message, cluster, internal,
+types, rest, ws, builders, collection e util, além de voice e sharding como peers
+opcionais).
 
-[0.2.0](CHANGELOG.md) · Node **22.13+** · ESM · [MIT](LICENSE)
+[0.2.1](CHANGELOG.md) · Node **22.13+** · ESM · [MIT](LICENSE)
 
 [Começar](#começar) · [Comandos](#escrever-comandos) · [Recursos](#recursos) · [Testes](#testar-sem-token) · [Documentação](#documentação)
 
@@ -16,7 +19,7 @@ por `bot.client` e aos exports do SDK em `yuzuha/sdk`.
 ### Criar um bot
 
 ```sh
-npx yuzuha@0.2.0 init ./meu-bot --ts
+npx yuzuha@0.2.1 init ./meu-bot --ts
 cd meu-bot
 npm install
 npm run check
@@ -42,7 +45,7 @@ para incluir um comando de exemplo com scripts.
 ### Usar em um projeto existente
 
 ```sh
-npm install yuzuha@0.2.0
+npm install yuzuha@0.2.1
 ```
 
 Use `"type": "module"` no `package.json`. O [guia inicial](docs/QUICKSTART.md)
@@ -99,7 +102,8 @@ e a [cobertura](docs/PARITY.md).
 | Comandos | Prefixos, aliases, subcomandos, argumentos e flags tipadas, cooldowns e ajuda gerada dos metadados |
 | Extensões | Plugins, eventos, checks, middleware e recarga atômica de comandos |
 | Moderação | Ban, kick, timeout, unban e moderação de voz, com permissões, hierarquia e casos por servidor |
-| Fluxer | Usuários, membros, cargos, canais, mensagens, reações, anexos, threads, convites, webhooks e expressões |
+| Fluxer | Usuários, membros, cargos, canais, mensagens com embeds, reações, anexos, threads, convites, webhooks, expressões, gateway, instância, conta autenticada e cache |
+| Collectors | `collectMessages` e `collectReactions` como streams assíncronas, com tempo, limite e cancelamento |
 | Dados | Memória, JSON e SQLite; TTL, transações, limpeza e backup/restauração com simulação |
 | Agendamentos | Tarefas persistentes, cron, fusos IANA, pausa/retomada, histórico e retry |
 | HTTP | Texto, bytes, streaming e multipart, com limites, cancelamento e políticas por comando |
