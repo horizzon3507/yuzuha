@@ -30,7 +30,7 @@ function fakeMessage(overrides: Record<string, unknown> = {}) {
     id: 'm1', channelId: 'c1',
     author: { id: 'u1', username: 'ana' },
     content: 'oi', createdAt: new Date(1_000), pinned: false,
-    attachments: new Map(),
+    attachments: new Map(), embeds: [],
     ...overrides,
   };
 }
