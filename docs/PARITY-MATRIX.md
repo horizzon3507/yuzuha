@@ -17,9 +17,9 @@ A cobertura é por nome: um método `send` de uma classe conta como coberto se q
 | Status | Exports de runtime | Membros |
 |---|---:|---:|
 | coberto-script | 50 | 414 |
-| coberto-nativo | 4 | 62 |
+| coberto-nativo | 4 | 85 |
 | só-SDK | 3 | 0 |
-| lacuna | 60 | 246 |
+| lacuna | 60 | 223 |
 
 Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são listados, mas não contam como lacuna.
 
@@ -192,11 +192,11 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são
 | `CacheController` | `cascadeGuild` | método | lacuna |
 | `CacheController` | `cascading` | acessor | lacuna |
 | `CacheController` | `limits` | propriedade | coberto-nativo |
-| `CacheController` | `stats` | método | lacuna |
+| `CacheController` | `stats` | método | coberto-nativo |
 | `CacheController` | `sweepChannels` | método | lacuna |
 | `CacheController` | `sweepGuilds` | método | lacuna |
-| `CacheController` | `sweepMembers` | método | lacuna |
-| `CacheController` | `sweepMessages` | método | lacuna |
+| `CacheController` | `sweepMembers` | método | coberto-nativo |
+| `CacheController` | `sweepMessages` | método | coberto-nativo |
 | `CacheController` | `sweepUsers` | método | lacuna |
 | `Channel` | `_patch` | método | lacuna |
 | `Channel` | `acknowledgePins` | método | lacuna |
@@ -216,7 +216,7 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são
 | `Channel` | `fetchSlowmode` | método | lacuna |
 | `Channel` | `from` | método | coberto-script |
 | `Channel` | `fromOrCreate` | método | lacuna |
-| `Channel` | `icon` | propriedade | lacuna |
+| `Channel` | `icon` | propriedade | coberto-nativo |
 | `Channel` | `id` | propriedade | coberto-script |
 | `Channel` | `isAnnouncement` | método | lacuna |
 | `Channel` | `isCategory` | método | coberto-script |
@@ -249,7 +249,7 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são
 | `Client` | `_finalizeReady` | método | lacuna |
 | `Client` | `_getMessageCache` | método | lacuna |
 | `Client` | `_guildStreamSettleTimeout` | propriedade | lacuna |
-| `Client` | `_messageCacheStats` | método | lacuna |
+| `Client` | `_messageCacheStats` | método | coberto-nativo |
 | `Client` | `_onGuildReceived` | método | lacuna |
 | `Client` | `_pendingGuildIds` | propriedade | lacuna |
 | `Client` | `_readyStubGuildIds` | propriedade | lacuna |
@@ -257,22 +257,22 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são
 | `Client` | `_sendToAllShards` | método | lacuna |
 | `Client` | `_ws` | propriedade | lacuna |
 | `Client` | `assertReady` | método | lacuna |
-| `Client` | `bulkFetchMessages` | método | lacuna |
+| `Client` | `bulkFetchMessages` | método | coberto-nativo |
 | `Client` | `cache` | propriedade | coberto-nativo |
 | `Client` | `channels` | propriedade | coberto-script |
 | `Client` | `destroy` | método | coberto-nativo |
 | `Client` | `emit` | método | coberto-nativo |
 | `Client` | `events` | propriedade | coberto-nativo |
-| `Client` | `fetchApplication` | método | lacuna |
-| `Client` | `fetchEmojiMetadata` | método | lacuna |
-| `Client` | `fetchGatewayInfo` | método | lacuna |
-| `Client` | `fetchInstance` | método | lacuna |
-| `Client` | `fetchOAuthApplications` | método | lacuna |
-| `Client` | `fetchStickerMetadata` | método | lacuna |
+| `Client` | `fetchApplication` | método | coberto-nativo |
+| `Client` | `fetchEmojiMetadata` | método | coberto-nativo |
+| `Client` | `fetchGatewayInfo` | método | coberto-nativo |
+| `Client` | `fetchInstance` | método | coberto-nativo |
+| `Client` | `fetchOAuthApplications` | método | coberto-nativo |
+| `Client` | `fetchStickerMetadata` | método | coberto-nativo |
 | `Client` | `fromDiscovery` | método | lacuna |
 | `Client` | `getOrCreateUser` | método | lacuna |
 | `Client` | `guilds` | propriedade | coberto-script |
-| `Client` | `instance` | propriedade | lacuna |
+| `Client` | `instance` | propriedade | coberto-nativo |
 | `Client` | `isReady` | método | lacuna |
 | `Client` | `logger` | propriedade | lacuna |
 | `Client` | `login` | método | coberto-nativo |
@@ -284,17 +284,17 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são
 | `Client` | `preloadMessagesAlt` | método | lacuna |
 | `Client` | `readyAt` | propriedade | coberto-nativo |
 | `Client` | `requestChannelMemberCounts` | método | coberto-script |
-| `Client` | `requestForumUnreads` | método | lacuna |
+| `Client` | `requestForumUnreads` | método | coberto-nativo |
 | `Client` | `requestGuildCounts` | método | coberto-script |
-| `Client` | `requestGuildMembers` | método | lacuna |
+| `Client` | `requestGuildMembers` | método | coberto-nativo |
 | `Client` | `resolveEmoji` | método | coberto-script |
 | `Client` | `rest` | propriedade | lacuna |
 | `Client` | `Routes` | acessor | lacuna |
 | `Client` | `searchMessages` | método | coberto-script |
-| `Client` | `sendToGateway` | método | lacuna |
-| `Client` | `subscribeThreads` | método | lacuna |
-| `Client` | `sweepMembers` | método | lacuna |
-| `Client` | `sweepMessages` | método | lacuna |
+| `Client` | `sendToGateway` | método | coberto-nativo |
+| `Client` | `subscribeThreads` | método | coberto-nativo |
+| `Client` | `sweepMembers` | método | coberto-nativo |
+| `Client` | `sweepMessages` | método | coberto-nativo |
 | `Client` | `uptime` | acessor | lacuna |
 | `Client` | `user` | propriedade | coberto-script |
 | `Client` | `users` | propriedade | coberto-script |
@@ -313,10 +313,10 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são
 | `ClientCluster` | `runtimeValues` | método | lacuna |
 | `ClientCluster` | `size` | acessor | coberto-script |
 | `ClientCluster` | `values` | método | coberto-script |
-| `ClientUser` | `bulkDeleteMyMessagesInGuild` | método | lacuna |
+| `ClientUser` | `bulkDeleteMyMessagesInGuild` | método | coberto-nativo |
 | `ClientUser` | `client` | propriedade | coberto-script |
 | `ClientUser` | `fetch` | método | coberto-script |
-| `ClientUser` | `fetchGuilds` | método | lacuna |
+| `ClientUser` | `fetchGuilds` | método | coberto-nativo |
 | `ClientUser` | `leaveGuild` | método | coberto-nativo |
 | `ClientUser` | `setPresence` | método | coberto-script |
 | `DMChannel` | `_patch` | método | lacuna |
@@ -419,7 +419,7 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são
 | `Guild` | `fetchStickers` | método | coberto-script |
 | `Guild` | `fetchVanityURL` | método | coberto-script |
 | `Guild` | `fetchWebhooks` | método | coberto-script |
-| `Guild` | `icon` | propriedade | lacuna |
+| `Guild` | `icon` | propriedade | coberto-nativo |
 | `Guild` | `iconURL` | método | coberto-script |
 | `Guild` | `id` | propriedade | coberto-script |
 | `Guild` | `kick` | método | coberto-nativo |
@@ -606,7 +606,7 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são
 | `Message` | `mentions` | propriedade | coberto-script |
 | `Message` | `messageReference` | propriedade | lacuna |
 | `Message` | `messageSnapshots` | propriedade | lacuna |
-| `Message` | `nonce` | propriedade | lacuna |
+| `Message` | `nonce` | propriedade | coberto-nativo |
 | `Message` | `nsfwEmojis` | propriedade | lacuna |
 | `Message` | `partial` | propriedade | coberto-nativo |
 | `Message` | `pin` | método | coberto-script |
