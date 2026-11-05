@@ -203,10 +203,12 @@ test('recursos herdados são preservados e mutações usam o ID autorizado em ve
   const checked: string[] = [];
   const inherited = Object.create(base) as typeof base;
   const bound = bindAuthorizedResources(inherited, new MockTransport(), { guildID: '100', authorID: '1' });
-  for (const area of ['users', 'collectors', 'invites'] as const) assert.equal(bound[area], base[area]);
+  for (const area of ['collectors', 'invites'] as const) assert.equal(bound[area], base[area]);
   assert.notEqual(bound.threads, base.threads);
   assert.equal(typeof bound.threads.setLocked, 'function');
   assert.notEqual(bound.messages, base.messages);
+  assert.notEqual(bound.users, base.users);
+  assert.equal(typeof bound.users.transferOwnership, 'function');
   assert.equal(typeof bound.messages.bulkDelete, 'function');
   assert.equal(typeof bound.messages.pin, 'function');
   await bound.roles.add('100', '2', 'membro');
