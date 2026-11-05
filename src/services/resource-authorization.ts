@@ -99,7 +99,7 @@ export function bindAuthorizedResources(source: Resources, transport: Transport,
   }), collectors: source.collectors,
     threads: Object.assign(Object.create(source.threads), {
     async setLocked(threadID: string, locked: boolean, reason?: string) {
-      await channel(threadID, 'ManageThreads');
+      await channel(threadID);
       return source.threads.setLocked(threadID, locked, reason);
     },
     async editSelf(threadID: string, input: ThreadSelfEditInput) { await channel(threadID, 'ViewChannel'); return source.threads.editSelf(threadID, input); },

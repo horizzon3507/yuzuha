@@ -172,3 +172,59 @@ test('purgeDM exige participacao e propaga a contagem', async () => {
   const guild = dmFixture(channel);
   await assert.rejects(guild.resources.messages.purgeDM('200'), GuardError);
 });
+
+const threadChannel: ChannelInfo = { ...channel, id: 'th-1', type: 11 };
+
+test('threads.setLocked exige ManageChannels do autor e do bot', async () => {
+  const calls: string[] = [];
+  const source = mockResources({
+    channels: { get: async (id: string) => (id === 'th-1' ? threadChannel : channel) },
+    threads: { setLocked: async (_t: string, l: boolean) => { calls.push('lock:' + l); } },
+  });
+  const transport = new MockTransport();
+  const grant = PermissionFlags.ManageChannels;
+  transport.member = async (_g: string, id: string) => member(id, id === transport.botID ? grant : grant) as never;
+  const bound = bindAuthorizedResources(source, transport, { guildID: '100', authorID: '2' });
+  await bound.threads.setLocked('th-1', true, 'motivo');
+  assert.deepEqual(calls, ['lock:true']);
+  transport.member = async (_g: string, id: string) => member(id, id === transport.botID ? grant : 0n) as never;
+  await assert.rejects(bound.threads.setLocked('th-1', true), GuardError);
+  transport.member = async (_g: string, id: string) => member(id, id === transport.botID ? 0n : grant) as never;
+  await assert.rejects(bound.threads.setLocked('th-1', true), GuardError);
+});
+
+test('threads.editSelf so toca a propria associacao', async () => {
+  const source = mockResources({
+    channels: { get: async (id: string) => (id === 'th-1' ? threadChannel : channel) },
+    threads: { editSelf: async (_t: string, i: { muted?: boolean }) =>
+      ({ threadID: 'th-1', userID: '2', joinedTimestamp: 1, flags: i.muted ? 8 : 0 }) },
+  });
+  const transport = new MockTransport();
+  transport.member = async (_g: string, id: string) => member(id, PermissionFlags.ViewChannel) as never;
+  const bound = bindAuthorizedResources(source, transport, { guildID: '100', authorID: '2' });
+  const self = await bound.threads.editSelf('th-1', { muted: true });
+  assert.equal(self?.userID, '2');
+});
+
+test('editDefaults de canal e de forum exigem ManageChannels', async () => {
+  const calls: string[] = [];
+  const source = mockResources({
+    channels: {
+      get: async () => channel,
+      editThreadDefaults: async () => { calls.push('chan-defaults'); },
+      setDefaultForumLayout: async (_c: string, l: string | null) => { calls.push('layout:' + l); },
+    },
+    threads: { editDefaults: async () => { calls.push('thread-defaults'); } },
+  });
+  const transport = new MockTransport();
+  const grant = PermissionFlags.ManageChannels;
+  transport.member = async (_g: string, id: string) => member(id, grant) as never;
+  const bound = bindAuthorizedResources(source, transport, { guildID: '100', authorID: '2' });
+  await bound.channels.editThreadDefaults('200', { slowmode: 10 });
+  await bound.channels.setDefaultForumLayout('200', 'list', 'motivo');
+  await bound.threads.editDefaults('200', { slowmode: 10 });
+  assert.deepEqual(calls, ['chan-defaults', 'layout:list', 'thread-defaults']);
+  transport.member = async (_g: string, id: string) => member(id, 0n) as never;
+  await assert.rejects(bound.channels.editThreadDefaults('200', {}), GuardError);
+  await assert.rejects(bound.threads.editDefaults('200', {}), GuardError);
+});
