@@ -216,5 +216,23 @@
       ],
       "note": "Disponível por `yuzuha/sdk` (e `SDK` na raiz); sem wrapper nativo por serem constantes, helpers puros ou classes de dados."
     }
+  },
+  "members": {
+    "Internos do SDK": {
+      "match": [
+        "^_",
+        "^fromOrCreate$",
+        "^isFluxerError$",
+        "^Flags$",
+        "^\\[Symbol"
+      ],
+      "reason": "membro interno ou helper estático do SDK; fora da superfície pública, acessível por `bot.client` e `yuzuha/sdk`"
+    },
+    "Dados dos objetos do SDK": {
+      "kinds": [
+        "propriedade"
+      ],
+      "reason": "propriedade de dado do objeto do SDK, acessível por `bot.client` e pelos `*Info` do recurso quando normalizada"
+    }
   }
 }
