@@ -212,7 +212,7 @@ await ctx.reply(`${membro.displayName}: ${canais.length} canais, ${fixadas.lengt
 
 | Área | Operações principais |
 |---|---|
-| `users` | `user`, `member`, `members`, `memberCount`, `guild`, `bans`, `auditLogs`, `setPresence`, `searchMembers`, `setNickname`, `editGuild` |
+| `users` | `user`, `member`, `members`, `memberCount`, `guild`, `bans`, `auditLogs`, `setPresence`, `searchMembers`, `setNickname`, `editGuild`, `discoveryStatus`, `applyForDiscovery`, `editDiscoveryApplication` |
 | `roles` | `list`, `resolve`, `has`, `create`, `edit`, `delete`, `add`, `remove`, `move` |
 | `channels` | `list`, `get`, `create`, `edit`, `delete`, `setSlowmode`, `slowmode`, `sendTyping`, `rtcRegions`, `addRecipient`/`removeRecipient` em grupos de DM, `editThreadDefaults`, `setDefaultForumLayout`, `overwrite`, `permissionsFor`, `move`, `setCategory` |
 | `messages` | Histórico com cursores, `pinnedPage`, `reactionUsersPage`, `dm`, `forward`, `search`/`searchAll` com filtros avançados, `bulkFetch`, `bulkDelete`, `bulkDeleteOwn`, `acknowledgePins`, `clearReadState`, `purgeDM`, `sendFiles`, `sendBytes`, `sendAttachments` |
@@ -222,8 +222,9 @@ await ctx.reply(`${membro.displayName}: ${canais.length} canais, ${fixadas.lengt
 | `self` | `fetch`, `guilds`, `leaveGuild` e `deleteMyMessages` com verificação sudo |
 | `cache` | `stats`, `sweepMessages`, `sweepMembers`, `sweepUsers`, `sweepChannels`, `sweepGuilds` |
 | `webhooks` | `list`, `create`, `send`, `edit`, `delete`, `editMessage`, `deleteMessage` |
-| `expressions` | CRUD de emojis/stickers, `cloneEmoji`, `cloneSticker` |
+| `expressions` | CRUD de emojis/stickers, `createEmojisBulk`, `createStickersBulk`, `cloneEmoji`, `cloneSticker` |
 | `threads` | `create`, `archive`, `unarchive`, `forumPost`, `addMember`, `removeMember`, `members`, `member`, `edit`, `join`, `leave`, `setLocked`, `editSelf`, `editDefaults`, `search` |
+
 | `invites` | `get`, `create`, `delete`, `list`, `vanity`, `setVanity` |
 
 Os retornos são objetos normalizados e serializáveis (`UserInfo`, `MemberInfo`,
