@@ -12,6 +12,10 @@ export interface WebhookSendInput {
   avatarURL?: string;
 }
 
+export interface WebhookMessageEditInput {
+  content?: string;
+}
+
 export interface WebhooksResources {
   fetch(webhookID: string): Promise<WebhookInfo>;
   create(channelID: string, name: string, reason?: string): Promise<WebhookInfo>;
@@ -19,4 +23,6 @@ export interface WebhooksResources {
   send(webhookID: string, token: string, input: WebhookSendInput): Promise<string | null>;
   edit(webhookID: string, token: string | null, name: string): Promise<void>;
   delete(webhookID: string, token: string | null): Promise<void>;
+  editMessage(webhookID: string, token: string, messageID: string, input: WebhookMessageEditInput): Promise<string>;
+  deleteMessage(webhookID: string, token: string, messageID: string): Promise<void>;
 }

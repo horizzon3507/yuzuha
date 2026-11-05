@@ -62,6 +62,13 @@ export function bindAuthorizedResources(source: Resources, transport: Transport,
     await allowed(flag, id);
     return target;
   };
+  const dm = async (id: string) => {
+    const target = await source.channels.get(id);
+    if (target.guildID !== null || !target.recipientIDs?.includes(scope.authorID)) {
+      throw new GuardError('Esta operação exige um canal de DM do qual o autor participe.');
+    }
+    return target;
+  };
   const parent = async (id: string) => {
     const target = await channel(id);
     if (target.type !== 4) throw new GuardError('O canal pai deve ser uma categoria.');
@@ -87,6 +94,7 @@ export function bindAuthorizedResources(source: Resources, transport: Transport,
     async bulkDeleteOwn(channelID: string) { await channel(channelID, 'SendMessages'); return source.messages.bulkDeleteOwn(channelID); },
     async acknowledgePins(channelID: string) { await channel(channelID, 'ReadMessageHistory'); return source.messages.acknowledgePins(channelID); },
     async clearReadState(channelID: string) { await channel(channelID, 'ReadMessageHistory'); return source.messages.clearReadState(channelID); },
+    async purgeDM(channelID: string) { await dm(channelID); return source.messages.purgeDM(channelID); },
   }), collectors: source.collectors,
     threads: source.threads, invites: source.invites, gateway: source.gateway,
     instance: source.instance, self: source.self, cache: source.cache, expressions: {
@@ -179,6 +187,20 @@ export function bindAuthorizedResources(source: Resources, transport: Transport,
       return source.channels.edit(id, input);
     },
     async delete(id, reason) { await channel(id); return source.channels.delete(id, reason); },
+    async addRecipient(id, userID) {
+      const target = await dm(id);
+      if (!target.ownerID || target.ownerID !== scope.authorID) {
+        throw new GuardError('Apenas o dono do grupo pode adicionar participantes.');
+      }
+      return source.channels.addRecipient(id, userID);
+    },
+    async removeRecipient(id, userID, options) {
+      const target = await dm(id);
+      if (userID !== scope.authorID && (!target.ownerID || target.ownerID !== scope.authorID)) {
+        throw new GuardError('Apenas o dono do grupo pode remover outros participantes.');
+      }
+      return source.channels.removeRecipient(id, userID, options);
+    },
     async setSlowmode(id, seconds, reason) { await channel(id); return source.channels.setSlowmode(id, seconds, reason); },
     slowmode: source.channels.slowmode.bind(source.channels),
     async sendTyping(id) { await channel(id, 'SendMessages'); return source.channels.sendTyping(id); },
@@ -212,6 +234,8 @@ export function bindAuthorizedResources(source: Resources, transport: Transport,
     async create(id, name, reason) { await channel(id, 'ManageWebhooks'); return source.webhooks.create(id, name, reason); },
     async list(id) { await channel(id, 'ManageWebhooks'); return source.webhooks.list(id); },
     async send(id, token, input) { await webhook(id); return source.webhooks.send(id, token, input); },
+    async editMessage(id, token, messageID, input) { await webhook(id); return source.webhooks.editMessage(id, token, messageID, input); },
+    async deleteMessage(id, token, messageID) { await webhook(id); return source.webhooks.deleteMessage(id, token, messageID); },
     async edit(id, token, name) { await webhook(id); return source.webhooks.edit(id, token, name); },
     async delete(id, token) { await webhook(id); return source.webhooks.delete(id, token); },
   } };

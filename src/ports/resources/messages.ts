@@ -49,6 +49,7 @@ export interface MessagesResources {
   bulkDeleteOwn(channelID: string): Promise<void>;
   acknowledgePins(channelID: string): Promise<void>;
   clearReadState(channelID: string): Promise<void>;
+  purgeDM(channelID: string): Promise<number>;
 }
 
 export interface MessageCursor { before?: string; after?: string; around?: string }

@@ -40,5 +40,14 @@ export function createWebhooksResources(client: Client): WebhooksResources {
       const webhook = token ? Webhook.fromToken(client, webhookID, token) : await Webhook.fetch(client, webhookID);
       await webhook.delete();
     },
+    editMessage: async (webhookID, token, messageID, input) => {
+      const webhook = Webhook.fromToken(client, webhookID, token);
+      const message = await webhook.editMessage(messageID, { content: input.content });
+      return message.id;
+    },
+    deleteMessage: async (webhookID, token, messageID) => {
+      const webhook = Webhook.fromToken(client, webhookID, token);
+      await webhook.deleteMessage(messageID);
+    },
   };
 }
