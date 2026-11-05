@@ -99,7 +99,7 @@ O índice SQLite é derivado e reconstruído na primeira consulta após escrita;
 as escritas ainda serializam o estado integral. Anexos recebidos por stream
 são acumulados antes do upload exigido pelo SDK. Componentes interativos e
 comandos de aplicação continuam sem contrato equivalente verificado.
-[FUNCTION-GAPS.md](FUNCTION-GAPS.md) e [INTEGRATIONS.md](INTEGRATIONS.md)
+[FUNCTION-GAPS.md](functions/FUNCTION-GAPS.md) e [INTEGRATIONS.md](INTEGRATIONS.md)
 registram essas limitações. Não houve publicação ou ações reais de bot.
 
 ## Monorepo e documentação web — rodada anterior
@@ -259,7 +259,7 @@ no Fluxer real. Ambiente: Linux, Node **26.11.1**, npm **12.2.1** e
 |---|---|
 | `npm run check` | PASS: tipos, arquitetura, testes, build, editor, referência e documentação |
 | Testes de comportamento | PASS: **386 testes**, nenhuma falha, cancelamento ou skip |
-| Dependências entre camadas | PASS: **147 módulos**; domínio, ports, serviços e scripting isolados |
+| Dependências entre camadas | PASS: **147 módulos**; domínio, ports, serviços e functions isolados |
 | Referência e documentação | PASS: **288 funções**, 28 arquivos Markdown e links locais |
 | Manifest, lockfile e changelog | PASS: versão `0.1.4`, título Hory `v0.1.4` |
 | `npm run smoke:package` | PASS: tarball instalado em consumidor externo e scaffolds JS/TS |
@@ -322,9 +322,9 @@ reabertura JSON/SQLite, histórico/retry de tarefas e isolamento por autor/guild
 Também inclui parser e limites, dados de usuário inertes, caminhos/propriedades
 próprias, diagnósticos UTF-16 e o host simulado da extensão VS Code.
 
-A raiz nativa continua sem exports de parser/runtime; bots nativos não registram
-builtins. Comandos com `code`, eventos de script e `enableFunctions()` ativam o
-function mode sob demanda. Reload, fechamento, store injetado e identidade das
+A raiz nativa continua sem exports de parser/runtime e não carrega o function mode;
+comandos com `code` e eventos de script exigem `engine: functions()` de `yuzuha/functions`.
+Reload, fechamento, store injetado e identidade das
 classes públicas em configs/comandos TS continuam cobertos.
 
 ## Limites da evidência

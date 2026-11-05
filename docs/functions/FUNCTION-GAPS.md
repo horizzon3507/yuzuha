@@ -26,7 +26,7 @@ satélites do monorepo.
 | Cargos | `$role`, `$roles`, `$hasRole`, `$addRole`, `$removeRole`, `$createRole`, `$editRole`, `$deleteRole`, `$moveRole` | Resolução por nome, ID ou menção, mutações e posição |
 | Canais | `$channel`, `$channels`, `$createChannel`, `$editChannel`, `$deleteChannel`, `$channelPerms`, `$channelPermsOf`, `$slowmode`, `$moveChannel`, `$setCategory` | Criação, edição, exclusão, posição, categoria, overwrites e permissões efetivas |
 | Mensagens | `$fetchMessage`, `$messages`, `$pin`, `$unpin`, `$pinnedMessages`, `$pinnedMessagesPage`, `$searchMessagesAdvanced`, `$sendFiles`, `$removeReaction`, `$clearReactions`, `$reactionUsers`, `$reactionUsersPage` | Histórico, páginas de fixadas por timestamp, busca com filtros do SDK, anexos por URL e reações com metadados de paginação |
-| Embeds | `$embed`, `$author`, `$url`, `$embedTimestamp`, `$footerIcon`, `$imageAlt`, `$fields`, `$addField`, `$removeField`, `$editField`, `$embedFromObject`, `$embeds`, `$addEmbed`, `$messageOptions` | Partes tipadas, campos incrementais, lista de até 10 embeds, URLs HTTP(S), limites do SDK e opções de envio com permissão; detalhes em [EMBEDS.md](EMBEDS.md) |
+| Embeds | `$embed`, `$author`, `$url`, `$embedTimestamp`, `$footerIcon`, `$imageAlt`, `$fields`, `$addField`, `$removeField`, `$editField`, `$embedFromObject`, `$embeds`, `$addEmbed`, `$messageOptions` | Partes tipadas, campos incrementais, lista de até 10 embeds, URLs HTTP(S), limites do SDK e opções de envio com permissão; detalhes em [EMBEDS.md](../EMBEDS.md) |
 | Coletores | `$awaitMessage`, `$awaitReaction`, `$confirm` | Espera com timeout, filtro por autor e múltiplos emojis |
 | Servidor e convites | `$invite`, `$createInvite`, `$deleteInvite` | Convite por código/URL e criação com duração |
 | Webhooks | `$webhooks`, `$createWebhook`, `$sendWebhook`, `$editWebhook`, `$deleteWebhook` | CRUD e envio com ou sem token |
@@ -81,12 +81,12 @@ assíncronos dentro do store. A extensão cobre as 336 funções internas.
 | Mensagens | `$preloadMessages` | Última mensagem por canal; array de 1 a 100 IDs, com entradas ausentes normalizadas como null |
 | Expressões | `$createEmojisBulk` | 1 a 50 objetos name/image base64, até 10 MB; success/failed preservam falhas parciais |
 | Autorização | Cargos, canais e webhooks em `ctx.resources` | Guards de autor/bot compartilhados entre nativo e script, servidor, permissões locais e hierarquia; token de webhook não contorna a política |
-| Eventos | `$eventName`, `$eventUserID`, `$eventGuildID`, `$eventChannelID`, `$eventMessageID`, `$eventContent`, `$eventOldContent`, `$eventEmoji` | Seis eventos de SDK, ausências null, metadados imutáveis, ator explícito e cancelamento; veja [EVENTS.md](EVENTS.md) |
+| Eventos | `$eventName`, `$eventUserID`, `$eventGuildID`, `$eventChannelID`, `$eventMessageID`, `$eventContent`, `$eventOldContent`, `$eventEmoji` | Seis eventos de SDK, ausências null, metadados imutáveis, ator explícito e cancelamento; veja [EVENTS.md](../EVENTS.md) |
 | Arrays | `$arrayUnion`, `$arrayIntersection`, `$arrayDifference` | Operações de conjuntos preservando ordem e igualdade profunda |
 | Números | `$formatBytes`, `$percent`, `$toBase`, `$fromBase` | Bytes SI/IEC, percentuais e conversão exata de inteiros em bases 2–36 |
-| Agendamentos | `$scheduleCron` | Cron de cinco campos em fuso IANA, missedRun e retryJitter; veja [SCHEDULER.md](SCHEDULER.md) |
-| HTTP | `$httpMultipart`; `HttpService.stream`/`withPolicy` nativos | Upload limitado, streaming cancelável e políticas restritivas por comando; veja [HTTP.md](HTTP.md) |
-| Ferramentas e estado | `lint`, catálogos JSON, cenários offline e `StateMaintenance` | Diagnósticos sem importar módulos; estatísticas, limpeza limitada, backup e restauração simulável; veja [STORAGE.md](STORAGE.md) |
+| Agendamentos | `$scheduleCron` | Cron de cinco campos em fuso IANA, missedRun e retryJitter; veja [SCHEDULER.md](../SCHEDULER.md) |
+| HTTP | `$httpMultipart`; `HttpService.stream`/`withPolicy` nativos | Upload limitado, streaming cancelável e políticas restritivas por comando; veja [HTTP.md](../HTTP.md) |
+| Ferramentas e estado | `lint`, catálogos JSON, cenários offline e `StateMaintenance` | Diagnósticos sem importar módulos; estatísticas, limpeza limitada, backup e restauração simulável; veja [STORAGE.md](../STORAGE.md) |
 
 ## Cobertura adicional da 0.1.7
 
@@ -105,11 +105,11 @@ assíncronos dentro do store. A extensão cobre as 336 funções internas.
 - `$httpStream`, `$httpChunk` e `$httpChunkIndex` processam trechos UTF-8 sem
   carregar a resposta inteira e preservam política HTTP e cancelamento.
 - Agendamentos têm prioridade e capacidade compartilhada por claims SQLite;
-  veja os requisitos de configuração no [guia](SCHEDULER.md).
+  veja os requisitos de configuração no [guia](../SCHEDULER.md).
 
 - `yuzuha/images` transforma PNG/JPEG/WebP por processos isolados com Sharp opcional.
   `ctx.sendStream` recebe anexos por stream com limite, acumulando antes do upload
-  exigido pelo SDK. Veja [IMAGES.md](IMAGES.md).
+  exigido pelo SDK. Veja [IMAGES.md](../IMAGES.md).
 
 Veja contratos e exemplos no [guia de operações de dados](LANGUAGE-EXTENSIONS.md).
 
@@ -137,7 +137,7 @@ nomes novos para métodos do SDK.
 
 Não há `$eval` de JavaScript nem reinterpretação de texto de usuário como código.
 Funções JS/TS próprias podem ser registradas explicitamente. Para operações
-complexas, use o [guia nativo](NATIVE.md).
+complexas, use o [guia nativo](../NATIVE.md).
 
 ## Limites de escopo do Yuzuha
 
@@ -147,7 +147,7 @@ complexas, use o [guia nativo](NATIVE.md).
   voz oficial opcional e controle Lavalink em `yuzuha/music`, sem wrappers de
   reprodução em scripts. O core aceita configuração de shards via clientOptions;
   gerência de processos exige `@fluxerjs/sharding`, não incluído no pacote.
-  Veja a [auditoria de integrações](INTEGRATIONS.md).
+  Veja a [auditoria de integrações](../INTEGRATIONS.md).
 - Economia, XP, rankings e tickets são sistemas de produto. Ter variáveis,
   moderação ou acesso ao SDK não significa que esses sistemas já estejam prontos.
 - LSP e migração automática de scripts de outros runtimes ainda não são ferramentas entregues.
@@ -167,7 +167,7 @@ dependência instalada. Não mede compatibilidade com catálogos de outros runti
 
 ## Evidências
 
-O inventário vem de `src/scripting/builtins/` e [FUNCTIONS.md](FUNCTIONS.md).
+O inventário vem de `src/functions/builtins/` e [FUNCTIONS.md](FUNCTIONS.md).
 Os recursos nativos foram conferidos nas declarações distribuídas em
 `node_modules/@fluxerjs/core/dist/index.d.ts` e nos arquivos `.d.ts` reexportados
 por ela, incluindo `Guild`, `GuildMember`, `Channel`, `Message`, `Webhook` e

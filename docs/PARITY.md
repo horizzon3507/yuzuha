@@ -54,14 +54,14 @@ precisam de `overrides` para o core fixado, como no manifesto do Yuzuha.
 | Agendamentos | `ctx.scheduler`, cron/fusos, concorrência limitada, histórico, heartbeat e controles | schedule, scheduleEvery, scheduleCron, controles, histórico, reexecução e retry com jitter |
 | HTTP | `request`, `requestBytes`, `stream`, `multipart`, `withPolicy` e cancelamento | `$http`, `$httpJson`, `$httpMultipart` e download de imagens com política de rede por comando |
 | CLI, plugins, comandos e middleware | Recursos próprios do Yuzuha; lint/catálogos/cenários e manutenção de dados | 336 funções canônicas; comandos e eventos de script |
-| Composição de cartões | `ctx.canvas` e `yuzuha/canvas`, com peer opcional `@napi-rs/canvas`; envio pelo contexto | 12 funções `$canvas*` para cenas privadas por execução; envio sem retorno automático |
+| Composição de cartões | `ctx.canvas`, `yuzuha/canvas` (napi em processo) e `yuzuha/canvas/card` (builder isolado), com peer opcional `@napi-rs/canvas`; envio pelo contexto | 12 funções `$canvas*` para cenas privadas por execução; envio sem retorno automático |
 
 A camada nativa do Yuzuha — o caminho principal — acrescenta schemas de argumentos
 e flags com inferência, subcomandos, ajuda detalhada, checks e middleware por comando, eventos com encaminhamento de
 erros e plugins que agrupam comandos e eventos. Os mesmos contratos de recursos atendem scripts
 e comandos nativos, e `ctx.scheduler`/`ctx.http` expõem agendamento e rede sem
 duplicar regras. Veja o [guia nativo](NATIVE.md) e o
-[inventário de lacunas](FUNCTION-GAPS.md), que separa wrappers ausentes de
+[inventário de lacunas](functions/FUNCTION-GAPS.md), que separa wrappers ausentes de
 recursos já acessíveis no SDK.
 
 Canvas é um módulo de composição com builder, imagens, texto e formas. Ele não
@@ -126,7 +126,7 @@ retorno e limites próprios, publicados na referência gerada:
   acrescentam casos e definem `$caseID`.
 
 Ao adaptar um script, revise cada chamada com a referência gerada em
-[FUNCTIONS.md](FUNCTIONS.md). Use a matriz acima para distinguir funções de script
+[FUNCTIONS.md](functions/FUNCTIONS.md). Use a matriz acima para distinguir funções de script
 dos recursos acessíveis pelo SDK nativo.
 
 ## Extensões opcionais e ferramentas

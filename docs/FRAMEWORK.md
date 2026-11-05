@@ -155,10 +155,9 @@ lazy e memoizados, inclusive promessas. `call.ctx` expõe o contexto e
 
 Plugins podem incluir `commands`, `events` e `middleware`. A instalação valida
 o lote antes de alterar os registros; funções do próprio plugin já são
-consideradas ao compilar seus scripts. Se o plugin trouxer um comando com `code`,
-os builtins são registrados antes da compilação. Nomes de plugin, funções e comandos não
+consideradas ao compilar seus scripts. Nomes de plugin, funções e comandos não
 podem colidir nos respectivos registros. Também é
-possível usar `bot.runtime.register(...)` e `registerAll(...)` diretamente.
+possível usar `bot.engine.registerAll(...)` diretamente.
 Registre as funções antes de carregar comandos que as utilizam.
 
 ## Middleware

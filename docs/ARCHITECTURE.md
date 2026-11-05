@@ -16,17 +16,21 @@ src/
     resources/             Contratos por área: usuários, cargos, canais, mensagens...
   services/                Autorização, moderação, casos, variáveis, scheduler, HTTP e música
   commands/                Definição, builders, argumentos tipados e contexto
-  scripting/               AST, parser, registro, avaliação, runtime e limites
+  functions/               Function mode: AST, parser, registro, avaliação e limites
+    runtime/               Evaluator, parser, registry, limites, valores e regex
     builtins/              Funções por categoria
+  canvas/                  Fachada do builder de cartões (yuzuha/canvas/card)
   framework/               Bot, eventos, registro, carga, roteamento, limites e middleware
   infrastructure/
     fluxer/                Mensagens, payloads, transporte e recursos do SDK real
     storage/               Estado, fila, caminhos, memória, JSON e SQLite
     lavalink/              REST/WebSocket v4, limites, cache e validação de protocolo
+    canvas/                Renderer em processo filho e loader do peer @napi-rs/canvas
   cli/                     Argumentos, config, scaffold, execução e watcher
   shared/                  Classes de erro
   index.ts                 API pública nativa (yuzuha)
   functions.ts             API pública do function mode (yuzuha/functions)
+  canvas.ts                Fachada napi-compatível do peer (yuzuha/canvas)
   sdk.ts                   Reexportação do SDK (yuzuha/sdk)
   testing.ts               Transporte, mensagens e recursos de teste (yuzuha/testing)
   tooling.ts               Auxiliares de editor, diagnósticos e catálogos (yuzuha/tooling)
@@ -34,10 +38,11 @@ src/
   tooling/                 Análise textual para editores, sem execução de funções
 ```
 
-Os arquivos da raiz, como `bot.ts`, `context.ts`, `runtime.ts`, `store.ts` e
-`adapter.ts`, mantêm reexports para os módulos atuais. Os consumidores importam
-pelos seis exports públicos do pacote; `runtime.ts` e `parser.ts` não fazem
-parte da raiz nativa.
+Os consumidores importam pelos exports públicos do pacote; a raiz nativa não
+exporta parser nem runtime. O framework depende da linguagem apenas pelo port
+`ScriptEngine` (`src/ports/script-engine.ts`), satisfeito por `Runtime` e
+instalado via `engine: functions()` ou `bot.useEngine(...)` — a inversão impede
+que `src/index.ts` carregue o function mode ou o peer de canvas.
 
 ## Responsabilidades e dependências
 
@@ -47,7 +52,7 @@ parte da raiz nativa.
 | `ports` | Interfaces exigidas pelos serviços | Implementações de SDK ou disco |
 | `services` | Autorização, ação de moderação e persistência de casos | Parser, watcher ou detalhes de Fluxer.js |
 | `commands` | Descrição, conversão de argumentos e fachada de contexto | Transações ou hierarquia implementadas novamente |
-| `scripting` | Compilar e executar a linguagem | Instanciar client ou escolher store |
+| `functions` | Compilar e executar a linguagem | Instanciar client ou escolher store |
 | `framework` | Compor runtime, registro, despacho e ciclo de vida | Implementar operações REST |
 | `infrastructure` | Traduzir contratos para SDK e disco | Escolher comandos do produto |
 | `cli` | Configuração, geração e processo de desenvolvimento | Duplicar regras de moderação |
@@ -115,7 +120,7 @@ objetos fornecidos pelas interfaces `Store` e `Transport`. Por isso, testes usam
 
 `npm run check:architecture` acompanha imports e reexports locais, inclusive
 caminhos que passam pelos arquivos de compatibilidade. Ele restringe domínio,
-ports, serviços e scripting às camadas permitidas. Não verifica a correção do
+ports, serviços e functions às camadas permitidas, além de exigir que só `canvas.ts` carregue o loader do peer. Não verifica a correção do
 comportamento nem o conteúdo de dependências externas; isso depende dos testes.
 
 ## Percurso de uma mensagem
@@ -155,7 +160,7 @@ As funções são agrupadas em `context`, `flow`, `guards`, `values`, `messages`
 `embeds`, `moderation`, `storage`, `users`, `roles`, `channels`, `collectors`,
 `webhooks`, `expressions`, `threads`, `invites`, `language`, `schedule` e
 `network` e `events`. Metadados de uso, aridade e descrição alimentam
-a CLI e a [referência gerada](FUNCTIONS.md), evitando assinaturas duplicadas.
+a CLI e a [referência gerada](functions/FUNCTIONS.md), evitando assinaturas duplicadas.
 
 ## Registro e recarga
 
@@ -206,7 +211,7 @@ streaming, multipart e políticas por comando. O runtime não isola plugins JS/T
 
 | Mudança | Ponto de partida |
 |---|---|
-| Nova função de script | `src/scripting/builtins/` e referência gerada |
+| Nova função de script | `src/functions/builtins/` e referência gerada |
 | Alterar semântica da linguagem | Parser/avaliador e testes de runtime |
 | Regra de moderação ou autorização | `src/services/` e regras puras em `domain/` |
 | Converter argumento | `src/commands/arguments.ts` |

@@ -140,7 +140,7 @@ Os erros incluem `HTTP_HOST`, `HTTP_PRIVATE`, `HTTP_TIMEOUT`,
 `HTTP_POLICY`. Cancelamento externo produz `EXECUTION_ABORTED` e não pode ser
 capturado por `$try`.
 
-Veja [guia nativo](NATIVE.md) e [referência de funções](FUNCTIONS.md).
+Veja [guia nativo](NATIVE.md) e [referência de funções](functions/FUNCTIONS.md).
 
 ## Streaming em scripts
 

@@ -71,7 +71,8 @@ transformação não compõe cenas nem oferece texto, fontes ou acesso ao filesy
 
 O peer opcional permite usar o restante do Yuzuha sem instalar Sharp. Para compor
 cartões com texto, avatares, fontes, gradientes, badges ou barras, use o módulo
-separado [`yuzuha/canvas`](CANVAS.md), que tem seu próprio peer opcional. Sharp
+separado [`yuzuha/canvas`](CANVAS.md), que tem seu próprio peer opcional —
+`yuzuha/canvas/card` para o builder de cartões. Sharp
 transforma uma imagem existente; Canvas monta uma cena nova. Ambos compartilham
 o limite de dois processos simultâneos. O sistema
 operacional e a arquitetura precisam ser suportados pelos binários da versão

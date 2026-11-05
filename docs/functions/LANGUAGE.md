@@ -1,8 +1,8 @@
 # Function mode: linguagem de scripts
 
-O function mode é opcional. Importe `script` de `yuzuha/functions` ou registre
-um comando com `code`; o runtime é ativado sob demanda. Comandos nativos não
-usam esta linguagem.
+O function mode é opcional e exige um engine: passe `engine: functions()`
+de `yuzuha/functions` nas opções do bot (ou `bot.useEngine(...)`); a CLI injeta
+o engine automaticamente. Comandos nativos não usam esta linguagem.
 
 ## Sintaxe
 
@@ -411,7 +411,7 @@ $reply[Prazo restante: $ttlGuildVar[evento] ms]
 As variantes `Var` e `UserVar` seguem as mesmas regras. `$dataTransaction` recebe
 um array de até 100 operações JSON para ler, escrever, apagar, incrementar e
 alterar/consultar TTL em vários escopos atomicamente. Uma operação inválida ou
-saída acima do orçamento desfaz tudo; veja [STORAGE.md](STORAGE.md).
+saída acima do orçamento desfaz tudo; veja [STORAGE.md](../STORAGE.md).
 Não há execução de scripts assíncronos dentro de transações do store.
 
 `$modMoveMember[usuário;canal;motivo]`, `$modMuteMember[usuário;true;motivo]`
@@ -520,7 +520,7 @@ separados por vírgula ou quebra de linha.
 O cliente bloqueia por padrão loopback, redes privadas e endereços de metadados,
 inclusive após redirecionamentos. Também aplica timeout, limite de bytes e uma
 allowlist opcional de hosts. As opções ficam em `new HttpService({ ... })`;
-veja [API](API.md). Use `http: false` para remover o serviço do contexto.
+veja [API](../API.md). Use `http: false` para remover o serviço do contexto.
 
 ## Diagnóstico e limites
 
@@ -528,7 +528,7 @@ Scripts são analisados antes de registrar os comandos. Função desconhecida,
 aridade incorreta e delimitadores incompletos são erros com arquivo/linha/coluna.
 O runtime envolve falhas com o local da chamada e mantém a causa para o handler.
 O editor também aponta esses problemas enquanto digita e pode ler metadados de
-plugins em JSON, conforme [EDITOR.md](EDITOR.md). Cancelamento HTTP/collectors
+plugins em JSON, conforme [EDITOR.md](../EDITOR.md). Cancelamento HTTP/collectors
 do contexto interrompe a espera e não é capturado por `$try`.
 O usuário recebe um erro genérico nas falhas internas; guards usam suas próprias
-mensagens. Confira os limites e o modelo de confiança em [STORAGE.md](STORAGE.md).
+mensagens. Confira os limites e o modelo de confiança em [STORAGE.md](../STORAGE.md).

@@ -95,6 +95,6 @@ A busca ignora maiúsculas e procura nome, aliases e descrição. Na documentaç
 a área Funções separa o catálogo por categoria e oferece uma página para cada
 assinatura. Aliases não aumentam a contagem canônica de funções.
 
-Consulte a [sintaxe e as regras de avaliação](../LANGUAGE.md), o
-[catálogo completo de funções](../FUNCTIONS.md) e os
+Consulte a [sintaxe e as regras de avaliação](../functions/LANGUAGE.md), o
+[catálogo completo de funções](../functions/FUNCTIONS.md) e os
 [eventos de script](../EVENTS.md).

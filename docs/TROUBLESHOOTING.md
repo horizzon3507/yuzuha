@@ -46,7 +46,7 @@ comprova validade do token, disponibilidade do servidor ou permissões remotas.
 
 Funções não distinguem maiúsculas e minúsculas; variáveis distinguem.
 `$reply[]` não possui argumento e é inválido. Consulte a
-[linguagem](LANGUAGE.md) e a [referência gerada](FUNCTIONS.md).
+[linguagem](functions/LANGUAGE.md) e a [referência gerada](functions/FUNCTIONS.md).
 
 Se o script usa uma função de plugin, valide a config em vez da pasta isolada:
 `yuzuha check yuzuha.config.ts`.

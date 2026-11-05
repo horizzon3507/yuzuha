@@ -3,7 +3,7 @@
 A extensão VS Code da 0.1.5 fornece autocomplete com argumentos em snippets,
 hover, assinatura/argumento ativo e diagnósticos durante a edição. Reconhece arquivos
 `.yz`/`.yuzuha` e strings JS/TS, incluindo JSX/TSX. Os metadados vêm do mesmo
-registro usado pelo runtime e pela [referência de funções](FUNCTIONS.md).
+registro usado pelo runtime e pela [referência de funções](functions/FUNCTIONS.md).
 
 ## Usar a extensão
 

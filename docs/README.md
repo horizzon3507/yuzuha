@@ -1,6 +1,6 @@
 # Documentação da Yuzuha
 
-Esta documentação cobre a Yuzuha 0.2.0, em JavaScript ESM e TypeScript, para
+Esta documentação cobre a Yuzuha 0.3.0, em JavaScript ESM e TypeScript, para
 Node >=22.13. O pacote usa `@fluxerjs/core` 3.3.0.
 
 JS/TS é o caminho principal da biblioteca. Function mode (`$...`) é opcional e
@@ -14,8 +14,8 @@ conectam ao Fluxer.
 |---|---|
 | Criar o primeiro bot | [Instale e gere o projeto](QUICKSTART.md), depois [crie e teste o comando `!hello`](tutorials/FIRST-COMMAND.md) |
 | Programar com a API nativa | Aprenda [comandos, eventos e plugins em JS/TS](NATIVE.md) e consulte os [contratos da API pública](API.md) |
-| Escrever comandos em function mode | [Crie o primeiro script](tutorials/FUNCTION-MODE.md) e consulte a [sintaxe e as regras de avaliação](LANGUAGE.md) |
-| Consultar referências | Use a [referência da API pública](API.md), o [catálogo de funções](FUNCTIONS.md) e a [referência da CLI](CLI.md) |
+| Escrever comandos em function mode | [Crie o primeiro script](tutorials/FUNCTION-MODE.md) e consulte a [sintaxe e as regras de avaliação](functions/LANGUAGE.md) |
+| Consultar referências | Use a [referência da API pública](API.md), o [catálogo de funções](functions/FUNCTIONS.md) e a [referência da CLI](CLI.md) |
 
 ## Desenvolver e integrar
 
@@ -24,9 +24,9 @@ conectam ao Fluxer.
 | [Guia nativo JS/TS](NATIVE.md) | Argumentos inferidos, contexto, moderação, dados, eventos e plugins |
 | [Framework](FRAMEWORK.md) | Registro de comandos, contexto, plugins, middleware e function mode |
 | [API pública](API.md) | Entrypoints, opções, métodos, contratos e erros |
-| [Function mode](LANGUAGE.md) | Sintaxe, funções, escopo e limites dos scripts |
-| [Referência de funções](FUNCTIONS.md) | Assinaturas geradas do registro executável |
-| [Funções ausentes](FUNCTION-GAPS.md) | Inventário auditado, propostas de wrappers e limites de cobertura |
+| [Function mode](functions/LANGUAGE.md) | Sintaxe, funções, escopo e limites dos scripts |
+| [Referência de funções](functions/FUNCTIONS.md) | Assinaturas geradas do registro executável |
+| [Funções ausentes](functions/FUNCTION-GAPS.md) | Inventário auditado, propostas de wrappers e limites de cobertura |
 | [Contador e dados por escopo](tutorials/DATA.md) | Incrementos atômicos, leitura, escrita, TTL e escolha do store |
 | [Estado e execução](STORAGE.md) | JSON/SQLite, transações, fechamento, limites e falhas parciais |
 | [Eventos de scripts](EVENTS.md) | Payloads, contexto, guards e ciclo de vida |
@@ -66,7 +66,7 @@ Os exemplos usam imports públicos de `yuzuha`, `yuzuha/functions`, `yuzuha/sdk`
 `yuzuha/testing`. Caminhos em `src/` aparecem para explicar a implementação e
 não são subpaths novos do pacote.
 
-Consulte também os guias de [loops, regex e decimais](LANGUAGE-EXTENSIONS.md),
+Consulte também os guias de [loops, regex e decimais](functions/LANGUAGE-EXTENSIONS.md),
 [transformação de imagens e streams de anexos](IMAGES.md) e
 [integrações e sharding](INTEGRATIONS.md).
 

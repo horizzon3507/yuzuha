@@ -10,13 +10,13 @@ Use Node >=22.13 e npm. Em um projeto ESM existente, instale a versão desta
 documentação:
 
 ```sh
-npm install yuzuha@0.2.0
+npm install yuzuha@0.3.0
 ```
 
 Para gerar um bot em uma pasta nova, execute:
 
 ```sh
-npx yuzuha@0.2.0 init ./meu-bot --ts
+npx yuzuha@0.3.0 init ./meu-bot --ts
 cd meu-bot
 npm install
 npm run check
@@ -156,12 +156,12 @@ export default script({
 });
 ```
 
-O runtime de funções é ativado automaticamente no primeiro comando com `code`.
-Para pré-carregá-lo, chame `bot.enableFunctions()`. Um comando executável aceita
+Comandos com `code` exigem um engine de function mode: passe
+`engine: functions()` de `yuzuha/functions` nas opções do bot. Um comando executável aceita
 exatamente um entre `code` e `run`. Grupos também podem declarar somente
 `subcommands`.
 
-Consulte a [sintaxe do function mode](LANGUAGE.md), o
+Consulte a [sintaxe do function mode](functions/LANGUAGE.md), o
 [tutorial do primeiro script](tutorials/FUNCTION-MODE.md) e os
 [grupos e subcomandos nativos](NATIVE.md).
 
