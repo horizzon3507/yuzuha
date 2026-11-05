@@ -29,5 +29,5 @@ test('bot.on aceita todo nome de evento do SDK', async () => {
   const { MockTransport } = await import('../src/testing.js');
   const { MemoryStore } = await import('../src/infrastructure/storage/memory.js');
   const bot = new Yuzuha({ transport: new MockTransport(), store: new MemoryStore() });
-  for (const name of matrix.sdkEvents) assert.doesNotThrow(() => bot.on(name, () => {}), name);
+  for (const name of matrix.sdkEvents) assert.doesNotThrow(() => bot.on(name as never, () => {}), name);
 });
