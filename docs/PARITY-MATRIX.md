@@ -16,10 +16,10 @@ A cobertura é por nome: um método `send` de uma classe conta como coberto se q
 
 | Status | Exports de runtime | Membros |
 |---|---:|---:|
-| coberto-recurso | 50 | 414 |
-| coberto-nativo | 4 | 97 |
+| coberto-recurso | 50 | 416 |
+| coberto-nativo | 4 | 102 |
 | só-SDK | 56 | 0 |
-| lacuna | 7 | 211 |
+| lacuna | 7 | 204 |
 
 Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são listados, mas não contam como lacuna.
 
@@ -220,7 +220,7 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são
 | `Channel` | `id` | propriedade | coberto-recurso |
 | `Channel` | `isAnnouncement` | método | lacuna |
 | `Channel` | `isCategory` | método | coberto-recurso |
-| `Channel` | `isDM` | método | lacuna |
+| `Channel` | `isDM` | método | coberto-recurso |
 | `Channel` | `isForum` | método | coberto-recurso |
 | `Channel` | `isGuild` | método | coberto-recurso |
 | `Channel` | `isLink` | método | lacuna |
@@ -320,15 +320,15 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são
 | `ClientUser` | `leaveGuild` | método | coberto-nativo |
 | `ClientUser` | `setPresence` | método | coberto-recurso |
 | `DMChannel` | `_patch` | método | lacuna |
-| `DMChannel` | `addRecipient` | método | lacuna |
+| `DMChannel` | `addRecipient` | método | coberto-nativo |
 | `DMChannel` | `edit` | método | coberto-recurso |
 | `DMChannel` | `lastMessageId` | propriedade | lacuna |
 | `DMChannel` | `nicks` | propriedade | lacuna |
 | `DMChannel` | `ownerId` | propriedade | coberto-recurso |
 | `DMChannel` | `pinInList` | método | lacuna |
-| `DMChannel` | `purgeMessages` | método | lacuna |
-| `DMChannel` | `recipients` | propriedade | lacuna |
-| `DMChannel` | `removeRecipient` | método | lacuna |
+| `DMChannel` | `purgeMessages` | método | coberto-nativo |
+| `DMChannel` | `recipients` | propriedade | coberto-recurso |
+| `DMChannel` | `removeRecipient` | método | coberto-nativo |
 | `DMChannel` | `unpinFromList` | método | lacuna |
 | `EmbedBuilder` | `addFields` | método | lacuna |
 | `EmbedBuilder` | `addFields` | método | lacuna |
@@ -858,9 +858,9 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são
 | `Webhook` | `createdAt` | acessor | coberto-recurso |
 | `Webhook` | `createdTimestamp` | acessor | coberto-recurso |
 | `Webhook` | `delete` | método | coberto-recurso |
-| `Webhook` | `deleteMessage` | método | lacuna |
+| `Webhook` | `deleteMessage` | método | coberto-nativo |
 | `Webhook` | `edit` | método | coberto-recurso |
-| `Webhook` | `editMessage` | método | lacuna |
+| `Webhook` | `editMessage` | método | coberto-nativo |
 | `Webhook` | `fetch` | método | coberto-recurso |
 | `Webhook` | `fetchMessage` | método | coberto-recurso |
 | `Webhook` | `fromToken` | método | coberto-recurso |
