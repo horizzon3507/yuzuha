@@ -18,8 +18,8 @@ A cobertura é por nome: um método `send` de uma classe conta como coberto se q
 |---|---:|---:|
 | coberto-recurso | 50 | 416 |
 | coberto-nativo | 4 | 113 |
-| só-SDK | 56 | 0 |
-| lacuna | 7 | 193 |
+| só-SDK | 56 | 103 |
+| lacuna | 7 | 90 |
 
 Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são listados, mas não contam como lacuna.
 
@@ -163,8 +163,8 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são
 | `AttachmentBuilder` | `setName` | método | lacuna |
 | `AttachmentBuilder` | `setSpoiler` | método | lacuna |
 | `AttachmentBuilder` | `setSpoiler` | método | lacuna |
-| `AttachmentBuilder` | `spoiler` | propriedade | lacuna |
-| `AttachmentBuilder` | `spoiler` | propriedade | lacuna |
+| `AttachmentBuilder` | `spoiler` | propriedade | só-SDK |
+| `AttachmentBuilder` | `spoiler` | propriedade | só-SDK |
 | `AttachmentBuilder` | `toFileData` | método | lacuna |
 | `AttachmentBuilder` | `toFileData` | método | lacuna |
 | `AttachmentBuilder` | `toJSON` | método | coberto-recurso |
@@ -183,8 +183,8 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são
 | `AttachmentMeta` | `setName` | método | lacuna |
 | `AttachmentMeta` | `setSpoiler` | método | lacuna |
 | `AttachmentMeta` | `setSpoiler` | método | lacuna |
-| `AttachmentMeta` | `spoiler` | propriedade | lacuna |
-| `AttachmentMeta` | `spoiler` | propriedade | lacuna |
+| `AttachmentMeta` | `spoiler` | propriedade | só-SDK |
+| `AttachmentMeta` | `spoiler` | propriedade | só-SDK |
 | `AttachmentMeta` | `toJSON` | método | coberto-recurso |
 | `AttachmentMeta` | `toJSON` | método | coberto-recurso |
 | `Base` | `client` | propriedade | coberto-recurso |
@@ -198,7 +198,7 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são
 | `CacheController` | `sweepMembers` | método | coberto-nativo |
 | `CacheController` | `sweepMessages` | método | coberto-nativo |
 | `CacheController` | `sweepUsers` | método | coberto-nativo |
-| `Channel` | `_patch` | método | lacuna |
+| `Channel` | `_patch` | método | só-SDK |
 | `Channel` | `acknowledgePins` | método | coberto-nativo |
 | `Channel` | `awaitMessages` | método | lacuna |
 | `Channel` | `bulkDelete` | método | coberto-nativo |
@@ -215,7 +215,7 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são
 | `Channel` | `fetchRtcRegions` | método | coberto-nativo |
 | `Channel` | `fetchSlowmode` | método | coberto-nativo |
 | `Channel` | `from` | método | coberto-recurso |
-| `Channel` | `fromOrCreate` | método | lacuna |
+| `Channel` | `fromOrCreate` | método | só-SDK |
 | `Channel` | `icon` | propriedade | coberto-nativo |
 | `Channel` | `id` | propriedade | coberto-recurso |
 | `Channel` | `isAnnouncement` | método | lacuna |
@@ -230,7 +230,7 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são
 | `Channel` | `isTextBased` | método | coberto-recurso |
 | `Channel` | `isThread` | método | coberto-recurso |
 | `Channel` | `isVoice` | método | coberto-nativo |
-| `Channel` | `lastPinTimestamp` | propriedade | lacuna |
+| `Channel` | `lastPinTimestamp` | propriedade | só-SDK |
 | `Channel` | `messages` | acessor | coberto-recurso |
 | `Channel` | `name` | propriedade | coberto-recurso |
 | `Channel` | `requestAttachmentUploads` | método | lacuna |
@@ -243,19 +243,19 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são
 | `ChannelManager` | `fetchMessage` | método | coberto-recurso |
 | `ChannelManager` | `resolve` | método | coberto-recurso |
 | `ChannelManager` | `send` | método | coberto-recurso |
-| `Client` | `_addMessageToCache` | método | lacuna |
-| `Client` | `_clearMessageCache` | método | lacuna |
-| `Client` | `_deferredGatewayDispatches` | propriedade | lacuna |
-| `Client` | `_finalizeReady` | método | lacuna |
-| `Client` | `_getMessageCache` | método | lacuna |
-| `Client` | `_guildStreamSettleTimeout` | propriedade | lacuna |
+| `Client` | `_addMessageToCache` | método | só-SDK |
+| `Client` | `_clearMessageCache` | método | só-SDK |
+| `Client` | `_deferredGatewayDispatches` | propriedade | só-SDK |
+| `Client` | `_finalizeReady` | método | só-SDK |
+| `Client` | `_getMessageCache` | método | só-SDK |
+| `Client` | `_guildStreamSettleTimeout` | propriedade | só-SDK |
 | `Client` | `_messageCacheStats` | método | coberto-nativo |
-| `Client` | `_onGuildReceived` | método | lacuna |
-| `Client` | `_pendingGuildIds` | propriedade | lacuna |
-| `Client` | `_readyStubGuildIds` | propriedade | lacuna |
-| `Client` | `_removeMessageFromCache` | método | lacuna |
-| `Client` | `_sendToAllShards` | método | lacuna |
-| `Client` | `_ws` | propriedade | lacuna |
+| `Client` | `_onGuildReceived` | método | só-SDK |
+| `Client` | `_pendingGuildIds` | propriedade | só-SDK |
+| `Client` | `_readyStubGuildIds` | propriedade | só-SDK |
+| `Client` | `_removeMessageFromCache` | método | só-SDK |
+| `Client` | `_sendToAllShards` | método | só-SDK |
+| `Client` | `_ws` | propriedade | só-SDK |
 | `Client` | `assertReady` | método | lacuna |
 | `Client` | `bulkFetchMessages` | método | coberto-nativo |
 | `Client` | `cache` | propriedade | coberto-nativo |
@@ -274,7 +274,7 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são
 | `Client` | `guilds` | propriedade | coberto-recurso |
 | `Client` | `instance` | propriedade | coberto-nativo |
 | `Client` | `isReady` | método | lacuna |
-| `Client` | `logger` | propriedade | lacuna |
+| `Client` | `logger` | propriedade | só-SDK |
 | `Client` | `login` | método | coberto-nativo |
 | `Client` | `off` | método | coberto-recurso |
 | `Client` | `on` | método | coberto-recurso |
@@ -288,7 +288,7 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são
 | `Client` | `requestGuildCounts` | método | coberto-recurso |
 | `Client` | `requestGuildMembers` | método | coberto-nativo |
 | `Client` | `resolveEmoji` | método | coberto-recurso |
-| `Client` | `rest` | propriedade | lacuna |
+| `Client` | `rest` | propriedade | só-SDK |
 | `Client` | `Routes` | acessor | lacuna |
 | `Client` | `searchMessages` | método | coberto-recurso |
 | `Client` | `sendToGateway` | método | coberto-nativo |
@@ -319,11 +319,11 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são
 | `ClientUser` | `fetchGuilds` | método | coberto-nativo |
 | `ClientUser` | `leaveGuild` | método | coberto-nativo |
 | `ClientUser` | `setPresence` | método | coberto-recurso |
-| `DMChannel` | `_patch` | método | lacuna |
+| `DMChannel` | `_patch` | método | só-SDK |
 | `DMChannel` | `addRecipient` | método | coberto-nativo |
 | `DMChannel` | `edit` | método | coberto-recurso |
-| `DMChannel` | `lastMessageId` | propriedade | lacuna |
-| `DMChannel` | `nicks` | propriedade | lacuna |
+| `DMChannel` | `lastMessageId` | propriedade | só-SDK |
+| `DMChannel` | `nicks` | propriedade | só-SDK |
 | `DMChannel` | `ownerId` | propriedade | coberto-recurso |
 | `DMChannel` | `pinInList` | método | lacuna |
 | `DMChannel` | `purgeMessages` | método | coberto-nativo |
@@ -361,23 +361,23 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são
 | `EmbedBuilder` | `toJSON` | método | coberto-recurso |
 | `EmbedBuilder` | `toJSON` | método | coberto-recurso |
 | `FluxerError` | `code` | propriedade | coberto-recurso |
-| `FluxerError` | `isFluxerError` | método | lacuna |
+| `FluxerError` | `isFluxerError` | método | só-SDK |
 | `FluxerError` | `toJSON` | método | coberto-recurso |
 | `FluxerError` | `toString` | método | coberto-recurso |
-| `ForumChannel` | `_patch` | método | lacuna |
-| `ForumChannel` | `defaultForumLayout` | propriedade | lacuna |
+| `ForumChannel` | `_patch` | método | só-SDK |
+| `ForumChannel` | `defaultForumLayout` | propriedade | só-SDK |
 | `ForumChannel` | `setDefaultForumLayout` | método | coberto-nativo |
-| `Guild` | `_patch` | método | lacuna |
+| `Guild` | `_patch` | método | só-SDK |
 | `Guild` | `adjustMemberCount` | método | lacuna |
 | `Guild` | `afkChannelId` | propriedade | coberto-recurso |
-| `Guild` | `afkTimeout` | propriedade | lacuna |
+| `Guild` | `afkTimeout` | propriedade | só-SDK |
 | `Guild` | `applyForDiscovery` | método | coberto-nativo |
-| `Guild` | `available` | propriedade | lacuna |
+| `Guild` | `available` | propriedade | só-SDK |
 | `Guild` | `ban` | método | coberto-recurso |
 | `Guild` | `banner` | propriedade | coberto-recurso |
-| `Guild` | `bannerHeight` | propriedade | lacuna |
+| `Guild` | `bannerHeight` | propriedade | só-SDK |
 | `Guild` | `bannerURL` | método | coberto-recurso |
-| `Guild` | `bannerWidth` | propriedade | lacuna |
+| `Guild` | `bannerWidth` | propriedade | só-SDK |
 | `Guild` | `channels` | propriedade | coberto-recurso |
 | `Guild` | `client` | propriedade | coberto-recurso |
 | `Guild` | `cloneEmoji` | método | coberto-nativo |
@@ -392,15 +392,15 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são
 | `Guild` | `createRole` | método | coberto-recurso |
 | `Guild` | `createSticker` | método | coberto-recurso |
 | `Guild` | `createStickersBulk` | método | coberto-nativo |
-| `Guild` | `defaultMessageNotifications` | propriedade | lacuna |
+| `Guild` | `defaultMessageNotifications` | propriedade | só-SDK |
 | `Guild` | `delete` | método | coberto-recurso |
-| `Guild` | `disabledOperations` | propriedade | lacuna |
+| `Guild` | `disabledOperations` | propriedade | só-SDK |
 | `Guild` | `edit` | método | coberto-recurso |
 | `Guild` | `editDiscoveryApplication` | método | coberto-nativo |
 | `Guild` | `editVanityURL` | método | coberto-recurso |
-| `Guild` | `embedSplash` | propriedade | lacuna |
+| `Guild` | `embedSplash` | propriedade | só-SDK |
 | `Guild` | `emojis` | propriedade | coberto-recurso |
-| `Guild` | `explicitContentFilter` | propriedade | lacuna |
+| `Guild` | `explicitContentFilter` | propriedade | só-SDK |
 | `Guild` | `features` | propriedade | coberto-recurso |
 | `Guild` | `fetchActiveThreads` | método | coberto-recurso |
 | `Guild` | `fetchAuditLogs` | método | coberto-recurso |
@@ -425,34 +425,34 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são
 | `Guild` | `kick` | método | coberto-nativo |
 | `Guild` | `memberCount` | propriedade | coberto-recurso |
 | `Guild` | `members` | propriedade | coberto-recurso |
-| `Guild` | `messageHistoryCutoff` | propriedade | lacuna |
-| `Guild` | `mfaLevel` | propriedade | lacuna |
+| `Guild` | `messageHistoryCutoff` | propriedade | só-SDK |
+| `Guild` | `mfaLevel` | propriedade | só-SDK |
 | `Guild` | `name` | propriedade | coberto-recurso |
 | `Guild` | `nsfw` | propriedade | coberto-recurso |
-| `Guild` | `nsfwLevel` | propriedade | lacuna |
+| `Guild` | `nsfwLevel` | propriedade | só-SDK |
 | `Guild` | `onlineCount` | propriedade | coberto-recurso |
 | `Guild` | `ownerId` | propriedade | coberto-recurso |
 | `Guild` | `permissions` | propriedade | coberto-recurso |
 | `Guild` | `resetRoleHoistPositions` | método | lacuna |
 | `Guild` | `resolveRoleId` | método | coberto-recurso |
 | `Guild` | `roles` | propriedade | coberto-recurso |
-| `Guild` | `rulesChannelId` | propriedade | lacuna |
+| `Guild` | `rulesChannelId` | propriedade | só-SDK |
 | `Guild` | `setChannelPositions` | método | coberto-recurso |
 | `Guild` | `setRoleHoistPositions` | método | lacuna |
 | `Guild` | `setRolePositions` | método | coberto-recurso |
-| `Guild` | `splash` | propriedade | lacuna |
-| `Guild` | `splashCardAlignment` | propriedade | lacuna |
-| `Guild` | `splashHeight` | propriedade | lacuna |
+| `Guild` | `splash` | propriedade | só-SDK |
+| `Guild` | `splashCardAlignment` | propriedade | só-SDK |
+| `Guild` | `splashHeight` | propriedade | só-SDK |
 | `Guild` | `splashURL` | método | lacuna |
-| `Guild` | `splashWidth` | propriedade | lacuna |
+| `Guild` | `splashWidth` | propriedade | só-SDK |
 | `Guild` | `stickers` | propriedade | coberto-nativo |
-| `Guild` | `systemChannelFlags` | propriedade | lacuna |
+| `Guild` | `systemChannelFlags` | propriedade | só-SDK |
 | `Guild` | `systemChannelId` | propriedade | coberto-recurso |
 | `Guild` | `toString` | método | coberto-recurso |
 | `Guild` | `transferOwnership` | método | lacuna |
 | `Guild` | `unban` | método | coberto-nativo |
-| `Guild` | `vanityURLCode` | propriedade | lacuna |
-| `Guild` | `verificationLevel` | propriedade | lacuna |
+| `Guild` | `vanityURLCode` | propriedade | só-SDK |
+| `Guild` | `verificationLevel` | propriedade | só-SDK |
 | `Guild` | `withdrawDiscoveryApplication` | método | lacuna |
 | `GuildBan` | `client` | propriedade | coberto-recurso |
 | `GuildBan` | `expiresAt` | propriedade | coberto-recurso |
@@ -460,7 +460,7 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são
 | `GuildBan` | `reason` | propriedade | coberto-recurso |
 | `GuildBan` | `unban` | método | coberto-nativo |
 | `GuildBan` | `user` | propriedade | coberto-recurso |
-| `GuildChannel` | `_patch` | método | lacuna |
+| `GuildChannel` | `_patch` | método | só-SDK |
 | `GuildChannel` | `applyEditPatch` | método | lacuna |
 | `GuildChannel` | `canSend` | método | lacuna |
 | `GuildChannel` | `canSendMessage` | método | lacuna |
@@ -474,7 +474,7 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são
 | `GuildChannel` | `parentId` | propriedade | coberto-recurso |
 | `GuildChannel` | `permissionOverwrites` | propriedade | coberto-recurso |
 | `GuildChannel` | `position` | propriedade | coberto-recurso |
-| `GuildEmoji` | `_patch` | método | lacuna |
+| `GuildEmoji` | `_patch` | método | só-SDK |
 | `GuildEmoji` | `animated` | propriedade | coberto-recurso |
 | `GuildEmoji` | `client` | propriedade | coberto-recurso |
 | `GuildEmoji` | `createdAt` | acessor | coberto-recurso |
@@ -490,10 +490,10 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são
 | `GuildManager` | `delete` | método | coberto-recurso |
 | `GuildManager` | `fetch` | método | coberto-recurso |
 | `GuildManager` | `resolve` | método | coberto-recurso |
-| `GuildMember` | `_clone` | método | lacuna |
-| `GuildMember` | `_patch` | método | lacuna |
+| `GuildMember` | `_clone` | método | só-SDK |
+| `GuildMember` | `_patch` | método | só-SDK |
 | `GuildMember` | `accentColor` | propriedade | coberto-recurso |
-| `GuildMember` | `avatar` | propriedade | lacuna |
+| `GuildMember` | `avatar` | propriedade | só-SDK |
 | `GuildMember` | `avatarURL` | método | coberto-recurso |
 | `GuildMember` | `ban` | método | coberto-recurso |
 | `GuildMember` | `bannable` | acessor | lacuna |
@@ -511,7 +511,7 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são
 | `GuildMember` | `joinedAt` | propriedade | coberto-recurso |
 | `GuildMember` | `kick` | método | coberto-nativo |
 | `GuildMember` | `kickable` | acessor | lacuna |
-| `GuildMember` | `mentionFlags` | propriedade | lacuna |
+| `GuildMember` | `mentionFlags` | propriedade | só-SDK |
 | `GuildMember` | `moderatable` | acessor | lacuna |
 | `GuildMember` | `move` | método | coberto-recurso |
 | `GuildMember` | `mute` | propriedade | coberto-nativo |
@@ -519,7 +519,7 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são
 | `GuildMember` | `partial` | propriedade | coberto-nativo |
 | `GuildMember` | `permissions` | acessor | coberto-recurso |
 | `GuildMember` | `permissionsIn` | método | coberto-recurso |
-| `GuildMember` | `profileFlags` | propriedade | lacuna |
+| `GuildMember` | `profileFlags` | propriedade | só-SDK |
 | `GuildMember` | `pronouns` | propriedade | coberto-recurso |
 | `GuildMember` | `roles` | propriedade | coberto-recurso |
 | `GuildMember` | `timeout` | método | coberto-recurso |
@@ -530,7 +530,7 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são
 | `GuildMemberManager` | `me` | acessor | lacuna |
 | `GuildMemberManager` | `resolve` | método | coberto-recurso |
 | `GuildMemberManager` | `search` | método | coberto-recurso |
-| `GuildMemberRoleManager` | `_patch` | método | lacuna |
+| `GuildMemberRoleManager` | `_patch` | método | só-SDK |
 | `GuildMemberRoleManager` | `add` | método | coberto-recurso |
 | `GuildMemberRoleManager` | `cache` | acessor | coberto-nativo |
 | `GuildMemberRoleManager` | `has` | método | coberto-recurso |
@@ -538,7 +538,7 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são
 | `GuildMemberRoleManager` | `roleIds` | acessor | coberto-recurso |
 | `GuildMemberRoleManager` | `set` | método | coberto-nativo |
 | `GuildRoleManager` | `everyone` | acessor | lacuna |
-| `GuildSticker` | `_patch` | método | lacuna |
+| `GuildSticker` | `_patch` | método | só-SDK |
 | `GuildSticker` | `animated` | propriedade | coberto-recurso |
 | `GuildSticker` | `client` | propriedade | coberto-recurso |
 | `GuildSticker` | `createdAt` | acessor | coberto-recurso |
@@ -566,7 +566,7 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são
 | `Invite` | `maxAge` | propriedade | coberto-recurso |
 | `Invite` | `maxUses` | propriedade | coberto-recurso |
 | `Invite` | `memberCount` | propriedade | coberto-recurso |
-| `Invite` | `presenceCount` | propriedade | lacuna |
+| `Invite` | `presenceCount` | propriedade | só-SDK |
 | `Invite` | `resolveChannel` | método | lacuna |
 | `Invite` | `resolveGuild` | método | lacuna |
 | `Invite` | `temporary` | propriedade | coberto-recurso |
@@ -575,9 +575,9 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são
 | `Invite` | `uses` | propriedade | coberto-recurso |
 | `LinkChannel` | `applyEditPatch` | método | lacuna |
 | `LinkChannel` | `url` | propriedade | coberto-recurso |
-| `Message` | `_createMessageBody` | método | lacuna |
-| `Message` | `_patch` | método | lacuna |
-| `Message` | `_send` | método | lacuna |
+| `Message` | `_createMessageBody` | método | só-SDK |
+| `Message` | `_patch` | método | só-SDK |
+| `Message` | `_send` | método | só-SDK |
 | `Message` | `attachments` | propriedade | coberto-recurso |
 | `Message` | `author` | propriedade | coberto-recurso |
 | `Message` | `awaitReactions` | método | lacuna |
@@ -591,7 +591,7 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são
 | `Message` | `delete` | método | coberto-recurso |
 | `Message` | `deleteAttachment` | método | lacuna |
 | `Message` | `edit` | método | coberto-recurso |
-| `Message` | `editedAt` | propriedade | lacuna |
+| `Message` | `editedAt` | propriedade | só-SDK |
 | `Message` | `embeds` | propriedade | coberto-recurso |
 | `Message` | `fetch` | método | coberto-recurso |
 | `Message` | `fetchReactionUsers` | método | coberto-recurso |
@@ -602,18 +602,18 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são
 | `Message` | `id` | propriedade | coberto-recurso |
 | `Message` | `member` | acessor | coberto-recurso |
 | `Message` | `mentionEveryone` | propriedade | coberto-recurso |
-| `Message` | `mentionRoles` | propriedade | lacuna |
+| `Message` | `mentionRoles` | propriedade | só-SDK |
 | `Message` | `mentions` | propriedade | coberto-recurso |
-| `Message` | `messageReference` | propriedade | lacuna |
-| `Message` | `messageSnapshots` | propriedade | lacuna |
+| `Message` | `messageReference` | propriedade | só-SDK |
+| `Message` | `messageSnapshots` | propriedade | só-SDK |
 | `Message` | `nonce` | propriedade | coberto-nativo |
-| `Message` | `nsfwEmojis` | propriedade | lacuna |
+| `Message` | `nsfwEmojis` | propriedade | só-SDK |
 | `Message` | `partial` | propriedade | coberto-nativo |
 | `Message` | `pin` | método | coberto-recurso |
 | `Message` | `pinned` | propriedade | coberto-recurso |
 | `Message` | `react` | método | coberto-recurso |
 | `Message` | `reactions` | propriedade | coberto-nativo |
-| `Message` | `referencedMessage` | propriedade | lacuna |
+| `Message` | `referencedMessage` | propriedade | só-SDK |
 | `Message` | `removeAllReactions` | método | coberto-recurso |
 | `Message` | `removeReaction` | método | coberto-recurso |
 | `Message` | `removeReactionEmoji` | método | coberto-recurso |
@@ -629,7 +629,7 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são
 | `Message` | `tts` | propriedade | coberto-recurso |
 | `Message` | `type` | propriedade | coberto-recurso |
 | `Message` | `unpin` | método | coberto-recurso |
-| `Message` | `webhookId` | propriedade | lacuna |
+| `Message` | `webhookId` | propriedade | só-SDK |
 | `MessageCollector` | `awaitMessages` | método | lacuna |
 | `MessageCollector` | `channelId` | propriedade | coberto-recurso |
 | `MessageCollector` | `client` | propriedade | coberto-recurso |
@@ -638,14 +638,14 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são
 | `MessageCollector` | `on` | método | coberto-recurso |
 | `MessageCollector` | `options` | propriedade | coberto-recurso |
 | `MessageCollector` | `stop` | método | coberto-recurso |
-| `MessageFlagsBitField` | `Flags` | propriedade | lacuna |
+| `MessageFlagsBitField` | `Flags` | propriedade | só-SDK |
 | `MessageManager` | `fetch` | método | coberto-recurso |
 | `MessageManager` | `get` | método | coberto-recurso |
 | `MessageManager` | `resolve` | método | coberto-recurso |
 | `MessagePayload` | `addEmbed` | método | lacuna |
 | `MessagePayload` | `addEmbed` | método | lacuna |
-| `MessagePayload` | `ContentMaxLength` | propriedade | lacuna |
-| `MessagePayload` | `ContentMaxLength` | propriedade | lacuna |
+| `MessagePayload` | `ContentMaxLength` | propriedade | só-SDK |
+| `MessagePayload` | `ContentMaxLength` | propriedade | só-SDK |
 | `MessagePayload` | `create` | método | coberto-recurso |
 | `MessagePayload` | `create` | método | coberto-recurso |
 | `MessagePayload` | `data` | propriedade | coberto-recurso |
@@ -666,7 +666,7 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são
 | `MessagePayload` | `setTTS` | método | lacuna |
 | `MessagePayload` | `toJSON` | método | coberto-recurso |
 | `MessagePayload` | `toJSON` | método | coberto-recurso |
-| `MessageReaction` | `_data` | propriedade | lacuna |
+| `MessageReaction` | `_data` | propriedade | só-SDK |
 | `MessageReaction` | `channel` | acessor | coberto-recurso |
 | `MessageReaction` | `channelId` | propriedade | coberto-recurso |
 | `MessageReaction` | `client` | propriedade | coberto-recurso |
@@ -677,11 +677,11 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são
 | `MessageReaction` | `fromMessage` | método | lacuna |
 | `MessageReaction` | `guild` | acessor | coberto-recurso |
 | `MessageReaction` | `guildId` | propriedade | coberto-recurso |
-| `MessageReaction` | `me` | propriedade | lacuna |
+| `MessageReaction` | `me` | propriedade | só-SDK |
 | `MessageReaction` | `message` | acessor | coberto-recurso |
 | `MessageReaction` | `messageId` | propriedade | coberto-recurso |
-| `MessageReactionManager` | `_patch` | método | lacuna |
-| `MessageReactionManager` | `[Symbol.iterator]` | método | lacuna |
+| `MessageReactionManager` | `_patch` | método | só-SDK |
+| `MessageReactionManager` | `[Symbol.iterator]` | método | só-SDK |
 | `MessageReactionManager` | `cache` | acessor | coberto-nativo |
 | `MessageReactionManager` | `size` | acessor | coberto-recurso |
 | `MessageSticker` | `animated` | propriedade | coberto-recurso |
@@ -712,22 +712,22 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são
 | `PartialMessage` | `id` | propriedade | coberto-recurso |
 | `PartialMessage` | `partial` | propriedade | coberto-nativo |
 | `PartialMessage` | `resolveChannel` | método | lacuna |
-| `PermissionOverwrite` | `_allow` | propriedade | lacuna |
-| `PermissionOverwrite` | `_deny` | propriedade | lacuna |
+| `PermissionOverwrite` | `_allow` | propriedade | só-SDK |
+| `PermissionOverwrite` | `_deny` | propriedade | só-SDK |
 | `PermissionOverwrite` | `allow` | acessor | coberto-recurso |
 | `PermissionOverwrite` | `deny` | acessor | coberto-recurso |
 | `PermissionOverwrite` | `id` | propriedade | coberto-recurso |
 | `PermissionOverwrite` | `toJSON` | método | coberto-recurso |
 | `PermissionOverwrite` | `type` | propriedade | coberto-recurso |
-| `PermissionOverwriteManager` | `_patch` | método | lacuna |
-| `PermissionOverwriteManager` | `[Symbol.iterator]` | método | lacuna |
+| `PermissionOverwriteManager` | `_patch` | método | só-SDK |
+| `PermissionOverwriteManager` | `[Symbol.iterator]` | método | só-SDK |
 | `PermissionOverwriteManager` | `cache` | acessor | coberto-nativo |
 | `PermissionOverwriteManager` | `delete` | método | coberto-recurso |
 | `PermissionOverwriteManager` | `edit` | método | coberto-recurso |
 | `PermissionOverwriteManager` | `size` | acessor | coberto-recurso |
 | `PermissionOverwriteManager` | `toJSON` | método | coberto-recurso |
 | `PermissionsBitField` | `any` | método | coberto-nativo |
-| `PermissionsBitField` | `Flags` | propriedade | lacuna |
+| `PermissionsBitField` | `Flags` | propriedade | só-SDK |
 | `PermissionsBitField` | `has` | método | coberto-recurso |
 | `PermissionsBitField` | `missing` | método | lacuna |
 | `ReactionCollector` | `awaitReactions` | método | lacuna |
@@ -739,9 +739,9 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são
 | `ReactionCollector` | `on` | método | coberto-recurso |
 | `ReactionCollector` | `options` | propriedade | coberto-recurso |
 | `ReactionCollector` | `stop` | método | coberto-recurso |
-| `Role` | `_clone` | método | lacuna |
-| `Role` | `_patch` | método | lacuna |
-| `Role` | `_permissions` | propriedade | lacuna |
+| `Role` | `_clone` | método | só-SDK |
+| `Role` | `_patch` | método | só-SDK |
+| `Role` | `_permissions` | propriedade | só-SDK |
 | `Role` | `client` | propriedade | coberto-recurso |
 | `Role` | `color` | propriedade | coberto-recurso |
 | `Role` | `createdAt` | acessor | coberto-recurso |
@@ -762,17 +762,17 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são
 | `TextChannel` | `applyEditPatch` | método | lacuna |
 | `TextChannel` | `contentWarningLevel` | propriedade | coberto-recurso |
 | `TextChannel` | `contentWarningText` | propriedade | coberto-recurso |
-| `TextChannel` | `defaultAutoArchiveDuration` | propriedade | lacuna |
-| `TextChannel` | `defaultThreadRateLimitPerUser` | propriedade | lacuna |
+| `TextChannel` | `defaultAutoArchiveDuration` | propriedade | só-SDK |
+| `TextChannel` | `defaultThreadRateLimitPerUser` | propriedade | só-SDK |
 | `TextChannel` | `editThreadDefaults` | método | coberto-nativo |
-| `TextChannel` | `lastMessageId` | propriedade | lacuna |
+| `TextChannel` | `lastMessageId` | propriedade | só-SDK |
 | `TextChannel` | `nsfw` | propriedade | coberto-recurso |
-| `TextChannel` | `nsfwOverride` | propriedade | lacuna |
+| `TextChannel` | `nsfwOverride` | propriedade | só-SDK |
 | `TextChannel` | `rateLimitPerUser` | propriedade | coberto-recurso |
 | `TextChannel` | `setSlowmode` | método | coberto-recurso |
 | `TextChannel` | `threads` | acessor | coberto-recurso |
 | `TextChannel` | `topic` | propriedade | coberto-recurso |
-| `ThreadChannel` | `_patch` | método | lacuna |
+| `ThreadChannel` | `_patch` | método | só-SDK |
 | `ThreadChannel` | `appliedTags` | propriedade | coberto-recurso |
 | `ThreadChannel` | `archived` | propriedade | coberto-recurso |
 | `ThreadChannel` | `archiveTimestamp` | propriedade | coberto-recurso |
@@ -780,9 +780,9 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são
 | `ThreadChannel` | `edit` | método | coberto-recurso |
 | `ThreadChannel` | `editSelf` | método | coberto-nativo |
 | `ThreadChannel` | `flags` | propriedade | coberto-recurso |
-| `ThreadChannel` | `invitable` | propriedade | lacuna |
+| `ThreadChannel` | `invitable` | propriedade | só-SDK |
 | `ThreadChannel` | `join` | método | coberto-recurso |
-| `ThreadChannel` | `lastMessageId` | propriedade | lacuna |
+| `ThreadChannel` | `lastMessageId` | propriedade | só-SDK |
 | `ThreadChannel` | `leave` | método | coberto-nativo |
 | `ThreadChannel` | `locked` | propriedade | coberto-recurso |
 | `ThreadChannel` | `member` | propriedade | coberto-recurso |
@@ -794,7 +794,7 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são
 | `ThreadChannel` | `rateLimitPerUser` | propriedade | coberto-recurso |
 | `ThreadChannel` | `setArchived` | método | coberto-recurso |
 | `ThreadChannel` | `setLocked` | método | coberto-nativo |
-| `ThreadChannel` | `totalMessageSent` | propriedade | lacuna |
+| `ThreadChannel` | `totalMessageSent` | propriedade | só-SDK |
 | `ThreadManager` | `create` | método | coberto-recurso |
 | `ThreadManager` | `createPost` | método | coberto-recurso |
 | `ThreadManager` | `editDefaults` | método | coberto-nativo |
@@ -812,9 +812,9 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são
 | `ThreadMemberManager` | `fetch` | método | coberto-recurso |
 | `ThreadMemberManager` | `fetchOne` | método | coberto-recurso |
 | `ThreadMemberManager` | `remove` | método | coberto-recurso |
-| `User` | `_patch` | método | lacuna |
-| `User` | `avatar` | propriedade | lacuna |
-| `User` | `avatarColor` | propriedade | lacuna |
+| `User` | `_patch` | método | só-SDK |
+| `User` | `avatar` | propriedade | só-SDK |
+| `User` | `avatarColor` | propriedade | só-SDK |
 | `User` | `avatarURL` | método | coberto-recurso |
 | `User` | `banner` | propriedade | coberto-recurso |
 | `User` | `bannerURL` | método | coberto-recurso |
@@ -823,35 +823,35 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são
 | `User` | `createdAt` | acessor | coberto-recurso |
 | `User` | `createDM` | método | coberto-nativo |
 | `User` | `createdTimestamp` | acessor | coberto-recurso |
-| `User` | `discriminator` | propriedade | lacuna |
+| `User` | `discriminator` | propriedade | só-SDK |
 | `User` | `displayAvatarURL` | método | coberto-recurso |
 | `User` | `flags` | propriedade | coberto-recurso |
 | `User` | `globalName` | propriedade | coberto-recurso |
 | `User` | `id` | propriedade | coberto-recurso |
 | `User` | `send` | método | coberto-recurso |
-| `User` | `system` | propriedade | lacuna |
+| `User` | `system` | propriedade | só-SDK |
 | `User` | `toString` | método | coberto-recurso |
 | `User` | `username` | propriedade | coberto-recurso |
-| `UserFlagsBitField` | `Flags` | propriedade | lacuna |
+| `UserFlagsBitField` | `Flags` | propriedade | só-SDK |
 | `UserManager` | `fetch` | método | coberto-recurso |
 | `UserManager` | `fetchWithProfile` | método | coberto-recurso |
 | `UserManager` | `resolve` | método | coberto-recurso |
 | `UserManager` | `sweep` | método | lacuna |
 | `VoiceChannel` | `applyEditPatch` | método | lacuna |
-| `VoiceChannel` | `bitrate` | propriedade | lacuna |
+| `VoiceChannel` | `bitrate` | propriedade | só-SDK |
 | `VoiceChannel` | `contentWarningLevel` | propriedade | coberto-recurso |
 | `VoiceChannel` | `contentWarningText` | propriedade | coberto-recurso |
 | `VoiceChannel` | `guildId` | propriedade | coberto-recurso |
-| `VoiceChannel` | `lastMessageId` | propriedade | lacuna |
+| `VoiceChannel` | `lastMessageId` | propriedade | só-SDK |
 | `VoiceChannel` | `nsfw` | propriedade | coberto-recurso |
-| `VoiceChannel` | `nsfwOverride` | propriedade | lacuna |
+| `VoiceChannel` | `nsfwOverride` | propriedade | só-SDK |
 | `VoiceChannel` | `rateLimitPerUser` | propriedade | coberto-recurso |
-| `VoiceChannel` | `rtcRegion` | propriedade | lacuna |
+| `VoiceChannel` | `rtcRegion` | propriedade | só-SDK |
 | `VoiceChannel` | `setSlowmode` | método | coberto-recurso |
 | `VoiceChannel` | `topic` | propriedade | coberto-recurso |
-| `VoiceChannel` | `userLimit` | propriedade | lacuna |
-| `VoiceChannel` | `voiceConnectionLimit` | propriedade | lacuna |
-| `Webhook` | `avatar` | propriedade | lacuna |
+| `VoiceChannel` | `userLimit` | propriedade | só-SDK |
+| `VoiceChannel` | `voiceConnectionLimit` | propriedade | só-SDK |
+| `Webhook` | `avatar` | propriedade | só-SDK |
 | `Webhook` | `avatarURL` | método | coberto-recurso |
 | `Webhook` | `channelId` | propriedade | coberto-recurso |
 | `Webhook` | `client` | propriedade | coberto-recurso |
@@ -874,76 +874,76 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são
 
 ## Eventos do cliente
 
-Comparação entre `ClientEvents` do SDK e `scriptEventNames` do function mode.
+Comparação entre `ClientEvents` do SDK e `scriptEventNames` do function mode. Todo evento do SDK pode ser recebido nativamente por `bot.on`/`bot.once`/`bot.event`/`bot.client.on` — a coluna Status marca só a cobertura do function mode.
 
 | Evento | Function mode | Status |
 |---|---|---|
-| `channelCreate` | não | lacuna |
-| `channelDelete` | não | lacuna |
-| `channelMemberCountsUpdate` | não | lacuna |
-| `channelPinsUpdate` | não | lacuna |
-| `channelRecipientAdd` | não | lacuna |
-| `channelRecipientRemove` | não | lacuna |
-| `channelUpdate` | não | lacuna |
-| `debug` | não | lacuna |
-| `entranceSoundPlay` | não | lacuna |
-| `error` | não | lacuna |
-| `forumUnreads` | não | lacuna |
-| `guildAuditLogEntryCreate` | não | lacuna |
-| `guildAvailable` | não | lacuna |
-| `guildBanAdd` | não | lacuna |
-| `guildBanRemove` | não | lacuna |
-| `guildCountsUpdate` | não | lacuna |
-| `guildCreate` | não | lacuna |
-| `guildDelete` | não | lacuna |
-| `guildEmojisUpdate` | não | lacuna |
+| `channelCreate` | não | coberto-nativo |
+| `channelDelete` | não | coberto-nativo |
+| `channelMemberCountsUpdate` | não | coberto-nativo |
+| `channelPinsUpdate` | não | coberto-nativo |
+| `channelRecipientAdd` | não | coberto-nativo |
+| `channelRecipientRemove` | não | coberto-nativo |
+| `channelUpdate` | não | coberto-nativo |
+| `debug` | não | coberto-nativo |
+| `entranceSoundPlay` | não | coberto-nativo |
+| `error` | não | coberto-nativo |
+| `forumUnreads` | não | coberto-nativo |
+| `guildAuditLogEntryCreate` | não | coberto-nativo |
+| `guildAvailable` | não | coberto-nativo |
+| `guildBanAdd` | não | coberto-nativo |
+| `guildBanRemove` | não | coberto-nativo |
+| `guildCountsUpdate` | não | coberto-nativo |
+| `guildCreate` | não | coberto-nativo |
+| `guildDelete` | não | coberto-nativo |
+| `guildEmojisUpdate` | não | coberto-nativo |
 | `guildMemberAdd` | sim | coberto-recurso |
 | `guildMemberRemove` | sim | coberto-recurso |
-| `guildMemberUpdate` | não | lacuna |
-| `guildMembersChunk` | não | lacuna |
-| `guildRoleCreate` | não | lacuna |
-| `guildRoleDelete` | não | lacuna |
-| `guildRoleUpdate` | não | lacuna |
-| `guildStickersUpdate` | não | lacuna |
-| `guildUnavailable` | não | lacuna |
-| `guildUpdate` | não | lacuna |
-| `inviteCreate` | não | lacuna |
-| `inviteDelete` | não | lacuna |
-| `messageCreate` | não | lacuna |
+| `guildMemberUpdate` | não | coberto-nativo |
+| `guildMembersChunk` | não | coberto-nativo |
+| `guildRoleCreate` | não | coberto-nativo |
+| `guildRoleDelete` | não | coberto-nativo |
+| `guildRoleUpdate` | não | coberto-nativo |
+| `guildStickersUpdate` | não | coberto-nativo |
+| `guildUnavailable` | não | coberto-nativo |
+| `guildUpdate` | não | coberto-nativo |
+| `inviteCreate` | não | coberto-nativo |
+| `inviteDelete` | não | coberto-nativo |
+| `messageCreate` | não | coberto-nativo |
 | `messageDelete` | sim | coberto-recurso |
-| `messageDeleteBulk` | não | lacuna |
+| `messageDeleteBulk` | não | coberto-nativo |
 | `messageReactionAdd` | sim | coberto-recurso |
-| `messageReactionAddMany` | não | lacuna |
+| `messageReactionAddMany` | não | coberto-nativo |
 | `messageReactionRemove` | sim | coberto-recurso |
-| `messageReactionRemoveAll` | não | lacuna |
-| `messageReactionRemoveEmoji` | não | lacuna |
+| `messageReactionRemoveAll` | não | coberto-nativo |
+| `messageReactionRemoveEmoji` | não | coberto-nativo |
 | `messageUpdate` | sim | coberto-recurso |
-| `presenceUpdate` | não | lacuna |
-| `presenceUpdateBulk` | não | lacuna |
-| `ready` | não | lacuna |
-| `resumed` | não | lacuna |
-| `shardDisconnect` | não | lacuna |
-| `shardError` | não | lacuna |
-| `shardReady` | não | lacuna |
-| `shardReconnecting` | não | lacuna |
-| `shardResumed` | não | lacuna |
-| `shardingRequired` | não | lacuna |
-| `threadCreate` | não | lacuna |
-| `threadDelete` | não | lacuna |
-| `threadListSync` | não | lacuna |
-| `threadMemberListUpdate` | não | lacuna |
-| `threadMemberUpdate` | não | lacuna |
-| `threadMembersUpdate` | não | lacuna |
-| `threadUpdate` | não | lacuna |
-| `typingStart` | não | lacuna |
-| `userConnectionsUpdate` | não | lacuna |
-| `userUpdate` | não | lacuna |
-| `voiceServerUpdate` | não | lacuna |
-| `voiceStateAck` | não | lacuna |
-| `voiceStateUpdate` | não | lacuna |
-| `voiceStatesSync` | não | lacuna |
-| `webauthnCredentialsUpdate` | não | lacuna |
-| `webhooksUpdate` | não | lacuna |
+| `presenceUpdate` | não | coberto-nativo |
+| `presenceUpdateBulk` | não | coberto-nativo |
+| `ready` | não | coberto-nativo |
+| `resumed` | não | coberto-nativo |
+| `shardDisconnect` | não | coberto-nativo |
+| `shardError` | não | coberto-nativo |
+| `shardReady` | não | coberto-nativo |
+| `shardReconnecting` | não | coberto-nativo |
+| `shardResumed` | não | coberto-nativo |
+| `shardingRequired` | não | coberto-nativo |
+| `threadCreate` | não | coberto-nativo |
+| `threadDelete` | não | coberto-nativo |
+| `threadListSync` | não | coberto-nativo |
+| `threadMemberListUpdate` | não | coberto-nativo |
+| `threadMemberUpdate` | não | coberto-nativo |
+| `threadMembersUpdate` | não | coberto-nativo |
+| `threadUpdate` | não | coberto-nativo |
+| `typingStart` | não | coberto-nativo |
+| `userConnectionsUpdate` | não | coberto-nativo |
+| `userUpdate` | não | coberto-nativo |
+| `voiceServerUpdate` | não | coberto-nativo |
+| `voiceStateAck` | não | coberto-nativo |
+| `voiceStateUpdate` | não | coberto-nativo |
+| `voiceStatesSync` | não | coberto-nativo |
+| `webauthnCredentialsUpdate` | não | coberto-nativo |
+| `webhooksUpdate` | não | coberto-nativo |
 
 Eventos do function mode que o SDK não declara: nenhum.
 
@@ -955,3 +955,5 @@ Eventos do function mode que o SDK não declara: nenhum.
 - **Instância, cache e logs** (`DEFAULT_INSTANCE_ENDPOINTS`, `INSTANCE_DISCOVERY_PATH`, `instanceDiscoveryUrl`, `normalizeApiOrigin`, `parseInstanceDiscovery`, `resolveInstanceEndpoints`, `DEFAULT_CACHE_LIMITS`, `normalizeCacheLimit`, `resolveCacheLimits`, `createLogger`, `serializeError`): Disponível por `yuzuha/sdk` (e `SDK` na raiz); sem wrapper nativo por serem constantes, helpers puros ou classes de dados.
 - **Texto e parsing puros** (`parsePrefixCommand`, `parseUserMention`, `resolveKlipyToImageUrl`): Disponível por `yuzuha/sdk` (e `SDK` na raiz); sem wrapper nativo por serem constantes, helpers puros ou classes de dados.
 - **Classes de dados do SDK** (`AnnouncementChannel`, `CategoryChannel`, `ForumChannel`, `MediaChannel`, `GuildRoleManager`): Disponível por `yuzuha/sdk` (e `SDK` na raiz); sem wrapper nativo por serem constantes, helpers puros ou classes de dados.
+- **Internos do SDK** (membros): membro interno ou helper estático do SDK; fora da superfície pública, acessível por `bot.client` e `yuzuha/sdk`
+- **Dados dos objetos do SDK** (membros): propriedade de dado do objeto do SDK, acessível por `bot.client` e pelos `*Info` do recurso quando normalizada
