@@ -269,3 +269,92 @@ test('discovery consulta e edita a candidatura do servidor', async () => {
   await bound.users.editDiscoveryApplication('100', { description: 'nova' });
   assert.deepEqual(calls, ['apply:pt-BR', 'edit']);
 });
+test('equivalências declaram caminhos nativos que existem', async () => {
+  const eq = JSON.parse(await readFile('scripts/parity-equivalents.json', 'utf8'));
+  const sources = {
+    channels: 'src/ports/resources/channels.ts', messages: 'src/ports/resources/messages.ts',
+    collectors: 'src/ports/resources/collectors.ts', cache: 'src/ports/resources/cache.ts',
+    roles: 'src/ports/resources/roles.ts', users: 'src/ports/resources/users.ts',
+    invites: 'src/ports/resources/invites.ts', 'ctx.mod': 'src/services/native-moderation.ts',
+    bot: 'src/framework/bot.ts', AttachmentSpec: 'src/ports/resources/common.ts',
+    BinaryAttachmentSpec: 'src/ports/resources/common.ts', ChannelInfo: 'src/ports/resources/channels.ts',
+    InviteInfo: 'src/ports/resources/invites.ts', MessageInfo: 'src/ports/resources/messages.ts',
+    CacheStatsInfo: 'src/ports/resources/cache.ts', Embed: 'src/domain/embeds.ts',
+    Payload: 'src/domain/messages.ts', 'ctx.resources.messages': 'src/ports/resources/messages.ts',
+  } as Record<string, string>;
+  const texts = new Map<string, string>();
+  for (const [key, entry] of Object.entries(eq) as [string, { native: string; note: string }][]) {
+    const at = entry.native.lastIndexOf('.');
+    if (at < 0) {
+      const file = sources[entry.native] ?? 'src/ports/resources/common.ts';
+      if (!texts.has(file)) texts.set(file, await readFile(file, 'utf8'));
+      assert.ok(texts.get(file)!.includes(entry.native), `${key}: ${entry.native} ausente`);
+      continue;
+    }
+    const [area, member] = [entry.native.slice(0, at), entry.native.slice(at + 1)] as [string, string];
+    const file = sources[area];
+    assert.ok(file, `${key}: área desconhecida ${area}`);
+    if (!texts.has(file)) texts.set(file, await readFile(file, 'utf8'));
+    assert.ok(texts.get(file)!.includes(member), `${key}: ${entry.native} ausente em ${file}`);
+  }
+});
+
+test('transferOwnership exige dono e membro não-bot', async () => {
+  const calls: string[] = [];
+  const mk = (owner: boolean, bot = false) => {
+    const transport = new MockTransport();
+    transport.member = async (_g: string, id: string) =>
+      ({ id, owner, rank: 5, topRoleID: '10', permissions: PermissionFlags.Administrator }) as never;
+    const source = mockResources({
+      users: {
+        member: async () => ({ id: '3', bot } as never),
+        transferOwnership: async (_g: string, u: string) => { calls.push(u); },
+      },
+    });
+    return bindAuthorizedResources(source, transport, { guildID: '100', authorID: '2' });
+  };
+  await mk(true).users.transferOwnership('100', '3');
+  assert.deepEqual(calls, ['3']);
+  await assert.rejects(mk(false).users.transferOwnership('100', '3'), GuardError);
+  await assert.rejects(mk(true, true).users.transferOwnership('100', '3'), GuardError);
+});
+
+test('deleteAttachment exige ManageMessages salvo em mensagem própria', async () => {
+  const calls: string[] = [];
+  const mk = (authorID: string, msgAuthor: string, perms: bigint) => {
+    const transport = new MockTransport();
+    transport.member = async (_g: string, id: string) =>
+      member(id, id === transport.botID ? (msgAuthor === 'bot' ? 0n : perms) : perms) as never;
+    const source = mockResources({ messages: {
+      fetch: async () => ({ id: '9', channelID: '200', authorID: msgAuthor === 'bot' ? transport.botID : msgAuthor,
+        authorName: 'x', content: '', createdTimestamp: 0, pinned: false, attachments: [], embeds: [] }),
+      deleteAttachment: async () => { calls.push('del'); },
+    } });
+    return bindAuthorizedResources(source, transport, { guildID: '100', authorID });
+  };
+  const own = mk('2', '2', PermissionFlags.ManageMessages);
+  await own.messages.deleteAttachment('200', '9', 'a1');
+  assert.deepEqual(calls, ['del']);
+  const denied = mk('2', '4', 0n);
+  await assert.rejects(denied.messages.deleteAttachment('200', '9', 'a1'), GuardError);
+});
+
+test('hoist positions exige ManageRoles e hierarquia', async () => {
+  const calls: string[] = [];
+  const role = { id: '10', name: 'r', color: 0, position: 1, permissions: '0', hoist: true,
+    mentionable: false, unicodeEmoji: null, managed: false, hoistPosition: 2 };
+  const transport = new MockTransport();
+  transport.member = async (_g: string, id: string) =>
+    member(id, PermissionFlags.ManageRoles) as never;
+  const source = mockResources({ roles: {
+    resolve: async () => role,
+    setRoleHoistPositions: async (_g: string, u: { id: string }[]) => { calls.push(...u.map(x => x.id)); return [role]; },
+    resetRoleHoistPositions: async () => { calls.push('reset'); return [role]; },
+  } });
+  const bound = bindAuthorizedResources(source, transport, { guildID: '100', authorID: '2' });
+  await bound.roles.setRoleHoistPositions('100', [{ id: '10', position: 1 }]);
+  await bound.roles.resetRoleHoistPositions('100');
+  assert.deepEqual(calls, ['10', 'reset']);
+  transport.member = async (_g: string, id: string) => member(id, 0n) as never;
+  await assert.rejects(bound.roles.setRoleHoistPositions('100', [{ id: '10', position: 1 }]), GuardError);
+});
