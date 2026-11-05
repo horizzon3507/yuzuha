@@ -60,6 +60,9 @@ export interface UsersResources {
   searchMembers(guildID: string, query: string, limit?: number, offset?: number): Promise<MemberSearchPage>;
   setNickname(guildID: string, userID: string, nickname: string | null, reason: string): Promise<MemberInfo>;
   editGuild(guildID: string, input: GuildEditInput): Promise<GuildInfo>;
+  discoveryStatus(guildID: string): Promise<DiscoveryStatusInfo>;
+  applyForDiscovery(guildID: string, input: DiscoveryApplicationInput): Promise<DiscoveryApplicationInfo>;
+  editDiscoveryApplication(guildID: string, input: DiscoveryApplicationInput): Promise<DiscoveryApplicationInfo>;
   createDM(userID: string): Promise<ChannelInfo>;
   leaveGuild?(guildID: string): Promise<void>;
 }
@@ -103,6 +106,31 @@ export interface MemberSearchPage {
   hasMore: boolean;
   indexing: boolean;
 }
+export interface DiscoveryApplicationInput {
+  description?: string;
+  primaryCategoryId?: number | string;
+  keywords?: string[];
+  primaryLanguage?: string;
+}
+
+export interface DiscoveryApplicationInfo {
+  guildID: string;
+  status: string;
+  description: string;
+  categoryType: number;
+  primaryLanguage?: string | null;
+  customTags?: string[];
+  appliedAt?: string;
+  reviewedAt?: string | null;
+  guildNsfwLevel?: number | null;
+}
+
+export interface DiscoveryStatusInfo {
+  application: DiscoveryApplicationInfo | null;
+  eligible: boolean;
+  minMemberCount: number;
+}
+
 export interface GuildEditInput {
   name?: string;
   icon?: string | null;

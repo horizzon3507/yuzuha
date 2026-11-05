@@ -124,6 +124,10 @@ export function bindAuthorizedResources(source: Resources, transport: Transport,
       await expressions(args[0]);
       return source.expressions.createSticker(...args);
     },
+    async createStickersBulk(...args) {
+      await expressions(args[0]);
+      return source.expressions.createStickersBulk(...args);
+    },
     async editSticker(...args) {
       await expressions(args[0]);
       return source.expressions.editSticker(...args);

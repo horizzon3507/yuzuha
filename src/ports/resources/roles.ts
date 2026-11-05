@@ -5,6 +5,7 @@ export interface RoleInfo {
   position: number;
   permissions: string;
   hoist: boolean;
+  hoistPosition?: number | null;
   mentionable: boolean;
   unicodeEmoji: string | null;
   managed: boolean;

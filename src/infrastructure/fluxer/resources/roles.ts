@@ -10,6 +10,7 @@ function toInfo(role: Role): RoleInfo {
     position: role.position,
     permissions: role.permissions.bitfield.toString(),
     hoist: role.hoist,
+    hoistPosition: role.hoistPosition,
     mentionable: role.mentionable,
     unicodeEmoji: role.unicodeEmoji,
     managed: Reflect.get(role, 'managed') === true,
