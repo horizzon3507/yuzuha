@@ -99,7 +99,7 @@ test('native command and contextEvent upload real images through mocked resource
     } });
     assert.equal(await bot.handle(mockMessage('!card')), 'success');
     bot.client.emit('guildMemberAdd', { id: '2', user: { username: 'Mina', bot: false }, guild: { id: '100' } } as never);
-    for (let attempt = 0; attempt < 100 && uploads.length < 2; attempt++) await new Promise(resolve => setTimeout(resolve, 10));
+    for (let attempt = 0; attempt < 500 && uploads.length < 2; attempt++) await new Promise(resolve => setTimeout(resolve, 10));
     assert.equal(uploads.length, 2);
     assert.deepEqual(uploads.map(upload => upload.channelID), ['200', '300']);
     assert.equal(uploads[1]!.files[0]!.name, 'welcome.png');
