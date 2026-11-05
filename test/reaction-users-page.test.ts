@@ -4,9 +4,9 @@ import { Client, Message } from '@fluxerjs/core';
 import { CommandContext } from '../src/commands/context.js';
 import { MemoryStore } from '../src/infrastructure/storage/memory.js';
 import { createMessagesResources } from '../src/infrastructure/fluxer/resources/messages.js';
-import { Runtime } from '../src/scripting/runtime.js';
-import { defaultLimits } from '../src/scripting/limits.js';
-import { resourceMessageFunctions } from '../src/scripting/builtins/native-messages.js';
+import { Runtime } from '../src/functions/runtime/runtime.js';
+import { defaultLimits } from '../src/functions/runtime/limits.js';
+import { resourceMessageFunctions } from '../src/functions/builtins/native-messages.js';
 import { MockTransport, mockMessage, mockResources } from '../src/testing.js';
 import type { ReactionUsersPage } from '../src/index.js';
 

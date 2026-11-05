@@ -3,8 +3,8 @@ import assert from 'node:assert/strict';
 import { CommandContext } from '../src/commands/context.js';
 import { MemoryStore } from '../src/infrastructure/storage/memory.js';
 import type { RoleInfo, RolesResources } from '../src/ports/resources/roles.js';
-import type { FunctionCall, FunctionDefinition } from '../src/scripting/types.js';
-import { roleFunctions } from '../src/scripting/builtins/native-roles.js';
+import type { FunctionCall, FunctionDefinition } from '../src/functions/runtime/types.js';
+import { roleFunctions } from '../src/functions/builtins/native-roles.js';
 import { YuzuhaError } from '../src/shared/errors.js';
 import { MockTransport, mockMessage, mockResources } from '../src/testing.js';
 

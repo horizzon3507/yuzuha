@@ -12,10 +12,8 @@ import type { NativeCommandDefinition } from '../commands/definition.js';
 import type { ArgumentSchema } from '../commands/builders.js';
 import type { IncomingMessage, Store, Transport } from '../contracts.js';
 import { GuardError, PartialModerationError, YuzuhaError } from '../errors.js';
-import { registerBuiltins } from '../functions.js';
-import { Runtime, defaultLimits, text } from '../runtime.js';
 import { JsonStore, defaultDataPath } from '../store.js';
-import { CommandRegistry } from './command-registry.js';
+import { CommandRegistry, functionsRequired } from './command-registry.js';
 import type { CompiledCommand } from './command-registry.js';
 import { runMiddleware } from './middleware.js';
 import type { DispatchResult, Middleware, YuzuhaOptions, YuzuhaPlugin } from './options.js';
@@ -32,13 +30,21 @@ import { cancellationError } from '../services/cancellation.js';
 import { EventContext } from '../commands/event-context.js';
 import { adaptScriptEvent, scriptEventNames, validateScriptEvent } from './script-events.js';
 import type { ScriptEventDefinition } from './script-events.js';
-import type { Program } from '../scripting/ast.js';
+import type { ScriptEngine } from '../ports/script-engine.js';
 import type { MusicManager } from '../services/music.js';
 import type { NativeVoice } from '../ports/voice.js';
 import { canvasRenderer } from '../infrastructure/canvas/render.js';
 
 type RoutedCommand = { compiled: CompiledCommand; input: string; prefix: string };
 const ignored: Promise<DispatchResult> = Promise.resolve('ignored');
+
+function assertEngine(engine: unknown): ScriptEngine {
+  const candidate = engine as Partial<Record<keyof ScriptEngine, unknown>> | null | undefined;
+  if (!candidate || (['compile', 'execute', 'functions', 'registerAll', 'fork', 'text'] as const).some(key => typeof candidate[key] !== 'function')) {
+    throw new YuzuhaError('ENGINE_INVALID', 'Engine de function mode inválido: precisa de compile, execute, functions, registerAll, fork e text.');
+  }
+  return engine as ScriptEngine;
+}
 
 export class Yuzuha {
   readonly client: Client;
@@ -49,7 +55,7 @@ export class Yuzuha {
   readonly http?: HttpService;
   readonly music?: MusicManager;
   readonly voice?: NativeVoice;
-  readonly runtime: Runtime;
+  private scriptEngine?: ScriptEngine;
   private readonly registry: CommandRegistry;
   private readonly middleware: Middleware[] = [];
   private readonly plugins = new Set<string>();
@@ -59,7 +65,6 @@ export class Yuzuha {
   private readonly events: NativeEvents;
   private readonly execution = new AsyncLocalStorage<boolean>();
   private listening = false;
-  private functionsReady = false;
   private closing = false;
   private closeTask?: Promise<void>;
   private loginTask?: Promise<void>;
@@ -103,8 +108,8 @@ export class Yuzuha {
     this.http = options.http === false ? undefined : options.http ?? new HttpService();
     this.music = options.music;
     this.voice = options.voice;
-    this.runtime = new Runtime({ ...defaultLimits, ...options.limits });
-    this.registry = new CommandRegistry(this.runtime, () => this.enableFunctions(), command => {
+    if (options.engine !== undefined) this.scriptEngine = assertEngine(options.engine);
+    this.registry = new CommandRegistry(() => this.scriptEngine, command => {
       if (command.http) (this.http ?? new HttpService()).withPolicy(command.http);
     });
     this.events = new NativeEvents(this.client, work => this.scheduleEvent(work));
@@ -114,12 +119,14 @@ export class Yuzuha {
     this.client.on(Events.ShardError, this.shardErrorListener);
   }
 
-  /** Ativa o function mode (parser, evaluator e builtins) antes de usar `code`. */
-  enableFunctions(): this {
-    if (!this.functionsReady) {
-      registerBuiltins(this.runtime);
-      this.functionsReady = true;
-    }
+  /** Engine de function mode instalado, quando presente. */
+  get engine(): ScriptEngine | undefined { return this.scriptEngine; }
+
+  /** Instala o motor de function mode; exigido por comandos com `code` e eventos de script. */
+  useEngine(engine: ScriptEngine): this {
+    if (this.closing) throw new YuzuhaError('BOT_CLOSED', 'O bot está encerrado.');
+    if (this.scriptEngine) throw new YuzuhaError('ENGINE_INSTALLED', 'O bot já tem um engine de function mode.');
+    this.scriptEngine = assertEngine(engine);
     return this;
   }
 
@@ -140,13 +147,15 @@ export class Yuzuha {
       hasScript = typeof command.code === 'string';
       if (Array.isArray(command.subcommands)) pending.push(...command.subcommands);
     }
-    if (hasScript) this.enableFunctions();
-    const stagedRuntime = new Runtime(this.runtime.limits);
-    stagedRuntime.registerAll([...this.runtime.functions(), ...(plugin.functions ?? [])]);
-    const commitCommands = this.registry.prepare(plugin.commands ?? [], stagedRuntime);
+    if (hasScript || plugin.functions?.length) {
+      if (!this.scriptEngine) throw functionsRequired();
+    }
+    const stagedEngine = this.scriptEngine?.fork();
+    stagedEngine?.registerAll(plugin.functions ?? []);
+    const commitCommands = this.registry.prepare(plugin.commands ?? [], stagedEngine);
     for (const event of plugin.events ?? []) this.events.validate(event);
-    const scriptEvents = (plugin.scriptEvents ?? []).map(event => this.prepareScriptEvent(event, stagedRuntime));
-    this.runtime.registerAll(plugin.functions ?? []);
+    const scriptEvents = (plugin.scriptEvents ?? []).map(event => this.prepareScriptEvent(event, stagedEngine));
+    this.scriptEngine?.registerAll(plugin.functions ?? []);
     commitCommands();
     this.middleware.push(...(plugin.middleware ?? []));
     for (const event of plugin.events ?? []) this.events.add(event);
@@ -202,18 +211,19 @@ export class Yuzuha {
 
   scriptEvent(definition: ScriptEventDefinition): this {
     if (this.closing) throw new YuzuhaError('BOT_CLOSED', 'O bot está encerrado.');
-    this.enableFunctions();
+    if (!this.scriptEngine) throw functionsRequired();
     this.events.add(this.prepareScriptEvent(definition));
     return this;
   }
-  private prepareScriptEvent(definition: ScriptEventDefinition, runtime = this.runtime): NativeEvent {
+  private prepareScriptEvent(definition: ScriptEventDefinition, engine = this.scriptEngine): NativeEvent {
+    if (!engine) throw functionsRequired();
     validateScriptEvent(definition);
     const options = structuredClone(definition);
     if (options.http) (this.http ?? new HttpService()).withPolicy(options.http);
-    const program = runtime.compile(options.code, `<event:${options.event}>`);
+    const program = engine.compile(options.code, `<event:${options.event}>`);
     return { event: options.event, once: options.once ?? false, invoke: args => this.runScriptEvent(options, program, args) };
   }
-  private async runScriptEvent(definition: ScriptEventDefinition, program: Program, args: unknown[]): Promise<void> {
+  private async runScriptEvent(definition: ScriptEventDefinition, program: unknown, args: unknown[]): Promise<void> {
     const source = adaptScriptEvent(definition.event, args);
     if ((definition.ignoreBots ?? true) && source.event.userBot) return;
     const signal = this.shutdown.signal;
@@ -225,7 +235,7 @@ export class Yuzuha {
     let outcome: DispatchResult = 'success';
     try {
       if (this.options.onLog) await emitLog(this.options, { event: 'event.start', executionID: ctx.executionID, command: ctx.command.name });
-      const output = text(await this.runtime.execute(program, ctx)).trim();
+      const output = this.scriptEngine!.text(await this.scriptEngine!.execute(program, ctx)).trim();
       if (output) {
         if (!ctx.channelID) throw new GuardError('Defina um canal para a saída deste evento.');
         await ctx.send(output, ctx.channelID);
@@ -394,7 +404,7 @@ export class Yuzuha {
       }
       const execute = async () => {
         if (compiled.program) {
-          const output = text(await this.runtime.execute(compiled.program, current)).trim();
+          const output = this.scriptEngine!.text(await this.scriptEngine!.execute(compiled.program, current)).trim();
           if (output) await current.reply(output);
         } else if (compiled.command.run) await compiled.command.run(current);
         else throw new GuardError(`${resolved.input ? 'Subcomando desconhecido.\n' : ''}${this.help(compiled.command.name, prefix)}`);

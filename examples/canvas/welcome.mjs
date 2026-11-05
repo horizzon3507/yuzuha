@@ -1,7 +1,7 @@
-import { createCanvas } from 'yuzuha/canvas';
+import { createCard } from 'yuzuha/canvas/card';
 
 export function buildWelcome(name, avatar) {
-  return createCanvas(980, 300, { background: '#111923' })
+  return createCard(980, 300, { background: '#111923' })
     .rect({ x: 0, y: 0, width: 12, height: 300, fill: '#d8a36b' })
     .avatar(avatar, { x: 42, y: 74, size: 152, border: { color: '#f0c38c', width: 3 } })
     .text('A NEW VOICE IN THE ROOM', { x: 232, y: 42, maxWidth: 700, fontSize: 13, weight: 700, color: '#e9b87e' })

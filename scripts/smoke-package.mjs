@@ -41,7 +41,7 @@ try {
   assert.ok(info.files.some(file => file.path === 'assets/canvas/Inter-Bold.ttf'));
   assert.ok(info.files.some(file => file.path === 'assets/canvas/OFL.txt'));
   assert.ok(info.files.some(file => file.path === 'assets/canvas/ORIGIN.md'));
-  assert.ok(info.files.some(file => file.path === 'dist/scripting/regex-worker.mjs'));
+  assert.ok(info.files.some(file => file.path === 'dist/functions/runtime/regex-worker.mjs'));
   assert.ok(info.files.some(file => file.path === 'bridges/lavalink/build.mjs'));
   assert.ok(info.files.some(file => file.path === 'bridges/lavalink/src/AudioController.java'));
   assert.ok(!info.files.some(file => file.path.startsWith('bridges/lavalink/build/')));
@@ -63,11 +63,14 @@ try {
     import * as upstream from '@fluxerjs/core';
     import * as sdk from 'yuzuha/sdk';
     import * as native from 'yuzuha';
-    import { script } from 'yuzuha/functions';
+    import { script, functions } from 'yuzuha/functions';
     import { transformImage } from 'yuzuha/images';
     await assert.rejects(transformImage(new Uint8Array([1])), { code: 'IMAGE_DEPENDENCY' });
     const canvas = await import('yuzuha/canvas');
-    await assert.rejects(canvas.createCanvas(1, 1).render(), { code: 'CANVAS_DEPENDENCY' });
+    assert.throws(() => canvas.createCanvas(1, 1), { code: 'CANVAS_DEPENDENCY' });
+    await assert.rejects(canvas.loadImage(new Uint8Array([1])), { code: 'CANVAS_DEPENDENCY' });
+    const { createCard } = await import('yuzuha/canvas/card');
+    await assert.rejects(createCard(1, 1).render(), { code: 'CANVAS_DEPENDENCY' });
     import { Yuzuha, MemoryStore, arg } from 'yuzuha';
     import { MockTransport, mockMessage, mockResources, createTestBot } from 'yuzuha/testing';
     import { Runtime, registerBuiltins } from 'yuzuha/functions';
@@ -202,7 +205,7 @@ try {
     assert.deepEqual(new Uint8Array(await upload.get('file').arrayBuffer()), new Uint8Array([0, 255]));
     const transport = new MockTransport();
     const gatewayErrors = [];
-    const bot = new Yuzuha({ transport, store: new MemoryStore(), onError: error => { gatewayErrors.push(error); } });
+    const bot = new Yuzuha({ transport, store: new MemoryStore(), engine: functions(), onError: error => { gatewayErrors.push(error); } });
     const gatewayError = new Error('offline gateway interruption');
     bot.client.emit(sdk.Events.ShardError, 0, gatewayError);
     bot.client.emit(sdk.Events.Error, gatewayError);
@@ -232,7 +235,7 @@ try {
     assert.equal(events, 1);
     assert.equal(transport.messages.at(-1).payload.content, 'Olá 2');
 
-    const fixture = createTestBot({ now: 1000, commands: [native.defineCommand({
+    const fixture = createTestBot({ now: 1000, engine: functions(), commands: [native.defineCommand({
       name: 'config', aliases: ['cfg'], guildOnly: true, permissions: ['ManageGuild'],
       subcommands: [native.defineCommand({ name: 'prefixo', aliases: ['p'],
         args: { valor: arg.text().required() },
@@ -269,15 +272,21 @@ try {
   await run('npm', ['install', '--ignore-scripts', '--no-audit', '--no-fund'], canvasConsumer);
   await run(process.execPath, ['--input-type=module', '-e', `
     import assert from 'node:assert/strict';
-    import { createCanvas, loadImage } from '@napi-rs/canvas';
-    import { createCanvas as createYuzuhaCanvas } from 'yuzuha/canvas';
+    import { createCanvas, loadImage, registerFonts } from 'yuzuha/canvas';
+    import { createCard } from 'yuzuha/canvas/card';
     import { transformImage } from 'yuzuha/images';
     await assert.rejects(import('sharp'), { code: 'ERR_MODULE_NOT_FOUND' });
-    const result = await createYuzuhaCanvas(24, 16, { scale: 2, background: '#183047' })
-      .text('Yuzuha 0.1.9', { x: 2, y: 2, maxWidth: 20, fontSize: 6, minFontSize: 4 })
+    const canvas = createCanvas(24, 16);
+    const context = canvas.getContext('2d');
+    context.fillStyle = '#183047'; context.fillRect(0, 0, 24, 16);
+    const png = new Uint8Array(await canvas.encode('png'));
+    const decoded = await loadImage(png); assert.equal(decoded.width, 24); assert.equal(decoded.height, 16);
+    assert.ok(registerFonts('node_modules/yuzuha/assets/canvas') >= 1);
+    const result = await createCard(24, 16, { scale: 2, background: '#183047' })
+      .text('Yuzuha', { x: 2, y: 2, maxWidth: 20, fontSize: 6, minFontSize: 4 })
       .render();
     assert.equal(result.width, 48); assert.equal(result.height, 32); assert.equal(result.format, 'png');
-    const decoded = await loadImage(result.data); assert.equal(decoded.width, 48); assert.equal(decoded.height, 32);
+    const cardImage = await loadImage(result.data); assert.equal(cardImage.width, 48); assert.equal(cardImage.height, 32);
     await assert.rejects(transformImage(new Uint8Array([1])), { code: 'IMAGE_DEPENDENCY' });
     const metadata = await (async () => { const image = await loadImage(result.data); return [image.width, image.height]; })();
     assert.deepEqual(metadata, [48, 32]);
@@ -289,7 +298,10 @@ try {
     import sharp from 'sharp';
     import { transformImage } from 'yuzuha/images';
     const canvas = await import('yuzuha/canvas');
-    await assert.rejects(canvas.createCanvas(1, 1).render(), { code: 'CANVAS_DEPENDENCY' });
+    assert.throws(() => canvas.createCanvas(1, 1), { code: 'CANVAS_DEPENDENCY' });
+    await assert.rejects(canvas.loadImage(new Uint8Array([1])), { code: 'CANVAS_DEPENDENCY' });
+    const { createCard } = await import('yuzuha/canvas/card');
+    await assert.rejects(createCard(1, 1).render(), { code: 'CANVAS_DEPENDENCY' });
     const bytes = await sharp({ create: { width: 20, height: 10, channels: 3, background: '#eacb1a' } }).png().toBuffer();
     const result = await transformImage(bytes, { width: 10, format: 'webp' });
     assert.equal(result.width, 10); assert.equal(result.height, 5);
@@ -375,10 +387,10 @@ try {
         import { MockMusicBackend, mockTrack } from 'yuzuha/testing';
         import { transformImage } from 'yuzuha/images';
         import type { ImageResult } from 'yuzuha/images';
-        import { createCanvas } from 'yuzuha/canvas';
-        import type { CanvasBuilder, CanvasResult } from 'yuzuha/canvas';
+        import { createCard } from 'yuzuha/canvas/card';
+        import type { CanvasBuilder, CanvasResult } from 'yuzuha/canvas/card';
         const image: Promise<ImageResult> = transformImage(new Uint8Array([1]));
-        const card: CanvasBuilder = createCanvas(10, 10).text('teste', { x: 0, y: 0 });
+        const card: CanvasBuilder = createCard(10, 10).text('teste', { x: 0, y: 0 });
         const rendered: Promise<CanvasResult> = card.render();
         void rendered;
         void image;
@@ -492,7 +504,8 @@ try {
       await run(process.execPath, [...(language === 'ts' ? ['--import', 'tsx'] : []), '--input-type=module', '-e', `
         import assert from 'node:assert/strict';
         import { createTestBot } from 'yuzuha/testing';
-        const fixture = createTestBot();
+        import { functions } from 'yuzuha/functions';
+        const fixture = createTestBot({ engine: functions() });
         try {
           await fixture.bot.load('./commands');
           assert.equal(await fixture.send('!ping'), 'success');
@@ -521,9 +534,10 @@ try {
   await run(process.execPath, ['--input-type=module', '-e', `
     import assert from 'node:assert/strict';
     import { Yuzuha, MemoryStore } from 'yuzuha';
+    import { functions } from 'yuzuha/functions';
     import { MockTransport, mockMessage } from 'yuzuha/testing';
     const transport = new MockTransport();
-    const bot = new Yuzuha({ transport, store: new MemoryStore() });
+    const bot = new Yuzuha({ transport, store: new MemoryStore(), engine: functions() });
     await bot.load('./commands');
     assert.equal(await bot.handle(mockMessage('!eco oi')), 'success');
     assert.equal(transport.messages.at(-1).payload.content, 'oi');

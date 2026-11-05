@@ -2,11 +2,12 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { Events } from '@fluxerjs/core';
 import { arg, defineCommand, defineEvent, MemoryStore, Yuzuha } from '../src/index.js';
+import { functions } from '../src/functions.js';
 import { MockTransport, mockMessage } from '../src/testing.js';
 
 function fixture() {
   const transport = new MockTransport(), errors: unknown[] = [];
-  const bot = new Yuzuha({ transport, store: new MemoryStore(), onError: error => { errors.push(error); } });
+  const bot = new Yuzuha({ transport, store: new MemoryStore(), engine: functions(), onError: error => { errors.push(error); } });
   return { bot, transport, errors };
 }
 
@@ -112,6 +113,6 @@ test('plugin commands can use plugin functions and invalid plugin commands commi
     functions: [{ name: 'uncommitted', minArgs: 0, maxArgs: 0, category: 'plugin', usage: '$uncommitted', description: '', execute: () => '' }],
     commands: [{ name: 'plugin', code: 'collision' }],
   }), /duplicado/);
-  assert.throws(() => bot.runtime.compile('$uncommitted'), /desconhecida/);
+  assert.throws(() => bot.engine!.compile('$uncommitted'), /desconhecida/);
   bot.client.emit(Events.Ready); await bot.destroy(); assert.equal(eventCount, 1);
 });

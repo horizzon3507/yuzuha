@@ -53,6 +53,10 @@
     "./canvas": {
       "types": "./dist/canvas.d.ts",
       "import": "./dist/canvas.js"
+    },
+    "./canvas/card": {
+      "types": "./dist/canvas/card.d.ts",
+      "import": "./dist/canvas/card.js"
     }
   },
   "bin": {

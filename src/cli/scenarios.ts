@@ -4,6 +4,7 @@ import { Yuzuha } from '../bot.js';
 import type { DispatchResult } from '../framework/options.js';
 import type { Command } from '../commands/definition.js';
 import type { Payload } from '../domain/messages.js';
+import { functions } from '../functions.js';
 import { MemoryStore } from '../infrastructure/storage/memory.js';
 import { permission } from '../domain/permissions.js';
 import { YuzuhaError } from '../errors.js';
@@ -124,7 +125,7 @@ export async function executeScenarios(suite: ScenarioSuite): Promise<ScenarioRe
         ...(member.topRoleID === undefined ? {} : { topRoleID: member.topRoleID }) });
     }
     const bot = new Yuzuha({ prefix: scenario.prefix ?? '!', store, transport, resources: mockResources(),
-      scheduler: false, http: false, limits: { timeoutMs: 1000, calls: 10_000, output: 100_000 },
+      scheduler: false, http: false, engine: functions({ limits: { timeoutMs: 1000, calls: 10_000, output: 100_000 } }),
       onError: error => { errors.push(error instanceof YuzuhaError ? error.code : 'ERROR'); } });
     const result: ScenarioResult = { name: scenario.name, passed: true, messages: [] };
     try {

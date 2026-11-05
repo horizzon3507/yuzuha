@@ -6,11 +6,12 @@ import { tmpdir } from 'node:os';
 import { PermissionFlags } from '@fluxerjs/core';
 import { MemoryStore, PartialModerationError, Yuzuha } from '../src/index.js';
 import type { State } from '../src/index.js';
+import { functions } from '../src/functions.js';
 import { MockTransport, mockMessage } from '../src/testing.js';
 
 function harness(store = new MemoryStore()) {
   const transport = new MockTransport(), errors: unknown[] = [];
-  const bot = new Yuzuha({ transport, store, onError: e => { errors.push(e); } });
+  const bot = new Yuzuha({ transport, store, engine: functions(), onError: e => { errors.push(e); } });
   return { bot, transport, store, errors };
 }
 
@@ -144,14 +145,13 @@ test('timeout validates duration and unban does not require target membership', 
 
 test('plugin registration is atomic and functions are usable from scripts', async () => {
   const { bot, transport } = harness();
-  bot.enableFunctions();
   bot.plugin({ name: 'greeting', functions: [{ name: 'greet', category: 'test', minArgs: 1, maxArgs: 1, usage: '$greet[name]', description: '', execute: async call => `Hi ${await call.text(0)}` }] });
   assert.throws(() => bot.plugin({ name: 'greeting' }), /Plugin/);
   assert.throws(() => bot.plugin({ name: 'broken', functions: [
     { name: 'new', category: 'test', minArgs: 0, maxArgs: 0, usage: '$new', description: '', execute: () => '' },
     { name: 'reply', category: 'test', minArgs: 0, maxArgs: 0, usage: '$reply', description: '', execute: () => '' },
   ] }));
-  assert.throws(() => bot.runtime.compile('$new'), /desconhecida/);
+  assert.throws(() => bot.engine!.compile('$new'), /desconhecida/);
   bot.command({ name: 'hi', code: '$reply[$greet[$username]]' });
   assert.equal(await bot.handle(mockMessage('!hi')), 'success');
   assert.equal(transport.messages.at(-1)?.payload.content, 'Hi Hory');

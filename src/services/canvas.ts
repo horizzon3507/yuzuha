@@ -6,7 +6,7 @@ import {
 import type {
   CanvasAvatarOptions, CanvasBadgeItem, CanvasBadgesOptions, CanvasCircleOptions, CanvasColor, CanvasConfig, CanvasCreateOptions,
   CanvasConfiguredFont, CanvasFontOptions, CanvasFontSource, CanvasImageOptions, CanvasLineOptions, CanvasOperation, CanvasProgressOptions,
-  CanvasRectOptions, CanvasRenderOptions, CanvasResult, CanvasScene, CanvasSource, CanvasTextOptions,
+  CanvasFormat, CanvasRectOptions, CanvasRenderOptions, CanvasResult, CanvasScene, CanvasSource, CanvasTextOptions,
 } from '../domain/canvas.js';
 import type { CanvasRenderer } from '../ports/canvas.js';
 import type { MessagesResources } from '../ports/resources/messages.js';
@@ -43,6 +43,23 @@ export interface CanvasHostOptions extends CanvasRuntimeOptions {
   channelID?: string;
   messages?: MessagesResources;
 }
+
+export interface CanvasLike {
+  width: number;
+  height: number;
+  encode(format: CanvasFormat, quality?: number): Promise<Uint8Array>;
+}
+
+export interface CanvasImageLike {
+  width: number;
+  height: number;
+}
+
+const canvasLike = (value: unknown): value is CanvasLike => {
+  if (!obj(value)) return false;
+  const candidate = value as Record<string, unknown>;
+  return typeof candidate.encode === 'function' && typeof candidate.width === 'number' && typeof candidate.height === 'number';
+};
 
 const obj = (value: unknown): value is Record<string, unknown> => value !== null && typeof value === 'object' && !Array.isArray(value);
 const optionsError = (message: string): never => { throw new YuzuhaError('CANVAS_OPTIONS', message); };
@@ -468,9 +485,10 @@ export class CanvasService {
     return new CanvasBuilderImpl(width, height, cloneCanvasValue(options), this.config, this.host.renderer, this.owner);
   }
 
-  async send(builder: CanvasBuilder, options: CanvasSendOptions = {}): Promise<string> {
+  async send(builder: CanvasBuilder | CanvasLike, options: CanvasSendOptions = {}): Promise<string> {
     if (!this.host.messages) throw new YuzuhaError('CANVAS_STATE', 'Este canvas não tem transporte de mensagens para envio.');
-    if (!(builder instanceof CanvasBuilderImpl) || !builder.belongsTo(this.owner)) throw new YuzuhaError('CANVAS_STATE', 'Builder de Canvas inválido para este contexto.');
+    const builderOwn = builder instanceof CanvasBuilderImpl && builder.belongsTo(this.owner);
+    if (!builderOwn && !canvasLike(builder)) throw new YuzuhaError('CANVAS_STATE', 'Builder de Canvas inválido para este contexto.');
     if (!obj(options) || !allowed(options, ['channelID', 'name', 'content', 'description', 'format', 'quality', 'matte', 'timeoutMs'])) optionsError('Opções de envio inválidas.');
     const channelID = options.channelID ?? this.host.channelID;
     if (typeof channelID !== 'string' || !channelID.trim()) throw new YuzuhaError('CANVAS_STATE', 'Informe channelID para enviar a imagem.');
@@ -479,10 +497,29 @@ export class CanvasService {
     const renderOptions = formatOptions({ format: options.format, quality: options.quality, matte: options.matte, timeoutMs: options.timeoutMs },
       this.config.timeoutMs ?? CANVAS_LIMITS.defaultTimeoutMs);
     const name = attachmentName(options.name, renderOptions.format);
-    const result = await builder.render(renderOptions);
+    let data: Uint8Array;
+    if (builderOwn) {
+      const result = await (builder as CanvasBuilderImpl).render(renderOptions);
+      if (result.format !== renderOptions.format) throw new YuzuhaError('CANVAS_PROCESS', 'Formato renderizado não corresponde ao solicitado.');
+      data = new Uint8Array(result.data);
+    } else {
+      const canvas = builder as CanvasLike;
+      if (!Number.isSafeInteger(canvas.width) || !Number.isSafeInteger(canvas.height) || canvas.width < 1 || canvas.height < 1
+        || canvas.width > CANVAS_LIMITS.maxPhysicalDimension || canvas.height > CANVAS_LIMITS.maxPhysicalDimension
+        || canvas.width * canvas.height > CANVAS_LIMITS.maxPixels) optionsError('Dimensões físicas excedem os limites do Canvas.');
+      const before = signalFailure(this.config.signal);
+      if (before) throw before;
+      const encoded = await canvas.encode(renderOptions.format, renderOptions.quality);
+      data = new Uint8Array(encoded);
+      if (data.byteLength > CANVAS_LIMITS.maxOutputBytes) throw new YuzuhaError('EXECUTION_LIMIT', 'Imagem codificada excede 10 MB.');
+    }
     if (signalFailure(this.config.signal)) throw signalFailure(this.config.signal);
-    if (result.format !== renderOptions.format) throw new YuzuhaError('CANVAS_PROCESS', 'Formato renderizado não corresponde ao solicitado.');
-    return this.host.messages.sendBytes(channelID, [{ data: new Uint8Array(result.data), name, ...(options.description ? { description: options.description } : {}) }], options.content);
+    return this.host.messages.sendBytes(channelID, [{ data, name, ...(options.description ? { description: options.description } : {}) }], options.content);
+  }
+
+  async loadImage(source: unknown): Promise<CanvasImageLike> {
+    const module = await import('../canvas.js');
+    return module.loadImage(source as Parameters<typeof module.loadImage>[0], { http: this.config.http, signal: this.config.signal });
   }
 }
 

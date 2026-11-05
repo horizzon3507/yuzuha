@@ -3,7 +3,7 @@ import { performance } from 'node:perf_hooks';
 import { arch, cpus, platform } from 'node:os';
 import { readFile } from 'node:fs/promises';
 import { CommandContext, MemoryStore, Yuzuha } from '../dist/index.js';
-import { registerBuiltins, Runtime } from '../dist/functions.js';
+import { functions, registerBuiltins, Runtime } from '../dist/functions.js';
 import { MockTransport, mockMessage } from '../dist/testing.js';
 import { compareReports } from './compare.mjs';
 
@@ -58,7 +58,8 @@ const bots = [];
 try {
   for (const scripted of [false, true]) {
     for (const concurrency of new Set([1, config.concurrency])) {
-    const bot = new Yuzuha({ transport: new MockTransport(), store: new MemoryStore(), scheduler: false, http: false });
+    const bot = new Yuzuha({ transport: new MockTransport(), store: new MemoryStore(), scheduler: false, http: false,
+      engine: scripted ? functions() : undefined });
     bots.push(bot);
     bot.command(scripted ? { name: 'bench', code: '$let[x;$math[2;*;3]]' } : { name: 'bench', run() {} });
     const name = scripted ? 'dispatch/functions' : 'dispatch/native';

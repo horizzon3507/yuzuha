@@ -1,5 +1,5 @@
-import { createCanvas } from 'yuzuha/canvas';
-import type { CanvasBuilder, CanvasCreateOptions, CanvasSource } from 'yuzuha/canvas';
+import { createCard } from 'yuzuha/canvas/card';
+import type { CanvasBuilder, CanvasCreateOptions, CanvasSource } from 'yuzuha/canvas/card';
 import type { EventContext } from 'yuzuha';
 
 type CanvasCreate = (width: number, height: number, options?: CanvasCreateOptions) => CanvasBuilder;
@@ -18,7 +18,7 @@ function composeWelcome(create: CanvasCreate, name: string, avatar: CanvasSource
 }
 
 export function buildWelcome(name: string, avatar: CanvasSource): CanvasBuilder {
-  return composeWelcome(createCanvas, name, avatar);
+  return composeWelcome(createCard, name, avatar);
 }
 
 export async function welcomeEvent(ctx: EventContext, avatar: CanvasSource = 'asset:avatar'): Promise<string> {

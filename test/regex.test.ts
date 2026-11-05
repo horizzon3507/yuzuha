@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { runRegex } from '../src/scripting/regex.js';
+import { runRegex } from '../src/functions/runtime/regex.js';
 import { CommandContext, MemoryStore, ScriptError } from '../src/index.js';
 import { Runtime, registerBuiltins } from '../src/functions.js';
 import { MockTransport, mockMessage } from '../src/testing.js';

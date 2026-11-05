@@ -1,13 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createCanvas as createNativeCanvas, loadImage } from '@napi-rs/canvas';
-import { createCanvas } from '../src/canvas.js';
+import { createCard } from '../src/canvas/card.js';
 import type { CanvasResult, CanvasScene } from '../src/domain/canvas.js';
 import { canvasRenderer } from '../src/infrastructure/canvas/render.js';
 import { activeImageProcesses } from '../src/infrastructure/process-budget.js';
 import { transformImage } from '../src/images.js';
 import { CommandContext, EventContext, HttpService, MemoryStore, Yuzuha } from '../src/index.js';
-import { Runtime } from '../src/runtime.js';
+import { Runtime } from '../src/functions.js';
 import { registerBuiltins } from '../src/functions.js';
 import { MockTransport, mockMessage, mockResources } from '../src/testing.js';
 
@@ -143,14 +143,14 @@ test('canvas function quotas and cancellation pass through $try', async () => {
 
 test('image and canvas operations share the two-process budget and cancellation releases a slot', async () => {
   const data = await solid(8, 8, '#26a9e0');
-  const first = transformImage(data), second = createCanvas(120, 80).render();
+  const first = transformImage(data), second = createCard(120, 80).render();
   await assert.rejects(transformImage(data), { code: 'EXECUTION_LIMIT' });
   assert.equal(activeImageProcesses(), 2);
   await Promise.all([first, second]);
   assert.equal(activeImageProcesses(), 0);
 
   const controller = new AbortController();
-  const pending = createCanvas(100, 80, { signal: controller.signal }).render();
+  const pending = createCard(100, 80, { signal: controller.signal }).render();
   const cancelled = assert.rejects(pending, { code: 'EXECUTION_ABORTED' });
   setTimeout(() => controller.abort(), 25);
   await cancelled;

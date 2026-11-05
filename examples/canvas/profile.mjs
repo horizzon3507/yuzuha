@@ -1,7 +1,7 @@
-import { createCanvas } from 'yuzuha/canvas';
+import { createCard } from 'yuzuha/canvas/card';
 
 export function buildProfile(name, avatar) {
-  return createCanvas(1000, 340, { scale: 2, background: '#101722' })
+  return createCard(1000, 340, { scale: 2, background: '#101722' })
     .rect({ x: 0, y: 0, width: 8, height: 340, fill: '#70d8bc' })
     .avatar(avatar, { x: 44, y: 92, size: 156, border: { color: '#8ce5c9', width: 3 } })
     .text('COMMUNITY MEMBER', { x: 230, y: 38, maxWidth: 600, fontSize: 14, weight: 700, color: '#70d8bc' })

@@ -1,6 +1,7 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { MemoryStore, Yuzuha } from 'yuzuha';
+import { functions } from 'yuzuha/functions';
 import { MockTransport, mockMessage, mockResources } from 'yuzuha/testing';
 import { buildProfile } from './profile.js';
 import { buildWelcome } from './welcome.js';
@@ -28,7 +29,7 @@ for (const name of ['profile', 'welcome', 'ranking']) {
   const source = await readFile(new URL(`./functions/${name}.yuzuha`, directory), 'utf8');
   let data: Uint8Array | undefined;
   const bot = new Yuzuha({ prefix: '!', store: new MemoryStore(), scheduler: false, http: false,
-    transport: new MockTransport(), canvas: { assets: { avatar } },
+    engine: functions(), transport: new MockTransport(), canvas: { assets: { avatar } },
     resources: mockResources({ messages: { async sendBytes(_channelID, files) { data = new Uint8Array(files[0]!.data); return 'offline'; } } }) });
   try {
     if (name === 'welcome') {

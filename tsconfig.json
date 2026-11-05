@@ -36,6 +36,9 @@
       ],
       "yuzuha/canvas": [
         "./src/canvas.ts"
+      ],
+      "yuzuha/canvas/card": [
+        "./src/canvas/card.ts"
       ]
     }
   },

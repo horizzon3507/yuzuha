@@ -1,4 +1,4 @@
-import type { CanvasBuilder } from 'yuzuha/canvas';
+import type { CanvasBuilder } from 'yuzuha/canvas/card';
 
 export interface RankingEntry { name: string; score: number }
 
