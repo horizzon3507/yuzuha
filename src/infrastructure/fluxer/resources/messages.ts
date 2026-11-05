@@ -51,8 +51,10 @@ export function createMessagesResources(client: Client): MessagesResources {
     }
     const builders = files.map(file => {
       if (!file.name.trim() || file.name.length > 255) throw new YuzuhaError('ATTACHMENT_NAME', 'Nome de anexo deve ter de 1 a 255 caracteres.');
-      return new AttachmentBuilder('data' in file ? Buffer.from(file.data) : file.url,
+      const builder = new AttachmentBuilder('data' in file ? Buffer.from(file.data) : file.url,
         { name: file.name, description: file.description });
+      if (file.spoiler) builder.setSpoiler();
+      return builder;
     });
     return (await client.channels.send(channelID, { content, files: builders,
       attachments: builders.map((builder, id) => builder.toJSON(id)),
@@ -177,6 +179,12 @@ export function createMessagesResources(client: Client): MessagesResources {
       const message = await client.channels.fetchMessage(channelID, messageID);
       const page = await message.fetchReactionUsersPage(emoji, input);
       return { users: page.users.map(user => user.id), hasMore: page.hasMore, nextAfter: page.nextAfter };
+    },
+    async deleteAttachment(channelID, messageID, attachmentID): Promise<void> {
+      await (await client.channels.fetchMessage(channelID, messageID)).deleteAttachment(attachmentID);
+    },
+    async sendTo(channelID, content): Promise<string> {
+      return (await client.channels.send(channelID, { content, allowedMentions: { parse: [], repliedUser: false } })).id;
     },
     async bulkDelete(channelID, messageIDs): Promise<string[]> {
       const channel = await client.channels.fetch(channelID, { force: true });

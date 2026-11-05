@@ -9,6 +9,7 @@ import { GuardError } from '../src/shared/errors.js';
 import { MockTransport, mockMessage, mockResources } from '../src/testing.js';
 import type { ChannelInfo } from '../src/ports/resources/channels.js';
 import * as sdk from '../src/sdk.js';
+import * as sdkTypes from '../src/sdk/types.js';
 
 const channel: ChannelInfo = { id: '200', name: 'geral', guildID: '100', type: 0, parentID: null,
   position: 0, topic: null, slowmode: 0, nsfw: false };
@@ -75,10 +76,12 @@ test('recursos novos passam pela autorização de canal', async () => {
 
 test('exports só-SDK existem como valores em yuzuha/sdk', async () => {
   const areas = JSON.parse(await readFile('scripts/parity-areas.json', 'utf8'));
-  for (const [group, entry] of Object.entries(areas.sdkOnly) as [string, { exports: string[] }][]) {
+  const surfaces = { sdk, 'sdk/types': sdkTypes } as Record<string, Record<string, unknown>>;
+  for (const [group, entry] of Object.entries(areas.sdkOnly) as [string, { exports: string[]; via?: string }][]) {
     if (group === 'Sharding e cluster') continue;
+    const surface = surfaces[entry.via ?? 'sdk'] ?? sdk;
     for (const name of entry.exports) {
-      assert.equal(name in sdk, true, `${name} (${group}) ausente em yuzuha/sdk`);
+      assert.equal(name in surface, true, `${name} (${group}) ausente em yuzuha/${entry.via ?? 'sdk'}`);
     }
   }
 });

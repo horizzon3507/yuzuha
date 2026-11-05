@@ -3,12 +3,14 @@ export interface AttachmentSpec {
   url: string;
   name: string;
   description?: string;
+  spoiler?: boolean;
 }
 
 export interface BinaryAttachmentSpec {
   data: Uint8Array;
   name: string;
   description?: string;
+  spoiler?: boolean;
 }
 
 export type PresenceStatus = 'online' | 'idle' | 'dnd' | 'invisible';

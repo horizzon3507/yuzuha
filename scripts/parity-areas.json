@@ -161,7 +161,8 @@
         "cdnStickerURL",
         "inviteUrl"
       ],
-      "note": "Disponível por `yuzuha/sdk` (e `SDK` na raiz); sem wrapper nativo por serem constantes, helpers puros ou classes de dados."
+      "note": "Disponível por `yuzuha/sdk` (e `SDK` na raiz); sem wrapper nativo por serem constantes, helpers puros ou classes de dados.",
+      "via": "sdk"
     },
     "Constantes e bitfields puros": {
       "exports": [
@@ -180,7 +181,8 @@
         "resolvePermissionsToBitfield",
         "ErrorCodes"
       ],
-      "note": "Disponível por `yuzuha/sdk` (e `SDK` na raiz); sem wrapper nativo por serem constantes, helpers puros ou classes de dados."
+      "note": "Disponível por `yuzuha/sdk` (e `SDK` na raiz); sem wrapper nativo por serem constantes, helpers puros ou classes de dados.",
+      "via": "sdk"
     },
     "Instância, cache e logs": {
       "exports": [
@@ -196,7 +198,8 @@
         "createLogger",
         "serializeError"
       ],
-      "note": "Disponível por `yuzuha/sdk` (e `SDK` na raiz); sem wrapper nativo por serem constantes, helpers puros ou classes de dados."
+      "note": "Disponível por `yuzuha/sdk` (e `SDK` na raiz); sem wrapper nativo por serem constantes, helpers puros ou classes de dados.",
+      "via": "sdk"
     },
     "Texto e parsing puros": {
       "exports": [
@@ -204,7 +207,8 @@
         "parseUserMention",
         "resolveKlipyToImageUrl"
       ],
-      "note": "Disponível por `yuzuha/sdk` (e `SDK` na raiz); sem wrapper nativo por serem constantes, helpers puros ou classes de dados."
+      "note": "Disponível por `yuzuha/sdk` (e `SDK` na raiz); sem wrapper nativo por serem constantes, helpers puros ou classes de dados.",
+      "via": "sdk"
     },
     "Classes de dados do SDK": {
       "exports": [
@@ -214,7 +218,21 @@
         "MediaChannel",
         "GuildRoleManager"
       ],
-      "note": "Disponível por `yuzuha/sdk` (e `SDK` na raiz); sem wrapper nativo por serem constantes, helpers puros ou classes de dados."
+      "note": "Disponível por `yuzuha/sdk` (e `SDK` na raiz); sem wrapper nativo por serem constantes, helpers puros ou classes de dados.",
+      "via": "sdk"
+    },
+    "Tipos e flags do SDK": {
+      "exports": [
+        "EmbedMediaFlags",
+        "GatewayDispatchEvents",
+        "GatewayErrorCodes",
+        "GatewayIdentifyFlags",
+        "isGroupDmInvite",
+        "isGuildInvite",
+        "isUploadedAttachment"
+      ],
+      "via": "sdk/types",
+      "note": "Disponível por `yuzuha/sdk/types`; sem wrapper nativo por serem constantes, enums e helpers puros."
     }
   },
   "members": {
@@ -224,9 +242,27 @@
         "^fromOrCreate$",
         "^isFluxerError$",
         "^Flags$",
-        "^\\[Symbol"
+        "^\\[Symbol",
+        "^applyEditPatch$",
+        "^fromMessage$",
+        "^adjustMemberCount$",
+        "^preloadMessagesAlt$",
+        "^getOrCreateUser$",
+        "^fromDiscovery$",
+        "^Routes$",
+        "^pinInList$",
+        "^unpinFromList$",
+        "^canSend$",
+        "^cascading$"
       ],
-      "reason": "membro interno ou helper estático do SDK; fora da superfície pública, acessível por `bot.client` e `yuzuha/sdk`"
+      "reason": "membro interno, helper estático ou helper de sessão do SDK; fora da superfície pública ou acessível por `bot.client`"
+    },
+    "Helpers puros do SDK": {
+      "match": [
+        "^missing$",
+        "^splashURL$"
+      ],
+      "reason": "helper puro do SDK (bitfield de permissões / URL de asset), acessível por `bot.client` e `yuzuha/sdk`"
     },
     "Dados dos objetos do SDK": {
       "kinds": [

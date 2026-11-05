@@ -13,6 +13,7 @@ export interface CacheLimitsInfo {
   roles: number | null;
   emojis: number | null;
   stickers: number | null;
+  cascading?: boolean;
 }
 
 /** Tamanhos atuais dos buckets de cache com os limites aplicados. */
@@ -75,4 +76,6 @@ export interface CacheResources {
   sweepUsers(input?: UserSweepInput): Promise<number>;
   sweepChannels(input?: ChannelSweepInput): Promise<number>;
   sweepGuilds(input?: GuildSweepInput): Promise<number>;
+  cascadeChannel(channelID: string): Promise<void>;
+  cascadeGuild(guildID: string): Promise<void>;
 }
