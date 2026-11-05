@@ -228,3 +228,41 @@ test('editDefaults de canal e de forum exigem ManageChannels', async () => {
   await assert.rejects(bound.channels.editThreadDefaults('200', {}), GuardError);
   await assert.rejects(bound.threads.editDefaults('200', {}), GuardError);
 });
+
+test('createStickersBulk valida lote e exige ManageExpressions', async () => {
+  const calls: string[] = [];
+  const source = mockResources({
+    expressions: { createStickersBulk: async (_g: string, inputs: { name: string }[]) => {
+      calls.push(...inputs.map(i => i.name));
+      return { success: [], failed: [{ name: 'ruim', error: 'duplicado' }] };
+    } },
+  });
+  const transport = new MockTransport();
+  transport.member = async (_g: string, id: string) => member(id, PermissionFlags.ManageExpressions) as never;
+  const bound = bindAuthorizedResources(source, transport, { guildID: '100', authorID: '2' });
+  const result = await bound.expressions.createStickersBulk('100', [
+    { name: 'ok', image: 'AAAA' }, { name: 'ruim', image: 'BBBB' }]);
+  assert.deepEqual(result.failed, [{ name: 'ruim', error: 'duplicado' }]);
+  assert.deepEqual(calls, ['ok', 'ruim']);
+  transport.member = async (_g: string, id: string) => member(id, 0n) as never;
+  await assert.rejects(bound.expressions.createStickersBulk('100', [{ name: 'x', image: 'AAAA' }]), GuardError);
+});
+
+test('discovery consulta e edita a candidatura do servidor', async () => {
+  const calls: string[] = [];
+  const source = mockResources({
+    users: {
+      discoveryStatus: async () => ({ application: null, eligible: true, minMemberCount: 1000 }),
+      applyForDiscovery: async (_g: string, i: { primaryLanguage?: string }) => {
+        calls.push('apply:' + i.primaryLanguage);
+        return { guildID: '100', status: 'pending', description: '', categoryType: 0 };
+      },
+      editDiscoveryApplication: async () => { calls.push('edit'); return { guildID: '100', status: 'pending', description: '', categoryType: 0 }; },
+    },
+  });
+  const bound = bindAuthorizedResources(source, new MockTransport(), { guildID: '100', authorID: '2' });
+  assert.equal((await bound.users.discoveryStatus('100')).minMemberCount, 1000);
+  await bound.users.applyForDiscovery('100', { primaryLanguage: 'pt-BR' });
+  await bound.users.editDiscoveryApplication('100', { description: 'nova' });
+  assert.deepEqual(calls, ['apply:pt-BR', 'edit']);
+});
