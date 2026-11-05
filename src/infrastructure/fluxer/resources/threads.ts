@@ -133,6 +133,20 @@ export function createThreadsResources(client: Client): ThreadsResources {
     },
     async join(threadID) { await asThread(await client.channels.fetch(threadID)).join(); },
     async leave(threadID) { await asThread(await client.channels.fetch(threadID)).leave(); },
+    async setLocked(threadID, locked, reason): Promise<void> {
+      await asThread(await client.channels.fetch(threadID)).setLocked(locked, reason);
+    },
+    async editSelf(threadID, input) {
+      const member = await asThread(await client.channels.fetch(threadID)).editSelf(input);
+      return member === null ? null : { threadID: member.id, userID: member.userId,
+        joinedTimestamp: member.joinedAt.getTime(), flags: member.flags };
+    },
+    async editDefaults(parentID, input): Promise<void> {
+      const { slowmode, autoArchiveDuration, reason } = input;
+      await parentThreads(await client.channels.fetch(parentID)).editDefaults({
+        autoArchiveDuration: autoArchiveDuration === null ? null : archiveDuration(autoArchiveDuration),
+        rateLimitPerUser: slowmode, reason });
+    },
     async search(channelID, input) {
       const limit = input.limit ?? 25, offset = input.offset ?? 0;
       if (!Number.isSafeInteger(limit) || limit < 1 || limit > 25 || !Number.isSafeInteger(offset) || offset < 0 || offset > 9975) {

@@ -48,9 +48,24 @@ export interface ThreadsResources {
   edit(threadID: string, input: ThreadEditInput): Promise<ThreadInfo>;
   join(threadID: string): Promise<void>;
   leave(threadID: string): Promise<void>;
+  setLocked(threadID: string, locked: boolean, reason?: string): Promise<void>;
+  editSelf(threadID: string, input: ThreadSelfEditInput): Promise<ThreadMemberInfo | null>;
+  editDefaults(parentID: string, input: ThreadDefaultsInput): Promise<void>;
   search(channelID: string, input: ThreadSearchInput): Promise<ThreadSearchPage>;
   active(guildID: string): Promise<ThreadListPage>;
   archived(channelID: string, input?: ArchivedThreadsInput): Promise<ThreadListPage>;
+}
+
+export interface ThreadSelfEditInput {
+  flags?: number;
+  muted?: boolean;
+  muteConfig?: { endTime?: string | number | null; selectedTimeWindow: number } | null;
+}
+
+export interface ThreadDefaultsInput {
+  autoArchiveDuration?: number | null;
+  slowmode?: number | null;
+  reason?: string;
 }
 
 export interface ThreadEditInput {

@@ -4,6 +4,7 @@ import { hasPermission, permission } from '../domain/permissions.js';
 import { emojiBatch } from '../domain/resource-batches.js';
 import type { Resources } from '../ports/resources.js';
 import type { RoleInfo } from '../ports/resources/roles.js';
+import type { ThreadDefaultsInput, ThreadSelfEditInput } from '../ports/resources/threads.js';
 import type { Transport } from '../ports/transport.js';
 import { GuardError, YuzuhaError } from '../shared/errors.js';
 import { AuthorizationService, requireGuild } from './authorization.js';
@@ -96,7 +97,14 @@ export function bindAuthorizedResources(source: Resources, transport: Transport,
     async clearReadState(channelID: string) { await channel(channelID, 'ReadMessageHistory'); return source.messages.clearReadState(channelID); },
     async purgeDM(channelID: string) { await dm(channelID); return source.messages.purgeDM(channelID); },
   }), collectors: source.collectors,
-    threads: source.threads, invites: source.invites, gateway: source.gateway,
+    threads: Object.assign(Object.create(source.threads), {
+    async setLocked(threadID: string, locked: boolean, reason?: string) {
+      await channel(threadID, 'ManageThreads');
+      return source.threads.setLocked(threadID, locked, reason);
+    },
+    async editSelf(threadID: string, input: ThreadSelfEditInput) { await channel(threadID, 'ViewChannel'); return source.threads.editSelf(threadID, input); },
+    async editDefaults(parentID: string, input: ThreadDefaultsInput) { await channel(parentID); return source.threads.editDefaults(parentID, input); },
+  }), invites: source.invites, gateway: source.gateway,
     instance: source.instance, self: source.self, cache: source.cache, expressions: {
     emoji: source.expressions.emoji.bind(source.expressions), emojis: source.expressions.emojis.bind(source.expressions),
     sticker: source.expressions.sticker.bind(source.expressions), stickers: source.expressions.stickers.bind(source.expressions),
@@ -206,6 +214,8 @@ export function bindAuthorizedResources(source: Resources, transport: Transport,
     async sendTyping(id) { await channel(id, 'SendMessages'); return source.channels.sendTyping(id); },
     rtcRegions: source.channels.rtcRegions.bind(source.channels),
     async move(id, position) { await channel(id); return source.channels.move(id, position); },
+    async editThreadDefaults(id, input) { await channel(id); return source.channels.editThreadDefaults(id, input); },
+    async setDefaultForumLayout(id, layout, reason) { await channel(id); return source.channels.setDefaultForumLayout(id, layout, reason); },
     async setCategory(id, parentID, reason) {
       await channel(id);
       if (parentID) await parent(parentID);
