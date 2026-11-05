@@ -178,5 +178,25 @@ export function createMessagesResources(client: Client): MessagesResources {
       const page = await message.fetchReactionUsersPage(emoji, input);
       return { users: page.users.map(user => user.id), hasMore: page.hasMore, nextAfter: page.nextAfter };
     },
+    async bulkDelete(channelID, messageIDs): Promise<string[]> {
+      const channel = await client.channels.fetch(channelID, { force: true });
+      if (!channel.isTextBased()) throw new YuzuhaError('CHANNEL_TEXT', 'Canal sem suporte a mensagens.');
+      return channel.bulkDelete(messageIDs);
+    },
+    async bulkDeleteOwn(channelID): Promise<void> {
+      const channel = await client.channels.fetch(channelID, { force: true });
+      if (!channel.isTextBased()) throw new YuzuhaError('CHANNEL_TEXT', 'Canal sem suporte a mensagens.');
+      await channel.bulkDeleteMyMessages();
+    },
+    async acknowledgePins(channelID): Promise<void> {
+      const channel = await client.channels.fetch(channelID, { force: true });
+      if (!channel.isTextBased()) throw new YuzuhaError('CHANNEL_TEXT', 'Canal sem suporte a mensagens.');
+      await channel.acknowledgePins();
+    },
+    async clearReadState(channelID): Promise<void> {
+      const channel = await client.channels.fetch(channelID, { force: true });
+      if (!channel.isTextBased()) throw new YuzuhaError('CHANNEL_TEXT', 'Canal sem suporte a mensagens.');
+      await channel.clearReadState();
+    },
   };
 }

@@ -12,7 +12,7 @@ type ChannelExtras = {
   contentWarningText?: string | null;
 };
 
-function toChannelInfo(channel: GuildChannel): ChannelInfo {
+export function toChannelInfo(channel: GuildChannel): ChannelInfo {
   const extras = channel as GuildChannel & ChannelExtras;
   return {
     id: channel.id,
@@ -123,6 +123,19 @@ export function createChannelsResources(client: Client): ChannelsResources {
       const channel = await guildChannel(client, channelID);
       if (reason === undefined) await channel.edit({ rateLimitPerUser: seconds });
       else await channel.edit({ rateLimitPerUser: seconds, reason });
+    },
+    async slowmode(channelID): Promise<number> {
+      const channel = await guildChannel(client, channelID);
+      return (await channel.fetchSlowmode()).rateLimitPerUser ?? 0;
+    },
+    async sendTyping(channelID): Promise<void> {
+      const channel = await guildChannel(client, channelID);
+      if (!channel.isTextBased()) throw new YuzuhaError('CHANNEL_TEXT', 'Canal sem suporte a mensagens.');
+      await channel.sendTyping();
+    },
+    async rtcRegions(channelID) {
+      const channel = await guildChannel(client, channelID);
+      return (await channel.fetchRtcRegions()).map(region => ({ id: region.id, name: region.name, emoji: region.emoji }));
     },
     async overwrite(channelID, targetID, input: ChannelOverwriteInput): Promise<void> {
       const channel = await guildChannel(client, channelID);
