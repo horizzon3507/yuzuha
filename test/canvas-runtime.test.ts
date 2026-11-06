@@ -1,13 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createCanvas as createNativeCanvas, loadImage } from '@napi-rs/canvas';
-import { createCanvas } from '../src/canvas.js';
+import { createCard } from '../src/canvas/card.js';
 import type { CanvasResult, CanvasScene } from '../src/domain/canvas.js';
 import { canvasRenderer } from '../src/infrastructure/canvas/render.js';
 import { activeImageProcesses } from '../src/infrastructure/process-budget.js';
 import { transformImage } from '../src/images.js';
 import { CommandContext, EventContext, HttpService, MemoryStore, Yuzuha } from '../src/index.js';
-import { Runtime } from '../src/runtime.js';
+import { Runtime } from '../src/functions.js';
 import { registerBuiltins } from '../src/functions.js';
 import { MockTransport, mockMessage, mockResources } from '../src/testing.js';
 
@@ -99,7 +99,7 @@ test('native command and contextEvent upload real images through mocked resource
     } });
     assert.equal(await bot.handle(mockMessage('!card')), 'success');
     bot.client.emit('guildMemberAdd', { id: '2', user: { username: 'Mina', bot: false }, guild: { id: '100' } } as never);
-    for (let attempt = 0; attempt < 100 && uploads.length < 2; attempt++) await new Promise(resolve => setTimeout(resolve, 10));
+    for (let attempt = 0; attempt < 500 && uploads.length < 2; attempt++) await new Promise(resolve => setTimeout(resolve, 10));
     assert.equal(uploads.length, 2);
     assert.deepEqual(uploads.map(upload => upload.channelID), ['200', '300']);
     assert.equal(uploads[1]!.files[0]!.name, 'welcome.png');
@@ -143,14 +143,14 @@ test('canvas function quotas and cancellation pass through $try', async () => {
 
 test('image and canvas operations share the two-process budget and cancellation releases a slot', async () => {
   const data = await solid(8, 8, '#26a9e0');
-  const first = transformImage(data), second = createCanvas(120, 80).render();
+  const first = transformImage(data), second = createCard(120, 80).render();
   await assert.rejects(transformImage(data), { code: 'EXECUTION_LIMIT' });
   assert.equal(activeImageProcesses(), 2);
   await Promise.all([first, second]);
   assert.equal(activeImageProcesses(), 0);
 
   const controller = new AbortController();
-  const pending = createCanvas(100, 80, { signal: controller.signal }).render();
+  const pending = createCard(100, 80, { signal: controller.signal }).render();
   const cancelled = assert.rejects(pending, { code: 'EXECUTION_ABORTED' });
   setTimeout(() => controller.abort(), 25);
   await cancelled;

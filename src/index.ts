@@ -17,6 +17,7 @@ export type { EventContextOptions } from './commands/event-context.js';
 export type { ScriptEventDefinition } from './framework/script-events.js';
 export type { ScriptEventData, ScriptEventName } from './domain/events.js';
 export type { NativeAccess } from './ports/native.js';
+export type { ScriptEngine, ScriptFunctionDefinition, ScriptLimits } from './ports/script-engine.js';
 export type { NativeVoice, FluxerVoiceConnection, FluxerVoiceDriver } from './ports/voice.js';
 export type { Resources } from './ports/resources.js';
 export type {

@@ -1,16 +1,16 @@
 # Versionamento
 
 O Yuzuha aplica o formato Hory ao histórico e usa **SemVer simples** no pacote.
-A versão desta atualização é **0.2.1**.
+A versão desta atualização é **0.3.0**.
 
 ## Pacote e histórico
 
 | Lugar | Formato nesta versão |
 |---|---|
-| `package.json` e entrada raiz de `package-lock.json` | `0.2.1` |
-| Pacote npm e saída de `yuzuha --version` | `0.2.1` |
-| Título do changelog | `## v0.2.1 · 03/11/2026` |
-| Tag Git | `v0.2.1` |
+| `package.json` e entrada raiz de `package-lock.json` | `0.3.0` |
+| Pacote npm e saída de `yuzuha --version` | `0.3.0` |
+| Título do changelog | `## v0.3.0 · 04/11/2026` |
+| Tag Git | `v0.3.0` |
 
 O SDK e a CLI pertencem ao mesmo pacote. Para bibliotecas, a convenção Hory mantém
 SemVer sem `m`, sem seções por superfície e sem sufixos de canal.
@@ -31,7 +31,7 @@ novas funcionalidades compatíveis, minor; correções compatíveis, patch.
 
 Os exports públicos são `yuzuha`, `yuzuha/functions`, `yuzuha/sdk`,
 `yuzuha/sdk/*`, `yuzuha/testing`, `yuzuha/tooling`, `yuzuha/music`,
-`yuzuha/images` e `yuzuha/canvas`. A organização interna de `src/` não cria
+`yuzuha/images`, `yuzuha/canvas` e `yuzuha/canvas/card`. A organização interna de `src/` não cria
 estabilidade de deep
 imports. Schema persistido,
 gramática e funções documentadas também fazem parte da compatibilidade.
@@ -41,6 +41,31 @@ A versão do SDK é fixada separadamente. Atualizá-la exige revisar
 gerado por `init` pertence ao consumidor e não precisa acompanhar a biblioteca.
 
 ## Preparar uma atualização
+
+### Migrar para 0.3.0
+
+A 0.3.0 isola o function mode da raiz e transforma `yuzuha/canvas` na API
+compatível com `@napi-rs/canvas`. Há três mudanças incompatíveis:
+
+- `yuzuha/canvas` passa a exportar a API napi em processo (`createCanvas`,
+  `loadImage`, `registerFonts`, `GlobalFonts` e demais exports do peer). O
+  antigo builder de cartões migrou para `yuzuha/canvas/card`: troque
+  `import { createCanvas } from 'yuzuha/canvas'` por
+  `import { createCard } from 'yuzuha/canvas/card'` e renomeie a chamada.
+- Comandos com `code`, eventos de script e plugins com `functions` exigem um
+  engine instalado: `new Yuzuha({ ..., engine: functions() })` ou
+  `bot.useEngine(functions())` com `functions` importado de `yuzuha/functions`.
+  Sem engine, o registro falha com `FUNCTIONS_REQUIRED`. A CLI injeta o engine
+  automaticamente, então `yuzuha.config.js` continua igual.
+- `bot.runtime`, `bot.enableFunctions()` e `YuzuhaOptions.limits` foram
+  removidos. Use `bot.engine` (o `ScriptEngine` instalado), o engine passado nas
+  opções e `functions({ limits })` para limites próprios.
+
+O schema persistido permanece em 2 e o SDK em 3.3.0; não há migração de dados.
+
+```sh
+npm install yuzuha@0.3.0
+```
 
 ### Migrar para 0.2.1
 

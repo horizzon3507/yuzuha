@@ -1,5 +1,6 @@
 import type { MessageInfo } from './messages.js';
-import type { MemberInfo } from './users.js';
+import type { ChannelInfo } from './channels.js';
+import type { GuildInfo, MemberInfo, UserInfo } from './users.js';
 
 /** Limites resolvidos do cache; `null` indica ilimitado. */
 export interface CacheLimitsInfo {
@@ -48,9 +49,30 @@ export interface MemberSweepInput {
   keep?: (member: MemberInfo, guildID: string) => boolean;
 }
 
+/**
+ * Filtro de limpeza do cache de usuários. Sem `keep`, todos os usuários
+ * do escopo são removidos. `keep` retorna verdadeiro para manter o usuário.
+ */
+export interface UserSweepInput {
+  keep?: (user: UserInfo, userID: string) => boolean;
+}
+
+/** Filtro de limpeza do cache de canais. `keep` retorna verdadeiro para manter o canal. */
+export interface ChannelSweepInput {
+  keep?: (channel: ChannelInfo, channelID: string) => boolean;
+}
+
+/** Filtro de limpeza do cache de servidores. `keep` retorna verdadeiro para manter o servidor. */
+export interface GuildSweepInput {
+  keep?: (guild: GuildInfo, guildID: string) => boolean;
+}
+
 /** Inspeção e limpeza dos caches locais do client. */
 export interface CacheResources {
   stats(): Promise<CacheStatsInfo>;
   sweepMessages(input?: MessageSweepInput): Promise<number>;
   sweepMembers(input?: MemberSweepInput): Promise<number>;
+  sweepUsers(input?: UserSweepInput): Promise<number>;
+  sweepChannels(input?: ChannelSweepInput): Promise<number>;
+  sweepGuilds(input?: GuildSweepInput): Promise<number>;
 }

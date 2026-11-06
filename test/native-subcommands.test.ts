@@ -6,11 +6,12 @@ import { tmpdir } from 'node:os';
 import { PermissionFlags } from '@fluxerjs/core';
 import { arg, commandUsage, defineCommand, HttpService, MemoryStore, Yuzuha } from '../src/index.js';
 import type { Command } from '../src/index.js';
+import { functions } from '../src/functions.js';
 import { MockTransport, mockMessage } from '../src/testing.js';
 
 function fixture() {
   const transport = new MockTransport(), errors: unknown[] = [];
-  const bot = new Yuzuha({ transport, store: new MemoryStore(), onError: error => { errors.push(error); } });
+  const bot = new Yuzuha({ transport, store: new MemoryStore(), engine: functions(), onError: error => { errors.push(error); } });
   let id = 0;
   return { bot, transport, errors, send: (content: string, extra = {}) => bot.handle(mockMessage(content, { id: String(++id), ...extra })) };
 }

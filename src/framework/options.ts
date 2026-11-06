@@ -1,7 +1,7 @@
 import type { Client, ClientOptions } from '@fluxerjs/core';
 import type { CommandContext } from '../context.js';
 import type { IncomingMessage, Store, Transport } from '../contracts.js';
-import type { FunctionDefinition, Limits } from '../runtime.js';
+import type { ScriptEngine, ScriptFunctionDefinition } from '../ports/script-engine.js';
 import type { Command } from '../context.js';
 import type { Resources } from '../ports/resources.js';
 import type { HttpService } from '../services/http.js';
@@ -17,7 +17,7 @@ export type DispatchResult = 'ignored' | 'success' | 'guarded' | 'error';
 export type Middleware = (ctx: CommandContext, next: () => Promise<void>) => Promise<void>;
 export interface YuzuhaPlugin {
   name: string;
-  functions?: FunctionDefinition[];
+  functions?: ScriptFunctionDefinition[];
   middleware?: Middleware[];
   commands?: Command[];
   events?: NativeEvent[];
@@ -33,7 +33,7 @@ export interface YuzuhaOptions {
   name?: string;
   /** Clock shared by cooldowns, variable TTLs and the default scheduler. */
   now?: () => number;
-  limits?: Partial<Limits>;
+  engine?: ScriptEngine;
   scheduler?: Scheduler | false;
   http?: HttpService | false;
   music?: MusicManager;

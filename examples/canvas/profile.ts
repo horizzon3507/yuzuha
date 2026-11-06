@@ -1,5 +1,5 @@
-import { createCanvas } from 'yuzuha/canvas';
-import type { CanvasBuilder, CanvasCreateOptions, CanvasSource } from 'yuzuha/canvas';
+import { createCard } from 'yuzuha/canvas/card';
+import type { CanvasBuilder, CanvasCreateOptions, CanvasSource } from 'yuzuha/canvas/card';
 import type { CommandContext } from 'yuzuha';
 
 type CanvasCreate = (width: number, height: number, options?: CanvasCreateOptions) => CanvasBuilder;
@@ -24,7 +24,7 @@ function composeProfile(create: CanvasCreate, name: string, avatar: CanvasSource
 }
 
 export function buildProfile(name: string, avatar: CanvasSource): CanvasBuilder {
-  return composeProfile(createCanvas, name, avatar);
+  return composeProfile(createCard, name, avatar);
 }
 
 export async function sendProfile(ctx: CommandContext, avatar: CanvasSource = 'asset:avatar'): Promise<string> {

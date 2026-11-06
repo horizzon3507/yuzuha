@@ -1,24 +1,77 @@
 # Canvas para cartões
 
-`yuzuha/canvas` compõe cartões PNG, JPEG e WebP com texto, imagens, formas,
-badges e barras. Use Canvas para montar uma imagem nova; use
-[`yuzuha/images`](IMAGES.md) quando já tiver uma imagem e quiser transformá-la
-com Sharp.
+`yuzuha/canvas` é a API de desenho compatível com `@napi-rs/canvas` —
+`createCanvas`, `loadImage`, `GlobalFonts`, `Path2D`, `ImageData`, `DOMMatrix`
+e os demais exports do pacote — rodando em processo para código confiável.
+`yuzuha/canvas/card` mantém o builder de cartões com texto, imagens, formas,
+badges e barras, renderizado em processo filho. Use Canvas para montar uma
+imagem nova; use [`yuzuha/images`](IMAGES.md) quando já tiver uma imagem e
+quiser transformá-la com Sharp.
 
 ## Instalação
 
 O backend é um peer opcional. Instale-o somente nos bots que renderizam Canvas:
 
 ```sh
-npm install yuzuha@0.2.0 @napi-rs/canvas@^1.0.13
+npm install yuzuha@0.3.0 @napi-rs/canvas@^1.0.13
 ```
 
-Os imports `yuzuha`, `yuzuha/functions` e `yuzuha/canvas` continuam disponíveis
-sem o peer. Criar um bot, um `CanvasBuilder` ou uma cena não carrega Skia nem
-inicia um processo. O pacote nativo só é importado pelo processo filho quando
-`render()` começa. Sem uma versão compatível, a renderização falha com
-`CANVAS_DEPENDENCY` e informa a instalação necessária. Canvas não depende de
-Sharp.
+Os imports `yuzuha`, `yuzuha/functions` e `yuzuha/canvas/card` continuam
+disponíveis sem o peer. Criar um bot ou um `CanvasBuilder` não carrega Skia nem
+inicia um processo. `import 'yuzuha/canvas'` tenta carregar o peer; sem uma
+versão compatível, as funções e classes exportadas falham com
+`CANVAS_DEPENDENCY` e informam a instalação necessária. O renderer do builder
+só é importado pelo processo filho quando `render()` começa. Canvas não
+depende de Sharp.
+
+## API napi em processo
+
+`yuzuha/canvas` cobre os mesmos exports de `@napi-rs/canvas`, para desenho
+direto em código confiável do bot:
+
+```ts
+import { createCanvas, loadImage, registerFonts } from 'yuzuha/canvas';
+
+registerFonts('./assets/fonts');
+const canvas = createCanvas(640, 240);
+const ctx = canvas.getContext('2d');
+ctx.fillStyle = '#101722';
+ctx.fillRect(0, 0, 640, 240);
+ctx.font = '700 52px Inter';
+ctx.fillStyle = '#f2f4f5';
+ctx.fillText('Perfil demonstrativo', 32, 120);
+const avatar = await loadImage('https://exemplo.dev/avatar.png');
+ctx.drawImage(avatar, 24, 56, 128, 128);
+const png = await canvas.encode('png');
+```
+
+`createCanvas` valida as dimensões contra `CANVAS_LIMITS` (4096 px por eixo,
+16.777.216 pixels) com `CANVAS_OPTIONS` antes de criar o canvas. `loadImage`
+aceita `Buffer`, `Uint8Array`, caminhos, data URLs e imagens como o original;
+URLs `http(s)` são baixadas via `HttpService` — com guarda de rede privada,
+limite de bytes e cancelamento — e inspecionadas como PNG, JPEG ou WebP
+estáticos antes do decode. As opções aceitam `http`, `signal` e `timeoutMs`.
+`registerFonts(dir)` registra cada `.ttf`, `.otf`, `.woff` e `.woff2` do
+diretório via `GlobalFonts` e retorna a contagem; diretório ausente retorna 0.
+
+No contexto de comando ou evento, `ctx.canvas.send(canvas)` codifica e envia um
+canvas napi como anexo, com as mesmas opções `name`, `channelID`, `content`,
+`description`, `format` e `quality` do builder. `ctx.canvas.loadImage(source)`
+é o wrapper acima já vinculado ao `ctx.http` e ao sinal do contexto:
+
+```ts
+const canvas = createCanvas(320, 120);
+const context = canvas.getContext('2d');
+context.fillStyle = '#111923'; context.fillRect(0, 0, 320, 120);
+context.fillStyle = '#ffffff'; context.font = '700 32px Inter';
+context.fillText(`Olá, ${ctx.authorName}`, 16, 64);
+await ctx.canvas.send(canvas, { name: 'cartao.png' });
+```
+
+Esta rota executa Skia no próprio processo, sem isolamento — reserve-a para
+código do bot. O function mode (`$canvas*`) e o builder de
+`yuzuha/canvas/card` continuam renderizando em processo filho com prazo,
+limites e orçamento de processos.
 
 ## Um cartão nativo
 
@@ -67,14 +120,16 @@ bot.contextEvent({
 
 ## Uso independente
 
-`createCanvas()` de `yuzuha/canvas` cria o mesmo builder sem contexto de bot:
+`createCard()` de `yuzuha/canvas/card` cria o mesmo builder sem contexto de bot
+(na 0.3.0, o antigo `createCanvas()` de `yuzuha/canvas` virou a API napi;
+migre para `createCard`):
 
 ```ts
-import { createCanvas } from 'yuzuha/canvas';
+import { createCard } from 'yuzuha/canvas/card';
 import { readFile, writeFile } from 'node:fs/promises';
 
 const avatar = new Uint8Array(await readFile('./avatar.png'));
-const image = await createCanvas(640, 240, { scale: 2, background: '#101722' })
+const image = await createCard(640, 240, { scale: 2, background: '#101722' })
   .avatar(avatar, { x: 24, y: 56, size: 128 })
   .text('Perfil demonstrativo', { x: 184, y: 64, maxWidth: 420, fontSize: 36, weight: 700 })
   .render();
@@ -83,7 +138,7 @@ await writeFile('./perfil.png', image.data);
 
 Para buscar fontes ou imagens remotas no uso independente, passe `http` e,
 opcionalmente, `signal`, `assets`, `fonts` e `timeoutMs` nas opções de
-`createCanvas`. Sem `http`, fontes remotas são recusadas. Não são aceitos
+`createCard`. Sem `http`, fontes remotas são recusadas. Não são aceitos
 caminhos, `file:` ou data URLs.
 
 ## Builder

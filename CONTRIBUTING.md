@@ -48,7 +48,7 @@ construtor do bot.
 6. Adicione teste do comportamento quando houver regra ou efeito.
 7. Execute `npm run docs:generate` e confira a referência.
 
-Não edite `docs/FUNCTIONS.md` manualmente. O check detecta divergência em relação
+Não edite `docs/functions/FUNCTIONS.md` manualmente. O check detecta divergência em relação
 ao registro. Uma mudança de assinatura também pede atualização de exemplos e da documentação
 de function mode.
 

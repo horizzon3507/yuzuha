@@ -2,10 +2,10 @@ import { arg, assert, defineCommand, defineEvent, Yuzuha } from '../src/index.js
 import { Events } from '@fluxerjs/core';
 import type { Command } from '../src/commands/definition.js';
 import type { HttpResponse, StickerCreateInput, ThreadMemberInfo } from '../src/index.js';
-import { createCanvas } from '../src/canvas.js';
-import type { CanvasBuilder, CanvasResult } from '../src/canvas.js';
+import { createCard } from '../src/canvas/card.js';
+import type { CanvasBuilder, CanvasResult } from '../src/canvas/card.js';
 
-const card: CanvasBuilder = createCanvas(64, 32, { scale: 2 }).text('Olá', { x: 4, y: 4, maxWidth: 56 });
+const card: CanvasBuilder = createCard(64, 32, { scale: 2 }).text('Olá', { x: 4, y: 4, maxWidth: 56 });
 const renderedCard: Promise<CanvasResult> = card.render();
 void renderedCard;
 

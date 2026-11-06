@@ -1,5 +1,5 @@
-import { createCanvas } from 'yuzuha/canvas';
-import type { CanvasBuilder, CanvasCreateOptions } from 'yuzuha/canvas';
+import { createCard } from 'yuzuha/canvas/card';
+import type { CanvasBuilder, CanvasCreateOptions } from 'yuzuha/canvas/card';
 import type { CommandContext } from 'yuzuha';
 
 export interface RankingEntry { name: string; score: number }
@@ -31,7 +31,7 @@ function composeRanking(create: CanvasCreate, entries: readonly RankingEntry[]):
 }
 
 export function buildRanking(entries: readonly RankingEntry[] = sampleEntries): CanvasBuilder {
-  return composeRanking(createCanvas, entries);
+  return composeRanking(createCard, entries);
 }
 
 export async function sendRanking(ctx: CommandContext, entries: readonly RankingEntry[] = sampleEntries): Promise<string> {

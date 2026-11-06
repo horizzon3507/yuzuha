@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { CommandContext } from '../src/commands/context.js';
 import { MemoryStore } from '../src/infrastructure/storage/memory.js';
-import { Runtime, defaultLimits } from '../src/runtime.js';
+import { Runtime, defaultLimits } from '../src/functions.js';
 import { ScriptError } from '../src/shared/errors.js';
 import { registerBuiltins } from '../src/functions.js';
 import { YuzuhaError } from '../src/shared/errors.js';

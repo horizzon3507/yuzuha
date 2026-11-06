@@ -5,15 +5,14 @@ import type { Command } from '../context.js';
 import { parseDuration } from '../context.js';
 import { YuzuhaError } from '../errors.js';
 import { loadCommands } from '../loader.js';
-import type { Program } from '../parser.js';
 import { permission } from '../permissions.js';
-import type { Runtime } from '../runtime.js';
+import type { ScriptEngine } from '../ports/script-engine.js';
 import type { HttpPolicy } from '../services/http.js';
 
 export interface CompiledCommand {
   command: Command;
   definition: Command;
-  program?: Program;
+  program?: unknown;
   directory?: string;
   children: Map<string, CompiledCommand>;
   lineage: Command[];
@@ -62,13 +61,17 @@ function inheritedHttp(parent?: HttpPolicy, child?: HttpPolicy): HttpPolicy | un
   return policy;
 }
 
+export function functionsRequired(): YuzuhaError {
+  return new YuzuhaError('FUNCTIONS_REQUIRED', 'Function mode requer um engine. Use import { functions } from \'yuzuha/functions\' e passe engine: functions() nas opções do bot.');
+}
+
 export class CommandRegistry {
   private entries = new Map<string, CompiledCommand>();
   private loading: Promise<unknown> = Promise.resolve();
-  constructor(private readonly runtime: Runtime, private readonly onScript: () => void = () => {},
+  constructor(private readonly engine: () => ScriptEngine | undefined,
     private readonly validate: (command: Command) => void = () => {}) {}
 
-  private compile(input: Command, directory?: string, runtime = this.runtime, ancestors: CompiledCommand[] = [], seen = new Set<Command>()): CompiledCommand {
+  private compile(input: Command, directory?: string, engine = this.engine(), ancestors: CompiledCommand[] = [], seen = new Set<Command>()): CompiledCommand {
     if (ancestors.length >= 32 || seen.has(input)) throw new YuzuhaError('COMMAND_TREE', 'Árvore de comandos cíclica ou com mais de 32 níveis.');
     validateMetadata(input);
     this.validate(input);
@@ -93,12 +96,12 @@ export class CommandRegistry {
     const ownGuard = { ...definition, name: command.name };
     const entry: CompiledCommand = { command, definition, directory, children: new Map(), lineage: [...ancestors.at(-1)?.lineage ?? [], ownGuard] };
     const visiting = new Set(seen).add(input);
-    for (const child of input.subcommands ?? []) this.insert(entry.children, this.compile(child, directory, runtime, [...ancestors, entry], visiting));
+    for (const child of input.subcommands ?? []) this.insert(entry.children, this.compile(child, directory, engine, [...ancestors, entry], visiting));
     definition.subcommands = [...new Set(entry.children.values())].map(child => child.definition);
     command.subcommands = definition.subcommands;
     if (command.code !== undefined) {
-      this.onScript();
-      entry.program = runtime.compile(command.code, command.file ?? command.name);
+      if (!engine) throw functionsRequired();
+      entry.program = engine.compile(command.code, command.file ?? command.name);
     }
     return entry;
   }
@@ -116,9 +119,9 @@ export class CommandRegistry {
     }
     this.insert(this.entries, entry);
   }
-  prepare(commands: Command[], runtime = this.runtime): () => void {
+  prepare(commands: Command[], engine = this.engine()): () => void {
     const next = new Map(this.entries);
-    for (const command of commands) this.insert(next, this.compile(command, undefined, runtime));
+    for (const command of commands) this.insert(next, this.compile(command, undefined, engine));
     return () => { this.entries = next; };
   }
   load(directory: string, mode: 'replace' | 'append' | 'reload'): Promise<void> {

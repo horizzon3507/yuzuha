@@ -4,22 +4,22 @@ Gerada por `scripts/parity-matrix.mjs` a partir dos `.d.ts` de `@fluxerjs/core`,
 
 ## Como ler
 
-- **coberto-script**: o nome é alcançado pelo caminho `builtins → ports → adaptador do SDK`.
 - **coberto-nativo**: o código do Yuzuha usa o nome do SDK, mas nenhuma função `$` o alcança.
+- **coberto-recurso**: o nome é alcançado pelo caminho `builtins → ports → adaptador do SDK`.
 - **só-SDK**: exceção intencional, com motivo em `scripts/parity-areas.json`.
 - **lacuna**: nenhum dos caminhos acima alcança o nome. Vira candidato a função ou a recurso.
 - **dados**: tipos e enums, sem comportamento próprio.
 
-A cobertura é por nome: um método `send` de uma classe conta como coberto se qualquer adaptador usar `send`. Use a matriz como lista de revisão, não como prova de cobertura.
+A cobertura é por nome: um método `send` de uma classe conta como coberto se qualquer adaptador usar `send`. O function mode é uma camada fina sobre os mesmos recursos — `coberto-recurso` não indica lacuna nativa. Use a matriz como lista de revisão, não como prova de cobertura.
 
 ## Resumo por export
 
 | Status | Exports de runtime | Membros |
 |---|---:|---:|
-| coberto-script | 50 | 414 |
-| coberto-nativo | 4 | 85 |
-| só-SDK | 3 | 0 |
-| lacuna | 60 | 223 |
+| coberto-recurso | 50 | 414 |
+| coberto-nativo | 4 | 97 |
+| só-SDK | 56 | 0 |
+| lacuna | 7 | 211 |
 
 Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são listados, mas não contam como lacuna.
 
@@ -27,136 +27,136 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são
 
 | Pacote | Export | Tipo | Área | Status | Evidência |
 |---|---|---|---|---|---|
-| @fluxerjs/builders | `AttachmentBuilder` | class | Embeds e payloads | coberto-script | builtins |
-| @fluxerjs/builders | `AttachmentMeta` | class | Embeds e payloads | coberto-script | builtins |
-| @fluxerjs/builders | `EmbedBuilder` | class | Embeds e payloads | coberto-script | builtins |
-| @fluxerjs/builders | `MessagePayload` | class | Embeds e payloads | coberto-script | builtins |
+| @fluxerjs/builders | `AttachmentBuilder` | class | Embeds e payloads | coberto-recurso | builtins |
+| @fluxerjs/builders | `AttachmentMeta` | class | Embeds e payloads | coberto-recurso | builtins |
+| @fluxerjs/builders | `EmbedBuilder` | class | Embeds e payloads | coberto-recurso | builtins |
+| @fluxerjs/builders | `MessagePayload` | class | Embeds e payloads | coberto-recurso | builtins |
 | @fluxerjs/core | `AllowedMentions` | variable | Embeds e payloads | coberto-nativo | código nativo |
-| @fluxerjs/core | `AnnouncementChannel` | class | Canais | lacuna |  |
-| @fluxerjs/core | `AttachmentBuilder` | class | Embeds e payloads | coberto-script | builtins |
-| @fluxerjs/core | `AttachmentMeta` | class | Embeds e payloads | coberto-script | builtins |
-| @fluxerjs/core | `Base` | class | Cliente e eventos | coberto-script | builtins |
+| @fluxerjs/core | `AnnouncementChannel` | class | Canais | só-SDK |  |
+| @fluxerjs/core | `AttachmentBuilder` | class | Embeds e payloads | coberto-recurso | builtins |
+| @fluxerjs/core | `AttachmentMeta` | class | Embeds e payloads | coberto-recurso | builtins |
+| @fluxerjs/core | `Base` | class | Cliente e eventos | coberto-recurso | builtins |
 | @fluxerjs/core | `BETA_CLIENT_CLUSTER_WARNING` | variable | só SDK | só-SDK |  |
 | @fluxerjs/core | `CacheController` | class | Cliente e eventos | coberto-nativo | código nativo |
-| @fluxerjs/core | `CategoryChannel` | class | Canais | lacuna |  |
-| @fluxerjs/core | `CDN_URL` | variable | CDN | lacuna |  |
-| @fluxerjs/core | `cdnAvatarURL` | function | CDN | lacuna |  |
-| @fluxerjs/core | `cdnBannerURL` | function | CDN | lacuna |  |
-| @fluxerjs/core | `cdnDefaultAvatarURL` | function | CDN | lacuna |  |
-| @fluxerjs/core | `cdnDisplayAvatarURL` | function | CDN | lacuna |  |
-| @fluxerjs/core | `cdnEmojiURL` | function | CDN | lacuna |  |
-| @fluxerjs/core | `cdnGuildAssetURL` | function | CDN | lacuna |  |
-| @fluxerjs/core | `cdnMemberAvatarURL` | function | CDN | lacuna |  |
-| @fluxerjs/core | `cdnMemberBannerURL` | function | CDN | lacuna |  |
-| @fluxerjs/core | `cdnStickerURL` | function | CDN | lacuna |  |
-| @fluxerjs/core | `Channel` | class | Canais | coberto-script | builtins |
-| @fluxerjs/core | `ChannelManager` | class | Canais | coberto-script | builtins |
-| @fluxerjs/core | `Client` | class | Cliente e eventos | coberto-script | builtins |
+| @fluxerjs/core | `CategoryChannel` | class | Canais | só-SDK |  |
+| @fluxerjs/core | `CDN_URL` | variable | CDN | só-SDK |  |
+| @fluxerjs/core | `cdnAvatarURL` | function | CDN | só-SDK |  |
+| @fluxerjs/core | `cdnBannerURL` | function | CDN | só-SDK |  |
+| @fluxerjs/core | `cdnDefaultAvatarURL` | function | CDN | só-SDK |  |
+| @fluxerjs/core | `cdnDisplayAvatarURL` | function | CDN | só-SDK |  |
+| @fluxerjs/core | `cdnEmojiURL` | function | CDN | só-SDK |  |
+| @fluxerjs/core | `cdnGuildAssetURL` | function | CDN | só-SDK |  |
+| @fluxerjs/core | `cdnMemberAvatarURL` | function | CDN | só-SDK |  |
+| @fluxerjs/core | `cdnMemberBannerURL` | function | CDN | só-SDK |  |
+| @fluxerjs/core | `cdnStickerURL` | function | CDN | só-SDK |  |
+| @fluxerjs/core | `Channel` | class | Canais | coberto-recurso | builtins |
+| @fluxerjs/core | `ChannelManager` | class | Canais | coberto-recurso | builtins |
+| @fluxerjs/core | `Client` | class | Cliente e eventos | coberto-recurso | builtins |
 | @fluxerjs/core | `ClientCluster` | class | só SDK | só-SDK | builtins |
 | @fluxerjs/core | `ClientClusterEvents` | variable | só SDK | só-SDK |  |
-| @fluxerjs/core | `ClientUser` | class | Cliente e eventos | coberto-script | builtins |
-| @fluxerjs/core | `createLogger` | function | Erros e logs | lacuna |  |
-| @fluxerjs/core | `DEFAULT_CACHE_LIMITS` | variable | Cliente e eventos | lacuna |  |
-| @fluxerjs/core | `DEFAULT_INSTANCE_ENDPOINTS` | variable | Instância e discovery | lacuna |  |
-| @fluxerjs/core | `DMChannel` | class | Canais | coberto-script | builtins |
-| @fluxerjs/core | `EmbedBuilder` | class | Embeds e payloads | coberto-script | builtins |
-| @fluxerjs/core | `ErrorCodes` | variable | Erros e logs | lacuna |  |
+| @fluxerjs/core | `ClientUser` | class | Cliente e eventos | coberto-recurso | builtins |
+| @fluxerjs/core | `createLogger` | function | Erros e logs | só-SDK |  |
+| @fluxerjs/core | `DEFAULT_CACHE_LIMITS` | variable | Cliente e eventos | só-SDK |  |
+| @fluxerjs/core | `DEFAULT_INSTANCE_ENDPOINTS` | variable | Instância e discovery | só-SDK |  |
+| @fluxerjs/core | `DMChannel` | class | Canais | coberto-recurso | builtins |
+| @fluxerjs/core | `EmbedBuilder` | class | Embeds e payloads | coberto-recurso | builtins |
+| @fluxerjs/core | `ErrorCodes` | variable | Erros e logs | só-SDK |  |
 | @fluxerjs/core | `Events` | variable | Cliente e eventos | coberto-nativo | código nativo |
-| @fluxerjs/core | `fetchActiveThreads` | function | Threads | coberto-script | builtins |
-| @fluxerjs/core | `FluxerError` | class | Erros e logs | coberto-script | builtins |
-| @fluxerjs/core | `ForumChannel` | class | Canais | lacuna |  |
-| @fluxerjs/core | `Guild` | class | Servidores e bans | coberto-script | builtins |
-| @fluxerjs/core | `GuildBan` | class | Servidores e bans | coberto-script | builtins |
-| @fluxerjs/core | `GuildChannel` | class | Canais | coberto-script | builtins |
-| @fluxerjs/core | `GuildEmoji` | class | Expressões | coberto-script | builtins |
-| @fluxerjs/core | `GuildManager` | class | Servidores e bans | coberto-script | builtins |
-| @fluxerjs/core | `GuildMember` | class | Usuários e membros | coberto-script | builtins |
-| @fluxerjs/core | `GuildMemberManager` | class | Usuários e membros | coberto-script | builtins |
-| @fluxerjs/core | `GuildMemberProfileFlags` | variable | Constantes e bitfields | lacuna |  |
-| @fluxerjs/core | `GuildMemberRoleManager` | class | Usuários e membros | coberto-script | builtins |
-| @fluxerjs/core | `GuildOperations` | variable | Constantes e bitfields | lacuna |  |
-| @fluxerjs/core | `GuildRoleManager` | class | Cargos | lacuna |  |
-| @fluxerjs/core | `GuildSticker` | class | Expressões | coberto-script | builtins |
-| @fluxerjs/core | `INSTANCE_DISCOVERY_PATH` | variable | Instância e discovery | lacuna |  |
-| @fluxerjs/core | `instanceDiscoveryUrl` | function | Instância e discovery | lacuna |  |
-| @fluxerjs/core | `Invite` | class | Convites | coberto-script | builtins |
-| @fluxerjs/core | `inviteUrl` | function | Convites | lacuna |  |
-| @fluxerjs/core | `LinkChannel` | class | Canais | coberto-script | builtins |
-| @fluxerjs/core | `MediaChannel` | class | Canais | lacuna |  |
-| @fluxerjs/core | `Message` | class | Mensagens e reações | coberto-script | builtins |
-| @fluxerjs/core | `MessageAttachmentFlags` | variable | Constantes e bitfields | lacuna |  |
-| @fluxerjs/core | `MessageCollector` | class | Coletores | coberto-script | builtins |
-| @fluxerjs/core | `MessageFlags` | variable | Constantes e bitfields | lacuna |  |
-| @fluxerjs/core | `MessageFlagsBitField` | class | Constantes e bitfields | lacuna |  |
-| @fluxerjs/core | `MessageFlagsBits` | variable | Constantes e bitfields | lacuna |  |
-| @fluxerjs/core | `MessageManager` | class | Mensagens e reações | coberto-script | builtins |
-| @fluxerjs/core | `MessagePayload` | class | Embeds e payloads | coberto-script | builtins |
-| @fluxerjs/core | `MessageReaction` | class | Mensagens e reações | coberto-script | builtins |
-| @fluxerjs/core | `MessageReactionManager` | class | Mensagens e reações | coberto-script | builtins |
-| @fluxerjs/core | `MessageSticker` | class | Mensagens e reações | coberto-script | builtins |
-| @fluxerjs/core | `normalizeApiOrigin` | function | Instância e discovery | lacuna |  |
-| @fluxerjs/core | `normalizeCacheLimit` | function | Cliente e eventos | lacuna |  |
-| @fluxerjs/core | `parseInstanceDiscovery` | function | Instância e discovery | lacuna |  |
-| @fluxerjs/core | `parsePrefixCommand` | function | Texto e guards | lacuna |  |
-| @fluxerjs/core | `parseUserMention` | function | Texto e guards | lacuna |  |
-| @fluxerjs/core | `PartialGuildMember` | class | Usuários e membros | coberto-script | builtins |
-| @fluxerjs/core | `PartialMessage` | class | Mensagens e reações | coberto-script | builtins |
+| @fluxerjs/core | `fetchActiveThreads` | function | Threads | coberto-recurso | builtins |
+| @fluxerjs/core | `FluxerError` | class | Erros e logs | coberto-recurso | builtins |
+| @fluxerjs/core | `ForumChannel` | class | Canais | só-SDK |  |
+| @fluxerjs/core | `Guild` | class | Servidores e bans | coberto-recurso | builtins |
+| @fluxerjs/core | `GuildBan` | class | Servidores e bans | coberto-recurso | builtins |
+| @fluxerjs/core | `GuildChannel` | class | Canais | coberto-recurso | builtins |
+| @fluxerjs/core | `GuildEmoji` | class | Expressões | coberto-recurso | builtins |
+| @fluxerjs/core | `GuildManager` | class | Servidores e bans | coberto-recurso | builtins |
+| @fluxerjs/core | `GuildMember` | class | Usuários e membros | coberto-recurso | builtins |
+| @fluxerjs/core | `GuildMemberManager` | class | Usuários e membros | coberto-recurso | builtins |
+| @fluxerjs/core | `GuildMemberProfileFlags` | variable | Constantes e bitfields | só-SDK |  |
+| @fluxerjs/core | `GuildMemberRoleManager` | class | Usuários e membros | coberto-recurso | builtins |
+| @fluxerjs/core | `GuildOperations` | variable | Constantes e bitfields | só-SDK |  |
+| @fluxerjs/core | `GuildRoleManager` | class | Cargos | só-SDK |  |
+| @fluxerjs/core | `GuildSticker` | class | Expressões | coberto-recurso | builtins |
+| @fluxerjs/core | `INSTANCE_DISCOVERY_PATH` | variable | Instância e discovery | só-SDK |  |
+| @fluxerjs/core | `instanceDiscoveryUrl` | function | Instância e discovery | só-SDK |  |
+| @fluxerjs/core | `Invite` | class | Convites | coberto-recurso | builtins |
+| @fluxerjs/core | `inviteUrl` | function | Convites | só-SDK |  |
+| @fluxerjs/core | `LinkChannel` | class | Canais | coberto-recurso | builtins |
+| @fluxerjs/core | `MediaChannel` | class | Canais | só-SDK |  |
+| @fluxerjs/core | `Message` | class | Mensagens e reações | coberto-recurso | builtins |
+| @fluxerjs/core | `MessageAttachmentFlags` | variable | Constantes e bitfields | só-SDK |  |
+| @fluxerjs/core | `MessageCollector` | class | Coletores | coberto-recurso | builtins |
+| @fluxerjs/core | `MessageFlags` | variable | Constantes e bitfields | só-SDK |  |
+| @fluxerjs/core | `MessageFlagsBitField` | class | Constantes e bitfields | só-SDK |  |
+| @fluxerjs/core | `MessageFlagsBits` | variable | Constantes e bitfields | só-SDK |  |
+| @fluxerjs/core | `MessageManager` | class | Mensagens e reações | coberto-recurso | builtins |
+| @fluxerjs/core | `MessagePayload` | class | Embeds e payloads | coberto-recurso | builtins |
+| @fluxerjs/core | `MessageReaction` | class | Mensagens e reações | coberto-recurso | builtins |
+| @fluxerjs/core | `MessageReactionManager` | class | Mensagens e reações | coberto-recurso | builtins |
+| @fluxerjs/core | `MessageSticker` | class | Mensagens e reações | coberto-recurso | builtins |
+| @fluxerjs/core | `normalizeApiOrigin` | function | Instância e discovery | só-SDK |  |
+| @fluxerjs/core | `normalizeCacheLimit` | function | Cliente e eventos | só-SDK |  |
+| @fluxerjs/core | `parseInstanceDiscovery` | function | Instância e discovery | só-SDK |  |
+| @fluxerjs/core | `parsePrefixCommand` | function | Texto e guards | só-SDK |  |
+| @fluxerjs/core | `parseUserMention` | function | Texto e guards | só-SDK |  |
+| @fluxerjs/core | `PartialGuildMember` | class | Usuários e membros | coberto-recurso | builtins |
+| @fluxerjs/core | `PartialMessage` | class | Mensagens e reações | coberto-recurso | builtins |
 | @fluxerjs/core | `PermissionFlags` | variable | Constantes e bitfields | coberto-nativo | código nativo |
-| @fluxerjs/core | `PermissionOverwrite` | class | Canais | coberto-script | builtins |
-| @fluxerjs/core | `PermissionOverwriteManager` | class | Canais | coberto-script | builtins |
-| @fluxerjs/core | `PermissionsBitField` | class | Constantes e bitfields | coberto-script | builtins |
-| @fluxerjs/core | `PublicUserFlags` | variable | Constantes e bitfields | lacuna |  |
-| @fluxerjs/core | `ReactionCollector` | class | Coletores | coberto-script | builtins |
-| @fluxerjs/core | `resolveCacheLimits` | function | Cliente e eventos | lacuna |  |
-| @fluxerjs/core | `resolveInstanceEndpoints` | function | Instância e discovery | lacuna |  |
-| @fluxerjs/core | `resolveKlipyToImageUrl` | function | Texto e guards | lacuna |  |
-| @fluxerjs/core | `resolvePermissionsToBitfield` | function | Constantes e bitfields | lacuna |  |
-| @fluxerjs/core | `Role` | class | Cargos | coberto-script | builtins |
-| @fluxerjs/core | `Routes` | variable | Constantes e bitfields | lacuna |  |
-| @fluxerjs/core | `serializeError` | function | Erros e logs | lacuna |  |
-| @fluxerjs/core | `STATIC_CDN_URL` | variable | CDN | lacuna |  |
-| @fluxerjs/core | `SystemChannelFlags` | variable | Constantes e bitfields | lacuna |  |
-| @fluxerjs/core | `TextChannel` | class | Canais | coberto-script | builtins |
-| @fluxerjs/core | `ThreadChannel` | class | Threads | coberto-script | builtins |
-| @fluxerjs/core | `ThreadManager` | class | Threads | coberto-script | builtins |
-| @fluxerjs/core | `ThreadMember` | class | Threads | coberto-script | builtins |
-| @fluxerjs/core | `ThreadMemberFlags` | variable | Constantes e bitfields | lacuna |  |
-| @fluxerjs/core | `ThreadMemberManager` | class | Threads | coberto-script | builtins |
-| @fluxerjs/core | `User` | class | Usuários e membros | coberto-script | builtins |
-| @fluxerjs/core | `UserFlagsBitField` | class | Constantes e bitfields | lacuna |  |
-| @fluxerjs/core | `UserFlagsBits` | variable | Constantes e bitfields | lacuna |  |
-| @fluxerjs/core | `UserManager` | class | Usuários e membros | coberto-script | builtins |
-| @fluxerjs/core | `VoiceChannel` | class | Canais | coberto-script | builtins |
-| @fluxerjs/core | `Webhook` | class | Webhooks | coberto-script | builtins |
+| @fluxerjs/core | `PermissionOverwrite` | class | Canais | coberto-recurso | builtins |
+| @fluxerjs/core | `PermissionOverwriteManager` | class | Canais | coberto-recurso | builtins |
+| @fluxerjs/core | `PermissionsBitField` | class | Constantes e bitfields | coberto-recurso | builtins |
+| @fluxerjs/core | `PublicUserFlags` | variable | Constantes e bitfields | só-SDK |  |
+| @fluxerjs/core | `ReactionCollector` | class | Coletores | coberto-recurso | builtins |
+| @fluxerjs/core | `resolveCacheLimits` | function | Cliente e eventos | só-SDK |  |
+| @fluxerjs/core | `resolveInstanceEndpoints` | function | Instância e discovery | só-SDK |  |
+| @fluxerjs/core | `resolveKlipyToImageUrl` | function | Texto e guards | só-SDK |  |
+| @fluxerjs/core | `resolvePermissionsToBitfield` | function | Constantes e bitfields | só-SDK |  |
+| @fluxerjs/core | `Role` | class | Cargos | coberto-recurso | builtins |
+| @fluxerjs/core | `Routes` | variable | Constantes e bitfields | só-SDK |  |
+| @fluxerjs/core | `serializeError` | function | Erros e logs | só-SDK |  |
+| @fluxerjs/core | `STATIC_CDN_URL` | variable | CDN | só-SDK |  |
+| @fluxerjs/core | `SystemChannelFlags` | variable | Constantes e bitfields | só-SDK |  |
+| @fluxerjs/core | `TextChannel` | class | Canais | coberto-recurso | builtins |
+| @fluxerjs/core | `ThreadChannel` | class | Threads | coberto-recurso | builtins |
+| @fluxerjs/core | `ThreadManager` | class | Threads | coberto-recurso | builtins |
+| @fluxerjs/core | `ThreadMember` | class | Threads | coberto-recurso | builtins |
+| @fluxerjs/core | `ThreadMemberFlags` | variable | Constantes e bitfields | só-SDK |  |
+| @fluxerjs/core | `ThreadMemberManager` | class | Threads | coberto-recurso | builtins |
+| @fluxerjs/core | `User` | class | Usuários e membros | coberto-recurso | builtins |
+| @fluxerjs/core | `UserFlagsBitField` | class | Constantes e bitfields | só-SDK |  |
+| @fluxerjs/core | `UserFlagsBits` | variable | Constantes e bitfields | só-SDK |  |
+| @fluxerjs/core | `UserManager` | class | Usuários e membros | coberto-recurso | builtins |
+| @fluxerjs/core | `VoiceChannel` | class | Canais | coberto-recurso | builtins |
+| @fluxerjs/core | `Webhook` | class | Webhooks | coberto-recurso | builtins |
 | @fluxerjs/types | `EmbedMediaFlags` | variable | Constantes e bitfields | lacuna |  |
-| @fluxerjs/types | `FLUXER_EPOCH` | variable | Constantes e bitfields | coberto-script | builtins |
+| @fluxerjs/types | `FLUXER_EPOCH` | variable | Constantes e bitfields | coberto-recurso | builtins |
 | @fluxerjs/types | `GatewayDispatchEvents` | variable | Constantes e bitfields | lacuna |  |
 | @fluxerjs/types | `GatewayErrorCodes` | variable | Constantes e bitfields | lacuna |  |
 | @fluxerjs/types | `GatewayIdentifyFlags` | variable | Constantes e bitfields | lacuna |  |
-| @fluxerjs/types | `GuildMemberProfileFlags` | variable | Constantes e bitfields | lacuna |  |
-| @fluxerjs/types | `GuildOperations` | variable | Constantes e bitfields | lacuna |  |
+| @fluxerjs/types | `GuildMemberProfileFlags` | variable | Constantes e bitfields | só-SDK |  |
+| @fluxerjs/types | `GuildOperations` | variable | Constantes e bitfields | só-SDK |  |
 | @fluxerjs/types | `isGroupDmInvite` | function | Texto e guards | lacuna |  |
 | @fluxerjs/types | `isGuildInvite` | function | Texto e guards | lacuna |  |
 | @fluxerjs/types | `isUploadedAttachment` | function | Texto e guards | lacuna |  |
-| @fluxerjs/types | `MessageAttachmentFlags` | variable | Constantes e bitfields | lacuna |  |
-| @fluxerjs/types | `MessageFlags` | variable | Constantes e bitfields | lacuna |  |
-| @fluxerjs/types | `PublicUserFlags` | variable | Constantes e bitfields | lacuna |  |
-| @fluxerjs/types | `Routes` | variable | Constantes e bitfields | lacuna |  |
-| @fluxerjs/types | `SystemChannelFlags` | variable | Constantes e bitfields | lacuna |  |
-| @fluxerjs/types | `ThreadMemberFlags` | variable | Constantes e bitfields | lacuna |  |
+| @fluxerjs/types | `MessageAttachmentFlags` | variable | Constantes e bitfields | só-SDK |  |
+| @fluxerjs/types | `MessageFlags` | variable | Constantes e bitfields | só-SDK |  |
+| @fluxerjs/types | `PublicUserFlags` | variable | Constantes e bitfields | só-SDK |  |
+| @fluxerjs/types | `Routes` | variable | Constantes e bitfields | só-SDK |  |
+| @fluxerjs/types | `SystemChannelFlags` | variable | Constantes e bitfields | só-SDK |  |
+| @fluxerjs/types | `ThreadMemberFlags` | variable | Constantes e bitfields | só-SDK |  |
 
 ## Métodos e propriedades de classes
 
 | Classe | Membro | Tipo | Status |
 |---|---|---|---|
-| `AttachmentBuilder` | `attachment` | propriedade | coberto-script |
-| `AttachmentBuilder` | `attachment` | propriedade | coberto-script |
-| `AttachmentBuilder` | `description` | propriedade | coberto-script |
-| `AttachmentBuilder` | `description` | propriedade | coberto-script |
-| `AttachmentBuilder` | `filename` | acessor | coberto-script |
-| `AttachmentBuilder` | `filename` | acessor | coberto-script |
-| `AttachmentBuilder` | `name` | propriedade | coberto-script |
-| `AttachmentBuilder` | `name` | propriedade | coberto-script |
+| `AttachmentBuilder` | `attachment` | propriedade | coberto-recurso |
+| `AttachmentBuilder` | `attachment` | propriedade | coberto-recurso |
+| `AttachmentBuilder` | `description` | propriedade | coberto-recurso |
+| `AttachmentBuilder` | `description` | propriedade | coberto-recurso |
+| `AttachmentBuilder` | `filename` | acessor | coberto-recurso |
+| `AttachmentBuilder` | `filename` | acessor | coberto-recurso |
+| `AttachmentBuilder` | `name` | propriedade | coberto-recurso |
+| `AttachmentBuilder` | `name` | propriedade | coberto-recurso |
 | `AttachmentBuilder` | `setDescription` | método | coberto-nativo |
 | `AttachmentBuilder` | `setDescription` | método | coberto-nativo |
 | `AttachmentBuilder` | `setName` | método | lacuna |
@@ -167,16 +167,16 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são
 | `AttachmentBuilder` | `spoiler` | propriedade | lacuna |
 | `AttachmentBuilder` | `toFileData` | método | lacuna |
 | `AttachmentBuilder` | `toFileData` | método | lacuna |
-| `AttachmentBuilder` | `toJSON` | método | coberto-script |
-| `AttachmentBuilder` | `toJSON` | método | coberto-script |
-| `AttachmentBuilder` | `url` | propriedade | coberto-script |
-| `AttachmentBuilder` | `url` | propriedade | coberto-script |
-| `AttachmentMeta` | `description` | propriedade | coberto-script |
-| `AttachmentMeta` | `description` | propriedade | coberto-script |
-| `AttachmentMeta` | `filename` | propriedade | coberto-script |
-| `AttachmentMeta` | `filename` | propriedade | coberto-script |
-| `AttachmentMeta` | `id` | propriedade | coberto-script |
-| `AttachmentMeta` | `id` | propriedade | coberto-script |
+| `AttachmentBuilder` | `toJSON` | método | coberto-recurso |
+| `AttachmentBuilder` | `toJSON` | método | coberto-recurso |
+| `AttachmentBuilder` | `url` | propriedade | coberto-recurso |
+| `AttachmentBuilder` | `url` | propriedade | coberto-recurso |
+| `AttachmentMeta` | `description` | propriedade | coberto-recurso |
+| `AttachmentMeta` | `description` | propriedade | coberto-recurso |
+| `AttachmentMeta` | `filename` | propriedade | coberto-recurso |
+| `AttachmentMeta` | `filename` | propriedade | coberto-recurso |
+| `AttachmentMeta` | `id` | propriedade | coberto-recurso |
+| `AttachmentMeta` | `id` | propriedade | coberto-recurso |
 | `AttachmentMeta` | `setDescription` | método | coberto-nativo |
 | `AttachmentMeta` | `setDescription` | método | coberto-nativo |
 | `AttachmentMeta` | `setName` | método | lacuna |
@@ -185,64 +185,64 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são
 | `AttachmentMeta` | `setSpoiler` | método | lacuna |
 | `AttachmentMeta` | `spoiler` | propriedade | lacuna |
 | `AttachmentMeta` | `spoiler` | propriedade | lacuna |
-| `AttachmentMeta` | `toJSON` | método | coberto-script |
-| `AttachmentMeta` | `toJSON` | método | coberto-script |
-| `Base` | `client` | propriedade | coberto-script |
+| `AttachmentMeta` | `toJSON` | método | coberto-recurso |
+| `AttachmentMeta` | `toJSON` | método | coberto-recurso |
+| `Base` | `client` | propriedade | coberto-recurso |
 | `CacheController` | `cascadeChannel` | método | lacuna |
 | `CacheController` | `cascadeGuild` | método | lacuna |
 | `CacheController` | `cascading` | acessor | lacuna |
 | `CacheController` | `limits` | propriedade | coberto-nativo |
 | `CacheController` | `stats` | método | coberto-nativo |
-| `CacheController` | `sweepChannels` | método | lacuna |
-| `CacheController` | `sweepGuilds` | método | lacuna |
+| `CacheController` | `sweepChannels` | método | coberto-nativo |
+| `CacheController` | `sweepGuilds` | método | coberto-nativo |
 | `CacheController` | `sweepMembers` | método | coberto-nativo |
 | `CacheController` | `sweepMessages` | método | coberto-nativo |
-| `CacheController` | `sweepUsers` | método | lacuna |
+| `CacheController` | `sweepUsers` | método | coberto-nativo |
 | `Channel` | `_patch` | método | lacuna |
-| `Channel` | `acknowledgePins` | método | lacuna |
+| `Channel` | `acknowledgePins` | método | coberto-nativo |
 | `Channel` | `awaitMessages` | método | lacuna |
-| `Channel` | `bulkDelete` | método | lacuna |
-| `Channel` | `bulkDeleteMyMessages` | método | lacuna |
+| `Channel` | `bulkDelete` | método | coberto-nativo |
+| `Channel` | `bulkDeleteMyMessages` | método | coberto-nativo |
 | `Channel` | `canSendMessage` | método | lacuna |
-| `Channel` | `clearReadState` | método | lacuna |
-| `Channel` | `client` | propriedade | coberto-script |
+| `Channel` | `clearReadState` | método | coberto-nativo |
+| `Channel` | `client` | propriedade | coberto-recurso |
 | `Channel` | `completeAttachmentUploads` | método | lacuna |
-| `Channel` | `createdAt` | acessor | coberto-script |
-| `Channel` | `createDM` | método | lacuna |
-| `Channel` | `createdTimestamp` | acessor | coberto-script |
+| `Channel` | `createdAt` | acessor | coberto-recurso |
+| `Channel` | `createDM` | método | coberto-nativo |
+| `Channel` | `createdTimestamp` | acessor | coberto-recurso |
 | `Channel` | `createMessageCollector` | método | lacuna |
-| `Channel` | `delete` | método | coberto-script |
-| `Channel` | `fetchRtcRegions` | método | lacuna |
-| `Channel` | `fetchSlowmode` | método | lacuna |
-| `Channel` | `from` | método | coberto-script |
+| `Channel` | `delete` | método | coberto-recurso |
+| `Channel` | `fetchRtcRegions` | método | coberto-nativo |
+| `Channel` | `fetchSlowmode` | método | coberto-nativo |
+| `Channel` | `from` | método | coberto-recurso |
 | `Channel` | `fromOrCreate` | método | lacuna |
 | `Channel` | `icon` | propriedade | coberto-nativo |
-| `Channel` | `id` | propriedade | coberto-script |
+| `Channel` | `id` | propriedade | coberto-recurso |
 | `Channel` | `isAnnouncement` | método | lacuna |
-| `Channel` | `isCategory` | método | coberto-script |
+| `Channel` | `isCategory` | método | coberto-recurso |
 | `Channel` | `isDM` | método | lacuna |
-| `Channel` | `isForum` | método | coberto-script |
-| `Channel` | `isGuild` | método | coberto-script |
+| `Channel` | `isForum` | método | coberto-recurso |
+| `Channel` | `isGuild` | método | coberto-recurso |
 | `Channel` | `isLink` | método | lacuna |
-| `Channel` | `isMedia` | método | coberto-script |
+| `Channel` | `isMedia` | método | coberto-recurso |
 | `Channel` | `isPersonalNotes` | método | lacuna |
 | `Channel` | `isText` | método | lacuna |
-| `Channel` | `isTextBased` | método | coberto-script |
-| `Channel` | `isThread` | método | coberto-script |
+| `Channel` | `isTextBased` | método | coberto-recurso |
+| `Channel` | `isThread` | método | coberto-recurso |
 | `Channel` | `isVoice` | método | coberto-nativo |
 | `Channel` | `lastPinTimestamp` | propriedade | lacuna |
-| `Channel` | `messages` | acessor | coberto-script |
-| `Channel` | `name` | propriedade | coberto-script |
+| `Channel` | `messages` | acessor | coberto-recurso |
+| `Channel` | `name` | propriedade | coberto-recurso |
 | `Channel` | `requestAttachmentUploads` | método | lacuna |
-| `Channel` | `sendTyping` | método | lacuna |
-| `Channel` | `toString` | método | coberto-script |
-| `Channel` | `type` | propriedade | coberto-script |
+| `Channel` | `sendTyping` | método | coberto-nativo |
+| `Channel` | `toString` | método | coberto-recurso |
+| `Channel` | `type` | propriedade | coberto-recurso |
 | `Channel` | `uploadAttachmentsForSend` | método | lacuna |
-| `ChannelManager` | `delete` | método | coberto-script |
-| `ChannelManager` | `fetch` | método | coberto-script |
-| `ChannelManager` | `fetchMessage` | método | coberto-script |
-| `ChannelManager` | `resolve` | método | coberto-script |
-| `ChannelManager` | `send` | método | coberto-script |
+| `ChannelManager` | `delete` | método | coberto-recurso |
+| `ChannelManager` | `fetch` | método | coberto-recurso |
+| `ChannelManager` | `fetchMessage` | método | coberto-recurso |
+| `ChannelManager` | `resolve` | método | coberto-recurso |
+| `ChannelManager` | `send` | método | coberto-recurso |
 | `Client` | `_addMessageToCache` | método | lacuna |
 | `Client` | `_clearMessageCache` | método | lacuna |
 | `Client` | `_deferredGatewayDispatches` | propriedade | lacuna |
@@ -259,7 +259,7 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são
 | `Client` | `assertReady` | método | lacuna |
 | `Client` | `bulkFetchMessages` | método | coberto-nativo |
 | `Client` | `cache` | propriedade | coberto-nativo |
-| `Client` | `channels` | propriedade | coberto-script |
+| `Client` | `channels` | propriedade | coberto-recurso |
 | `Client` | `destroy` | método | coberto-nativo |
 | `Client` | `emit` | método | coberto-nativo |
 | `Client` | `events` | propriedade | coberto-nativo |
@@ -271,60 +271,60 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são
 | `Client` | `fetchStickerMetadata` | método | coberto-nativo |
 | `Client` | `fromDiscovery` | método | lacuna |
 | `Client` | `getOrCreateUser` | método | lacuna |
-| `Client` | `guilds` | propriedade | coberto-script |
+| `Client` | `guilds` | propriedade | coberto-recurso |
 | `Client` | `instance` | propriedade | coberto-nativo |
 | `Client` | `isReady` | método | lacuna |
 | `Client` | `logger` | propriedade | lacuna |
 | `Client` | `login` | método | coberto-nativo |
-| `Client` | `off` | método | coberto-script |
-| `Client` | `on` | método | coberto-script |
-| `Client` | `once` | método | coberto-script |
-| `Client` | `options` | propriedade | coberto-script |
-| `Client` | `preloadMessages` | método | coberto-script |
+| `Client` | `off` | método | coberto-recurso |
+| `Client` | `on` | método | coberto-recurso |
+| `Client` | `once` | método | coberto-recurso |
+| `Client` | `options` | propriedade | coberto-recurso |
+| `Client` | `preloadMessages` | método | coberto-recurso |
 | `Client` | `preloadMessagesAlt` | método | lacuna |
 | `Client` | `readyAt` | propriedade | coberto-nativo |
-| `Client` | `requestChannelMemberCounts` | método | coberto-script |
+| `Client` | `requestChannelMemberCounts` | método | coberto-recurso |
 | `Client` | `requestForumUnreads` | método | coberto-nativo |
-| `Client` | `requestGuildCounts` | método | coberto-script |
+| `Client` | `requestGuildCounts` | método | coberto-recurso |
 | `Client` | `requestGuildMembers` | método | coberto-nativo |
-| `Client` | `resolveEmoji` | método | coberto-script |
+| `Client` | `resolveEmoji` | método | coberto-recurso |
 | `Client` | `rest` | propriedade | lacuna |
 | `Client` | `Routes` | acessor | lacuna |
-| `Client` | `searchMessages` | método | coberto-script |
+| `Client` | `searchMessages` | método | coberto-recurso |
 | `Client` | `sendToGateway` | método | coberto-nativo |
 | `Client` | `subscribeThreads` | método | coberto-nativo |
 | `Client` | `sweepMembers` | método | coberto-nativo |
 | `Client` | `sweepMessages` | método | coberto-nativo |
 | `Client` | `uptime` | acessor | lacuna |
-| `Client` | `user` | propriedade | coberto-script |
-| `Client` | `users` | propriedade | coberto-script |
+| `Client` | `user` | propriedade | coberto-recurso |
+| `Client` | `users` | propriedade | coberto-recurso |
 | `Client` | `ws` | acessor | coberto-nativo |
-| `ClientCluster` | `add` | método | coberto-script |
+| `ClientCluster` | `add` | método | coberto-recurso |
 | `ClientCluster` | `addAll` | método | lacuna |
 | `ClientCluster` | `destroy` | método | coberto-nativo |
 | `ClientCluster` | `emit` | método | coberto-nativo |
-| `ClientCluster` | `get` | método | coberto-script |
-| `ClientCluster` | `has` | método | coberto-script |
-| `ClientCluster` | `off` | método | coberto-script |
-| `ClientCluster` | `on` | método | coberto-script |
-| `ClientCluster` | `once` | método | coberto-script |
-| `ClientCluster` | `remove` | método | coberto-script |
+| `ClientCluster` | `get` | método | coberto-recurso |
+| `ClientCluster` | `has` | método | coberto-recurso |
+| `ClientCluster` | `off` | método | coberto-recurso |
+| `ClientCluster` | `on` | método | coberto-recurso |
+| `ClientCluster` | `once` | método | coberto-recurso |
+| `ClientCluster` | `remove` | método | coberto-recurso |
 | `ClientCluster` | `restart` | método | lacuna |
 | `ClientCluster` | `runtimeValues` | método | lacuna |
-| `ClientCluster` | `size` | acessor | coberto-script |
-| `ClientCluster` | `values` | método | coberto-script |
+| `ClientCluster` | `size` | acessor | coberto-recurso |
+| `ClientCluster` | `values` | método | coberto-recurso |
 | `ClientUser` | `bulkDeleteMyMessagesInGuild` | método | coberto-nativo |
-| `ClientUser` | `client` | propriedade | coberto-script |
-| `ClientUser` | `fetch` | método | coberto-script |
+| `ClientUser` | `client` | propriedade | coberto-recurso |
+| `ClientUser` | `fetch` | método | coberto-recurso |
 | `ClientUser` | `fetchGuilds` | método | coberto-nativo |
 | `ClientUser` | `leaveGuild` | método | coberto-nativo |
-| `ClientUser` | `setPresence` | método | coberto-script |
+| `ClientUser` | `setPresence` | método | coberto-recurso |
 | `DMChannel` | `_patch` | método | lacuna |
 | `DMChannel` | `addRecipient` | método | lacuna |
-| `DMChannel` | `edit` | método | coberto-script |
+| `DMChannel` | `edit` | método | coberto-recurso |
 | `DMChannel` | `lastMessageId` | propriedade | lacuna |
 | `DMChannel` | `nicks` | propriedade | lacuna |
-| `DMChannel` | `ownerId` | propriedade | coberto-script |
+| `DMChannel` | `ownerId` | propriedade | coberto-recurso |
 | `DMChannel` | `pinInList` | método | lacuna |
 | `DMChannel` | `purgeMessages` | método | lacuna |
 | `DMChannel` | `recipients` | propriedade | lacuna |
@@ -332,10 +332,10 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são
 | `DMChannel` | `unpinFromList` | método | lacuna |
 | `EmbedBuilder` | `addFields` | método | lacuna |
 | `EmbedBuilder` | `addFields` | método | lacuna |
-| `EmbedBuilder` | `data` | propriedade | coberto-script |
-| `EmbedBuilder` | `data` | propriedade | coberto-script |
-| `EmbedBuilder` | `from` | método | coberto-script |
-| `EmbedBuilder` | `from` | método | coberto-script |
+| `EmbedBuilder` | `data` | propriedade | coberto-recurso |
+| `EmbedBuilder` | `data` | propriedade | coberto-recurso |
+| `EmbedBuilder` | `from` | método | coberto-recurso |
+| `EmbedBuilder` | `from` | método | coberto-recurso |
 | `EmbedBuilder` | `setAuthor` | método | coberto-nativo |
 | `EmbedBuilder` | `setAuthor` | método | coberto-nativo |
 | `EmbedBuilder` | `setColor` | método | coberto-nativo |
@@ -358,88 +358,88 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são
 | `EmbedBuilder` | `setURL` | método | coberto-nativo |
 | `EmbedBuilder` | `spliceFields` | método | lacuna |
 | `EmbedBuilder` | `spliceFields` | método | lacuna |
-| `EmbedBuilder` | `toJSON` | método | coberto-script |
-| `EmbedBuilder` | `toJSON` | método | coberto-script |
-| `FluxerError` | `code` | propriedade | coberto-script |
+| `EmbedBuilder` | `toJSON` | método | coberto-recurso |
+| `EmbedBuilder` | `toJSON` | método | coberto-recurso |
+| `FluxerError` | `code` | propriedade | coberto-recurso |
 | `FluxerError` | `isFluxerError` | método | lacuna |
-| `FluxerError` | `toJSON` | método | coberto-script |
-| `FluxerError` | `toString` | método | coberto-script |
+| `FluxerError` | `toJSON` | método | coberto-recurso |
+| `FluxerError` | `toString` | método | coberto-recurso |
 | `ForumChannel` | `_patch` | método | lacuna |
 | `ForumChannel` | `defaultForumLayout` | propriedade | lacuna |
 | `ForumChannel` | `setDefaultForumLayout` | método | lacuna |
 | `Guild` | `_patch` | método | lacuna |
 | `Guild` | `adjustMemberCount` | método | lacuna |
-| `Guild` | `afkChannelId` | propriedade | coberto-script |
+| `Guild` | `afkChannelId` | propriedade | coberto-recurso |
 | `Guild` | `afkTimeout` | propriedade | lacuna |
 | `Guild` | `applyForDiscovery` | método | lacuna |
 | `Guild` | `available` | propriedade | lacuna |
-| `Guild` | `ban` | método | coberto-script |
-| `Guild` | `banner` | propriedade | coberto-script |
+| `Guild` | `ban` | método | coberto-recurso |
+| `Guild` | `banner` | propriedade | coberto-recurso |
 | `Guild` | `bannerHeight` | propriedade | lacuna |
-| `Guild` | `bannerURL` | método | coberto-script |
+| `Guild` | `bannerURL` | método | coberto-recurso |
 | `Guild` | `bannerWidth` | propriedade | lacuna |
-| `Guild` | `channels` | propriedade | coberto-script |
-| `Guild` | `client` | propriedade | coberto-script |
+| `Guild` | `channels` | propriedade | coberto-recurso |
+| `Guild` | `client` | propriedade | coberto-recurso |
 | `Guild` | `cloneEmoji` | método | coberto-nativo |
 | `Guild` | `cloneSticker` | método | coberto-nativo |
-| `Guild` | `contentWarningLevel` | propriedade | coberto-script |
-| `Guild` | `contentWarningText` | propriedade | coberto-script |
-| `Guild` | `createChannel` | método | coberto-script |
-| `Guild` | `createdAt` | acessor | coberto-script |
-| `Guild` | `createdTimestamp` | acessor | coberto-script |
-| `Guild` | `createEmoji` | método | coberto-script |
-| `Guild` | `createEmojisBulk` | método | coberto-script |
-| `Guild` | `createRole` | método | coberto-script |
-| `Guild` | `createSticker` | método | coberto-script |
+| `Guild` | `contentWarningLevel` | propriedade | coberto-recurso |
+| `Guild` | `contentWarningText` | propriedade | coberto-recurso |
+| `Guild` | `createChannel` | método | coberto-recurso |
+| `Guild` | `createdAt` | acessor | coberto-recurso |
+| `Guild` | `createdTimestamp` | acessor | coberto-recurso |
+| `Guild` | `createEmoji` | método | coberto-recurso |
+| `Guild` | `createEmojisBulk` | método | coberto-recurso |
+| `Guild` | `createRole` | método | coberto-recurso |
+| `Guild` | `createSticker` | método | coberto-recurso |
 | `Guild` | `createStickersBulk` | método | lacuna |
 | `Guild` | `defaultMessageNotifications` | propriedade | lacuna |
-| `Guild` | `delete` | método | coberto-script |
+| `Guild` | `delete` | método | coberto-recurso |
 | `Guild` | `disabledOperations` | propriedade | lacuna |
-| `Guild` | `edit` | método | coberto-script |
+| `Guild` | `edit` | método | coberto-recurso |
 | `Guild` | `editDiscoveryApplication` | método | lacuna |
-| `Guild` | `editVanityURL` | método | coberto-script |
+| `Guild` | `editVanityURL` | método | coberto-recurso |
 | `Guild` | `embedSplash` | propriedade | lacuna |
-| `Guild` | `emojis` | propriedade | coberto-script |
+| `Guild` | `emojis` | propriedade | coberto-recurso |
 | `Guild` | `explicitContentFilter` | propriedade | lacuna |
-| `Guild` | `features` | propriedade | coberto-script |
-| `Guild` | `fetchActiveThreads` | método | coberto-script |
-| `Guild` | `fetchAuditLogs` | método | coberto-script |
-| `Guild` | `fetchBans` | método | coberto-script |
-| `Guild` | `fetchChannels` | método | coberto-script |
+| `Guild` | `features` | propriedade | coberto-recurso |
+| `Guild` | `fetchActiveThreads` | método | coberto-recurso |
+| `Guild` | `fetchAuditLogs` | método | coberto-recurso |
+| `Guild` | `fetchBans` | método | coberto-recurso |
+| `Guild` | `fetchChannels` | método | coberto-recurso |
 | `Guild` | `fetchDiscoveryStatus` | método | lacuna |
-| `Guild` | `fetchEmoji` | método | coberto-script |
-| `Guild` | `fetchEmojis` | método | coberto-script |
+| `Guild` | `fetchEmoji` | método | coberto-recurso |
+| `Guild` | `fetchEmojis` | método | coberto-recurso |
 | `Guild` | `fetchInvite` | método | lacuna |
-| `Guild` | `fetchInvites` | método | coberto-script |
+| `Guild` | `fetchInvites` | método | coberto-recurso |
 | `Guild` | `fetchMe` | método | lacuna |
-| `Guild` | `fetchMember` | método | coberto-script |
-| `Guild` | `fetchRole` | método | coberto-script |
-| `Guild` | `fetchRoles` | método | coberto-script |
-| `Guild` | `fetchSticker` | método | coberto-script |
-| `Guild` | `fetchStickers` | método | coberto-script |
-| `Guild` | `fetchVanityURL` | método | coberto-script |
-| `Guild` | `fetchWebhooks` | método | coberto-script |
+| `Guild` | `fetchMember` | método | coberto-recurso |
+| `Guild` | `fetchRole` | método | coberto-recurso |
+| `Guild` | `fetchRoles` | método | coberto-recurso |
+| `Guild` | `fetchSticker` | método | coberto-recurso |
+| `Guild` | `fetchStickers` | método | coberto-recurso |
+| `Guild` | `fetchVanityURL` | método | coberto-recurso |
+| `Guild` | `fetchWebhooks` | método | coberto-recurso |
 | `Guild` | `icon` | propriedade | coberto-nativo |
-| `Guild` | `iconURL` | método | coberto-script |
-| `Guild` | `id` | propriedade | coberto-script |
+| `Guild` | `iconURL` | método | coberto-recurso |
+| `Guild` | `id` | propriedade | coberto-recurso |
 | `Guild` | `kick` | método | coberto-nativo |
-| `Guild` | `memberCount` | propriedade | coberto-script |
-| `Guild` | `members` | propriedade | coberto-script |
+| `Guild` | `memberCount` | propriedade | coberto-recurso |
+| `Guild` | `members` | propriedade | coberto-recurso |
 | `Guild` | `messageHistoryCutoff` | propriedade | lacuna |
 | `Guild` | `mfaLevel` | propriedade | lacuna |
-| `Guild` | `name` | propriedade | coberto-script |
-| `Guild` | `nsfw` | propriedade | coberto-script |
+| `Guild` | `name` | propriedade | coberto-recurso |
+| `Guild` | `nsfw` | propriedade | coberto-recurso |
 | `Guild` | `nsfwLevel` | propriedade | lacuna |
-| `Guild` | `onlineCount` | propriedade | coberto-script |
-| `Guild` | `ownerId` | propriedade | coberto-script |
-| `Guild` | `permissions` | propriedade | coberto-script |
+| `Guild` | `onlineCount` | propriedade | coberto-recurso |
+| `Guild` | `ownerId` | propriedade | coberto-recurso |
+| `Guild` | `permissions` | propriedade | coberto-recurso |
 | `Guild` | `resetRoleHoistPositions` | método | lacuna |
-| `Guild` | `resolveRoleId` | método | coberto-script |
-| `Guild` | `roles` | propriedade | coberto-script |
+| `Guild` | `resolveRoleId` | método | coberto-recurso |
+| `Guild` | `roles` | propriedade | coberto-recurso |
 | `Guild` | `rulesChannelId` | propriedade | lacuna |
-| `Guild` | `setChannelPositions` | método | coberto-script |
+| `Guild` | `setChannelPositions` | método | coberto-recurso |
 | `Guild` | `setRoleHoistPositions` | método | lacuna |
-| `Guild` | `setRolePositions` | método | coberto-script |
+| `Guild` | `setRolePositions` | método | coberto-recurso |
 | `Guild` | `splash` | propriedade | lacuna |
 | `Guild` | `splashCardAlignment` | propriedade | lacuna |
 | `Guild` | `splashHeight` | propriedade | lacuna |
@@ -447,209 +447,209 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são
 | `Guild` | `splashWidth` | propriedade | lacuna |
 | `Guild` | `stickers` | propriedade | coberto-nativo |
 | `Guild` | `systemChannelFlags` | propriedade | lacuna |
-| `Guild` | `systemChannelId` | propriedade | coberto-script |
-| `Guild` | `toString` | método | coberto-script |
+| `Guild` | `systemChannelId` | propriedade | coberto-recurso |
+| `Guild` | `toString` | método | coberto-recurso |
 | `Guild` | `transferOwnership` | método | lacuna |
 | `Guild` | `unban` | método | coberto-nativo |
 | `Guild` | `vanityURLCode` | propriedade | lacuna |
 | `Guild` | `verificationLevel` | propriedade | lacuna |
 | `Guild` | `withdrawDiscoveryApplication` | método | lacuna |
-| `GuildBan` | `client` | propriedade | coberto-script |
-| `GuildBan` | `expiresAt` | propriedade | coberto-script |
-| `GuildBan` | `guildId` | propriedade | coberto-script |
-| `GuildBan` | `reason` | propriedade | coberto-script |
+| `GuildBan` | `client` | propriedade | coberto-recurso |
+| `GuildBan` | `expiresAt` | propriedade | coberto-recurso |
+| `GuildBan` | `guildId` | propriedade | coberto-recurso |
+| `GuildBan` | `reason` | propriedade | coberto-recurso |
 | `GuildBan` | `unban` | método | coberto-nativo |
-| `GuildBan` | `user` | propriedade | coberto-script |
+| `GuildBan` | `user` | propriedade | coberto-recurso |
 | `GuildChannel` | `_patch` | método | lacuna |
 | `GuildChannel` | `applyEditPatch` | método | lacuna |
 | `GuildChannel` | `canSend` | método | lacuna |
 | `GuildChannel` | `canSendMessage` | método | lacuna |
-| `GuildChannel` | `createInvite` | método | coberto-script |
-| `GuildChannel` | `createWebhook` | método | coberto-script |
-| `GuildChannel` | `edit` | método | coberto-script |
-| `GuildChannel` | `fetchInvites` | método | coberto-script |
-| `GuildChannel` | `fetchWebhooks` | método | coberto-script |
-| `GuildChannel` | `guildId` | propriedade | coberto-script |
-| `GuildChannel` | `name` | propriedade | coberto-script |
-| `GuildChannel` | `parentId` | propriedade | coberto-script |
-| `GuildChannel` | `permissionOverwrites` | propriedade | coberto-script |
-| `GuildChannel` | `position` | propriedade | coberto-script |
+| `GuildChannel` | `createInvite` | método | coberto-recurso |
+| `GuildChannel` | `createWebhook` | método | coberto-recurso |
+| `GuildChannel` | `edit` | método | coberto-recurso |
+| `GuildChannel` | `fetchInvites` | método | coberto-recurso |
+| `GuildChannel` | `fetchWebhooks` | método | coberto-recurso |
+| `GuildChannel` | `guildId` | propriedade | coberto-recurso |
+| `GuildChannel` | `name` | propriedade | coberto-recurso |
+| `GuildChannel` | `parentId` | propriedade | coberto-recurso |
+| `GuildChannel` | `permissionOverwrites` | propriedade | coberto-recurso |
+| `GuildChannel` | `position` | propriedade | coberto-recurso |
 | `GuildEmoji` | `_patch` | método | lacuna |
-| `GuildEmoji` | `animated` | propriedade | coberto-script |
-| `GuildEmoji` | `client` | propriedade | coberto-script |
-| `GuildEmoji` | `createdAt` | acessor | coberto-script |
-| `GuildEmoji` | `createdTimestamp` | acessor | coberto-script |
-| `GuildEmoji` | `delete` | método | coberto-script |
-| `GuildEmoji` | `edit` | método | coberto-script |
-| `GuildEmoji` | `guildId` | propriedade | coberto-script |
-| `GuildEmoji` | `id` | propriedade | coberto-script |
-| `GuildEmoji` | `identifier` | acessor | coberto-script |
-| `GuildEmoji` | `name` | propriedade | coberto-script |
-| `GuildEmoji` | `toString` | método | coberto-script |
-| `GuildEmoji` | `url` | acessor | coberto-script |
-| `GuildManager` | `delete` | método | coberto-script |
-| `GuildManager` | `fetch` | método | coberto-script |
-| `GuildManager` | `resolve` | método | coberto-script |
+| `GuildEmoji` | `animated` | propriedade | coberto-recurso |
+| `GuildEmoji` | `client` | propriedade | coberto-recurso |
+| `GuildEmoji` | `createdAt` | acessor | coberto-recurso |
+| `GuildEmoji` | `createdTimestamp` | acessor | coberto-recurso |
+| `GuildEmoji` | `delete` | método | coberto-recurso |
+| `GuildEmoji` | `edit` | método | coberto-recurso |
+| `GuildEmoji` | `guildId` | propriedade | coberto-recurso |
+| `GuildEmoji` | `id` | propriedade | coberto-recurso |
+| `GuildEmoji` | `identifier` | acessor | coberto-recurso |
+| `GuildEmoji` | `name` | propriedade | coberto-recurso |
+| `GuildEmoji` | `toString` | método | coberto-recurso |
+| `GuildEmoji` | `url` | acessor | coberto-recurso |
+| `GuildManager` | `delete` | método | coberto-recurso |
+| `GuildManager` | `fetch` | método | coberto-recurso |
+| `GuildManager` | `resolve` | método | coberto-recurso |
 | `GuildMember` | `_clone` | método | lacuna |
 | `GuildMember` | `_patch` | método | lacuna |
-| `GuildMember` | `accentColor` | propriedade | coberto-script |
+| `GuildMember` | `accentColor` | propriedade | coberto-recurso |
 | `GuildMember` | `avatar` | propriedade | lacuna |
-| `GuildMember` | `avatarURL` | método | coberto-script |
-| `GuildMember` | `ban` | método | coberto-script |
+| `GuildMember` | `avatarURL` | método | coberto-recurso |
+| `GuildMember` | `ban` | método | coberto-recurso |
 | `GuildMember` | `bannable` | acessor | lacuna |
-| `GuildMember` | `banner` | propriedade | coberto-script |
-| `GuildMember` | `bannerURL` | método | coberto-script |
-| `GuildMember` | `bio` | propriedade | coberto-script |
-| `GuildMember` | `client` | propriedade | coberto-script |
-| `GuildMember` | `communicationDisabledUntil` | propriedade | coberto-script |
+| `GuildMember` | `banner` | propriedade | coberto-recurso |
+| `GuildMember` | `bannerURL` | método | coberto-recurso |
+| `GuildMember` | `bio` | propriedade | coberto-recurso |
+| `GuildMember` | `client` | propriedade | coberto-recurso |
+| `GuildMember` | `communicationDisabledUntil` | propriedade | coberto-recurso |
 | `GuildMember` | `deaf` | propriedade | coberto-nativo |
-| `GuildMember` | `displayAvatarURL` | método | coberto-script |
-| `GuildMember` | `displayName` | acessor | coberto-script |
-| `GuildMember` | `edit` | método | coberto-script |
-| `GuildMember` | `guild` | propriedade | coberto-script |
-| `GuildMember` | `id` | propriedade | coberto-script |
-| `GuildMember` | `joinedAt` | propriedade | coberto-script |
+| `GuildMember` | `displayAvatarURL` | método | coberto-recurso |
+| `GuildMember` | `displayName` | acessor | coberto-recurso |
+| `GuildMember` | `edit` | método | coberto-recurso |
+| `GuildMember` | `guild` | propriedade | coberto-recurso |
+| `GuildMember` | `id` | propriedade | coberto-recurso |
+| `GuildMember` | `joinedAt` | propriedade | coberto-recurso |
 | `GuildMember` | `kick` | método | coberto-nativo |
 | `GuildMember` | `kickable` | acessor | lacuna |
 | `GuildMember` | `mentionFlags` | propriedade | lacuna |
 | `GuildMember` | `moderatable` | acessor | lacuna |
-| `GuildMember` | `move` | método | coberto-script |
+| `GuildMember` | `move` | método | coberto-recurso |
 | `GuildMember` | `mute` | propriedade | coberto-nativo |
-| `GuildMember` | `nick` | propriedade | coberto-script |
+| `GuildMember` | `nick` | propriedade | coberto-recurso |
 | `GuildMember` | `partial` | propriedade | coberto-nativo |
-| `GuildMember` | `permissions` | acessor | coberto-script |
-| `GuildMember` | `permissionsIn` | método | coberto-script |
+| `GuildMember` | `permissions` | acessor | coberto-recurso |
+| `GuildMember` | `permissionsIn` | método | coberto-recurso |
 | `GuildMember` | `profileFlags` | propriedade | lacuna |
-| `GuildMember` | `pronouns` | propriedade | coberto-script |
-| `GuildMember` | `roles` | propriedade | coberto-script |
-| `GuildMember` | `timeout` | método | coberto-script |
-| `GuildMember` | `toString` | método | coberto-script |
-| `GuildMember` | `user` | propriedade | coberto-script |
-| `GuildMemberManager` | `fetch` | método | coberto-script |
+| `GuildMember` | `pronouns` | propriedade | coberto-recurso |
+| `GuildMember` | `roles` | propriedade | coberto-recurso |
+| `GuildMember` | `timeout` | método | coberto-recurso |
+| `GuildMember` | `toString` | método | coberto-recurso |
+| `GuildMember` | `user` | propriedade | coberto-recurso |
+| `GuildMemberManager` | `fetch` | método | coberto-recurso |
 | `GuildMemberManager` | `fetchMe` | método | lacuna |
 | `GuildMemberManager` | `me` | acessor | lacuna |
-| `GuildMemberManager` | `resolve` | método | coberto-script |
-| `GuildMemberManager` | `search` | método | coberto-script |
+| `GuildMemberManager` | `resolve` | método | coberto-recurso |
+| `GuildMemberManager` | `search` | método | coberto-recurso |
 | `GuildMemberRoleManager` | `_patch` | método | lacuna |
-| `GuildMemberRoleManager` | `add` | método | coberto-script |
+| `GuildMemberRoleManager` | `add` | método | coberto-recurso |
 | `GuildMemberRoleManager` | `cache` | acessor | coberto-nativo |
-| `GuildMemberRoleManager` | `has` | método | coberto-script |
-| `GuildMemberRoleManager` | `remove` | método | coberto-script |
-| `GuildMemberRoleManager` | `roleIds` | acessor | coberto-script |
+| `GuildMemberRoleManager` | `has` | método | coberto-recurso |
+| `GuildMemberRoleManager` | `remove` | método | coberto-recurso |
+| `GuildMemberRoleManager` | `roleIds` | acessor | coberto-recurso |
 | `GuildMemberRoleManager` | `set` | método | coberto-nativo |
 | `GuildRoleManager` | `everyone` | acessor | lacuna |
 | `GuildSticker` | `_patch` | método | lacuna |
-| `GuildSticker` | `animated` | propriedade | coberto-script |
-| `GuildSticker` | `client` | propriedade | coberto-script |
-| `GuildSticker` | `createdAt` | acessor | coberto-script |
-| `GuildSticker` | `createdTimestamp` | acessor | coberto-script |
-| `GuildSticker` | `delete` | método | coberto-script |
-| `GuildSticker` | `description` | propriedade | coberto-script |
-| `GuildSticker` | `edit` | método | coberto-script |
-| `GuildSticker` | `guildId` | propriedade | coberto-script |
-| `GuildSticker` | `id` | propriedade | coberto-script |
-| `GuildSticker` | `name` | propriedade | coberto-script |
-| `GuildSticker` | `nsfw` | propriedade | coberto-script |
-| `GuildSticker` | `tags` | propriedade | coberto-script |
-| `GuildSticker` | `url` | acessor | coberto-script |
-| `Invite` | `channelSnapshot` | propriedade | coberto-script |
-| `Invite` | `client` | propriedade | coberto-script |
-| `Invite` | `code` | propriedade | coberto-script |
-| `Invite` | `createdAt` | propriedade | coberto-script |
-| `Invite` | `delete` | método | coberto-script |
-| `Invite` | `expiresAt` | propriedade | coberto-script |
-| `Invite` | `fetch` | método | coberto-script |
-| `Invite` | `guildSnapshot` | propriedade | coberto-script |
-| `Invite` | `inviter` | propriedade | coberto-script |
+| `GuildSticker` | `animated` | propriedade | coberto-recurso |
+| `GuildSticker` | `client` | propriedade | coberto-recurso |
+| `GuildSticker` | `createdAt` | acessor | coberto-recurso |
+| `GuildSticker` | `createdTimestamp` | acessor | coberto-recurso |
+| `GuildSticker` | `delete` | método | coberto-recurso |
+| `GuildSticker` | `description` | propriedade | coberto-recurso |
+| `GuildSticker` | `edit` | método | coberto-recurso |
+| `GuildSticker` | `guildId` | propriedade | coberto-recurso |
+| `GuildSticker` | `id` | propriedade | coberto-recurso |
+| `GuildSticker` | `name` | propriedade | coberto-recurso |
+| `GuildSticker` | `nsfw` | propriedade | coberto-recurso |
+| `GuildSticker` | `tags` | propriedade | coberto-recurso |
+| `GuildSticker` | `url` | acessor | coberto-recurso |
+| `Invite` | `channelSnapshot` | propriedade | coberto-recurso |
+| `Invite` | `client` | propriedade | coberto-recurso |
+| `Invite` | `code` | propriedade | coberto-recurso |
+| `Invite` | `createdAt` | propriedade | coberto-recurso |
+| `Invite` | `delete` | método | coberto-recurso |
+| `Invite` | `expiresAt` | propriedade | coberto-recurso |
+| `Invite` | `fetch` | método | coberto-recurso |
+| `Invite` | `guildSnapshot` | propriedade | coberto-recurso |
+| `Invite` | `inviter` | propriedade | coberto-recurso |
 | `Invite` | `isGroupDM` | método | lacuna |
-| `Invite` | `isGuild` | método | coberto-script |
-| `Invite` | `maxAge` | propriedade | coberto-script |
-| `Invite` | `maxUses` | propriedade | coberto-script |
-| `Invite` | `memberCount` | propriedade | coberto-script |
+| `Invite` | `isGuild` | método | coberto-recurso |
+| `Invite` | `maxAge` | propriedade | coberto-recurso |
+| `Invite` | `maxUses` | propriedade | coberto-recurso |
+| `Invite` | `memberCount` | propriedade | coberto-recurso |
 | `Invite` | `presenceCount` | propriedade | lacuna |
 | `Invite` | `resolveChannel` | método | lacuna |
 | `Invite` | `resolveGuild` | método | lacuna |
-| `Invite` | `temporary` | propriedade | coberto-script |
-| `Invite` | `type` | propriedade | coberto-script |
-| `Invite` | `url` | acessor | coberto-script |
-| `Invite` | `uses` | propriedade | coberto-script |
+| `Invite` | `temporary` | propriedade | coberto-recurso |
+| `Invite` | `type` | propriedade | coberto-recurso |
+| `Invite` | `url` | acessor | coberto-recurso |
+| `Invite` | `uses` | propriedade | coberto-recurso |
 | `LinkChannel` | `applyEditPatch` | método | lacuna |
-| `LinkChannel` | `url` | propriedade | coberto-script |
+| `LinkChannel` | `url` | propriedade | coberto-recurso |
 | `Message` | `_createMessageBody` | método | lacuna |
 | `Message` | `_patch` | método | lacuna |
 | `Message` | `_send` | método | lacuna |
-| `Message` | `attachments` | propriedade | coberto-script |
-| `Message` | `author` | propriedade | coberto-script |
+| `Message` | `attachments` | propriedade | coberto-recurso |
+| `Message` | `author` | propriedade | coberto-recurso |
 | `Message` | `awaitReactions` | método | lacuna |
 | `Message` | `call` | propriedade | lacuna |
-| `Message` | `channel` | acessor | coberto-script |
-| `Message` | `channelId` | propriedade | coberto-script |
-| `Message` | `client` | propriedade | coberto-script |
-| `Message` | `content` | propriedade | coberto-script |
-| `Message` | `createdAt` | propriedade | coberto-script |
+| `Message` | `channel` | acessor | coberto-recurso |
+| `Message` | `channelId` | propriedade | coberto-recurso |
+| `Message` | `client` | propriedade | coberto-recurso |
+| `Message` | `content` | propriedade | coberto-recurso |
+| `Message` | `createdAt` | propriedade | coberto-recurso |
 | `Message` | `createReactionCollector` | método | lacuna |
-| `Message` | `delete` | método | coberto-script |
+| `Message` | `delete` | método | coberto-recurso |
 | `Message` | `deleteAttachment` | método | lacuna |
-| `Message` | `edit` | método | coberto-script |
+| `Message` | `edit` | método | coberto-recurso |
 | `Message` | `editedAt` | propriedade | lacuna |
-| `Message` | `embeds` | propriedade | coberto-script |
-| `Message` | `fetch` | método | coberto-script |
-| `Message` | `fetchReactionUsers` | método | coberto-script |
-| `Message` | `fetchReactionUsersPage` | método | coberto-script |
-| `Message` | `flags` | propriedade | coberto-script |
-| `Message` | `guild` | acessor | coberto-script |
-| `Message` | `guildId` | propriedade | coberto-script |
-| `Message` | `id` | propriedade | coberto-script |
-| `Message` | `member` | acessor | coberto-script |
-| `Message` | `mentionEveryone` | propriedade | coberto-script |
+| `Message` | `embeds` | propriedade | coberto-recurso |
+| `Message` | `fetch` | método | coberto-recurso |
+| `Message` | `fetchReactionUsers` | método | coberto-recurso |
+| `Message` | `fetchReactionUsersPage` | método | coberto-recurso |
+| `Message` | `flags` | propriedade | coberto-recurso |
+| `Message` | `guild` | acessor | coberto-recurso |
+| `Message` | `guildId` | propriedade | coberto-recurso |
+| `Message` | `id` | propriedade | coberto-recurso |
+| `Message` | `member` | acessor | coberto-recurso |
+| `Message` | `mentionEveryone` | propriedade | coberto-recurso |
 | `Message` | `mentionRoles` | propriedade | lacuna |
-| `Message` | `mentions` | propriedade | coberto-script |
+| `Message` | `mentions` | propriedade | coberto-recurso |
 | `Message` | `messageReference` | propriedade | lacuna |
 | `Message` | `messageSnapshots` | propriedade | lacuna |
 | `Message` | `nonce` | propriedade | coberto-nativo |
 | `Message` | `nsfwEmojis` | propriedade | lacuna |
 | `Message` | `partial` | propriedade | coberto-nativo |
-| `Message` | `pin` | método | coberto-script |
-| `Message` | `pinned` | propriedade | coberto-script |
-| `Message` | `react` | método | coberto-script |
+| `Message` | `pin` | método | coberto-recurso |
+| `Message` | `pinned` | propriedade | coberto-recurso |
+| `Message` | `react` | método | coberto-recurso |
 | `Message` | `reactions` | propriedade | coberto-nativo |
 | `Message` | `referencedMessage` | propriedade | lacuna |
-| `Message` | `removeAllReactions` | método | coberto-script |
-| `Message` | `removeReaction` | método | coberto-script |
-| `Message` | `removeReactionEmoji` | método | coberto-script |
-| `Message` | `reply` | método | coberto-script |
-| `Message` | `resolve` | método | coberto-script |
+| `Message` | `removeAllReactions` | método | coberto-recurso |
+| `Message` | `removeReaction` | método | coberto-recurso |
+| `Message` | `removeReactionEmoji` | método | coberto-recurso |
+| `Message` | `reply` | método | coberto-recurso |
+| `Message` | `resolve` | método | coberto-recurso |
 | `Message` | `resolveChannel` | método | lacuna |
 | `Message` | `resolveGuild` | método | lacuna |
-| `Message` | `send` | método | coberto-script |
+| `Message` | `send` | método | coberto-recurso |
 | `Message` | `sendTo` | método | lacuna |
-| `Message` | `startThread` | método | coberto-script |
+| `Message` | `startThread` | método | coberto-recurso |
 | `Message` | `stickers` | propriedade | coberto-nativo |
-| `Message` | `thread` | propriedade | coberto-script |
-| `Message` | `tts` | propriedade | coberto-script |
-| `Message` | `type` | propriedade | coberto-script |
-| `Message` | `unpin` | método | coberto-script |
+| `Message` | `thread` | propriedade | coberto-recurso |
+| `Message` | `tts` | propriedade | coberto-recurso |
+| `Message` | `type` | propriedade | coberto-recurso |
+| `Message` | `unpin` | método | coberto-recurso |
 | `Message` | `webhookId` | propriedade | lacuna |
 | `MessageCollector` | `awaitMessages` | método | lacuna |
-| `MessageCollector` | `channelId` | propriedade | coberto-script |
-| `MessageCollector` | `client` | propriedade | coberto-script |
-| `MessageCollector` | `collected` | propriedade | coberto-script |
+| `MessageCollector` | `channelId` | propriedade | coberto-recurso |
+| `MessageCollector` | `client` | propriedade | coberto-recurso |
+| `MessageCollector` | `collected` | propriedade | coberto-recurso |
 | `MessageCollector` | `emit` | método | coberto-nativo |
-| `MessageCollector` | `on` | método | coberto-script |
-| `MessageCollector` | `options` | propriedade | coberto-script |
-| `MessageCollector` | `stop` | método | coberto-script |
+| `MessageCollector` | `on` | método | coberto-recurso |
+| `MessageCollector` | `options` | propriedade | coberto-recurso |
+| `MessageCollector` | `stop` | método | coberto-recurso |
 | `MessageFlagsBitField` | `Flags` | propriedade | lacuna |
-| `MessageManager` | `fetch` | método | coberto-script |
-| `MessageManager` | `get` | método | coberto-script |
-| `MessageManager` | `resolve` | método | coberto-script |
+| `MessageManager` | `fetch` | método | coberto-recurso |
+| `MessageManager` | `get` | método | coberto-recurso |
+| `MessageManager` | `resolve` | método | coberto-recurso |
 | `MessagePayload` | `addEmbed` | método | lacuna |
 | `MessagePayload` | `addEmbed` | método | lacuna |
 | `MessagePayload` | `ContentMaxLength` | propriedade | lacuna |
 | `MessagePayload` | `ContentMaxLength` | propriedade | lacuna |
-| `MessagePayload` | `create` | método | coberto-script |
-| `MessagePayload` | `create` | método | coberto-script |
-| `MessagePayload` | `data` | propriedade | coberto-script |
-| `MessagePayload` | `data` | propriedade | coberto-script |
+| `MessagePayload` | `create` | método | coberto-recurso |
+| `MessagePayload` | `create` | método | coberto-recurso |
+| `MessagePayload` | `data` | propriedade | coberto-recurso |
+| `MessagePayload` | `data` | propriedade | coberto-recurso |
 | `MessagePayload` | `setAllowedMentions` | método | lacuna |
 | `MessagePayload` | `setAllowedMentions` | método | lacuna |
 | `MessagePayload` | `setAttachments` | método | lacuna |
@@ -664,213 +664,213 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são
 | `MessagePayload` | `setReply` | método | lacuna |
 | `MessagePayload` | `setTTS` | método | lacuna |
 | `MessagePayload` | `setTTS` | método | lacuna |
-| `MessagePayload` | `toJSON` | método | coberto-script |
-| `MessagePayload` | `toJSON` | método | coberto-script |
+| `MessagePayload` | `toJSON` | método | coberto-recurso |
+| `MessagePayload` | `toJSON` | método | coberto-recurso |
 | `MessageReaction` | `_data` | propriedade | lacuna |
-| `MessageReaction` | `channel` | acessor | coberto-script |
-| `MessageReaction` | `channelId` | propriedade | coberto-script |
-| `MessageReaction` | `client` | propriedade | coberto-script |
-| `MessageReaction` | `count` | propriedade | coberto-script |
-| `MessageReaction` | `emoji` | propriedade | coberto-script |
-| `MessageReaction` | `emojiIdentifier` | acessor | coberto-script |
-| `MessageReaction` | `fetchMessage` | método | coberto-script |
+| `MessageReaction` | `channel` | acessor | coberto-recurso |
+| `MessageReaction` | `channelId` | propriedade | coberto-recurso |
+| `MessageReaction` | `client` | propriedade | coberto-recurso |
+| `MessageReaction` | `count` | propriedade | coberto-recurso |
+| `MessageReaction` | `emoji` | propriedade | coberto-recurso |
+| `MessageReaction` | `emojiIdentifier` | acessor | coberto-recurso |
+| `MessageReaction` | `fetchMessage` | método | coberto-recurso |
 | `MessageReaction` | `fromMessage` | método | lacuna |
-| `MessageReaction` | `guild` | acessor | coberto-script |
-| `MessageReaction` | `guildId` | propriedade | coberto-script |
+| `MessageReaction` | `guild` | acessor | coberto-recurso |
+| `MessageReaction` | `guildId` | propriedade | coberto-recurso |
 | `MessageReaction` | `me` | propriedade | lacuna |
-| `MessageReaction` | `message` | acessor | coberto-script |
-| `MessageReaction` | `messageId` | propriedade | coberto-script |
+| `MessageReaction` | `message` | acessor | coberto-recurso |
+| `MessageReaction` | `messageId` | propriedade | coberto-recurso |
 | `MessageReactionManager` | `_patch` | método | lacuna |
 | `MessageReactionManager` | `[Symbol.iterator]` | método | lacuna |
 | `MessageReactionManager` | `cache` | acessor | coberto-nativo |
-| `MessageReactionManager` | `size` | acessor | coberto-script |
-| `MessageSticker` | `animated` | propriedade | coberto-script |
-| `MessageSticker` | `client` | propriedade | coberto-script |
-| `MessageSticker` | `createdAt` | acessor | coberto-script |
-| `MessageSticker` | `createdTimestamp` | acessor | coberto-script |
-| `MessageSticker` | `description` | propriedade | coberto-script |
-| `MessageSticker` | `id` | propriedade | coberto-script |
-| `MessageSticker` | `name` | propriedade | coberto-script |
-| `MessageSticker` | `tags` | propriedade | coberto-script |
-| `MessageSticker` | `url` | acessor | coberto-script |
-| `PartialGuildMember` | `client` | propriedade | coberto-script |
-| `PartialGuildMember` | `fetch` | método | coberto-script |
-| `PartialGuildMember` | `guild` | propriedade | coberto-script |
-| `PartialGuildMember` | `guildId` | propriedade | coberto-script |
-| `PartialGuildMember` | `id` | propriedade | coberto-script |
+| `MessageReactionManager` | `size` | acessor | coberto-recurso |
+| `MessageSticker` | `animated` | propriedade | coberto-recurso |
+| `MessageSticker` | `client` | propriedade | coberto-recurso |
+| `MessageSticker` | `createdAt` | acessor | coberto-recurso |
+| `MessageSticker` | `createdTimestamp` | acessor | coberto-recurso |
+| `MessageSticker` | `description` | propriedade | coberto-recurso |
+| `MessageSticker` | `id` | propriedade | coberto-recurso |
+| `MessageSticker` | `name` | propriedade | coberto-recurso |
+| `MessageSticker` | `tags` | propriedade | coberto-recurso |
+| `MessageSticker` | `url` | acessor | coberto-recurso |
+| `PartialGuildMember` | `client` | propriedade | coberto-recurso |
+| `PartialGuildMember` | `fetch` | método | coberto-recurso |
+| `PartialGuildMember` | `guild` | propriedade | coberto-recurso |
+| `PartialGuildMember` | `guildId` | propriedade | coberto-recurso |
+| `PartialGuildMember` | `id` | propriedade | coberto-recurso |
 | `PartialGuildMember` | `partial` | propriedade | coberto-nativo |
-| `PartialGuildMember` | `user` | propriedade | coberto-script |
-| `PartialMessage` | `author` | propriedade | coberto-script |
+| `PartialGuildMember` | `user` | propriedade | coberto-recurso |
+| `PartialMessage` | `author` | propriedade | coberto-recurso |
 | `PartialMessage` | `authorId` | propriedade | coberto-nativo |
-| `PartialMessage` | `channel` | acessor | coberto-script |
-| `PartialMessage` | `channelId` | propriedade | coberto-script |
-| `PartialMessage` | `client` | propriedade | coberto-script |
-| `PartialMessage` | `content` | propriedade | coberto-script |
-| `PartialMessage` | `createdAt` | propriedade | coberto-script |
-| `PartialMessage` | `fetch` | método | coberto-script |
-| `PartialMessage` | `guildId` | propriedade | coberto-script |
-| `PartialMessage` | `id` | propriedade | coberto-script |
+| `PartialMessage` | `channel` | acessor | coberto-recurso |
+| `PartialMessage` | `channelId` | propriedade | coberto-recurso |
+| `PartialMessage` | `client` | propriedade | coberto-recurso |
+| `PartialMessage` | `content` | propriedade | coberto-recurso |
+| `PartialMessage` | `createdAt` | propriedade | coberto-recurso |
+| `PartialMessage` | `fetch` | método | coberto-recurso |
+| `PartialMessage` | `guildId` | propriedade | coberto-recurso |
+| `PartialMessage` | `id` | propriedade | coberto-recurso |
 | `PartialMessage` | `partial` | propriedade | coberto-nativo |
 | `PartialMessage` | `resolveChannel` | método | lacuna |
 | `PermissionOverwrite` | `_allow` | propriedade | lacuna |
 | `PermissionOverwrite` | `_deny` | propriedade | lacuna |
-| `PermissionOverwrite` | `allow` | acessor | coberto-script |
-| `PermissionOverwrite` | `deny` | acessor | coberto-script |
-| `PermissionOverwrite` | `id` | propriedade | coberto-script |
-| `PermissionOverwrite` | `toJSON` | método | coberto-script |
-| `PermissionOverwrite` | `type` | propriedade | coberto-script |
+| `PermissionOverwrite` | `allow` | acessor | coberto-recurso |
+| `PermissionOverwrite` | `deny` | acessor | coberto-recurso |
+| `PermissionOverwrite` | `id` | propriedade | coberto-recurso |
+| `PermissionOverwrite` | `toJSON` | método | coberto-recurso |
+| `PermissionOverwrite` | `type` | propriedade | coberto-recurso |
 | `PermissionOverwriteManager` | `_patch` | método | lacuna |
 | `PermissionOverwriteManager` | `[Symbol.iterator]` | método | lacuna |
 | `PermissionOverwriteManager` | `cache` | acessor | coberto-nativo |
-| `PermissionOverwriteManager` | `delete` | método | coberto-script |
-| `PermissionOverwriteManager` | `edit` | método | coberto-script |
-| `PermissionOverwriteManager` | `size` | acessor | coberto-script |
-| `PermissionOverwriteManager` | `toJSON` | método | coberto-script |
+| `PermissionOverwriteManager` | `delete` | método | coberto-recurso |
+| `PermissionOverwriteManager` | `edit` | método | coberto-recurso |
+| `PermissionOverwriteManager` | `size` | acessor | coberto-recurso |
+| `PermissionOverwriteManager` | `toJSON` | método | coberto-recurso |
 | `PermissionsBitField` | `any` | método | coberto-nativo |
 | `PermissionsBitField` | `Flags` | propriedade | lacuna |
-| `PermissionsBitField` | `has` | método | coberto-script |
+| `PermissionsBitField` | `has` | método | coberto-recurso |
 | `PermissionsBitField` | `missing` | método | lacuna |
 | `ReactionCollector` | `awaitReactions` | método | lacuna |
-| `ReactionCollector` | `channelId` | propriedade | coberto-script |
-| `ReactionCollector` | `client` | propriedade | coberto-script |
-| `ReactionCollector` | `collected` | propriedade | coberto-script |
+| `ReactionCollector` | `channelId` | propriedade | coberto-recurso |
+| `ReactionCollector` | `client` | propriedade | coberto-recurso |
+| `ReactionCollector` | `collected` | propriedade | coberto-recurso |
 | `ReactionCollector` | `emit` | método | coberto-nativo |
-| `ReactionCollector` | `messageId` | propriedade | coberto-script |
-| `ReactionCollector` | `on` | método | coberto-script |
-| `ReactionCollector` | `options` | propriedade | coberto-script |
-| `ReactionCollector` | `stop` | método | coberto-script |
+| `ReactionCollector` | `messageId` | propriedade | coberto-recurso |
+| `ReactionCollector` | `on` | método | coberto-recurso |
+| `ReactionCollector` | `options` | propriedade | coberto-recurso |
+| `ReactionCollector` | `stop` | método | coberto-recurso |
 | `Role` | `_clone` | método | lacuna |
 | `Role` | `_patch` | método | lacuna |
 | `Role` | `_permissions` | propriedade | lacuna |
-| `Role` | `client` | propriedade | coberto-script |
-| `Role` | `color` | propriedade | coberto-script |
-| `Role` | `createdAt` | acessor | coberto-script |
-| `Role` | `createdTimestamp` | acessor | coberto-script |
-| `Role` | `delete` | método | coberto-script |
-| `Role` | `edit` | método | coberto-script |
-| `Role` | `guildId` | propriedade | coberto-script |
-| `Role` | `has` | método | coberto-script |
-| `Role` | `hoist` | propriedade | coberto-script |
+| `Role` | `client` | propriedade | coberto-recurso |
+| `Role` | `color` | propriedade | coberto-recurso |
+| `Role` | `createdAt` | acessor | coberto-recurso |
+| `Role` | `createdTimestamp` | acessor | coberto-recurso |
+| `Role` | `delete` | método | coberto-recurso |
+| `Role` | `edit` | método | coberto-recurso |
+| `Role` | `guildId` | propriedade | coberto-recurso |
+| `Role` | `has` | método | coberto-recurso |
+| `Role` | `hoist` | propriedade | coberto-recurso |
 | `Role` | `hoistPosition` | propriedade | lacuna |
-| `Role` | `id` | propriedade | coberto-script |
-| `Role` | `mentionable` | propriedade | coberto-script |
-| `Role` | `name` | propriedade | coberto-script |
-| `Role` | `permissions` | acessor | coberto-script |
-| `Role` | `position` | propriedade | coberto-script |
-| `Role` | `toString` | método | coberto-script |
-| `Role` | `unicodeEmoji` | propriedade | coberto-script |
+| `Role` | `id` | propriedade | coberto-recurso |
+| `Role` | `mentionable` | propriedade | coberto-recurso |
+| `Role` | `name` | propriedade | coberto-recurso |
+| `Role` | `permissions` | acessor | coberto-recurso |
+| `Role` | `position` | propriedade | coberto-recurso |
+| `Role` | `toString` | método | coberto-recurso |
+| `Role` | `unicodeEmoji` | propriedade | coberto-recurso |
 | `TextChannel` | `applyEditPatch` | método | lacuna |
-| `TextChannel` | `contentWarningLevel` | propriedade | coberto-script |
-| `TextChannel` | `contentWarningText` | propriedade | coberto-script |
+| `TextChannel` | `contentWarningLevel` | propriedade | coberto-recurso |
+| `TextChannel` | `contentWarningText` | propriedade | coberto-recurso |
 | `TextChannel` | `defaultAutoArchiveDuration` | propriedade | lacuna |
 | `TextChannel` | `defaultThreadRateLimitPerUser` | propriedade | lacuna |
 | `TextChannel` | `editThreadDefaults` | método | lacuna |
 | `TextChannel` | `lastMessageId` | propriedade | lacuna |
-| `TextChannel` | `nsfw` | propriedade | coberto-script |
+| `TextChannel` | `nsfw` | propriedade | coberto-recurso |
 | `TextChannel` | `nsfwOverride` | propriedade | lacuna |
-| `TextChannel` | `rateLimitPerUser` | propriedade | coberto-script |
-| `TextChannel` | `setSlowmode` | método | coberto-script |
-| `TextChannel` | `threads` | acessor | coberto-script |
-| `TextChannel` | `topic` | propriedade | coberto-script |
+| `TextChannel` | `rateLimitPerUser` | propriedade | coberto-recurso |
+| `TextChannel` | `setSlowmode` | método | coberto-recurso |
+| `TextChannel` | `threads` | acessor | coberto-recurso |
+| `TextChannel` | `topic` | propriedade | coberto-recurso |
 | `ThreadChannel` | `_patch` | método | lacuna |
-| `ThreadChannel` | `appliedTags` | propriedade | coberto-script |
-| `ThreadChannel` | `archived` | propriedade | coberto-script |
-| `ThreadChannel` | `archiveTimestamp` | propriedade | coberto-script |
-| `ThreadChannel` | `autoArchiveDuration` | propriedade | coberto-script |
-| `ThreadChannel` | `edit` | método | coberto-script |
+| `ThreadChannel` | `appliedTags` | propriedade | coberto-recurso |
+| `ThreadChannel` | `archived` | propriedade | coberto-recurso |
+| `ThreadChannel` | `archiveTimestamp` | propriedade | coberto-recurso |
+| `ThreadChannel` | `autoArchiveDuration` | propriedade | coberto-recurso |
+| `ThreadChannel` | `edit` | método | coberto-recurso |
 | `ThreadChannel` | `editSelf` | método | lacuna |
-| `ThreadChannel` | `flags` | propriedade | coberto-script |
+| `ThreadChannel` | `flags` | propriedade | coberto-recurso |
 | `ThreadChannel` | `invitable` | propriedade | lacuna |
-| `ThreadChannel` | `join` | método | coberto-script |
+| `ThreadChannel` | `join` | método | coberto-recurso |
 | `ThreadChannel` | `lastMessageId` | propriedade | lacuna |
 | `ThreadChannel` | `leave` | método | coberto-nativo |
-| `ThreadChannel` | `locked` | propriedade | coberto-script |
-| `ThreadChannel` | `member` | propriedade | coberto-script |
-| `ThreadChannel` | `memberCount` | propriedade | coberto-script |
-| `ThreadChannel` | `members` | propriedade | coberto-script |
-| `ThreadChannel` | `messageCount` | propriedade | coberto-script |
-| `ThreadChannel` | `ownerId` | propriedade | coberto-script |
-| `ThreadChannel` | `parentId` | propriedade | coberto-script |
-| `ThreadChannel` | `rateLimitPerUser` | propriedade | coberto-script |
-| `ThreadChannel` | `setArchived` | método | coberto-script |
+| `ThreadChannel` | `locked` | propriedade | coberto-recurso |
+| `ThreadChannel` | `member` | propriedade | coberto-recurso |
+| `ThreadChannel` | `memberCount` | propriedade | coberto-recurso |
+| `ThreadChannel` | `members` | propriedade | coberto-recurso |
+| `ThreadChannel` | `messageCount` | propriedade | coberto-recurso |
+| `ThreadChannel` | `ownerId` | propriedade | coberto-recurso |
+| `ThreadChannel` | `parentId` | propriedade | coberto-recurso |
+| `ThreadChannel` | `rateLimitPerUser` | propriedade | coberto-recurso |
+| `ThreadChannel` | `setArchived` | método | coberto-recurso |
 | `ThreadChannel` | `setLocked` | método | lacuna |
 | `ThreadChannel` | `totalMessageSent` | propriedade | lacuna |
-| `ThreadManager` | `create` | método | coberto-script |
-| `ThreadManager` | `createPost` | método | coberto-script |
+| `ThreadManager` | `create` | método | coberto-recurso |
+| `ThreadManager` | `createPost` | método | coberto-recurso |
 | `ThreadManager` | `editDefaults` | método | lacuna |
 | `ThreadManager` | `fetchArchived` | método | coberto-nativo |
 | `ThreadManager` | `fetchJoinedPrivateArchived` | método | coberto-nativo |
-| `ThreadManager` | `search` | método | coberto-script |
-| `ThreadMember` | `flags` | propriedade | coberto-script |
-| `ThreadMember` | `id` | propriedade | coberto-script |
-| `ThreadMember` | `joinedAt` | propriedade | coberto-script |
-| `ThreadMember` | `muted` | propriedade | coberto-script |
-| `ThreadMember` | `muteEndTime` | propriedade | coberto-script |
-| `ThreadMember` | `muteWindow` | propriedade | coberto-script |
-| `ThreadMember` | `userId` | propriedade | coberto-script |
-| `ThreadMemberManager` | `add` | método | coberto-script |
-| `ThreadMemberManager` | `fetch` | método | coberto-script |
-| `ThreadMemberManager` | `fetchOne` | método | coberto-script |
-| `ThreadMemberManager` | `remove` | método | coberto-script |
+| `ThreadManager` | `search` | método | coberto-recurso |
+| `ThreadMember` | `flags` | propriedade | coberto-recurso |
+| `ThreadMember` | `id` | propriedade | coberto-recurso |
+| `ThreadMember` | `joinedAt` | propriedade | coberto-recurso |
+| `ThreadMember` | `muted` | propriedade | coberto-recurso |
+| `ThreadMember` | `muteEndTime` | propriedade | coberto-recurso |
+| `ThreadMember` | `muteWindow` | propriedade | coberto-recurso |
+| `ThreadMember` | `userId` | propriedade | coberto-recurso |
+| `ThreadMemberManager` | `add` | método | coberto-recurso |
+| `ThreadMemberManager` | `fetch` | método | coberto-recurso |
+| `ThreadMemberManager` | `fetchOne` | método | coberto-recurso |
+| `ThreadMemberManager` | `remove` | método | coberto-recurso |
 | `User` | `_patch` | método | lacuna |
 | `User` | `avatar` | propriedade | lacuna |
 | `User` | `avatarColor` | propriedade | lacuna |
-| `User` | `avatarURL` | método | coberto-script |
-| `User` | `banner` | propriedade | coberto-script |
-| `User` | `bannerURL` | método | coberto-script |
-| `User` | `bot` | propriedade | coberto-script |
-| `User` | `client` | propriedade | coberto-script |
-| `User` | `createdAt` | acessor | coberto-script |
-| `User` | `createDM` | método | lacuna |
-| `User` | `createdTimestamp` | acessor | coberto-script |
+| `User` | `avatarURL` | método | coberto-recurso |
+| `User` | `banner` | propriedade | coberto-recurso |
+| `User` | `bannerURL` | método | coberto-recurso |
+| `User` | `bot` | propriedade | coberto-recurso |
+| `User` | `client` | propriedade | coberto-recurso |
+| `User` | `createdAt` | acessor | coberto-recurso |
+| `User` | `createDM` | método | coberto-nativo |
+| `User` | `createdTimestamp` | acessor | coberto-recurso |
 | `User` | `discriminator` | propriedade | lacuna |
-| `User` | `displayAvatarURL` | método | coberto-script |
-| `User` | `flags` | propriedade | coberto-script |
-| `User` | `globalName` | propriedade | coberto-script |
-| `User` | `id` | propriedade | coberto-script |
-| `User` | `send` | método | coberto-script |
+| `User` | `displayAvatarURL` | método | coberto-recurso |
+| `User` | `flags` | propriedade | coberto-recurso |
+| `User` | `globalName` | propriedade | coberto-recurso |
+| `User` | `id` | propriedade | coberto-recurso |
+| `User` | `send` | método | coberto-recurso |
 | `User` | `system` | propriedade | lacuna |
-| `User` | `toString` | método | coberto-script |
-| `User` | `username` | propriedade | coberto-script |
+| `User` | `toString` | método | coberto-recurso |
+| `User` | `username` | propriedade | coberto-recurso |
 | `UserFlagsBitField` | `Flags` | propriedade | lacuna |
-| `UserManager` | `fetch` | método | coberto-script |
-| `UserManager` | `fetchWithProfile` | método | coberto-script |
-| `UserManager` | `resolve` | método | coberto-script |
+| `UserManager` | `fetch` | método | coberto-recurso |
+| `UserManager` | `fetchWithProfile` | método | coberto-recurso |
+| `UserManager` | `resolve` | método | coberto-recurso |
 | `UserManager` | `sweep` | método | lacuna |
 | `VoiceChannel` | `applyEditPatch` | método | lacuna |
 | `VoiceChannel` | `bitrate` | propriedade | lacuna |
-| `VoiceChannel` | `contentWarningLevel` | propriedade | coberto-script |
-| `VoiceChannel` | `contentWarningText` | propriedade | coberto-script |
-| `VoiceChannel` | `guildId` | propriedade | coberto-script |
+| `VoiceChannel` | `contentWarningLevel` | propriedade | coberto-recurso |
+| `VoiceChannel` | `contentWarningText` | propriedade | coberto-recurso |
+| `VoiceChannel` | `guildId` | propriedade | coberto-recurso |
 | `VoiceChannel` | `lastMessageId` | propriedade | lacuna |
-| `VoiceChannel` | `nsfw` | propriedade | coberto-script |
+| `VoiceChannel` | `nsfw` | propriedade | coberto-recurso |
 | `VoiceChannel` | `nsfwOverride` | propriedade | lacuna |
-| `VoiceChannel` | `rateLimitPerUser` | propriedade | coberto-script |
+| `VoiceChannel` | `rateLimitPerUser` | propriedade | coberto-recurso |
 | `VoiceChannel` | `rtcRegion` | propriedade | lacuna |
-| `VoiceChannel` | `setSlowmode` | método | coberto-script |
-| `VoiceChannel` | `topic` | propriedade | coberto-script |
+| `VoiceChannel` | `setSlowmode` | método | coberto-recurso |
+| `VoiceChannel` | `topic` | propriedade | coberto-recurso |
 | `VoiceChannel` | `userLimit` | propriedade | lacuna |
 | `VoiceChannel` | `voiceConnectionLimit` | propriedade | lacuna |
 | `Webhook` | `avatar` | propriedade | lacuna |
-| `Webhook` | `avatarURL` | método | coberto-script |
-| `Webhook` | `channelId` | propriedade | coberto-script |
-| `Webhook` | `client` | propriedade | coberto-script |
-| `Webhook` | `createdAt` | acessor | coberto-script |
-| `Webhook` | `createdTimestamp` | acessor | coberto-script |
-| `Webhook` | `delete` | método | coberto-script |
+| `Webhook` | `avatarURL` | método | coberto-recurso |
+| `Webhook` | `channelId` | propriedade | coberto-recurso |
+| `Webhook` | `client` | propriedade | coberto-recurso |
+| `Webhook` | `createdAt` | acessor | coberto-recurso |
+| `Webhook` | `createdTimestamp` | acessor | coberto-recurso |
+| `Webhook` | `delete` | método | coberto-recurso |
 | `Webhook` | `deleteMessage` | método | lacuna |
-| `Webhook` | `edit` | método | coberto-script |
+| `Webhook` | `edit` | método | coberto-recurso |
 | `Webhook` | `editMessage` | método | lacuna |
-| `Webhook` | `fetch` | método | coberto-script |
-| `Webhook` | `fetchMessage` | método | coberto-script |
-| `Webhook` | `fromToken` | método | coberto-script |
-| `Webhook` | `guildId` | propriedade | coberto-script |
-| `Webhook` | `id` | propriedade | coberto-script |
-| `Webhook` | `name` | propriedade | coberto-script |
-| `Webhook` | `send` | método | coberto-script |
-| `Webhook` | `token` | propriedade | coberto-script |
-| `Webhook` | `type` | propriedade | coberto-script |
-| `Webhook` | `user` | propriedade | coberto-script |
+| `Webhook` | `fetch` | método | coberto-recurso |
+| `Webhook` | `fetchMessage` | método | coberto-recurso |
+| `Webhook` | `fromToken` | método | coberto-recurso |
+| `Webhook` | `guildId` | propriedade | coberto-recurso |
+| `Webhook` | `id` | propriedade | coberto-recurso |
+| `Webhook` | `name` | propriedade | coberto-recurso |
+| `Webhook` | `send` | método | coberto-recurso |
+| `Webhook` | `token` | propriedade | coberto-recurso |
+| `Webhook` | `type` | propriedade | coberto-recurso |
+| `Webhook` | `user` | propriedade | coberto-recurso |
 
 ## Eventos do cliente
 
@@ -897,8 +897,8 @@ Comparação entre `ClientEvents` do SDK e `scriptEventNames` do function mode.
 | `guildCreate` | não | lacuna |
 | `guildDelete` | não | lacuna |
 | `guildEmojisUpdate` | não | lacuna |
-| `guildMemberAdd` | sim | coberto-script |
-| `guildMemberRemove` | sim | coberto-script |
+| `guildMemberAdd` | sim | coberto-recurso |
+| `guildMemberRemove` | sim | coberto-recurso |
 | `guildMemberUpdate` | não | lacuna |
 | `guildMembersChunk` | não | lacuna |
 | `guildRoleCreate` | não | lacuna |
@@ -910,14 +910,14 @@ Comparação entre `ClientEvents` do SDK e `scriptEventNames` do function mode.
 | `inviteCreate` | não | lacuna |
 | `inviteDelete` | não | lacuna |
 | `messageCreate` | não | lacuna |
-| `messageDelete` | sim | coberto-script |
+| `messageDelete` | sim | coberto-recurso |
 | `messageDeleteBulk` | não | lacuna |
-| `messageReactionAdd` | sim | coberto-script |
+| `messageReactionAdd` | sim | coberto-recurso |
 | `messageReactionAddMany` | não | lacuna |
-| `messageReactionRemove` | sim | coberto-script |
+| `messageReactionRemove` | sim | coberto-recurso |
 | `messageReactionRemoveAll` | não | lacuna |
 | `messageReactionRemoveEmoji` | não | lacuna |
-| `messageUpdate` | sim | coberto-script |
+| `messageUpdate` | sim | coberto-recurso |
 | `presenceUpdate` | não | lacuna |
 | `presenceUpdateBulk` | não | lacuna |
 | `ready` | não | lacuna |
@@ -950,3 +950,8 @@ Eventos do function mode que o SDK não declara: nenhum.
 ## Exceções intencionais (só SDK)
 
 - **Sharding e cluster** (`BETA_CLIENT_CLUSTER_WARNING`, `ClientCluster`, `ClientClusterEvents`): Fora deste lote. O Yuzuha expõe shardCount e shardIds em clientOptions; o wrapper yuzuha/sharding fica como seguimento.
+- **CDN e helpers de URL** (`CDN_URL`, `STATIC_CDN_URL`, `cdnAvatarURL`, `cdnBannerURL`, `cdnDefaultAvatarURL`, `cdnDisplayAvatarURL`, `cdnEmojiURL`, `cdnGuildAssetURL`, `cdnMemberAvatarURL`, `cdnMemberBannerURL`, `cdnStickerURL`, `inviteUrl`): Disponível por `yuzuha/sdk` (e `SDK` na raiz); sem wrapper nativo por serem constantes, helpers puros ou classes de dados.
+- **Constantes e bitfields puros** (`GuildMemberProfileFlags`, `GuildOperations`, `MessageAttachmentFlags`, `MessageFlags`, `MessageFlagsBitField`, `MessageFlagsBits`, `PublicUserFlags`, `Routes`, `SystemChannelFlags`, `ThreadMemberFlags`, `UserFlagsBitField`, `UserFlagsBits`, `resolvePermissionsToBitfield`, `ErrorCodes`): Disponível por `yuzuha/sdk` (e `SDK` na raiz); sem wrapper nativo por serem constantes, helpers puros ou classes de dados.
+- **Instância, cache e logs** (`DEFAULT_INSTANCE_ENDPOINTS`, `INSTANCE_DISCOVERY_PATH`, `instanceDiscoveryUrl`, `normalizeApiOrigin`, `parseInstanceDiscovery`, `resolveInstanceEndpoints`, `DEFAULT_CACHE_LIMITS`, `normalizeCacheLimit`, `resolveCacheLimits`, `createLogger`, `serializeError`): Disponível por `yuzuha/sdk` (e `SDK` na raiz); sem wrapper nativo por serem constantes, helpers puros ou classes de dados.
+- **Texto e parsing puros** (`parsePrefixCommand`, `parseUserMention`, `resolveKlipyToImageUrl`): Disponível por `yuzuha/sdk` (e `SDK` na raiz); sem wrapper nativo por serem constantes, helpers puros ou classes de dados.
+- **Classes de dados do SDK** (`AnnouncementChannel`, `CategoryChannel`, `ForumChannel`, `MediaChannel`, `GuildRoleManager`): Disponível por `yuzuha/sdk` (e `SDK` na raiz); sem wrapper nativo por serem constantes, helpers puros ou classes de dados.

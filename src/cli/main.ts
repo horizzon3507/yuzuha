@@ -6,8 +6,7 @@ import { stat } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { Yuzuha } from '../bot.js';
 import { ScriptError, YuzuhaError } from '../errors.js';
-import { registerBuiltins } from '../functions.js';
-import { Runtime } from '../runtime.js';
+import { functions, registerBuiltins, Runtime } from '../functions.js';
 import { parseArguments, usage } from './arguments.js';
 import { configuredBot, findConfig } from './config.js';
 import { runBot } from './runner.js';
@@ -58,25 +57,25 @@ export async function main(args = process.argv.slice(2)): Promise<void> {
     try {
       if (options.config) {
         ({ bot: catalogBot } = await configuredBot(await findConfig(options.config), false, false));
-        all = catalogBot.enableFunctions().runtime.functions();
+        all = catalogBot.engine!.functions();
       } else all = registerBuiltins(new Runtime()).functions();
     } finally { if (catalogBot) { await catalogBot.destroy(); await catalogBot.options.store?.close?.(); } }
 
     const builtinNames = options.pluginsOnly ? new Set(registerBuiltins(new Runtime()).functions().map(fn => fn.name.replace(/^\$/, '').toLowerCase())) : undefined;
     const visible = builtinNames ? all.filter(fn => !builtinNames.has(fn.name.replace(/^\$/, '').toLowerCase())) : all;
-    let functions = options.category ? visible.filter(fn => fn.category === options.category) : visible;
-    if (options.category && !functions.length) throw new YuzuhaError('CATEGORY', `Categoria desconhecida. Escolha: ${[...new Set(all.map(fn => fn.category))].join(', ')}.`);
+    let entries = options.category ? visible.filter(fn => fn.category === options.category) : visible;
+    if (options.category && !entries.length) throw new YuzuhaError('CATEGORY', `Categoria desconhecida. Escolha: ${[...new Set(all.map(fn => fn.category))].join(', ')}.`);
     if (options.search !== undefined) {
       const term = options.search.toLowerCase();
-      functions = functions.filter(fn => [fn.name, ...(fn.aliases ?? []), fn.description].some(value => value.toLowerCase().includes(term)));
+      entries = entries.filter(fn => [fn.name, ...(fn.aliases ?? []), fn.description].some(value => value.toLowerCase().includes(term)));
     }
-    const metadata = functions.map(({ execute: _execute, ...value }) => value);
-    console.log(options.catalog ? JSON.stringify({ version: 1, functions: metadata }, null, 2) : options.json ? JSON.stringify(metadata, null, 2) : options.search !== undefined && !functions.length ? 'Nenhuma função encontrada.' : functions.map(fn => `${fn.usage.padEnd(52)} ${fn.description}`).join('\n'));
+    const metadata = entries.map(({ execute: _execute, ...value }) => value);
+    console.log(options.catalog ? JSON.stringify({ version: 1, functions: metadata }, null, 2) : options.json ? JSON.stringify(metadata, null, 2) : options.search !== undefined && !entries.length ? 'Nenhuma função encontrada.' : entries.map(fn => `${fn.usage.padEnd(52)} ${fn.description}`).join('\n'));
     return;
   }
   let bot: Yuzuha, commandsPath: string;
   if (options.action === 'check' && options.input && (await stat(resolve(options.input))).isDirectory()) {
-    bot = new Yuzuha(); commandsPath = resolve(options.input);
+    bot = new Yuzuha({ engine: functions() }); commandsPath = resolve(options.input);
     try { await bot.load(commandsPath); } catch (error) { await bot.destroy(); throw error; }
   } else ({ bot, commandsPath } = await configuredBot(await findConfig(options.input), options.action !== 'check'));
   if (options.action === 'check') {

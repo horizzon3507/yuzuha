@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { parse } from '../src/scripting/parser.js';
+import { parse } from '../src/functions/runtime/parser.js';
 import { ScriptError } from '../src/errors.js';
 
 test('text runs preserve delimiters, escapes, nested literals and source offsets', () => {

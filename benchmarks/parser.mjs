@@ -6,7 +6,7 @@ import { createHash } from 'node:crypto';
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
-const modules = { current: new URL('../dist/scripting/parser.js', import.meta.url) };
+const modules = { current: new URL('../dist/functions/runtime/parser.js', import.meta.url) };
 for (let index = 2; index < process.argv.length; index += 2) {
   const key = { '--parser-module': 'current', '--baseline-module': 'baseline' }[process.argv[index]];
   const value = process.argv[index + 1];

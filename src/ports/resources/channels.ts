@@ -52,8 +52,13 @@ export interface ChannelsResources {
   edit(channelID: string, input: ChannelEditInput): Promise<ChannelInfo>;
   delete(channelID: string, reason?: string): Promise<void>;
   setSlowmode(channelID: string, seconds: number, reason?: string): Promise<void>;
+  slowmode(channelID: string): Promise<number>;
+  sendTyping(channelID: string): Promise<void>;
+  rtcRegions(channelID: string): Promise<RtcRegionInfo[]>;
   overwrite(channelID: string, targetID: string, input: ChannelOverwriteInput): Promise<void>;
   permissionsFor(guildID: string, channelID: string, userID: string): Promise<string>;
   move(channelID: string, position: number): Promise<void>;
   setCategory(channelID: string, parentID: string | null, reason?: string): Promise<ChannelInfo>;
 }
+
+export interface RtcRegionInfo { id: string; name: string; emoji: string }

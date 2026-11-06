@@ -1,8 +1,8 @@
 // Gera docs/PARITY-MATRIX.md a partir dos .d.ts instalados de @fluxerjs/*.
 // Uso: node scripts/parity-matrix.mjs [--check]
-// Heurística: cobertura por nome. "coberto-script" = o nome é alcançado pelo caminho
-// builtins -> ports de recursos/transporte -> adaptador do SDK. "coberto-nativo" = o
-// código do Yuzuha usa o nome do SDK. As áreas e as exceções intencionais vêm de
+// Heurística: cobertura por nome. "coberto-recurso" = o nome é alcançado por
+// ctx.resources (os ports), que também servem às funções do function mode.
+// "coberto-nativo" = o código do Yuzuha usa o nome do SDK sem função `$. As áreas e as exceções intencionais vêm de
 // scripts/parity-areas.json; export novo sem classificação faz o teste falhar.
 import ts from 'typescript';
 import { readFile, readdir, writeFile } from 'node:fs/promises';
@@ -16,7 +16,7 @@ const SDK_PACKAGES = [
   { name: '@fluxerjs/types', entry: 'node_modules/@fluxerjs/types/dist/index.d.ts' },
 ];
 const RUNTIME_KINDS = new Set(['class', 'function', 'variable']);
-const STATUSES = ['coberto-script', 'coberto-nativo', 'só-SDK', 'lacuna', 'dados'];
+const STATUSES = ['coberto-recurso', 'coberto-nativo', 'só-SDK', 'lacuna', 'dados'];
 
 async function tsFiles(directory) {
   const result = [];
@@ -110,7 +110,7 @@ async function yuzuhaUsage() {
 /** Métodos que os builtins chamam em recursos e transporte, com os nomes alcançados no adaptador do SDK. */
 async function scriptChain() {
   const calls = new Set();
-  for (const path of await tsFiles(join(ROOT, 'src/scripting/builtins'))) {
+  for (const path of await tsFiles(join(ROOT, 'src/functions/builtins'))) {
     const text = await readFile(path, 'utf8');
     for (const match of text.matchAll(/\bresources\.(\w+)\.(\w+)/g)) calls.add(`${match[1]}.${match[2]}`);
     for (const match of text.matchAll(/\btransport\.(\w+)/g)) calls.add(`transport.${match[1]}`);
@@ -208,14 +208,14 @@ export async function buildParityMatrix() {
       const memberRows = item.members.map(member => {
         const script = chain.has(member.name);
         const native = usage.properties.has(member.name) || usage.identifiers.has(member.name);
-        return { ...member, status: script ? 'coberto-script' : native ? 'coberto-nativo' : 'lacuna' };
+        return { ...member, status: script ? 'coberto-recurso' : native ? 'coberto-nativo' : 'lacuna' };
       });
-      const scriptHit = chain.has(item.name) || memberRows.some(member => member.status === 'coberto-script');
+      const scriptHit = chain.has(item.name) || memberRows.some(member => member.status === 'coberto-recurso');
       const nativeHit = usage.identifiers.has(item.name) || usage.properties.has(item.name) || memberRows.some(member => member.status === 'coberto-nativo');
       let status;
       if (sdkOnly.has(item.name)) status = 'só-SDK';
       else if (!runtimeItem) status = 'dados';
-      else if (scriptHit) status = 'coberto-script';
+      else if (scriptHit) status = 'coberto-recurso';
       else if (nativeHit) status = 'coberto-nativo';
       else status = 'lacuna';
       rows.push({ ...item, area: areaOf.get(item.name) ?? null, status, members: memberRows,
@@ -247,12 +247,13 @@ export function renderMatrix(matrix) {
     'Gerada por `scripts/parity-matrix.mjs` a partir dos `.d.ts` de `@fluxerjs/core`, `@fluxerjs/builders` e `@fluxerjs/types` instalados. '
     + 'Atualize com `npm run docs:generate`. Não edite à mão.', '',
     '## Como ler', '',
-    '- **coberto-script**: o nome é alcançado pelo caminho `builtins → ports → adaptador do SDK`.',
     '- **coberto-nativo**: o código do Yuzuha usa o nome do SDK, mas nenhuma função `$` o alcança.',
+    '- **coberto-recurso**: o nome é alcançado pelo caminho `builtins → ports → adaptador do SDK`.',
     '- **só-SDK**: exceção intencional, com motivo em `scripts/parity-areas.json`.',
     '- **lacuna**: nenhum dos caminhos acima alcança o nome. Vira candidato a função ou a recurso.',
     '- **dados**: tipos e enums, sem comportamento próprio.', '',
     'A cobertura é por nome: um método `send` de uma classe conta como coberto se qualquer adaptador usar `send`. '
+    + 'O function mode é uma camada fina sobre os mesmos recursos — `coberto-recurso` não indica lacuna nativa. '
     + 'Use a matriz como lista de revisão, não como prova de cobertura.', '',
     '## Resumo por export', '', '| Status | Exports de runtime | Membros |', '|---|---:|---:|'];
   for (const status of STATUSES.filter(status => status !== 'dados')) lines.push(`| ${status} | ${counts[status]} | ${memberCounts[status]} |`);
@@ -274,7 +275,7 @@ export function renderMatrix(matrix) {
     '| Evento | Function mode | Status |', '|---|---|---|');
   for (const event of sdkEvents) {
     const covered = modeEvents.includes(event);
-    lines.push(`| \`${event}\` | ${covered ? 'sim' : 'não'} | ${covered ? 'coberto-script' : 'lacuna'} |`);
+    lines.push(`| \`${event}\` | ${covered ? 'sim' : 'não'} | ${covered ? 'coberto-recurso' : 'lacuna'} |`);
   }
   lines.push('', `Eventos do function mode que o SDK não declara: ${modeEvents.filter(event => !sdkEvents.includes(event)).join(', ') || 'nenhum'}.`, '');
 

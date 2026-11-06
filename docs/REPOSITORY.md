@@ -45,7 +45,7 @@ padrão e os exemplos de consumidor estão no [guia inicial](QUICKSTART.md).
 
 ## Editar a documentação
 
-Edite os guias em `docs/`. A referência de funções em `docs/FUNCTIONS.md` e o
+Edite os guias em `docs/`. A referência de funções em `docs/functions/FUNCTIONS.md` e o
 catálogo do editor são gerados a partir dos metadados dos builtins:
 
 ```sh
