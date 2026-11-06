@@ -175,6 +175,12 @@ export class Yuzuha {
   listCommands(): Command[] { return this.registry.list(); }
   help(command?: string, prefix = ''): string { return this.registry.help(command, prefix); }
   get signal(): AbortSignal { return this.shutdown.signal; }
+  isReady(): boolean { return this.client.isReady(); }
+  get uptime(): number | null { return this.client.uptime; }
+  assertReady(): void {
+    try { this.client.assertReady(); }
+    catch { throw new YuzuhaError('BOT_NOT_READY', 'O bot ainda não está pronto.'); }
+  }
 
   on<K extends ClientEventName>(event: K, listener: NativeListener<K>): this {
     this.events.add(defineEvent({ event, run: listener }), listener); return this;

@@ -104,6 +104,13 @@ export function createRolesResources(client: Client): RolesResources {
       const guild = await getGuild(client, guildID);
       await (await resolveRole(guild, role)).delete(reason);
     },
+    async setRoleHoistPositions(guildID, updates) {
+      const guild = await client.guilds.resolve(guildID);
+      return (await guild.setRoleHoistPositions(updates)).map(toInfo);
+    },
+    async resetRoleHoistPositions(guildID) {
+      return (await (await client.guilds.resolve(guildID)).resetRoleHoistPositions()).map(toInfo);
+    },
     async move(guildID, role, position): Promise<void> {
       if (!Number.isSafeInteger(position) || position < 0) throw new YuzuhaError('POSITION', 'Posição deve ser um inteiro a partir de 0.');
       const guild = await getGuild(client, guildID);

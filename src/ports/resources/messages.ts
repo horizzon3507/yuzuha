@@ -45,6 +45,8 @@ export interface MessagesResources {
   bulkFetch(requests: BulkFetchRequest[], input?: BulkFetchInput): Promise<MessageInfo[] | BulkFetchRawChannel[]>;
   sendBytes(channelID: string, files: BinaryAttachmentSpec[], content?: string): Promise<string>;
   sendAttachments(channelID: string, files: (AttachmentSpec | BinaryAttachmentSpec)[], content?: string): Promise<string>;
+  deleteAttachment(channelID: string, messageID: string, attachmentID: string): Promise<void>;
+  sendTo(channelID: string, content: string): Promise<string>;
   bulkDelete(channelID: string, messageIDs: string[]): Promise<string[]>;
   bulkDeleteOwn(channelID: string): Promise<void>;
   acknowledgePins(channelID: string): Promise<void>;

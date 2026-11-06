@@ -1,0 +1,234 @@
+{
+  "Channel.canSendMessage": {
+    "native": "channels.permissionsFor",
+    "note": "`permissionsFor` devolve o bitfield de permissões do autor no canal."
+  },
+  "Channel.awaitMessages": {
+    "native": "collectors.collectMessages",
+    "note": "O stream de coletores cobre espera de mensagens."
+  },
+  "Channel.createMessageCollector": {
+    "native": "collectors.collectMessages",
+    "note": "O stream de coletores cobre o coletor de mensagens."
+  },
+  "Channel.requestAttachmentUploads": {
+    "native": "messages.sendAttachments",
+    "note": "O envio de anexos resolve uploads internamente."
+  },
+  "Channel.completeAttachmentUploads": {
+    "native": "messages.sendAttachments",
+    "note": "O envio de anexos resolve uploads internamente."
+  },
+  "Channel.uploadAttachmentsForSend": {
+    "native": "messages.sendAttachments",
+    "note": "O envio de anexos resolve uploads internamente."
+  },
+  "Channel.isText": {
+    "native": "ChannelInfo.type",
+    "note": "O tipo numérico do canal distingue texto."
+  },
+  "Channel.isAnnouncement": {
+    "native": "ChannelInfo.type",
+    "note": "O tipo numérico do canal distingue anúncio."
+  },
+  "Channel.isLink": {
+    "native": "ChannelInfo.type",
+    "note": "O tipo numérico do canal distingue link."
+  },
+  "Channel.isPersonalNotes": {
+    "native": "ChannelInfo.type",
+    "note": "O tipo numérico do canal distingue anotações."
+  },
+  "Message.awaitReactions": {
+    "native": "collectors.collectReactions",
+    "note": "O stream de reações cobre espera."
+  },
+  "Message.createReactionCollector": {
+    "native": "collectors.collectReactions",
+    "note": "O stream de reações cobre o coletor."
+  },
+  "MessageCollector.awaitMessages": {
+    "native": "collectors.collectMessages",
+    "note": "O stream de coletores cobre espera de mensagens."
+  },
+  "ReactionCollector.awaitReactions": {
+    "native": "collectors.collectReactions",
+    "note": "O stream de reações cobre espera."
+  },
+  "UserManager.sweep": {
+    "native": "cache.sweepUsers",
+    "note": "`sweepUsers` limpa o cache de usuários."
+  },
+  "User.sweep": {
+    "native": "cache.sweepUsers",
+    "note": "`sweepUsers` limpa o cache de usuários."
+  },
+  "GuildRoleManager.everyone": {
+    "native": "roles.list",
+    "note": "O cargo @everyone é o cargo cujo id é o do servidor, listado por `roles.list`."
+  },
+  "Invite.isGroupDM": {
+    "native": "invites.get",
+    "note": "`InviteInfo` normaliza o tipo do convite."
+  },
+  "Invite.resolveChannel": {
+    "native": "channels.get",
+    "note": "O id do canal do convite resolve por `channels.get`."
+  },
+  "Invite.resolveGuild": {
+    "native": "users.guild",
+    "note": "O id do servidor do convite resolve por `users.guild`."
+  },
+  "Message.resolveChannel": {
+    "native": "channels.get",
+    "note": "`MessageInfo.channelID` resolve por `channels.get`."
+  },
+  "Message.resolveGuild": {
+    "native": "users.guild",
+    "note": "O servidor da mensagem resolve por `users.guild`."
+  },
+  "PartialMessage.resolveChannel": {
+    "native": "channels.get",
+    "note": "O canal da mensagem parcial resolve por `channels.get`."
+  },
+  "MessagePayload.setContent": {
+    "native": "Payload.content",
+    "note": "O objeto `Payload` aceita `content`."
+  },
+  "MessagePayload.setEmbeds": {
+    "native": "Payload.embeds",
+    "note": "O objeto `Payload` aceita `embeds`."
+  },
+  "MessagePayload.addEmbed": {
+    "native": "Payload.embeds",
+    "note": "O objeto `Payload` aceita `embeds`."
+  },
+  "MessagePayload.setAttachments": {
+    "native": "messages.sendAttachments",
+    "note": "Anexos seguem por `sendAttachments`/`sendFiles`/`sendBytes`."
+  },
+  "MessagePayload.setReply": {
+    "native": "Payload.reply",
+    "note": "O objeto `Payload` aceita `reply`."
+  },
+  "MessagePayload.setAllowedMentions": {
+    "native": "Payload.allowedMentions",
+    "note": "O objeto `Payload` aceita `allowedMentions`."
+  },
+  "MessagePayload.setFlags": {
+    "native": "Payload.flags",
+    "note": "O objeto `Payload` aceita `flags`."
+  },
+  "MessagePayload.setTTS": {
+    "native": "Payload.tts",
+    "note": "O objeto `Payload` aceita `tts`."
+  },
+  "EmbedBuilder.addFields": {
+    "native": "Embed.fields",
+    "note": "O objeto `Embed` aceita `fields` e a fusão acumula campos."
+  },
+  "EmbedBuilder.spliceFields": {
+    "native": "Embed.fields",
+    "note": "O objeto `Embed` aceita `fields` e a fusão acumula campos."
+  },
+  "AttachmentBuilder.setName": {
+    "native": "AttachmentSpec.name",
+    "note": "O nome do anexo é campo de `AttachmentSpec`."
+  },
+  "AttachmentBuilder.setSpoiler": {
+    "native": "AttachmentSpec.spoiler",
+    "note": "`spoiler` é campo de `AttachmentSpec`/`BinaryAttachmentSpec`."
+  },
+  "AttachmentBuilder.toFileData": {
+    "native": "BinaryAttachmentSpec",
+    "note": "Anexos binários vão por `BinaryAttachmentSpec`."
+  },
+  "AttachmentMeta.setName": {
+    "native": "AttachmentSpec.name",
+    "note": "O nome do anexo é campo de `AttachmentSpec`."
+  },
+  "AttachmentMeta.setSpoiler": {
+    "native": "AttachmentSpec.spoiler",
+    "note": "`spoiler` é campo de `AttachmentSpec`/`BinaryAttachmentSpec`."
+  },
+  "Guild.transferOwnership": {
+    "native": "users.transferOwnership",
+    "note": "Implementado nesta versão."
+  },
+  "Guild.fetchInvite": {
+    "native": "invites.get",
+    "note": "`invites.get` resolve convite por código ou URL."
+  },
+  "Guild.fetchMe": {
+    "native": "users.me",
+    "note": "Implementado nesta versão."
+  },
+  "GuildMemberManager.fetchMe": {
+    "native": "users.me",
+    "note": "Implementado nesta versão."
+  },
+  "GuildManager.fetchMe": {
+    "native": "users.me",
+    "note": "Implementado nesta versão."
+  },
+  "Guild.setRoleHoistPositions": {
+    "native": "roles.setRoleHoistPositions",
+    "note": "Implementado nesta versão."
+  },
+  "Guild.resetRoleHoistPositions": {
+    "native": "roles.resetRoleHoistPositions",
+    "note": "Implementado nesta versão."
+  },
+  "GuildChannel.canSendMessage": {
+    "native": "channels.permissionsFor",
+    "note": "`permissionsFor` devolve o bitfield do autor no canal."
+  },
+  "GuildChannel.canSend": {
+    "native": "channels.permissionsFor",
+    "note": "`permissionsFor` devolve o bitfield do autor no canal."
+  },
+  "GuildMember.kickable": {
+    "native": "ctx.mod.canKick",
+    "note": "`ctx.mod.canKick` avalia hierarquia e permissões sem executar."
+  },
+  "GuildMember.bannable": {
+    "native": "ctx.mod.canBan",
+    "note": "`ctx.mod.canBan` avalia hierarquia e permissões sem executar."
+  },
+  "GuildMember.moderatable": {
+    "native": "ctx.mod.canModerate",
+    "note": "`ctx.mod.canModerate` avalia hierarquia e permissões sem executar."
+  },
+  "CacheController.cascading": {
+    "native": "CacheStatsInfo.cascading",
+    "note": "`cache.stats()` expõe `cascading`."
+  },
+  "DMChannel.pinInList": {
+    "native": "messages.pin",
+    "note": "O pin da lista de DMs é helper de sessão; `messages.pin` cobre fixação de mensagem."
+  },
+  "DMChannel.unpinFromList": {
+    "native": "messages.unpin",
+    "note": "O unpin da lista de DMs é helper de sessão; `messages.unpin` cobre."
+  },
+  "Message.sendTo": {
+    "native": "messages.sendTo",
+    "note": "Implementado nesta versão."
+  },
+  "Message.deleteAttachment": {
+    "native": "messages.deleteAttachment",
+    "note": "Implementado nesta versão."
+  },
+  "Client.uptime": {
+    "native": "bot.uptime",
+    "note": "Implementado nesta versão."
+  },
+  "Client.isReady": {
+    "native": "bot.isReady",
+    "note": "Implementado nesta versão."
+  },
+  "Client.assertReady": {
+    "native": "bot.assertReady",
+    "note": "Implementado nesta versão."
+  }
+}

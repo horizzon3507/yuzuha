@@ -28,7 +28,17 @@ type Execute = (action: ModerationAction, target: string, reason: string,
   options: ModerationOptions) => Promise<CaseRecord | undefined>;
 
 export class NativeModeration {
-  constructor(private readonly execute: Execute) {}
+  constructor(private readonly execute: Execute,
+    private readonly check?: (action: 'ban' | 'kick' | 'timeout', targetID: string) => Promise<boolean>) {}
+
+  canBan(target: ModerationTarget): Promise<boolean> { return this.can('ban', target); }
+  canKick(target: ModerationTarget): Promise<boolean> { return this.can('kick', target); }
+  canModerate(target: ModerationTarget): Promise<boolean> { return this.can('timeout', target); }
+
+  private can(action: 'ban' | 'kick' | 'timeout', target: ModerationTarget): Promise<boolean> {
+    if (!this.check) return Promise.resolve(true);
+    return this.check(action, typeof target === 'string' ? target : target.id);
+  }
 
   ban(target: ModerationTarget, options: NativeBanOptions & { record: false }): Promise<undefined>;
   ban(target: ModerationTarget, options: NativeBanOptions & { record?: true }): Promise<CaseRecord>;
