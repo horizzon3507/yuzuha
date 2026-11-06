@@ -198,5 +198,11 @@ export function createMessagesResources(client: Client): MessagesResources {
       if (!channel.isTextBased()) throw new YuzuhaError('CHANNEL_TEXT', 'Canal sem suporte a mensagens.');
       await channel.clearReadState();
     },
+    async purgeDM(channelID): Promise<number> {
+      const channel = await client.channels.fetch(channelID, { force: true });
+      if (!channel.isDM()) throw new YuzuhaError('CHANNEL_DM', 'Esta operação exige um canal de DM.');
+      if (Number(channel.type) !== 999) throw new YuzuhaError('CHANNEL_NOTES', 'purgeDM só funciona no canal de anotações pessoais.');
+      return channel.purgeMessages();
+    },
   };
 }

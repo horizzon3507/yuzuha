@@ -113,3 +113,62 @@ test('ctx.resources expõe os novos métodos com tipos de domínio', async () =>
   assert.equal(await ctx.resources.cache.sweepGuilds(), 1);
   assert.deepEqual(calls, ['typing']);
 });
+
+const groupDM: ChannelInfo = { ...channel, id: 'dm-1', guildID: null, type: 3, recipientIDs: ['2', '3'], ownerID: '2' };
+
+function dmFixture(dm: ChannelInfo) {
+  const calls: string[] = [];
+  const transport = new MockTransport();
+  const source = mockResources({
+    channels: {
+      get: async (id: string) => (id === dm.id ? dm : channel),
+      addRecipient: async (_c: string, u: string) => { calls.push('add:' + u); },
+      removeRecipient: async (_c: string, u: string, o?: { silent?: boolean }) => { calls.push('remove:' + u + ':' + (o?.silent === true)); },
+    },
+    messages: { purgeDM: async () => { calls.push('purge'); return 7; } },
+    webhooks: {
+      fetch: async () => ({ id: '50', name: 'logs', channelID: '200', guildID: '100', token: 'secret' }),
+      editMessage: async (w: string, t: string, m: string, i: { content?: string }) => { calls.push('edit:' + m + ':' + i.content); return m; },
+      deleteMessage: async (w: string, t: string, m: string) => { calls.push('del:' + m); },
+    },
+  });
+  transport.member = async (_g: string, id: string) => member(id, PermissionFlags.Administrator) as never;
+  return { resources: bindAuthorizedResources(source, transport, { guildID: '100', authorID: '2' }), calls };
+}
+
+test('webhooks editMessage/deleteMessage usam a autoridade do webhook', async () => {
+  const { resources, calls } = dmFixture(groupDM);
+  assert.equal(await resources.webhooks.editMessage('50', 'tok', '9', { content: 'novo' }), '9');
+  await resources.webhooks.deleteMessage('50', 'tok', '9');
+  assert.deepEqual(calls, ['edit:9:novo', 'del:9']);
+});
+
+test('addRecipient exige dono do grupo e participacao do autor', async () => {
+  const { resources, calls } = dmFixture(groupDM);
+  await resources.channels.addRecipient('dm-1', '4');
+  assert.deepEqual(calls, ['add:4']);
+  const nonOwner = dmFixture({ ...groupDM, ownerID: '3' });
+  await assert.rejects(nonOwner.resources.channels.addRecipient('dm-1', '4'), GuardError);
+  const outsider = dmFixture({ ...groupDM, recipientIDs: ['3'] });
+  await assert.rejects(outsider.resources.channels.addRecipient('dm-1', '4'), GuardError);
+  const guild = dmFixture(channel);
+  await assert.rejects(guild.resources.channels.addRecipient('200', '4'), GuardError);
+});
+
+test('removeRecipient permite sair e restringe remocao de terceiros ao dono', async () => {
+  const { resources, calls } = dmFixture(groupDM);
+  await resources.channels.removeRecipient('dm-1', '4', { silent: true });
+  assert.deepEqual(calls, ['remove:4:true']);
+  const member = dmFixture({ ...groupDM, ownerID: '3' });
+  await member.resources.channels.removeRecipient('dm-1', '2');
+  assert.deepEqual(member.calls, ['remove:2:false']);
+  await assert.rejects(member.resources.channels.removeRecipient('dm-1', '3'), GuardError);
+});
+
+test('purgeDM exige participacao e propaga a contagem', async () => {
+  const { resources, calls } = dmFixture({ ...groupDM, type: 999 });
+  assert.equal(await resources.messages.purgeDM('dm-1'), 7);
+  assert.deepEqual(calls, ['purge']);
+  const guild = dmFixture(channel);
+  await assert.rejects(guild.resources.messages.purgeDM('200'), GuardError);
+});

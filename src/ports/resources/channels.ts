@@ -9,6 +9,8 @@ export interface ChannelInfo {
   slowmode: number;
   nsfw: boolean;
   url?: string | null;
+  recipientIDs?: string[];
+  ownerID?: string | null;
   contentWarningLevel?: number | null;
   contentWarningText?: string | null;
 }
@@ -47,6 +49,8 @@ export interface ChannelOverwriteInput {
 
 export interface ChannelsResources {
   get(channelID: string): Promise<ChannelInfo>;
+  addRecipient(channelID: string, userID: string): Promise<void>;
+  removeRecipient(channelID: string, userID: string, options?: { silent?: boolean }): Promise<void>;
   list(guildID: string, limit?: number): Promise<ChannelInfo[]>;
   create(guildID: string, input: ChannelCreateInput): Promise<ChannelInfo>;
   edit(channelID: string, input: ChannelEditInput): Promise<ChannelInfo>;

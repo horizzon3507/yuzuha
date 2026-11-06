@@ -1,5 +1,5 @@
 import { OverwriteType } from '@fluxerjs/core';
-import type { ChannelEditOptions, ChannelType, Client, GuildChannel, PermissionResolvable } from '@fluxerjs/core';
+import type { ChannelEditOptions, ChannelType, Client, DMChannel, GuildChannel, PermissionResolvable } from '@fluxerjs/core';
 import type { ChannelCreateInput, ChannelEditInput, ChannelInfo, ChannelOverwriteInput, ChannelsResources } from '../../../ports/resources/channels.js';
 import { YuzuhaError } from '../../../errors.js';
 
@@ -33,6 +33,12 @@ export function toChannelInfo(channel: GuildChannel): ChannelInfo {
 async function guildChannel(client: Client, channelID: string): Promise<GuildChannel> {
   const channel = await client.channels.fetch(channelID);
   if (!channel.isGuild()) throw new YuzuhaError('CHANNEL', 'Canal não pertence a um servidor.');
+  return channel;
+}
+
+async function dmChannel(client: Client, channelID: string): Promise<DMChannel> {
+  const channel = await client.channels.fetch(channelID);
+  if (!channel.isDM()) throw new YuzuhaError('CHANNEL_DM', 'Esta operação exige um canal de DM.');
   return channel;
 }
 
@@ -73,7 +79,21 @@ async function overwriteKind(client: Client, channel: GuildChannel, targetID: st
 export function createChannelsResources(client: Client): ChannelsResources {
   return {
     async get(channelID): Promise<ChannelInfo> {
+      const channel = await client.channels.fetch(channelID);
+      if (channel.isDM()) {
+        return { id: channel.id, name: channel.name ?? '', type: Number(channel.type), guildID: null,
+          parentID: null, position: 0, topic: null, slowmode: 0, nsfw: false,
+          recipientIDs: channel.recipients.map(user => user.id), ownerID: channel.ownerId };
+      }
       return toChannelInfo(await guildChannel(client, channelID));
+    },
+    async addRecipient(channelID, userID): Promise<void> {
+      const channel = await dmChannel(client, channelID);
+      await channel.addRecipient(userID);
+    },
+    async removeRecipient(channelID, userID, options): Promise<void> {
+      const channel = await dmChannel(client, channelID);
+      await channel.removeRecipient(userID, options?.silent === undefined ? undefined : { silent: options.silent });
     },
     async list(guildID, limit?): Promise<ChannelInfo[]> {
       const guild = await client.guilds.resolve(guildID);
