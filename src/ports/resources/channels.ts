@@ -1,3 +1,4 @@
+import type { ThreadDefaultsInput } from './threads.js';
 export interface ChannelInfo {
   id: string;
   name: string;
@@ -61,6 +62,8 @@ export interface ChannelsResources {
   rtcRegions(channelID: string): Promise<RtcRegionInfo[]>;
   overwrite(channelID: string, targetID: string, input: ChannelOverwriteInput): Promise<void>;
   permissionsFor(guildID: string, channelID: string, userID: string): Promise<string>;
+  editThreadDefaults(channelID: string, input: ThreadDefaultsInput): Promise<void>;
+  setDefaultForumLayout(channelID: string, layout: 'default' | 'list' | 'grid' | null, reason?: string): Promise<void>;
   move(channelID: string, position: number): Promise<void>;
   setCategory(channelID: string, parentID: string | null, reason?: string): Promise<ChannelInfo>;
 }

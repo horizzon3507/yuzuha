@@ -16,10 +16,10 @@ A cobertura é por nome: um método `send` de uma classe conta como coberto se q
 
 | Status | Exports de runtime | Membros |
 |---|---:|---:|
-| coberto-recurso | 50 | 416 |
-| coberto-nativo | 4 | 102 |
+| coberto-recurso | 50 | 415 |
+| coberto-nativo | 4 | 109 |
 | só-SDK | 56 | 0 |
-| lacuna | 7 | 204 |
+| lacuna | 7 | 198 |
 
 Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são listados, mas não contam como lacuna.
 
@@ -64,7 +64,7 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são
 | @fluxerjs/core | `Events` | variable | Cliente e eventos | coberto-nativo | código nativo |
 | @fluxerjs/core | `fetchActiveThreads` | function | Threads | coberto-recurso | builtins |
 | @fluxerjs/core | `FluxerError` | class | Erros e logs | coberto-recurso | builtins |
-| @fluxerjs/core | `ForumChannel` | class | Canais | só-SDK |  |
+| @fluxerjs/core | `ForumChannel` | class | Canais | só-SDK | código nativo |
 | @fluxerjs/core | `Guild` | class | Servidores e bans | coberto-recurso | builtins |
 | @fluxerjs/core | `GuildBan` | class | Servidores e bans | coberto-recurso | builtins |
 | @fluxerjs/core | `GuildChannel` | class | Canais | coberto-recurso | builtins |
@@ -366,7 +366,7 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são
 | `FluxerError` | `toString` | método | coberto-recurso |
 | `ForumChannel` | `_patch` | método | lacuna |
 | `ForumChannel` | `defaultForumLayout` | propriedade | lacuna |
-| `ForumChannel` | `setDefaultForumLayout` | método | lacuna |
+| `ForumChannel` | `setDefaultForumLayout` | método | coberto-nativo |
 | `Guild` | `_patch` | método | lacuna |
 | `Guild` | `adjustMemberCount` | método | lacuna |
 | `Guild` | `afkChannelId` | propriedade | coberto-recurso |
@@ -405,7 +405,7 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são
 | `Guild` | `fetchActiveThreads` | método | coberto-recurso |
 | `Guild` | `fetchAuditLogs` | método | coberto-recurso |
 | `Guild` | `fetchBans` | método | coberto-recurso |
-| `Guild` | `fetchChannels` | método | coberto-recurso |
+| `Guild` | `fetchChannels` | método | coberto-nativo |
 | `Guild` | `fetchDiscoveryStatus` | método | lacuna |
 | `Guild` | `fetchEmoji` | método | coberto-recurso |
 | `Guild` | `fetchEmojis` | método | coberto-recurso |
@@ -581,7 +581,7 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são
 | `Message` | `attachments` | propriedade | coberto-recurso |
 | `Message` | `author` | propriedade | coberto-recurso |
 | `Message` | `awaitReactions` | método | lacuna |
-| `Message` | `call` | propriedade | lacuna |
+| `Message` | `call` | propriedade | coberto-nativo |
 | `Message` | `channel` | acessor | coberto-recurso |
 | `Message` | `channelId` | propriedade | coberto-recurso |
 | `Message` | `client` | propriedade | coberto-recurso |
@@ -764,7 +764,7 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são
 | `TextChannel` | `contentWarningText` | propriedade | coberto-recurso |
 | `TextChannel` | `defaultAutoArchiveDuration` | propriedade | lacuna |
 | `TextChannel` | `defaultThreadRateLimitPerUser` | propriedade | lacuna |
-| `TextChannel` | `editThreadDefaults` | método | lacuna |
+| `TextChannel` | `editThreadDefaults` | método | coberto-nativo |
 | `TextChannel` | `lastMessageId` | propriedade | lacuna |
 | `TextChannel` | `nsfw` | propriedade | coberto-recurso |
 | `TextChannel` | `nsfwOverride` | propriedade | lacuna |
@@ -778,7 +778,7 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são
 | `ThreadChannel` | `archiveTimestamp` | propriedade | coberto-recurso |
 | `ThreadChannel` | `autoArchiveDuration` | propriedade | coberto-recurso |
 | `ThreadChannel` | `edit` | método | coberto-recurso |
-| `ThreadChannel` | `editSelf` | método | lacuna |
+| `ThreadChannel` | `editSelf` | método | coberto-nativo |
 | `ThreadChannel` | `flags` | propriedade | coberto-recurso |
 | `ThreadChannel` | `invitable` | propriedade | lacuna |
 | `ThreadChannel` | `join` | método | coberto-recurso |
@@ -793,11 +793,11 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são
 | `ThreadChannel` | `parentId` | propriedade | coberto-recurso |
 | `ThreadChannel` | `rateLimitPerUser` | propriedade | coberto-recurso |
 | `ThreadChannel` | `setArchived` | método | coberto-recurso |
-| `ThreadChannel` | `setLocked` | método | lacuna |
+| `ThreadChannel` | `setLocked` | método | coberto-nativo |
 | `ThreadChannel` | `totalMessageSent` | propriedade | lacuna |
 | `ThreadManager` | `create` | método | coberto-recurso |
 | `ThreadManager` | `createPost` | método | coberto-recurso |
-| `ThreadManager` | `editDefaults` | método | lacuna |
+| `ThreadManager` | `editDefaults` | método | coberto-nativo |
 | `ThreadManager` | `fetchArchived` | método | coberto-nativo |
 | `ThreadManager` | `fetchJoinedPrivateArchived` | método | coberto-nativo |
 | `ThreadManager` | `search` | método | coberto-recurso |
