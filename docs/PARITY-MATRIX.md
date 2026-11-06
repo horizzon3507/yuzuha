@@ -16,10 +16,10 @@ A cobertura é por nome: um método `send` de uma classe conta como coberto se q
 
 | Status | Exports de runtime | Membros |
 |---|---:|---:|
-| coberto-recurso | 50 | 415 |
-| coberto-nativo | 4 | 109 |
+| coberto-recurso | 50 | 416 |
+| coberto-nativo | 4 | 113 |
 | só-SDK | 56 | 0 |
-| lacuna | 7 | 198 |
+| lacuna | 7 | 193 |
 
 Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são listados, mas não contam como lacuna.
 
@@ -371,7 +371,7 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são
 | `Guild` | `adjustMemberCount` | método | lacuna |
 | `Guild` | `afkChannelId` | propriedade | coberto-recurso |
 | `Guild` | `afkTimeout` | propriedade | lacuna |
-| `Guild` | `applyForDiscovery` | método | lacuna |
+| `Guild` | `applyForDiscovery` | método | coberto-nativo |
 | `Guild` | `available` | propriedade | lacuna |
 | `Guild` | `ban` | método | coberto-recurso |
 | `Guild` | `banner` | propriedade | coberto-recurso |
@@ -391,12 +391,12 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são
 | `Guild` | `createEmojisBulk` | método | coberto-recurso |
 | `Guild` | `createRole` | método | coberto-recurso |
 | `Guild` | `createSticker` | método | coberto-recurso |
-| `Guild` | `createStickersBulk` | método | lacuna |
+| `Guild` | `createStickersBulk` | método | coberto-nativo |
 | `Guild` | `defaultMessageNotifications` | propriedade | lacuna |
 | `Guild` | `delete` | método | coberto-recurso |
 | `Guild` | `disabledOperations` | propriedade | lacuna |
 | `Guild` | `edit` | método | coberto-recurso |
-| `Guild` | `editDiscoveryApplication` | método | lacuna |
+| `Guild` | `editDiscoveryApplication` | método | coberto-nativo |
 | `Guild` | `editVanityURL` | método | coberto-recurso |
 | `Guild` | `embedSplash` | propriedade | lacuna |
 | `Guild` | `emojis` | propriedade | coberto-recurso |
@@ -406,7 +406,7 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são
 | `Guild` | `fetchAuditLogs` | método | coberto-recurso |
 | `Guild` | `fetchBans` | método | coberto-recurso |
 | `Guild` | `fetchChannels` | método | coberto-nativo |
-| `Guild` | `fetchDiscoveryStatus` | método | lacuna |
+| `Guild` | `fetchDiscoveryStatus` | método | coberto-nativo |
 | `Guild` | `fetchEmoji` | método | coberto-recurso |
 | `Guild` | `fetchEmojis` | método | coberto-recurso |
 | `Guild` | `fetchInvite` | método | lacuna |
@@ -751,7 +751,7 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são
 | `Role` | `guildId` | propriedade | coberto-recurso |
 | `Role` | `has` | método | coberto-recurso |
 | `Role` | `hoist` | propriedade | coberto-recurso |
-| `Role` | `hoistPosition` | propriedade | lacuna |
+| `Role` | `hoistPosition` | propriedade | coberto-recurso |
 | `Role` | `id` | propriedade | coberto-recurso |
 | `Role` | `mentionable` | propriedade | coberto-recurso |
 | `Role` | `name` | propriedade | coberto-recurso |

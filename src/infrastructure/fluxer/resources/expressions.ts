@@ -1,6 +1,6 @@
 import type { Client, GuildEmoji, GuildSticker } from '@fluxerjs/core';
 import { YuzuhaError } from '../../../errors.js';
-import { emojiBatch } from '../../../domain/resource-batches.js';
+import { emojiBatch, stickerBatch } from '../../../domain/resource-batches.js';
 import type { EmojiInfo, ExpressionsResources, StickerInfo } from '../../../ports/resources/expressions.js';
 
 function toEmojiInfo(emoji: GuildEmoji): EmojiInfo {
@@ -68,6 +68,12 @@ export function createExpressionsResources(client: Client): ExpressionsResources
       toEmojiInfo(await (await resolveEmoji(guildID, nameOrID)).edit({ name, reason })),
     createSticker: async (guildID, input) =>
       toStickerInfo(await (await guild(guildID)).createSticker(input)),
+    createStickersBulk: async (guildID, inputs) => {
+      const batch = stickerBatch(inputs);
+      if (!guildID) throw new YuzuhaError('GUILD_REQUIRED', 'Esta operação exige um servidor.');
+      const result = await (await guild(guildID)).createStickersBulk(batch);
+      return { success: result.success.map(toStickerInfo), failed: result.failed.map(item => ({ name: item.name, error: item.error })) };
+    },
     editSticker: async (guildID, nameOrID, input) =>
       toStickerInfo(await (await resolveSticker(guildID, nameOrID)).edit(input)),
     deleteSticker: async (guildID, nameOrID, reason) => {

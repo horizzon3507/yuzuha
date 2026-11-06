@@ -1,4 +1,4 @@
-import type { Client, Guild, GuildMember, PresenceUpdateOptions, User, ProfilePayload } from '@fluxerjs/core';
+import type { Client, DiscoveryApplicationPayload, Guild, GuildMember, PresenceUpdateOptions, User, ProfilePayload } from '@fluxerjs/core';
 import type { ActivityInfo, ActivityType, PresenceStatus } from '../../../ports/resources/common.js';
 import { limitOf } from '../../../ports/resources/common.js';
 import type {
@@ -11,6 +11,7 @@ import type {
   LiveCountsInput,
   ProfileInfo,
 } from '../../../ports/resources/users.js';
+import type { DiscoveryApplicationInfo } from '../../../ports/resources/users.js';
 import type { ChannelInfo } from '../../../ports/resources/channels.js';
 import { YuzuhaError } from '../../../errors.js';
 
@@ -109,6 +110,13 @@ export function toGuildInfo(guild: Guild): GuildInfo {
   };
 }
 
+function toDiscoveryApplicationInfo(payload: DiscoveryApplicationPayload): DiscoveryApplicationInfo {
+  return { guildID: payload.guildId, status: payload.status, description: payload.description,
+    categoryType: payload.categoryType, primaryLanguage: payload.primaryLanguage ?? null,
+    customTags: payload.customTags, appliedAt: payload.appliedAt, reviewedAt: payload.reviewedAt ?? null,
+    guildNsfwLevel: payload.guildNsfwLevel ?? null };
+}
+
 export function createUsersResources(client: Client): UsersResources {
   return {
     async leaveGuild(guildID) {
@@ -186,6 +194,17 @@ export function createUsersResources(client: Client): UsersResources {
       const guild = await client.guilds.resolve(guildID);
       const { systemChannelID, afkChannelID, ...fields } = input;
       return toGuildInfo(await guild.edit({ ...fields, systemChannelId: systemChannelID, afkChannelId: afkChannelID }));
+    },
+    async discoveryStatus(guildID) {
+      const status = await (await client.guilds.resolve(guildID)).fetchDiscoveryStatus();
+      return { application: status.application ? toDiscoveryApplicationInfo(status.application) : null,
+        eligible: status.eligible, minMemberCount: status.minMemberCount };
+    },
+    async applyForDiscovery(guildID, input) {
+      return toDiscoveryApplicationInfo(await (await client.guilds.resolve(guildID)).applyForDiscovery(input));
+    },
+    async editDiscoveryApplication(guildID, input) {
+      return toDiscoveryApplicationInfo(await (await client.guilds.resolve(guildID)).editDiscoveryApplication(input));
     },
     async setPresence(status: PresenceStatus, activity?: ActivityInfo): Promise<void> {
       const self = client.user;
