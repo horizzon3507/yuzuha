@@ -22,3 +22,12 @@ test('eventos do function mode existem no SDK e a matriz registra as lacunas', a
   assert.ok(matrix.sdkEvents.length > matrix.modeEvents.length);
   assert.ok(matrix.rows.some(row => row.name === 'Message' && row.status === 'coberto-recurso'));
 });
+
+test('bot.on aceita todo nome de evento do SDK', async () => {
+  const matrix = await buildParityMatrix();
+  const { Yuzuha } = await import('../src/index.js');
+  const { MockTransport } = await import('../src/testing.js');
+  const { MemoryStore } = await import('../src/infrastructure/storage/memory.js');
+  const bot = new Yuzuha({ transport: new MockTransport(), store: new MemoryStore() });
+  for (const name of matrix.sdkEvents) assert.doesNotThrow(() => bot.on(name as never, () => {}), name);
+});

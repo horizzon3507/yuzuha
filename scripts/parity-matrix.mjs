@@ -196,6 +196,15 @@ export async function buildParityMatrix() {
   }
   const areaOf = new Map();
   for (const [area, names] of Object.entries(areasDocument.areas)) for (const name of names) areaOf.set(name, area);
+  const memberRules = [];
+  for (const [reason, entry] of Object.entries(areasDocument.members ?? {})) {
+    if (entry.match) memberRules.push({ reason, reasonKey: reason, test: name => entry.match.some(pattern => new RegExp(pattern).test(name)), matched: 0 });
+    if (entry.kinds) memberRules.push({ reason, reasonKey: reason, test: (_name, member) => entry.kinds.includes(member.kind), matched: 0 });
+  }
+  const memberException = member => {
+    for (const rule of memberRules) if (rule.test(member.name, member)) { rule.matched += 1; return rule.reason; }
+    return null;
+  };
 
   const rows = [];
   for (const { pkg, exports } of packages) {
@@ -208,7 +217,9 @@ export async function buildParityMatrix() {
       const memberRows = item.members.map(member => {
         const script = chain.has(member.name);
         const native = usage.properties.has(member.name) || usage.identifiers.has(member.name);
-        return { ...member, status: script ? 'coberto-recurso' : native ? 'coberto-nativo' : 'lacuna' };
+        const exception = script || native ? null : memberException(member);
+        return { ...member, status: script ? 'coberto-recurso' : native ? 'coberto-nativo' : exception ? 'só-SDK' : 'lacuna',
+          reason: exception ?? '' };
       });
       const scriptHit = chain.has(item.name) || memberRows.some(member => member.status === 'coberto-recurso');
       const nativeHit = usage.identifiers.has(item.name) || usage.properties.has(item.name) || memberRows.some(member => member.status === 'coberto-nativo');
@@ -226,6 +237,7 @@ export async function buildParityMatrix() {
   const unclassified = rows.filter(row => RUNTIME_KINDS.has(row.kind) && !row.area && !sdkOnly.has(row.name)).map(row => `${row.package}:${row.name}`);
   const known = new Set(rows.map(row => row.name));
   const stale = [...areaOf.keys(), ...sdkOnly.keys()].filter(name => !known.has(name));
+  for (const rule of memberRules) if (rule.matched === 0) stale.push(`membro:${rule.reasonKey}`);
   const sdkEvents = clientEvents(packages.find(item => item.pkg.name === '@fluxerjs/core'));
   const modeEvents = await functionModeEvents();
   return { rows, unclassified, stale, sdkEvents, modeEvents, areas: areasDocument, sdkOnly };
@@ -271,17 +283,22 @@ export function renderMatrix(matrix) {
   }
   lines.push('');
 
-  lines.push('## Eventos do cliente', '', 'Comparação entre `ClientEvents` do SDK e `scriptEventNames` do function mode.', '',
+  lines.push('## Eventos do cliente', '',
+    'Comparação entre `ClientEvents` do SDK e `scriptEventNames` do function mode. '
+    + 'Todo evento do SDK pode ser recebido nativamente por `bot.on`/`bot.once`/`bot.event`/`bot.client.on` — a coluna Status marca só a cobertura do function mode.', '',
     '| Evento | Function mode | Status |', '|---|---|---|');
   for (const event of sdkEvents) {
     const covered = modeEvents.includes(event);
-    lines.push(`| \`${event}\` | ${covered ? 'sim' : 'não'} | ${covered ? 'coberto-recurso' : 'lacuna'} |`);
+    lines.push(`| \`${event}\` | ${covered ? 'sim' : 'não'} | ${covered ? 'coberto-recurso' : 'coberto-nativo'} |`);
   }
   lines.push('', `Eventos do function mode que o SDK não declara: ${modeEvents.filter(event => !sdkEvents.includes(event)).join(', ') || 'nenhum'}.`, '');
 
   lines.push('## Exceções intencionais (só SDK)', '');
   for (const [reason, entry] of Object.entries(matrix.areas.sdkOnly)) {
     lines.push(`- **${reason}** (${entry.exports.map(name => `\`${name}\``).join(', ')}): ${entry.note}`);
+  }
+  for (const [reason, entry] of Object.entries(matrix.areas.members ?? {})) {
+    lines.push(`- **${reason}** (membros): ${entry.reason}`);
   }
   lines.push('');
   return lines.join('\n');
