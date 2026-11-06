@@ -16,19 +16,10 @@ A cobertura é por nome: um método `send` de uma classe conta como coberto se q
 
 | Status | Exports de runtime | Membros |
 |---|---:|---:|
-| coberto-recurso | 50 | 415 |
-| coberto-nativo | 4 | 109 |
+| coberto-recurso | 50 | 416 |
+| coberto-nativo | 4 | 113 |
 | só-SDK | 56 | 0 |
-| lacuna | 7 | 198 |
-| lacuna | 7 | 204 |
-| coberto-recurso | 50 | 413 |
-| coberto-nativo | 4 | 104 |
-| só-SDK | 56 | 0 |
-| lacuna | 7 | 205 |
-| coberto-recurso | 50 | 415 |
-| coberto-nativo | 4 | 101 |
-| só-SDK | 56 | 0 |
-| lacuna | 7 | 206 |
+| lacuna | 7 | 193 |
 
 Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são listados, mas não contam como lacuna.
 
@@ -415,8 +406,6 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são
 | `Guild` | `fetchAuditLogs` | método | coberto-recurso |
 | `Guild` | `fetchBans` | método | coberto-recurso |
 | `Guild` | `fetchChannels` | método | coberto-nativo |
-| `Guild` | `fetchDiscoveryStatus` | método | lacuna |
-| `Guild` | `fetchChannels` | método | coberto-recurso |
 | `Guild` | `fetchDiscoveryStatus` | método | coberto-nativo |
 | `Guild` | `fetchEmoji` | método | coberto-recurso |
 | `Guild` | `fetchEmojis` | método | coberto-recurso |
