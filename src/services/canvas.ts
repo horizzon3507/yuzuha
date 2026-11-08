@@ -509,7 +509,33 @@ export class CanvasService {
         || canvas.width * canvas.height > CANVAS_LIMITS.maxPixels) optionsError('Dimensões físicas excedem os limites do Canvas.');
       const before = signalFailure(this.config.signal);
       if (before) throw before;
-      const encoded = await canvas.encode(renderOptions.format, renderOptions.quality);
+      let source = canvas;
+      if (renderOptions.format === 'jpeg' && renderOptions.matte) {
+        const { createCanvas } = await import('../canvas.js');
+        const temp = createCanvas(canvas.width, canvas.height);
+        const context = temp.getContext('2d');
+        context.fillStyle = renderOptions.matte;
+        context.fillRect(0, 0, canvas.width, canvas.height);
+        context.drawImage(canvas as never, 0, 0);
+        source = temp as unknown as CanvasLike;
+      }
+      const timeoutMs = renderOptions.timeoutMs;
+      const encoded = await new Promise<Uint8Array>((resolve, reject) => {
+        let done = false;
+        const timer = setTimeout(() => {
+          if (!done) { done = true; reject(new YuzuhaError('EXECUTION_LIMIT', 'Tempo limite de codificação do canvas excedido.')); }
+        }, timeoutMs);
+        const signal = this.config.signal;
+        const onAbort = () => { if (!done) { done = true; reject(signalFailure(signal) ?? new YuzuhaError('CANVAS_ABORTED', 'Codificação de canvas abortada.')); } };
+        if (signal) {
+          if (signal.aborted) onAbort();
+          else signal.addEventListener('abort', onAbort, { once: true });
+        }
+        source.encode(renderOptions.format, renderOptions.quality).then(
+          bytes => { if (done) return; done = true; clearTimeout(timer); signal?.removeEventListener('abort', onAbort); resolve(bytes); },
+          error => { if (done) return; done = true; clearTimeout(timer); signal?.removeEventListener('abort', onAbort); reject(error); },
+        ).catch(() => {});
+      });
       data = new Uint8Array(encoded);
       if (data.byteLength > CANVAS_LIMITS.maxOutputBytes) throw new YuzuhaError('EXECUTION_LIMIT', 'Imagem codificada excede 10 MB.');
     }

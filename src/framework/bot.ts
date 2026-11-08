@@ -227,9 +227,9 @@ export class Yuzuha {
     const options = structuredClone(definition);
     if (options.http) (this.http ?? new HttpService()).withPolicy(options.http);
     const program = engine.compile(options.code, `<event:${options.event}>`);
-    return { event: options.event, once: options.once ?? false, invoke: args => this.runScriptEvent(options, program, args) };
+    return { event: options.event, once: options.once ?? false, invoke: args => this.runScriptEvent(options, program, args, engine) };
   }
-  private async runScriptEvent(definition: ScriptEventDefinition, program: unknown, args: unknown[]): Promise<void> {
+  private async runScriptEvent(definition: ScriptEventDefinition, program: unknown, args: unknown[], engine: ScriptEngine): Promise<void> {
     const source = adaptScriptEvent(definition.event, args);
     if ((definition.ignoreBots ?? true) && source.event.userBot) return;
     const signal = this.shutdown.signal;
@@ -241,7 +241,7 @@ export class Yuzuha {
     let outcome: DispatchResult = 'success';
     try {
       if (this.options.onLog) await emitLog(this.options, { event: 'event.start', executionID: ctx.executionID, command: ctx.command.name });
-      const output = this.scriptEngine!.text(await this.scriptEngine!.execute(program, ctx)).trim();
+      const output = engine.text(await engine.execute(program, ctx)).trim();
       if (output) {
         if (!ctx.channelID) throw new GuardError('Defina um canal para a saída deste evento.');
         await ctx.send(output, ctx.channelID);
@@ -410,7 +410,8 @@ export class Yuzuha {
       }
       const execute = async () => {
         if (compiled.program) {
-          const output = this.scriptEngine!.text(await this.scriptEngine!.execute(compiled.program, current)).trim();
+          const programEngine = (compiled as { programEngine?: ScriptEngine }).programEngine ?? this.scriptEngine!;
+          const output = programEngine.text(await programEngine.execute(compiled.program, current)).trim();
           if (output) await current.reply(output);
         } else if (compiled.command.run) await compiled.command.run(current);
         else throw new GuardError(`${resolved.input ? 'Subcomando desconhecido.\n' : ''}${this.help(compiled.command.name, prefix)}`);

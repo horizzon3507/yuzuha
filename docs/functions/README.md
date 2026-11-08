@@ -5,6 +5,8 @@ parte da superfície nativa: a raiz `yuzuha` não carrega parser, runtime nem
 builtins. Para usá-lo em comandos com `code`, eventos de script ou plugins com
 `functions`, instale um engine explicitamente:
 
+Uma engine compila programas opacos; cada programa executa sempre na engine que o compilou.
+
 ```ts
 import { Yuzuha, MemoryStore } from 'yuzuha';
 import { functions, script } from 'yuzuha/functions';

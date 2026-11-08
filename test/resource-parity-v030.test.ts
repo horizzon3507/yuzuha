@@ -5,7 +5,7 @@ import { readFile } from 'node:fs/promises';
 import { CommandContext } from '../src/commands/context.js';
 import { MemoryStore } from '../src/infrastructure/storage/memory.js';
 import { bindAuthorizedResources } from '../src/services/resource-authorization.js';
-import { GuardError } from '../src/shared/errors.js';
+import { GuardError, YuzuhaError } from '../src/shared/errors.js';
 import { MockTransport, mockMessage, mockResources } from '../src/testing.js';
 import type { ChannelInfo } from '../src/ports/resources/channels.js';
 import * as sdk from '../src/sdk.js';
@@ -169,7 +169,7 @@ test('removeRecipient permite sair e restringe remocao de terceiros ao dono', as
 });
 
 test('purgeDM exige participacao e propaga a contagem', async () => {
-  const { resources, calls } = dmFixture({ ...groupDM, type: 999 });
+  const { resources, calls } = dmFixture(groupDM);
   assert.equal(await resources.messages.purgeDM('dm-1'), 7);
   assert.deepEqual(calls, ['purge']);
   const guild = dmFixture(channel);
@@ -357,4 +357,30 @@ test('hoist positions exige ManageRoles e hierarquia', async () => {
   assert.deepEqual(calls, ['10', 'reset']);
   transport.member = async (_g: string, id: string) => member(id, 0n) as never;
   await assert.rejects(bound.roles.setRoleHoistPositions('100', [{ id: '10', position: 1 }]), GuardError);
+});
+
+test('purgeDM em notas pessoais exige bot.resources', async () => {
+  const notes: ChannelInfo = { ...channel, id: 'n-1', guildID: null, type: 999, recipientIDs: [], ownerID: '2' };
+  const calls: string[] = [];
+  const transport = new MockTransport();
+  const source = mockResources({
+    channels: { get: async () => notes },
+    messages: { purgeDM: async () => { calls.push('purge'); return 4; } },
+  });
+  const bound = bindAuthorizedResources(source, transport, { guildID: '100', authorID: '2' });
+  await assert.rejects(bound.messages.purgeDM('n-1'), /anotações pessoais/);
+  assert.equal(await source.messages.purgeDM('n-1'), 4);
+  assert.deepEqual(calls, ['purge']);
+});
+
+test('canBan/canKick/canModerate repassam erros que não são GuardError', async () => {
+  const { Yuzuha } = await import('../src/index.js');
+  const transport = new MockTransport();
+  transport.member = async () => { throw new YuzuhaError('MEMBER_NOT_FOUND', 'Membro ausente.'); };
+  const bot = new Yuzuha({ transport, store: new MemoryStore() });
+  const ctx = new CommandContext({
+    message: mockMessage('!x'), command: { name: 'x' }, store: new MemoryStore(),
+    transport, cooldown: () => 0, resources: mockResources(),
+  });
+  await assert.rejects(ctx.mod.canBan('3'), (e: unknown) => (e as YuzuhaError).code === 'MEMBER_NOT_FOUND');
 });

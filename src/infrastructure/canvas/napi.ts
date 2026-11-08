@@ -6,7 +6,8 @@ export function canvasDependency(): YuzuhaError {
 
 let loaded: typeof import('@napi-rs/canvas') | undefined;
 try {
-  loaded = (await import('@napi-rs/canvas')).default as typeof import('@napi-rs/canvas');
+  const module = await import('@napi-rs/canvas') as unknown as Record<string, unknown>;
+  loaded = (module.createCanvas ? module : module.default) as typeof import('@napi-rs/canvas');
 } catch (cause) {
   const code = (cause as NodeJS.ErrnoException)?.code;
   const message = cause instanceof Error ? cause.message : String(cause);

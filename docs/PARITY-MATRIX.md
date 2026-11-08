@@ -17,8 +17,8 @@ A cobertura é por nome: um método `send` de uma classe conta como coberto se q
 | Status | Exports de runtime | Membros |
 |---|---:|---:|
 | coberto-recurso | 50 | 424 |
-| coberto-nativo | 4 | 128 |
-| coberto-equivalente | 0 | 57 |
+| coberto-nativo | 4 | 129 |
+| coberto-equivalente | 0 | 56 |
 | só-SDK | 63 | 113 |
 | lacuna | 0 | 0 |
 
@@ -191,7 +191,7 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são
 | `Base` | `client` | propriedade | coberto-recurso |
 | `CacheController` | `cascadeChannel` | método | coberto-nativo |
 | `CacheController` | `cascadeGuild` | método | coberto-nativo |
-| `CacheController` | `cascading` | acessor | coberto-equivalente |
+| `CacheController` | `cascading` | acessor | coberto-nativo |
 | `CacheController` | `limits` | propriedade | coberto-nativo |
 | `CacheController` | `stats` | método | coberto-nativo |
 | `CacheController` | `sweepChannels` | método | coberto-nativo |

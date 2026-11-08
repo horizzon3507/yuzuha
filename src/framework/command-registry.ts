@@ -13,6 +13,7 @@ export interface CompiledCommand {
   command: Command;
   definition: Command;
   program?: unknown;
+  programEngine?: ScriptEngine;
   directory?: string;
   children: Map<string, CompiledCommand>;
   lineage: Command[];
@@ -102,6 +103,7 @@ export class CommandRegistry {
     if (command.code !== undefined) {
       if (!engine) throw functionsRequired();
       entry.program = engine.compile(command.code, command.file ?? command.name);
+      entry.programEngine = engine;
     }
     return entry;
   }
