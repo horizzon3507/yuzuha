@@ -511,12 +511,17 @@ export class CanvasService {
       if (before) throw before;
       let source = canvas;
       if (renderOptions.format === 'jpeg' && renderOptions.matte) {
-        const { createCanvas } = await import('../canvas.js');
+        const { createCanvas, loadImage } = await import('../canvas.js');
         const temp = createCanvas(canvas.width, canvas.height);
         const context = temp.getContext('2d');
         context.fillStyle = renderOptions.matte;
         context.fillRect(0, 0, canvas.width, canvas.height);
-        context.drawImage(canvas as never, 0, 0);
+        if (typeof (canvas as { getContext?: unknown }).getContext === 'function') {
+          context.drawImage(canvas as never, 0, 0);
+        } else {
+          const image = await loadImage(await canvas.encode('png'), { http: this.config.http, signal: this.config.signal });
+          context.drawImage(image as never, 0, 0);
+        }
         source = temp as unknown as CanvasLike;
       }
       const timeoutMs = renderOptions.timeoutMs;

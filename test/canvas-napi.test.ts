@@ -162,3 +162,23 @@ test('ctx.canvas.send aplica timeoutMs e matte sem mutar o canvas', async () => 
   const pixel = transparent.getContext('2d').getImageData(0, 0, 1, 1).data;
   assert.equal(pixel[3], 0);
 });
+
+test('ctx.canvas.send aceita canvas estrutural e aplica matte em jpeg', async () => {
+  const { ctx, uploads } = host();
+  const native = canvas.createCanvas(4, 4);
+  const png = new Uint8Array(await native.encode('png'));
+  const structural = { width: 4, height: 4, encode: async (format: string) => {
+    if (format === 'png') return png;
+    return new Uint8Array(await canvas.createCanvas(4, 4).encode('jpeg'));
+  } };
+  const id = await ctx.canvas.send(structural as never, { channelID: '300', format: 'jpeg', matte: '#ff0000' });
+  assert.equal(id, 'message-1');
+  const jpeg = uploads[0]!.files[0]!.data;
+  const decoded = await napi.loadImage(jpeg);
+  assert.equal(decoded.width, 4);
+  const check = canvas.createCanvas(4, 4);
+  const cx = check.getContext('2d');
+  cx.drawImage(decoded, 0, 0);
+  const pixel = cx.getImageData(0, 0, 1, 1).data;
+  assert.ok(pixel[0]! > 240 && pixel[1]! < 20 && pixel[2]! < 20, `pixel esperado vermelho, veio ${[...pixel]}`);
+});
