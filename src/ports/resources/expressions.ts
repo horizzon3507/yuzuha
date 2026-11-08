@@ -22,6 +22,7 @@ export interface ExpressionsResources {
   stickers(guildID: string): Promise<StickerInfo[]>;
   editEmoji(guildID: string, nameOrID: string, name: string, reason?: string): Promise<EmojiInfo>;
   createSticker(guildID: string, input: StickerCreateInput): Promise<StickerInfo>;
+  createStickersBulk(guildID: string, inputs: StickerCreateInput[]): Promise<StickerBulkResult>;
   editSticker(guildID: string, nameOrID: string, input: StickerEditInput): Promise<StickerInfo>;
   deleteSticker(guildID: string, nameOrID: string, reason?: string): Promise<void>;
   cloneEmoji(guildID: string, sourceID: string): Promise<EmojiInfo>;
@@ -31,6 +32,11 @@ export interface ExpressionsResources {
 export interface EmojiCreateInput { name: string; image: string }
 export interface EmojiBulkResult {
   success: EmojiInfo[];
+  failed: { name: string; error: string }[];
+}
+
+export interface StickerBulkResult {
+  success: StickerInfo[];
   failed: { name: string; error: string }[];
 }
 
