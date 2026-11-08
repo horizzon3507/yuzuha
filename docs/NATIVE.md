@@ -214,7 +214,7 @@ await ctx.reply(`${membro.displayName}: ${canais.length} canais, ${fixadas.lengt
 |---|---|
 | `users` | `user`, `member`, `members`, `memberCount`, `guild`, `bans`, `auditLogs`, `setPresence`, `searchMembers`, `setNickname`, `editGuild` |
 | `roles` | `list`, `resolve`, `has`, `create`, `edit`, `delete`, `add`, `remove`, `move` |
-| `channels` | `list`, `get`, `create`, `edit`, `delete`, `setSlowmode`, `slowmode`, `sendTyping`, `rtcRegions`, `addRecipient`/`removeRecipient` em grupos de DM, `overwrite`, `permissionsFor`, `move`, `setCategory` |
+| `channels` | `list`, `get`, `create`, `edit`, `delete`, `setSlowmode`, `slowmode`, `sendTyping`, `rtcRegions`, `addRecipient`/`removeRecipient` em grupos de DM, `editThreadDefaults`, `setDefaultForumLayout`, `overwrite`, `permissionsFor`, `move`, `setCategory` |
 | `messages` | Histórico com cursores, `pinnedPage`, `reactionUsersPage`, `dm`, `forward`, `search`/`searchAll` com filtros avançados, `bulkFetch`, `bulkDelete`, `bulkDeleteOwn`, `acknowledgePins`, `clearReadState`, `purgeDM`, `sendFiles`, `sendBytes`, `sendAttachments` |
 | `collectors` | `awaitMessage`, `awaitReaction`, streams `collectMessages`/`collectReactions` (AsyncIterable) |
 | `gateway` | `requestMembers`, `requestGuildCounts`, `requestChannelCounts`, `requestForumUnreads`, `subscribeThreads`, `send` (fire-and-forget) |
@@ -223,7 +223,7 @@ await ctx.reply(`${membro.displayName}: ${canais.length} canais, ${fixadas.lengt
 | `cache` | `stats`, `sweepMessages`, `sweepMembers`, `sweepUsers`, `sweepChannels`, `sweepGuilds` |
 | `webhooks` | `list`, `create`, `send`, `edit`, `delete`, `editMessage`, `deleteMessage` |
 | `expressions` | CRUD de emojis/stickers, `cloneEmoji`, `cloneSticker` |
-| `threads` | `create`, `archive`, `unarchive`, `forumPost`, `addMember`, `removeMember`, `members`, `member`, `edit`, `join`, `leave`, `search` |
+| `threads` | `create`, `archive`, `unarchive`, `forumPost`, `addMember`, `removeMember`, `members`, `member`, `edit`, `join`, `leave`, `setLocked`, `editSelf`, `editDefaults`, `search` |
 | `invites` | `get`, `create`, `delete`, `list`, `vanity`, `setVanity` |
 
 Os retornos são objetos normalizados e serializáveis (`UserInfo`, `MemberInfo`,

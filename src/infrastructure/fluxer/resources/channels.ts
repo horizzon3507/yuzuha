@@ -1,4 +1,4 @@
-import { OverwriteType } from '@fluxerjs/core';
+import { OverwriteType, ForumLayout } from '@fluxerjs/core';
 import type { ChannelEditOptions, ChannelType, Client, DMChannel, GuildChannel, PermissionResolvable } from '@fluxerjs/core';
 import type { ChannelCreateInput, ChannelEditInput, ChannelInfo, ChannelOverwriteInput, ChannelsResources } from '../../../ports/resources/channels.js';
 import { YuzuhaError } from '../../../errors.js';
@@ -170,6 +170,21 @@ export function createChannelsResources(client: Client): ChannelsResources {
       const channel = await guildChannel(client, channelID);
       const member = await guild.fetchMember(userID);
       return member.permissionsIn(channel).toJSON();
+    },
+    async editThreadDefaults(channelID, input): Promise<void> {
+      const channel = await guildChannel(client, channelID);
+      const edit = (channel as { editThreadDefaults?: unknown }).editThreadDefaults;
+      if (typeof edit !== 'function') throw new YuzuhaError('CHANNEL_THREAD', 'O canal não suporta padrões de thread.');
+      const { slowmode, autoArchiveDuration, reason } = input;
+      await (edit as (options: Record<string, unknown>) => Promise<unknown>).call(channel, {
+        autoArchiveDuration: autoArchiveDuration === null ? null : autoArchiveDuration,
+        rateLimitPerUser: slowmode, reason });
+    },
+    async setDefaultForumLayout(channelID, layout, reason): Promise<void> {
+      const channel = await guildChannel(client, channelID);
+      if (!channel.isForum()) throw new YuzuhaError('CHANNEL_FORUM', 'Layout padrão exige um canal de fórum.');
+      const value = layout === null ? null : { default: ForumLayout.Default, list: ForumLayout.List, grid: ForumLayout.Grid }[layout];
+      await channel.setDefaultForumLayout(value, reason);
     },
     async move(channelID, position): Promise<void> {
       if (!Number.isSafeInteger(position) || position < 0) throw new YuzuhaError('POSITION', 'Posição deve ser um inteiro a partir de 0.');
