@@ -105,6 +105,7 @@ test('programas executam na engine que os compilou', async () => {
     text: value => engine.text(value),
     functions: () => engine.functions(),
     registerAll: fns => engine.registerAll(fns),
+    limits: engine.limits,
     fork: () => tagged(engine.fork()),
   });
   const bot = new Yuzuha({ transport: new MockTransport(), store: new MemoryStore(), engine: tagged(real) });
