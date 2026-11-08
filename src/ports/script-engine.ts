@@ -29,6 +29,7 @@ export interface ScriptFunctionDefinition {
  * de execução são opacos para a framework; `yuzuha/functions` provê a
  * implementação de referência via `functions()`.
  */
+/** Programas compilados executam na engine que compilou o programa. */
 export interface ScriptEngine {
   readonly limits: Readonly<ScriptLimits>;
   compile(code: string, name?: string): unknown;

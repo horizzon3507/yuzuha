@@ -6,6 +6,7 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { promisify } from 'node:util';
 import { MemoryStore, Yuzuha } from '../src/index.js';
+import type { ScriptEngine } from '../src/ports/script-engine.js';
 import { functions } from '../src/functions.js';
 import { MockTransport } from '../src/testing.js';
 
@@ -89,4 +90,27 @@ test('instalação de plugin que falha validação preserva as funções do engi
     }));
     assert.deepEqual(engine.functions().map(fn => fn.name).sort(), before);
   } finally { await bot.destroy(); }
+});
+
+test('programas executam na engine que os compilou', async () => {
+  const real = functions();
+  const tag = Symbol('tag');
+  const tagged = (engine: ReturnType<typeof functions>): ScriptEngine => ({
+    compile: (code: string, file: string) => ({ [tag]: true, program: engine.compile(code, file) }),
+    execute: (program: unknown, ctx: unknown) => {
+      const wrapped = program as { program: unknown } & Record<symbol, unknown>;
+      if (!wrapped[tag]) return Promise.reject(new Error('programa externo'));
+      return engine.execute(wrapped.program, ctx);
+    },
+    text: value => engine.text(value),
+    functions: () => engine.functions(),
+    registerAll: fns => engine.registerAll(fns),
+    fork: () => tagged(engine.fork()),
+  });
+  const bot = new Yuzuha({ transport: new MockTransport(), store: new MemoryStore(), engine: tagged(real) });
+  bot.plugin({ name: 'tagged', commands: [{ name: 'oi', code: 'reply("oi")' }] });
+  assert.ok(bot.listCommands().some(command => command.name === 'oi'));
+  const wrong = new Yuzuha({ transport: new MockTransport(), store: new MemoryStore() });
+  assert.throws(() => wrong.plugin({ name: 'x', commands: [{ name: 'y', code: 'reply("y")' }] }),
+    { code: 'FUNCTIONS_REQUIRED' });
 });
