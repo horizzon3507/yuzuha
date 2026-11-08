@@ -249,3 +249,27 @@ test('ctx.canvas.send cobre o pipeline inteiro de matte no mesmo deadline', asyn
   assert.equal(aborted.uploads.length, 0);
   assert.equal(added, removed);
 });
+
+test('ctx.canvas.send interrompe o pipeline de matte após o deadline', async () => {
+  let unhandled = 0;
+  const onUnhandled = () => { unhandled++; };
+  process.on('unhandledRejection', onUnhandled);
+  try {
+    const { ctx, uploads } = host();
+    let calls: string[] = [];
+    const png = new Uint8Array(await canvas.createCanvas(2, 2).encode('png'));
+    const slow = { width: 2, height: 2, encode: async (format: string) => {
+      calls.push(format);
+      await new Promise(resolve => setTimeout(resolve, 200));
+      return format === 'png' ? png : new Uint8Array(8);
+    } };
+    await assert.rejects(ctx.canvas.send(slow as never, { channelID: '300', format: 'jpeg', matte: '#ff0000', timeoutMs: 50 }),
+      { code: 'EXECUTION_LIMIT' });
+    await new Promise(resolve => setTimeout(resolve, 400));
+    assert.deepEqual(calls, ['png']);
+    assert.equal(uploads.length, 0);
+    assert.equal(unhandled, 0);
+  } finally {
+    process.off('unhandledRejection', onUnhandled);
+  }
+});
