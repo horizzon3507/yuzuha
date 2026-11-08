@@ -110,7 +110,14 @@ export function bindAuthorizedResources(source: Resources, transport: Transport,
     async bulkDeleteOwn(channelID: string) { await channel(channelID, 'SendMessages'); return source.messages.bulkDeleteOwn(channelID); },
     async acknowledgePins(channelID: string) { await channel(channelID, 'ReadMessageHistory'); return source.messages.acknowledgePins(channelID); },
     async clearReadState(channelID: string) { await channel(channelID, 'ReadMessageHistory'); return source.messages.clearReadState(channelID); },
-    async purgeDM(channelID: string) { await dm(channelID); return source.messages.purgeDM(channelID); },
+    async purgeDM(channelID: string) {
+      const channel = await source.channels.get(channelID);
+      if (channel.type === 999) {
+        throw new GuardError('O canal de anotações pessoais só pode ser esvaziado por bot.resources.messages.purgeDM.');
+      }
+      await dm(channelID);
+      return source.messages.purgeDM(channelID);
+    },
   }), collectors: source.collectors,
     threads: Object.assign(Object.create(source.threads), {
     async setLocked(threadID: string, locked: boolean, reason?: string) {

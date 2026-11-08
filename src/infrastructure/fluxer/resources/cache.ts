@@ -28,6 +28,7 @@ export function createCacheResources(client: Client): CacheResources {
           roles: bounded(limits.roles),
           emojis: bounded(limits.emojis),
           stickers: bounded(limits.stickers),
+          cascading: client.cache.cascading,
         },
       };
     },

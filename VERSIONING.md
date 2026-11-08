@@ -44,6 +44,8 @@ gerado por `init` pertence ao consumidor e não precisa acompanhar a biblioteca.
 
 ### Migrar para 0.3.0
 
+As interfaces `Resources` ganharam métodos obrigatórios; quem mantém um adaptador `Resources` próprio precisa implementá-los (veja o CHANGELOG `v0.3.0` para a lista).
+
 A 0.3.0 isola o function mode da raiz e transforma `yuzuha/canvas` na API
 compatível com `@napi-rs/canvas`. Há três mudanças incompatíveis:
 
