@@ -230,7 +230,7 @@ test('adaptador de cache combina contagens e limites e converte filtros de sweep
     guilds: 1, channels: 2, users: 3, members: 4, messages: 9, messageChannels: 2,
     roles: 5, emojis: 6, stickers: 7,
     limits: { guilds: 100, channels: null, users: 500, members: null,
-      messages: false, roles: 0, emojis: 10, stickers: null },
+      messages: false, roles: 0, emojis: 10, stickers: null, cascading: false },
   });
   const messages = [
     fakeMessage({ id: 'old', channelId: 'c1', createdAt: new Date(Date.now() - 10_000) }),
