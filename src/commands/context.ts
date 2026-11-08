@@ -153,7 +153,9 @@ export class CommandContext {
     await this.resources.users.leaveGuild(guildID);
   }
   get mod(): NativeModeration {
-    return this.nativeMod ??= new NativeModeration((action, target, reason, options) => this.moderate(action, target, reason, options));
+    return this.nativeMod ??= new NativeModeration(
+      (action, target, reason, options) => this.moderate(action, target, reason, options),
+      (action, targetID) => this.moderation.canModerate(action, targetID));
   }
   get data(): NativeData {
     return this.nativeData ??= Object.freeze({

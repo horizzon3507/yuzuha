@@ -49,4 +49,8 @@ export class ModerationService {
         ...(options.duration === undefined ? {} : { duration: options.duration }), ...voice });
     } catch (cause) { throw new PartialModerationError(action, targetID, cause); }
   }
+  async canModerate(action: ModerationAction, targetID: string, channelID?: string | null): Promise<boolean> {
+    try { await this.authorization.requireModeratable(action, targetID, channelID); return true; }
+    catch (error) { if (error instanceof GuardError) return false; throw error; }
+  }
 }

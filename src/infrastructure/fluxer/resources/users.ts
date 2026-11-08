@@ -195,6 +195,16 @@ export function createUsersResources(client: Client): UsersResources {
       const { systemChannelID, afkChannelID, ...fields } = input;
       return toGuildInfo(await guild.edit({ ...fields, systemChannelId: systemChannelID, afkChannelId: afkChannelID }));
     },
+    async me(guildID) {
+      const guild = await client.guilds.resolve(guildID);
+      return toMemberInfo(await guild.members.fetchMe());
+    },
+    async transferOwnership(guildID, userID): Promise<void> {
+      await (await client.guilds.resolve(guildID)).transferOwnership(userID);
+    },
+    async withdrawDiscoveryApplication(guildID): Promise<void> {
+      await (await client.guilds.resolve(guildID)).withdrawDiscoveryApplication();
+    },
     async discoveryStatus(guildID) {
       const status = await (await client.guilds.resolve(guildID)).fetchDiscoveryStatus();
       return { application: status.application ? toDiscoveryApplicationInfo(status.application) : null,

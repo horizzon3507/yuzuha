@@ -60,6 +60,9 @@ export interface UsersResources {
   searchMembers(guildID: string, query: string, limit?: number, offset?: number): Promise<MemberSearchPage>;
   setNickname(guildID: string, userID: string, nickname: string | null, reason: string): Promise<MemberInfo>;
   editGuild(guildID: string, input: GuildEditInput): Promise<GuildInfo>;
+  me(guildID: string): Promise<MemberInfo>;
+  transferOwnership(guildID: string, userID: string): Promise<void>;
+  withdrawDiscoveryApplication(guildID: string): Promise<void>;
   discoveryStatus(guildID: string): Promise<DiscoveryStatusInfo>;
   applyForDiscovery(guildID: string, input: DiscoveryApplicationInput): Promise<DiscoveryApplicationInfo>;
   editDiscoveryApplication(guildID: string, input: DiscoveryApplicationInput): Promise<DiscoveryApplicationInfo>;

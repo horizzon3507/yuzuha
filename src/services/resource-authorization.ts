@@ -84,7 +84,22 @@ export function bindAuthorizedResources(source: Resources, transport: Transport,
     guild(guildID);
     await allowed('ManageExpressions');
   };
-  return { users: source.users, messages: Object.assign(Object.create(source.messages), {
+  return { users: Object.assign(Object.create(source.users), {
+    async transferOwnership(guildID: string, userID: string) {
+      requireGuild(guildID);
+      const [author] = await actors();
+      if (!author.owner) throw new GuardError('Apenas o dono do servidor pode transferir a propriedade.');
+      const target = await source.users.member(guildID, userID);
+      if (target.bot) throw new GuardError('A propriedade não pode ser transferida para um bot.');
+      return source.users.transferOwnership(guildID, userID);
+    },
+  }), messages: Object.assign(Object.create(source.messages), {
+    async deleteAttachment(channelID: string, messageID: string, attachmentID: string) {
+      const message = await source.messages.fetch(channelID, messageID);
+      if (message.authorID !== scope.authorID) await authorization.requirePermission('ManageMessages', false, undefined, channelID);
+      if (message.authorID !== transport.botID) await authorization.requirePermission('ManageMessages', true, undefined, channelID);
+      return source.messages.deleteAttachment(channelID, messageID, attachmentID);
+    },
     async bulkDelete(channelID: string, messageIDs: string[]) {
       await channel(channelID, 'ManageMessages');
       const ids = [...new Set(messageIDs)];
@@ -177,6 +192,17 @@ export function bindAuthorizedResources(source: Resources, transport: Transport,
     async delete(guildID, query, reason) {
       const target = await role(guildID, query);
       return source.roles.delete(guildID, target.id, reason);
+    },
+    async setRoleHoistPositions(guildID: string, updates: { id: string; position: number | null }[]) {
+      guild(guildID);
+      await allowed('ManageRoles');
+      for (const update of updates) await roleHierarchy(await role(guildID, update.id));
+      return source.roles.setRoleHoistPositions(guildID, updates);
+    },
+    async resetRoleHoistPositions(guildID: string) {
+      guild(guildID);
+      await allowed('ManageRoles');
+      return source.roles.resetRoleHoistPositions(guildID);
     },
     async move(guildID, query, position) {
       const target = await role(guildID, query);

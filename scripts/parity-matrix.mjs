@@ -16,7 +16,7 @@ const SDK_PACKAGES = [
   { name: '@fluxerjs/types', entry: 'node_modules/@fluxerjs/types/dist/index.d.ts' },
 ];
 const RUNTIME_KINDS = new Set(['class', 'function', 'variable']);
-const STATUSES = ['coberto-recurso', 'coberto-nativo', 'só-SDK', 'lacuna', 'dados'];
+const STATUSES = ['coberto-recurso', 'coberto-nativo', 'coberto-equivalente', 'só-SDK', 'lacuna', 'dados'];
 
 async function tsFiles(directory) {
   const result = [];
@@ -185,6 +185,11 @@ async function functionModeEvents() {
   return names;
 }
 
+async function equivalents() {
+  const path = join(ROOT, 'scripts/parity-equivalents.json');
+  try { return JSON.parse(await readFile(path, 'utf8')); } catch { return {}; }
+}
+
 export async function buildParityMatrix() {
   const areasDocument = JSON.parse(await readFile(join(ROOT, 'scripts/parity-areas.json'), 'utf8'));
   const packages = SDK_PACKAGES.map(pkg => ({ pkg, ...inventory(pkg) }));
@@ -196,6 +201,7 @@ export async function buildParityMatrix() {
   }
   const areaOf = new Map();
   for (const [area, names] of Object.entries(areasDocument.areas)) for (const name of names) areaOf.set(name, area);
+  const equivalentsMap = await equivalents();
   const memberRules = [];
   for (const [reason, entry] of Object.entries(areasDocument.members ?? {})) {
     if (entry.match) memberRules.push({ reason, reasonKey: reason, test: name => entry.match.some(pattern => new RegExp(pattern).test(name)), matched: 0 });
@@ -217,14 +223,17 @@ export async function buildParityMatrix() {
       const memberRows = item.members.map(member => {
         const script = chain.has(member.name);
         const native = usage.properties.has(member.name) || usage.identifiers.has(member.name);
-        const exception = script || native ? null : memberException(member);
-        return { ...member, status: script ? 'coberto-recurso' : native ? 'coberto-nativo' : exception ? 'só-SDK' : 'lacuna',
-          reason: exception ?? '' };
+        const equivalent = equivalentsMap[`${item.name}.${member.name}`];
+        const exception = script || native || equivalent || sdkOnly.has(item.name) ? null : memberException(member);
+        return { ...member, status: script ? 'coberto-recurso' : native ? 'coberto-nativo'
+          : equivalent ? 'coberto-equivalente' : sdkOnly.has(item.name) || exception ? 'só-SDK' : 'lacuna',
+          reason: exception ?? equivalent?.note ?? '' };
       });
       const scriptHit = chain.has(item.name) || memberRows.some(member => member.status === 'coberto-recurso');
       const nativeHit = usage.identifiers.has(item.name) || usage.properties.has(item.name) || memberRows.some(member => member.status === 'coberto-nativo');
       let status;
       if (sdkOnly.has(item.name)) status = 'só-SDK';
+      else if (equivalentsMap[item.name]) status = 'coberto-equivalente';
       else if (!runtimeItem) status = 'dados';
       else if (scriptHit) status = 'coberto-recurso';
       else if (nativeHit) status = 'coberto-nativo';

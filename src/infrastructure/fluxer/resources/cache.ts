@@ -58,5 +58,11 @@ export function createCacheResources(client: Client): CacheResources {
     async sweepGuilds(input = {}) {
       return client.cache.sweepGuilds((guild, id) => (input.keep ? !input.keep(toGuildInfo(guild), id) : true));
     },
+    async cascadeChannel(channelID): Promise<void> {
+      client.cache.cascadeChannel(await client.channels.fetch(channelID));
+    },
+    async cascadeGuild(guildID): Promise<void> {
+      client.cache.cascadeGuild(await client.guilds.resolve(guildID));
+    },
   };
 }
