@@ -511,29 +511,42 @@ export class CanvasService {
       if (before) throw before;
       let source = canvas;
       if (renderOptions.format === 'jpeg' && renderOptions.matte) {
-        const { createCanvas } = await import('../canvas.js');
+        const { createCanvas, loadImage } = await import('../canvas.js');
         const temp = createCanvas(canvas.width, canvas.height);
         const context = temp.getContext('2d');
         context.fillStyle = renderOptions.matte;
         context.fillRect(0, 0, canvas.width, canvas.height);
-        context.drawImage(canvas as never, 0, 0);
+        if (typeof (canvas as { getContext?: unknown }).getContext === 'function') {
+          context.drawImage(canvas as never, 0, 0);
+        } else {
+          const image = await loadImage(await canvas.encode('png'), { http: this.config.http, signal: this.config.signal });
+          context.drawImage(image as never, 0, 0);
+        }
         source = temp as unknown as CanvasLike;
       }
       const timeoutMs = renderOptions.timeoutMs;
       const encoded = await new Promise<Uint8Array>((resolve, reject) => {
-        let done = false;
-        const timer = setTimeout(() => {
-          if (!done) { done = true; reject(new YuzuhaError('EXECUTION_LIMIT', 'Tempo limite de codificação do canvas excedido.')); }
-        }, timeoutMs);
         const signal = this.config.signal;
-        const onAbort = () => { if (!done) { done = true; reject(signalFailure(signal) ?? new YuzuhaError('CANVAS_ABORTED', 'Codificação de canvas abortada.')); } };
-        if (signal) {
-          if (signal.aborted) onAbort();
-          else signal.addEventListener('abort', onAbort, { once: true });
-        }
-        source.encode(renderOptions.format, renderOptions.quality).then(
-          bytes => { if (done) return; done = true; clearTimeout(timer); signal?.removeEventListener('abort', onAbort); resolve(bytes); },
-          error => { if (done) return; done = true; clearTimeout(timer); signal?.removeEventListener('abort', onAbort); reject(error); },
+        let done = false;
+        const cleanup = () => {
+          if (done) return;
+          done = true;
+          clearTimeout(timer);
+          signal?.removeEventListener('abort', onAbort);
+        };
+        const timer = setTimeout(() => {
+          cleanup();
+          reject(new YuzuhaError('EXECUTION_LIMIT', 'Tempo limite de codificação do canvas excedido.'));
+        }, timeoutMs);
+        const onAbort = () => {
+          cleanup();
+          reject(signalFailure(signal) ?? new YuzuhaError('CANVAS_ABORTED', 'Codificação de canvas abortada.'));
+        };
+        if (signal?.aborted) onAbort();
+        else signal?.addEventListener('abort', onAbort, { once: true });
+        Promise.resolve().then(() => source.encode(renderOptions.format, renderOptions.quality)).then(
+          bytes => { if (!done) { cleanup(); resolve(bytes); } },
+          error => { if (!done) { cleanup(); reject(error); } },
         ).catch(() => {});
       });
       data = new Uint8Array(encoded);

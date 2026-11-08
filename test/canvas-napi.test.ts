@@ -162,3 +162,51 @@ test('ctx.canvas.send aplica timeoutMs e matte sem mutar o canvas', async () => 
   const pixel = transparent.getContext('2d').getImageData(0, 0, 1, 1).data;
   assert.equal(pixel[3], 0);
 });
+
+test('ctx.canvas.send aceita canvas estrutural e aplica matte em jpeg', async () => {
+  const { ctx, uploads } = host();
+  const native = canvas.createCanvas(4, 4);
+  const png = new Uint8Array(await native.encode('png'));
+  const structural = { width: 4, height: 4, encode: async (format: string) => {
+    if (format === 'png') return png;
+    return new Uint8Array(await canvas.createCanvas(4, 4).encode('jpeg'));
+  } };
+  const id = await ctx.canvas.send(structural as never, { channelID: '300', format: 'jpeg', matte: '#ff0000' });
+  assert.equal(id, 'message-1');
+  const jpeg = uploads[0]!.files[0]!.data;
+  const decoded = await napi.loadImage(jpeg);
+  assert.equal(decoded.width, 4);
+  const check = canvas.createCanvas(4, 4);
+  const cx = check.getContext('2d');
+  cx.drawImage(decoded, 0, 0);
+  const pixel = cx.getImageData(0, 0, 1, 1).data;
+  assert.ok(pixel[0]! > 240 && pixel[1]! < 20 && pixel[2]! < 20, `pixel esperado vermelho, veio ${[...pixel]}`);
+});
+
+test('ctx.canvas.send limpa timer e listener de abort em todos os desfechos', async () => {
+  const controller = new AbortController();
+  let added = 0;
+  let removed = 0;
+  const add = controller.signal.addEventListener.bind(controller.signal);
+  const remove = controller.signal.removeEventListener.bind(controller.signal);
+  controller.signal.addEventListener = ((type: string, listener: unknown, options?: unknown) => {
+    if (type === 'abort') added++;
+    return add(type, listener as never, options as never);
+  }) as typeof controller.signal.addEventListener;
+  controller.signal.removeEventListener = ((type: string, listener: unknown) => {
+    if (type === 'abort') removed++;
+    return remove(type, listener as never);
+  }) as typeof controller.signal.removeEventListener;
+  const { ctx, uploads } = host({ signal: controller.signal });
+  const slow = () => ({ width: 2, height: 2,
+    encode: () => new Promise<Uint8Array>(resolve => setTimeout(() => resolve(new Uint8Array(8)), 300)) });
+  for (let i = 0; i < 10; i++) {
+    await assert.rejects(ctx.canvas.send(slow() as never, { channelID: '300', timeoutMs: 30 }), { code: 'EXECUTION_LIMIT' });
+  }
+  const throwing = { width: 2, height: 2, encode: () => { throw new Error('falha síncrona'); } };
+  await assert.rejects(ctx.canvas.send(throwing as never, { channelID: '300' }), /falha síncrona/);
+  assert.equal(uploads.length, 0);
+  await new Promise(resolve => setTimeout(resolve, 350));
+  assert.equal(added, 11);
+  assert.equal(removed, 11);
+});

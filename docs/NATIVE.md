@@ -216,7 +216,6 @@ await ctx.reply(`${membro.displayName}: ${canais.length} canais, ${fixadas.lengt
 | `roles` | `list`, `resolve`, `has`, `create`, `edit`, `delete`, `add`, `remove`, `move`, `setRoleHoistPositions`, `resetRoleHoistPositions` |
 | `channels` | `list`, `get`, `create`, `edit`, `delete`, `setSlowmode`, `slowmode`, `sendTyping`, `rtcRegions`, `addRecipient`/`removeRecipient` em grupos de DM, `editThreadDefaults`, `setDefaultForumLayout`, `overwrite`, `permissionsFor`, `move`, `setCategory` |
 | `messages` | Histórico com cursores, `pinnedPage`, `reactionUsersPage`, `dm`, `forward`, `search`/`searchAll` com filtros avançados, `bulkFetch`, `bulkDelete`, `bulkDeleteOwn`, `acknowledgePins`, `clearReadState`, `purgeDM`, `deleteAttachment`, `sendTo`, `sendFiles`, `sendBytes`, `sendAttachments` |
-> `purgeDM` em canais de anotações pessoais (tipo 999) só pode ser chamado por `bot.resources`, sem wrapper de autorização.
 | `collectors` | `awaitMessage`, `awaitReaction`, streams `collectMessages`/`collectReactions` (AsyncIterable) |
 | `gateway` | `requestMembers`, `requestGuildCounts`, `requestChannelCounts`, `requestForumUnreads`, `subscribeThreads`, `send` (fire-and-forget) |
 | `instance` | `describe`, `gatewayInfo`, `application`, `oauthApplications`, `emojiMetadata`, `stickerMetadata`, `resolveEmoji` |
@@ -225,8 +224,10 @@ await ctx.reply(`${membro.displayName}: ${canais.length} canais, ${fixadas.lengt
 | `webhooks` | `list`, `create`, `send`, `edit`, `delete`, `editMessage`, `deleteMessage` |
 | `expressions` | CRUD de emojis/stickers, `createEmojisBulk`, `createStickersBulk`, `cloneEmoji`, `cloneSticker` |
 | `threads` | `create`, `archive`, `unarchive`, `forumPost`, `addMember`, `removeMember`, `members`, `member`, `edit`, `join`, `leave`, `setLocked`, `editSelf`, `editDefaults`, `search` |
-
 | `invites` | `get`, `create`, `delete`, `list`, `vanity`, `setVanity` |
+
+`purgeDM` em canais de anotações pessoais (tipo 999) só pode ser chamado por
+`bot.resources`, sem wrapper de autorização.
 
 Os retornos são objetos normalizados e serializáveis (`UserInfo`, `MemberInfo`,
 `MessageInfo` etc.), não instâncias do SDK. Isso mantém os mesmos dados nos
