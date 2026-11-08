@@ -146,3 +146,19 @@ assert.ok(builder);
       '--input-type=module', '-e', script]);
   } finally { await rm(dir, { recursive: true, force: true }); }
 });
+
+test('ctx.canvas.send aplica timeoutMs e matte sem mutar o canvas', async () => {
+  const { ctx, uploads } = host();
+  const slow = { width: 2, height: 2,
+    encode: () => new Promise<Uint8Array>(resolve => setTimeout(() => resolve(new Uint8Array(8)), 500)) };
+  await assert.rejects(ctx.canvas.send(slow as never, { channelID: '300', timeoutMs: 50 }), { code: 'EXECUTION_LIMIT' });
+  assert.equal(uploads.length, 0);
+  await new Promise(resolve => setTimeout(resolve, 550));
+
+  const matte = host();
+  const transparent = canvas.createCanvas(4, 4);
+  const id = await matte.ctx.canvas.send(transparent, { channelID: '300', format: 'jpeg', matte: '#ff0000' });
+  assert.equal(id, 'message-1');
+  const pixel = transparent.getContext('2d').getImageData(0, 0, 1, 1).data;
+  assert.equal(pixel[3], 0);
+});
