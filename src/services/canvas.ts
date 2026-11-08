@@ -526,19 +526,27 @@ export class CanvasService {
       }
       const timeoutMs = renderOptions.timeoutMs;
       const encoded = await new Promise<Uint8Array>((resolve, reject) => {
-        let done = false;
-        const timer = setTimeout(() => {
-          if (!done) { done = true; reject(new YuzuhaError('EXECUTION_LIMIT', 'Tempo limite de codificação do canvas excedido.')); }
-        }, timeoutMs);
         const signal = this.config.signal;
-        const onAbort = () => { if (!done) { done = true; reject(signalFailure(signal) ?? new YuzuhaError('CANVAS_ABORTED', 'Codificação de canvas abortada.')); } };
-        if (signal) {
-          if (signal.aborted) onAbort();
-          else signal.addEventListener('abort', onAbort, { once: true });
-        }
-        source.encode(renderOptions.format, renderOptions.quality).then(
-          bytes => { if (done) return; done = true; clearTimeout(timer); signal?.removeEventListener('abort', onAbort); resolve(bytes); },
-          error => { if (done) return; done = true; clearTimeout(timer); signal?.removeEventListener('abort', onAbort); reject(error); },
+        let done = false;
+        const cleanup = () => {
+          if (done) return;
+          done = true;
+          clearTimeout(timer);
+          signal?.removeEventListener('abort', onAbort);
+        };
+        const timer = setTimeout(() => {
+          cleanup();
+          reject(new YuzuhaError('EXECUTION_LIMIT', 'Tempo limite de codificação do canvas excedido.'));
+        }, timeoutMs);
+        const onAbort = () => {
+          cleanup();
+          reject(signalFailure(signal) ?? new YuzuhaError('CANVAS_ABORTED', 'Codificação de canvas abortada.'));
+        };
+        if (signal?.aborted) onAbort();
+        else signal?.addEventListener('abort', onAbort, { once: true });
+        Promise.resolve().then(() => source.encode(renderOptions.format, renderOptions.quality)).then(
+          bytes => { if (!done) { cleanup(); resolve(bytes); } },
+          error => { if (!done) { cleanup(); reject(error); } },
         ).catch(() => {});
       });
       data = new Uint8Array(encoded);
