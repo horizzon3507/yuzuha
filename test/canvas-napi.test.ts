@@ -210,3 +210,42 @@ test('ctx.canvas.send limpa timer e listener de abort em todos os desfechos', as
   assert.equal(added, 11);
   assert.equal(removed, 11);
 });
+
+test('ctx.canvas.send cobre o pipeline inteiro de matte no mesmo deadline', async () => {
+  const { ctx, uploads } = host();
+  const slowPng = { width: 2, height: 2, encode: (format: string) => format === 'png'
+    ? new Promise<Uint8Array>(resolve => setTimeout(() => resolve(new Uint8Array(8)), 300))
+    : Promise.resolve(new Uint8Array(8)) };
+  const started = Date.now();
+  await assert.rejects(ctx.canvas.send(slowPng as never, { channelID: '300', format: 'jpeg', matte: '#ff0000', timeoutMs: 50 }),
+    { code: 'EXECUTION_LIMIT' });
+  assert.ok(Date.now() - started < 250);
+  assert.equal(uploads.length, 0);
+
+  const never = { width: 2, height: 2, encode: () => new Promise<Uint8Array>(() => {}) };
+  const hanging = host();
+  await assert.rejects(hanging.ctx.canvas.send(never as never, { channelID: '300', format: 'jpeg', matte: '#ff0000', timeoutMs: 50 }),
+    { code: 'EXECUTION_LIMIT' });
+  assert.equal(hanging.uploads.length, 0);
+
+  const controller = new AbortController();
+  let added = 0;
+  let removed = 0;
+  const add = controller.signal.addEventListener.bind(controller.signal);
+  const remove = controller.signal.removeEventListener.bind(controller.signal);
+  controller.signal.addEventListener = ((type: string, listener: unknown, options?: unknown) => {
+    if (type === 'abort') added++;
+    return add(type, listener as never, options as never);
+  }) as typeof controller.signal.addEventListener;
+  controller.signal.removeEventListener = ((type: string, listener: unknown) => {
+    if (type === 'abort') removed++;
+    return remove(type, listener as never);
+  }) as typeof controller.signal.removeEventListener;
+  const aborted = host({ signal: controller.signal });
+  const pending = { width: 2, height: 2, encode: () => new Promise<Uint8Array>(() => {}) };
+  const attempt = aborted.ctx.canvas.send(pending as never, { channelID: '300', format: 'jpeg', matte: '#ff0000' });
+  setTimeout(() => controller.abort(), 20);
+  await assert.rejects(attempt, { code: 'EXECUTION_ABORTED' });
+  assert.equal(aborted.uploads.length, 0);
+  assert.equal(added, removed);
+});

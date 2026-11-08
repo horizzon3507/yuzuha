@@ -509,21 +509,6 @@ export class CanvasService {
         || canvas.width * canvas.height > CANVAS_LIMITS.maxPixels) optionsError('Dimensões físicas excedem os limites do Canvas.');
       const before = signalFailure(this.config.signal);
       if (before) throw before;
-      let source = canvas;
-      if (renderOptions.format === 'jpeg' && renderOptions.matte) {
-        const { createCanvas, loadImage } = await import('../canvas.js');
-        const temp = createCanvas(canvas.width, canvas.height);
-        const context = temp.getContext('2d');
-        context.fillStyle = renderOptions.matte;
-        context.fillRect(0, 0, canvas.width, canvas.height);
-        if (typeof (canvas as { getContext?: unknown }).getContext === 'function') {
-          context.drawImage(canvas as never, 0, 0);
-        } else {
-          const image = await loadImage(await canvas.encode('png'), { http: this.config.http, signal: this.config.signal });
-          context.drawImage(image as never, 0, 0);
-        }
-        source = temp as unknown as CanvasLike;
-      }
       const timeoutMs = renderOptions.timeoutMs;
       const encoded = await new Promise<Uint8Array>((resolve, reject) => {
         const signal = this.config.signal;
@@ -544,7 +529,24 @@ export class CanvasService {
         };
         if (signal?.aborted) onAbort();
         else signal?.addEventListener('abort', onAbort, { once: true });
-        Promise.resolve().then(() => source.encode(renderOptions.format, renderOptions.quality)).then(
+        Promise.resolve().then(async () => {
+          let source = canvas;
+          if (renderOptions.format === 'jpeg' && renderOptions.matte) {
+            const { createCanvas, loadImage } = await import('../canvas.js');
+            const temp = createCanvas(canvas.width, canvas.height);
+            const context = temp.getContext('2d');
+            context.fillStyle = renderOptions.matte;
+            context.fillRect(0, 0, canvas.width, canvas.height);
+            if (typeof (canvas as { getContext?: unknown }).getContext === 'function') {
+              context.drawImage(canvas as never, 0, 0);
+            } else {
+              const image = await loadImage(await canvas.encode('png'), { http: this.config.http, signal: this.config.signal });
+              context.drawImage(image as never, 0, 0);
+            }
+            source = temp as unknown as CanvasLike;
+          }
+          return source.encode(renderOptions.format, renderOptions.quality);
+        }).then(
           bytes => { if (!done) { cleanup(); resolve(bytes); } },
           error => { if (!done) { cleanup(); reject(error); } },
         ).catch(() => {});
