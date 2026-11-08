@@ -533,6 +533,7 @@ export class CanvasService {
           let source = canvas;
           if (renderOptions.format === 'jpeg' && renderOptions.matte) {
             const { createCanvas, loadImage } = await import('../canvas.js');
+            if (done) return;
             const temp = createCanvas(canvas.width, canvas.height);
             const context = temp.getContext('2d');
             context.fillStyle = renderOptions.matte;
@@ -540,14 +541,18 @@ export class CanvasService {
             if (typeof (canvas as { getContext?: unknown }).getContext === 'function') {
               context.drawImage(canvas as never, 0, 0);
             } else {
-              const image = await loadImage(await canvas.encode('png'), { http: this.config.http, signal: this.config.signal });
+              const png = await canvas.encode('png');
+              if (done) return;
+              const image = await loadImage(png, { http: this.config.http, signal: this.config.signal });
+              if (done) return;
               context.drawImage(image as never, 0, 0);
             }
             source = temp as unknown as CanvasLike;
           }
+          if (done) return;
           return source.encode(renderOptions.format, renderOptions.quality);
         }).then(
-          bytes => { if (!done) { cleanup(); resolve(bytes); } },
+          bytes => { if (!done && bytes) { cleanup(); resolve(bytes); } },
           error => { if (!done) { cleanup(); reject(error); } },
         ).catch(() => {});
       });
