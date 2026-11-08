@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { defineCommand, MemoryStore } from '../src/index.js';
+import { functions } from '../src/functions.js';
 import { createTestBot, TestClock } from '../src/testing.js';
 import { Client } from '../src/sdk.js';
 
@@ -85,7 +86,7 @@ test('tick executa tarefas e retries com relógio manual e aguarda handlers', as
 });
 
 test('agendamentos em function mode usam o mesmo relógio manual', async t => {
-  const fixture = createTestBot({ now: 1_000, commands: [
+  const fixture = createTestBot({ now: 1_000, engine: functions(), commands: [
     { name: 'schedule', code: '$let[id;$schedule[100ms;ping]]' },
     { name: 'ping', code: '$reply[agendado]' },
   ] });

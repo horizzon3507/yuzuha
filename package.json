@@ -1,6 +1,6 @@
 {
   "name": "yuzuha",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "Fluxer bots with simple scripts and typed JavaScript/TypeScript.",
   "type": "module",
   "license": "MIT",
@@ -53,6 +53,10 @@
     "./canvas": {
       "types": "./dist/canvas.d.ts",
       "import": "./dist/canvas.js"
+    },
+    "./canvas/card": {
+      "types": "./dist/canvas/card.d.ts",
+      "import": "./dist/canvas/card.js"
     }
   },
   "bin": {

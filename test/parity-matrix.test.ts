@@ -20,5 +20,5 @@ test('eventos do function mode existem no SDK e a matriz registra as lacunas', a
   assert.ok(matrix.modeEvents.length > 0);
   for (const event of matrix.modeEvents) assert.ok(matrix.sdkEvents.includes(event), event);
   assert.ok(matrix.sdkEvents.length > matrix.modeEvents.length);
-  assert.ok(matrix.rows.some(row => row.name === 'Message' && row.status === 'coberto-script'));
+  assert.ok(matrix.rows.some(row => row.name === 'Message' && row.status === 'coberto-recurso'));
 });

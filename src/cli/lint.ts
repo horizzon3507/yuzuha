@@ -1,7 +1,6 @@
 import { lstat, readFile, readdir } from 'node:fs/promises';
 import { extname, join, resolve } from 'node:path';
-import { registerBuiltins } from '../functions.js';
-import { Runtime } from '../runtime.js';
+import { registerBuiltins, Runtime } from '../functions.js';
 import { YuzuhaError } from '../errors.js';
 import { documentDiagnostics, mergeFunctionCatalogs, parseFunctionCatalog } from '../tooling/language.js';
 import type { FunctionMetadata, ScriptDiagnostic } from '../tooling/language.js';

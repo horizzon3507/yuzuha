@@ -37,7 +37,8 @@ erro, o resultado continua sendo `success`.
 | Método | Resultado e uso |
 |---|---|
 | `command(command)` | Registra um comando validado e retorna o bot |
-| `enableFunctions()` | Ativa o parser e os builtins de function mode; idempotente |
+| `useEngine(engine)` | Instala o engine de function mode (`functions()` de `yuzuha/functions`) |
+| `engine` | Engine de function mode instalado, quando presente |
 | `use(middleware)` | Acrescenta middleware e retorna o bot |
 | `plugin(plugin)` | Instala funções, comandos, eventos e middleware; retorna o bot |
 | `on(event, listener)`, `once(event, listener)` | Registra callback tipado do SDK, com erros e encerramento rastreados |
@@ -185,7 +186,7 @@ async function exemplo(resources: Resources, guildID: string) {
 
 Os retornos são objetos serializáveis, não classes do SDK. As áreas e assinaturas
 estão em `src/ports/resources/` e nas declarações distribuídas; a referência de
-uso por script fica em [FUNCTIONS.md](FUNCTIONS.md).
+uso por script fica em [FUNCTIONS.md](functions/FUNCTIONS.md).
 
 Implementações próprias de `MessagesResources` precisam fornecer `pinnedPage`
 e `reactionUsersPage`; `ThreadsResources` inclui `member`. Os retornos mantêm
@@ -272,8 +273,8 @@ retornado por ele. `checkOutput(valor)` verifica saídas intermediárias e lanç
 Plugins podem fornecer arrays `commands`, `events` (com `defineEvent`) e
 `middleware`. Scripts no próprio plugin podem usar funções declaradas nele.
 Nomes de plugins, funções e comandos não podem colidir em seus registros.
-O registro valida o lote antes de aplicá-lo. Também
-existem `bot.runtime.register(fn)` e `registerAll(functions)`.
+O registro valida o lote antes de aplicá-lo. Sobre o engine,
+existem `bot.engine.registerAll(functions)` e o port `ScriptEngine`.
 
 `Runtime`, `registerBuiltins`, `parse` e `script` vêm de `yuzuha/functions`,
 não da raiz. `Runtime` expõe `compile(source, file?)`, `execute(program, ctx)` e
@@ -321,7 +322,7 @@ operação nativa confiável; prefira o auxiliar autorizado do contexto.
 `decimal(a, operador, b, casas?)`, `decimalCompare(a, b)` e
 `decimalRound(valor, casas)`, exportados por `yuzuha`, operam sobre strings
 decimais com até 1000 dígitos. Não aceitam expoente; retornam texto normalizado,
-exceto a comparação, que retorna -1, 0 ou 1. Veja [operações de dados](LANGUAGE-EXTENSIONS.md).
+exceto a comparação, que retorna -1, 0 ou 1. Veja [operações de dados](functions/LANGUAGE-EXTENSIONS.md).
 
 ## Erros
 
@@ -355,8 +356,8 @@ limitações de prazo em [STORAGE.md](STORAGE.md).
 aceita um ReadableStream de bytes, limita sua leitura e acumula antes do upload.
 O retorno é o ID da mensagem; não transmite multipart continuamente pela rede.
 Veja [IMAGES.md](IMAGES.md) para os limites e o módulo opcional `yuzuha/images`.
-Para compor cartões, consulte [CANVAS.md](CANVAS.md) e o subpath opcional
-`yuzuha/canvas`.
+Para compor cartões, consulte [CANVAS.md](CANVAS.md) e os subpaths opcionais
+`yuzuha/canvas` (API napi em processo) e `yuzuha/canvas/card` (builder isolado).
 
 `yuzuha/images` exporta `transformImage`, `ImageTransform`, `ImageOptions` e
 `ImageResult`. A raiz não importa Sharp. Não há funções de imagem registradas

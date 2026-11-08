@@ -10,7 +10,7 @@ pacotes satélites por `yuzuha/sdk/*` (client, errors, message, cluster, interna
 types, rest, ws, builders, collection e util, além de voice e sharding como peers
 opcionais).
 
-[0.2.1](CHANGELOG.md) · Node **22.13+** · ESM · [MIT](LICENSE)
+[0.3.0](CHANGELOG.md) · Node **22.13+** · ESM · [MIT](LICENSE)
 
 [Começar](#começar) · [Comandos](#escrever-comandos) · [Recursos](#recursos) · [Testes](#testar-sem-token) · [Documentação](#documentação)
 
@@ -19,7 +19,7 @@ opcionais).
 ### Criar um bot
 
 ```sh
-npx yuzuha@0.2.1 init ./meu-bot --ts
+npx yuzuha@0.3.0 init ./meu-bot --ts
 cd meu-bot
 npm install
 npm run check
@@ -45,7 +45,7 @@ para incluir um comando de exemplo com scripts.
 ### Usar em um projeto existente
 
 ```sh
-npm install yuzuha@0.2.1
+npm install yuzuha@0.3.0
 ```
 
 Use `"type": "module"` no `package.json`. O [guia inicial](docs/QUICKSTART.md)
@@ -75,24 +75,28 @@ Schemas `arg.*` inferem os tipos de argumentos e flags. Você também pode decla
 subcomandos, checks e middleware. O [guia nativo](docs/NATIVE.md) cobre esses
 contratos, eventos, moderação e persistência.
 
-### Function mode do Yuzuha
+### Function mode (opcional)
+
+O function mode é opcional e isolado da raiz. Comandos com `code` e eventos de
+script exigem um engine explícito:
 
 ```ts
-import { script } from 'yuzuha/functions';
+import { functions, script } from 'yuzuha/functions';
 
-export default script({
+const bot = new Yuzuha({ transport, store, engine: functions() });
+
+bot.command(script({
   name: 'eco',
   description: 'Repete o texto informado.',
   code: '$reply[$messageSlice[0]]',
-});
+}));
 ```
 
 O function mode tem **336 funções** para mensagens, guards, moderação, variáveis,
-JSON, arrays, loops, eventos e agendamentos. O runtime é ativado ao registrar um
-comando com `code` ou um evento de script.
+JSON, arrays, loops, eventos e agendamentos.
 
 As funções seguem as assinaturas e regras do runtime do Yuzuha. Consulte a
-[linguagem](docs/LANGUAGE.md), as [assinaturas das funções](docs/FUNCTIONS.md)
+[linguagem](docs/functions/LANGUAGE.md), as [assinaturas das funções](docs/functions/FUNCTIONS.md)
 e a [cobertura](docs/PARITY.md).
 
 ## Recursos
@@ -163,10 +167,10 @@ O [índice completo](docs/README.md) reúne os guias e as referências.
 | Criar um bot de música | [Lavalink, filas e voz Fluxer](docs/MUSIC.md) |
 | Medir performance | [Benchmarks e comparações com a 0.1.5](docs/BENCHMARKS.md) |
 | Compor cartões e imagens | [Canvas](docs/CANVAS.md) e [transformações de imagem](docs/IMAGES.md) |
-| Escrever scripts `$...` | [Linguagem](docs/LANGUAGE.md) e [referência de funções](docs/FUNCTIONS.md) |
+| Escrever scripts `$...` | [Linguagem](docs/functions/LANGUAGE.md) e [referência de funções](docs/functions/FUNCTIONS.md) |
 | Copiar exemplos | [Receitas](docs/COOKBOOK.md) e [código de exemplo](examples) |
 | Usar o editor ou diagnosticar um erro | [VS Code](docs/EDITOR.md) e [problemas comuns](docs/TROUBLESHOOTING.md) |
-| Entender a cobertura | [Paridade](docs/PARITY.md) e [funções ausentes](docs/FUNCTION-GAPS.md) |
+| Entender a cobertura | [Paridade](docs/PARITY.md) e [funções ausentes](docs/functions/FUNCTION-GAPS.md) |
 | Conferir mudanças e validação | [Changelog](CHANGELOG.md), [versionamento](VERSIONING.md) e [evidências](docs/VALIDATION.md) |
 
 ## Desenvolver a biblioteca

@@ -5,7 +5,7 @@ import { emojiBatch } from '../domain/resource-batches.js';
 import type { Resources } from '../ports/resources.js';
 import type { RoleInfo } from '../ports/resources/roles.js';
 import type { Transport } from '../ports/transport.js';
-import { GuardError } from '../shared/errors.js';
+import { GuardError, YuzuhaError } from '../shared/errors.js';
 import { AuthorizationService, requireGuild } from './authorization.js';
 import type { ActorScope } from './authorization.js';
 
@@ -76,7 +76,18 @@ export function bindAuthorizedResources(source: Resources, transport: Transport,
     guild(guildID);
     await allowed('ManageExpressions');
   };
-  return { users: source.users, messages: source.messages, collectors: source.collectors,
+  return { users: source.users, messages: Object.assign(Object.create(source.messages), {
+    async bulkDelete(channelID: string, messageIDs: string[]) {
+      await channel(channelID, 'ManageMessages');
+      const ids = [...new Set(messageIDs)];
+      if (!ids.length) throw new GuardError('Informe ao menos uma mensagem para apagar.');
+      if (ids.length > 100) throw new YuzuhaError('BULK_DELETE_LIMIT', 'Exclusão em massa aceita no máximo 100 mensagens por chamada.');
+      return source.messages.bulkDelete(channelID, ids);
+    },
+    async bulkDeleteOwn(channelID: string) { await channel(channelID, 'SendMessages'); return source.messages.bulkDeleteOwn(channelID); },
+    async acknowledgePins(channelID: string) { await channel(channelID, 'ReadMessageHistory'); return source.messages.acknowledgePins(channelID); },
+    async clearReadState(channelID: string) { await channel(channelID, 'ReadMessageHistory'); return source.messages.clearReadState(channelID); },
+  }), collectors: source.collectors,
     threads: source.threads, invites: source.invites, gateway: source.gateway,
     instance: source.instance, self: source.self, cache: source.cache, expressions: {
     emoji: source.expressions.emoji.bind(source.expressions), emojis: source.expressions.emojis.bind(source.expressions),
@@ -169,6 +180,9 @@ export function bindAuthorizedResources(source: Resources, transport: Transport,
     },
     async delete(id, reason) { await channel(id); return source.channels.delete(id, reason); },
     async setSlowmode(id, seconds, reason) { await channel(id); return source.channels.setSlowmode(id, seconds, reason); },
+    slowmode: source.channels.slowmode.bind(source.channels),
+    async sendTyping(id) { await channel(id, 'SendMessages'); return source.channels.sendTyping(id); },
+    rtcRegions: source.channels.rtcRegions.bind(source.channels),
     async move(id, position) { await channel(id); return source.channels.move(id, position); },
     async setCategory(id, parentID, reason) {
       await channel(id);

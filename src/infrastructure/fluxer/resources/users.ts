@@ -11,6 +11,7 @@ import type {
   LiveCountsInput,
   ProfileInfo,
 } from '../../../ports/resources/users.js';
+import type { ChannelInfo } from '../../../ports/resources/channels.js';
 import { YuzuhaError } from '../../../errors.js';
 
 /** Época Fluxer (01/01/2015 UTC) para derivar timestamps de snowflakes. */
@@ -95,7 +96,7 @@ export function toMemberInfo(member: GuildMember): MemberInfo {
   };
 }
 
-function toGuildInfo(guild: Guild): GuildInfo {
+export function toGuildInfo(guild: Guild): GuildInfo {
   return {
     id: guild.id,
     name: guild.name,
@@ -203,6 +204,12 @@ export function createUsersResources(client: Client): UsersResources {
           };
       }
       self.setPresence(presence);
+    },
+    async createDM(userID): Promise<ChannelInfo> {
+      const user = await client.users.fetch(userID, { force: true });
+      const dm = await user.createDM();
+      return { id: dm.id, name: '', type: 1, guildID: null, parentID: null, position: 0,
+        topic: null, slowmode: 0, nsfw: false };
     },
   };
 }

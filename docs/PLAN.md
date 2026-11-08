@@ -43,9 +43,9 @@ recursos. O runtime de scripts só é registrado quando o function mode é usado
 2. Entrypoints: `yuzuha` é nativo; `yuzuha/functions` contém parser, AST,
    evaluator, `Runtime`, `registerBuiltins` e `script()`. `yuzuha/sdk`,
    `yuzuha/testing` e os auxiliares de editor em `yuzuha/tooling` completam a superfície pública.
-3. Ativação do function mode: registrar um comando com `code` ou um evento de script chama
-   `bot.enableFunctions()` automaticamente. `bot.enableFunctions()` é idempotente
-   e permite pré-carregar o runtime. Comandos 100% nativos não registram builtins.
+3. Ativação do function mode: comandos com `code` e eventos de script exigem um
+   engine explícito — `engine: functions()` nas opções ou `bot.useEngine(engine)`.
+   A CLI injeta `functions()` automaticamente. Bots 100% nativos não carregam o runtime.
 4. Transporte: interface pequena, tipada e substituível. Adaptador Fluxer real e
    adaptador em memória para testes sem token. Objetos de mensagens preservam os
    dados usados pelo contexto; acesso ao objeto original é explícito.
@@ -72,6 +72,17 @@ recursos. O runtime de scripts só é registrado quando o function mode é usado
     e manutenção de dados. Nenhuma ferramenta de validação faz login.
 
 ## Entregas e dependências
+
+A atualização 0.3.0 isola o function mode da raiz e abre o canvas em processo:
+`yuzuha/canvas` passa a espelhar `@napi-rs/canvas` com `createCanvas`,
+`loadImage` via `HttpService` e `registerFonts`, enquanto o builder de cartões
+vai para `yuzuha/canvas/card` como `createCard`. O runtime de scripts migra para
+`src/functions/` atrás do port `ScriptEngine` (`src/ports/script-engine.ts`) —
+bots com `code` ou `scriptEvent` instalam `engine: functions()` ou
+`bot.useEngine(...)`, e a CLI injeta o engine sozinha. `bot.runtime`,
+`enableFunctions()` e `YuzuhaOptions.limits` saem. A documentação passa a tratar
+JS/TS como experiência principal e move os guias do function mode para
+`docs/functions/`.
 
 A atualização 0.2.0 completa os embeds: `url`, `timestamp`, `author`, ícones, alt
 text em imagem e miniatura, campos incrementais e `$embedFromObject`. Mensagens

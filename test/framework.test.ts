@@ -4,6 +4,7 @@ import { mkdir, mkdtemp, rm, unlink, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { MemoryStore, Yuzuha } from '../src/index.js';
+import { functions } from '../src/functions.js';
 import { MockTransport, mockMessage } from '../src/testing.js';
 import { RateLimits } from '../src/framework/rate-limits.js';
 
@@ -12,7 +13,7 @@ test('reload preserves manual commands and other command directories, including 
   const first = join(root, 'first'), second = join(root, 'second');
   await mkdir(first); await mkdir(second);
   const path = join(first, 'ping.mjs');
-  const bot = new Yuzuha({ transport: new MockTransport(), store: new MemoryStore() });
+  const bot = new Yuzuha({ transport: new MockTransport(), store: new MemoryStore(), engine: functions() });
   try {
     bot.command({ name: 'manual', code: 'preserved' });
     await writeFile(path, 'export default { name: "ping", code: "first" };');
@@ -28,7 +29,7 @@ test('reload preserves manual commands and other command directories, including 
 
 test('command definitions and command listings cannot mutate registered metadata', async () => {
   const transport = new MockTransport();
-  const bot = new Yuzuha({ transport, store: new MemoryStore() });
+  const bot = new Yuzuha({ transport, store: new MemoryStore(), engine: functions() });
   const command = { name: 'original', aliases: ['alias'], code: 'first' };
   bot.command(command);
   command.code = 'changed'; command.aliases.push('new');

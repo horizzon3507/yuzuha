@@ -1,11 +1,11 @@
 import { MemoryStore, Yuzuha } from 'yuzuha';
-import { script } from 'yuzuha/functions';
+import { functions, script } from 'yuzuha/functions';
 import { MockTransport, mockMessage } from 'yuzuha/testing';
 
 const transport = new MockTransport();
-const bot = new Yuzuha({ transport, store: new MemoryStore() });
+const bot = new Yuzuha({ transport, store: new MemoryStore(), engine: functions() });
 
-// Function mode é ativado automaticamente ao registrar um comando com `code`.
+// Comandos com `code` exigem um engine de function mode instalado no bot.
 bot.command(script({
   name: 'ban',
   code: '$modBan[$mentioned[1];$messageSlice[1]]$reply[Membro banido. Caso #$caseID.]',

@@ -136,7 +136,7 @@ preservar seus imports relativos e é removido ao encerrar o shell:
   trap 'rm -f "$baseline_file"' EXIT
   git show 98c7f4233fa84889f1e9325b53795533d000363d:src/scripting/parser.ts > "$baseline_file"
   ./node_modules/.bin/tsx benchmarks/parser.mjs \
-    --parser-module src/scripting/parser.ts \
+    --parser-module src/functions/runtime/parser.ts \
     --baseline-module "$baseline_file" > parser-comparacao.json
 )
 ```

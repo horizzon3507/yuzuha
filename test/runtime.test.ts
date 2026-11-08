@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { CommandContext, MemoryStore, PartialModerationError, ScriptError } from '../src/index.js';
 import { Runtime, defaultLimits, registerBuiltins } from '../src/functions.js';
-import { parse } from '../src/parser.js';
+import { parse } from '../src/functions.js';
 import { MockTransport, mockMessage } from '../src/testing.js';
 
 function harness(limits = {}) {

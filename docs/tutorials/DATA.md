@@ -96,5 +96,5 @@ da configuração durante seu próprio ciclo de vida.
 
 Para transações entre chaves, backup, restauração e falhas parciais, consulte o
 [guia de estado e persistência](../STORAGE.md). Para scripts, veja as
-[transações declarativas](../LANGUAGE.md) e a assinatura de
-[`$dataTransaction` no catálogo de funções](../FUNCTIONS.md).
+[transações declarativas](../functions/LANGUAGE.md) e a assinatura de
+[`$dataTransaction` no catálogo de funções](../functions/FUNCTIONS.md).

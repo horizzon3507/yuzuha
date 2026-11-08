@@ -21,6 +21,20 @@ documentos. Veja a [política completa](VERSIONING.md).
 
 </details>
 
+## v0.3.0 · 04/11/2026
+
+Function mode isolado da raiz e `yuzuha/canvas` compatível com `@napi-rs/canvas`. Esta atualização da biblioteca Yuzuha foi preparada em 04/11/2026 (v0.3.0).
+
+- `yuzuha/canvas` agora expõe a API napi em processo: `createCanvas`, `loadImage`, `registerFonts`, `GlobalFonts`, `Path2D`, `ImageData`, `DOMMatrix` e os demais exports de `@napi-rs/canvas`. `loadImage` baixa URLs HTTP(S) por `HttpService` com guarda de rede privada, limite de bytes, inspeção de formato e cancelamento. Sem o peer, os exports falham com `CANVAS_DEPENDENCY`.
+- `ctx.canvas.send(canvas)` aceita um canvas napi e envia o anexo com as mesmas opções do builder; `ctx.canvas.loadImage(source)` usa o HTTP e o sinal do contexto. `ctx.canvas` continua oferecendo o builder (`create`/`send(builder)`) sem alterações.
+- O builder de cartões migrou para `yuzuha/canvas/card` e continua renderizando em processo filho com os mesmos limites.
+- O function mode fica isolado em `src/functions/`: `yuzuha/functions` exporta `functions()` que devolve um `ScriptEngine` com os builtins registrados. `new Yuzuha({ engine: functions() })` ou `bot.useEngine(engine)` instalam o engine; comandos com `code`, subcomandos com `code`, eventos de script e `plugin.functions` sem engine falham com `FUNCTIONS_REQUIRED`. A CLI injeta `functions()` automaticamente, preservando a UX de `yuzuha.config.js`.
+- **Mudanças incompatíveis:** `import { createCanvas } from 'yuzuha/canvas'` passa a criar um canvas napi em processo — para o builder, migre para `import { createCard } from 'yuzuha/canvas/card'`. `bot.runtime`, `bot.enableFunctions()` e `YuzuhaOptions.limits` foram removidos — instale o engine explicitamente e use `bot.engine` ou `functions({ limits })`. Sem engine, `code:` e `scriptEvent` lançam `FUNCTIONS_REQUIRED`.
+- Recursos nativos novos: `channels.sendTyping`, `channels.slowmode` (leitura), `channels.rtcRegions`, `messages.bulkDelete`/`bulkDeleteOwn`/`acknowledgePins`/`clearReadState`, `users.createDM` e `cache.sweepUsers`/`sweepChannels`/`sweepGuilds`. `bulkDelete` exige `ManageMessages` de autor e bot no canal, deduplica os ids e limita o lote a 100 (`BULK_DELETE_LIMIT`).
+- A matriz de paridade agora distingue `coberto-recurso` (alcançado por `ctx.resources`, usado também pelas funções) de `coberto-nativo`, e marca como `só-SDK` as constantes, helpers puros e classes de dados reexportados por `yuzuha/sdk`.
+- Documentação refeita com foco na experiência nativa JS/TS: os guias do function mode foram para `docs/functions/`, com índice explicando ativação por `engine: functions()`.
+- SDK 3.3.0, Node >=22.13 e schema persistido 2 permanecem compatíveis. Veja [VERSIONING.md](VERSIONING.md#migrar-para-030) antes de atualizar.
+
 ## v0.2.1 · 03/11/2026
 
 Paridade nativa ampliada com o Fluxer.js: subpaths do SDK espelhados, pacotes satélites reexportados e novas áreas de recursos para gateway, instância, usuário autenticado e cache. Esta atualização da biblioteca Yuzuha foi preparada em 03/11/2026 (v0.2.1).
@@ -43,7 +57,7 @@ Embeds completos em uma API só, nos modos nativo e function mode, com uma matri
 - `$fetchMessage` e `$messages` devolvem `embeds` normalizados, com `type`, `provider`, `video`, `audio`, `nsfw` e `children` somente leitura.
 - Mudança incompatível: `MessageInfo.embeds` é obrigatório para implementações próprias de `MessagesResources`. Objetos de mensagem em script rejeitam chaves desconhecidas, que antes viravam embed sem validação. Veja [VERSIONING.md](VERSIONING.md#migrar-para-020).
 - `npm run docs:generate` gera [PARITY-MATRIX.md](docs/PARITY-MATRIX.md), que classifica cada export do SDK como coberto por script, coberto pelo código nativo, só-SDK ou lacuna. Um teste falha quando o SDK ganha export sem área.
-- Catálogo do function mode: de 322 para **336** funções. [FUNCTION-GAPS.md](docs/FUNCTION-GAPS.md) foi atualizado com a contagem real.
+- Catálogo do function mode: de 322 para **336** funções. [FUNCTION-GAPS.md](docs/functions/FUNCTION-GAPS.md) foi atualizado com a contagem real.
 
 ## v0.1.9 · 29/10/2026
 

@@ -123,4 +123,4 @@ local: comandos com efeitos externos devem ser idempotentes. Falhas automáticas
 de store chegam a `onError` e aos eventos do scheduler; não são descartadas.
 
 Veja também [armazenamento](STORAGE.md), [observabilidade](OBSERVABILITY.md) e
-[referência de funções](FUNCTIONS.md).
+[referência de funções](functions/FUNCTIONS.md).

@@ -4,6 +4,7 @@ import { pathToFileURL } from 'node:url';
 import { parseEnv } from 'node:util';
 import { importModule } from '../framework/module-loader.js';
 import { Yuzuha } from '../bot.js';
+import { functions } from '../functions.js';
 import type { YuzuhaConfig } from '../config.js';
 import { YuzuhaError } from '../errors.js';
 
@@ -33,7 +34,7 @@ export async function configuredBot(path: string, environment: boolean, loadComm
   if (!module.default || typeof module.default !== 'object' || Array.isArray(module.default)) throw new YuzuhaError('CONFIG_INVALID', 'Config deve exportar um objeto default.');
   const config = module.default as YuzuhaConfig;
   if ((config.commands !== undefined && typeof config.commands !== 'string') || (config.setup !== undefined && typeof config.setup !== 'function')) throw new YuzuhaError('CONFIG_INVALID', 'commands deve ser texto e setup deve ser uma função.');
-  const bot = new Yuzuha(config);
+  const bot = new Yuzuha({ ...config, engine: config.engine ?? functions() });
   try {
     await config.setup?.(bot);
     const commandsPath = resolve(directory, config.commands ?? 'commands');

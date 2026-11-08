@@ -19,7 +19,7 @@ for (const category of categories) {
 const content = lines.join('\n');
 const metadata = `${JSON.stringify(functions.map(({ execute: _execute, ...fn }) => fn), null, 2)}\n`;
 const metadataPath = fileURLToPath(new URL('../editors/vscode/functions.json', import.meta.url));
-const path = fileURLToPath(new URL('../docs/FUNCTIONS.md', import.meta.url));
+const path = fileURLToPath(new URL('../docs/functions/FUNCTIONS.md', import.meta.url));
 if (process.argv.includes('--check')) {
   if (await readFile(path, 'utf8') !== content) throw new Error('Referência de funções desatualizada. Execute npm run docs:generate.');
   if (await readFile(metadataPath, 'utf8') !== metadata) throw new Error('Metadados do editor desatualizados. Execute npm run docs:generate.');

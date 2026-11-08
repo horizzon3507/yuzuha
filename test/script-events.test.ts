@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { Guild, GuildMember, Message, MessageReaction, PartialGuildMember, PartialMessage, User } from '@fluxerjs/core';
 import { Yuzuha, MemoryStore, GuardError, PartialModerationError } from '../src/index.js';
+import { functions } from '../src/functions.js';
 import type { CommandContext } from '../src/commands/context.js';
 import type { ScriptEventData } from '../src/domain/events.js';
 import { MockTransport, mockMessage } from '../src/testing.js';
@@ -12,7 +13,7 @@ const userData = (id = '2', bot = false) => ({ id, username: 'Ana', discriminato
   avatar: null, avatar_color: null, flags: 0, bot });
 function fixture(store = new MemoryStore()) {
   const transport = new MockTransport(), errors: { error: unknown; ctx?: CommandContext }[] = [];
-  const bot = new Yuzuha({ transport, store, scheduler: false, http: false,
+  const bot = new Yuzuha({ transport, store, scheduler: false, http: false, engine: functions(),
     onError: (error, ctx) => { errors.push({ error, ctx }); } });
   const guild = new Guild(bot.client, { id: '100', name: 'Teste', ownerId: '1' });
   const member = (id = '2', botAccount = false) => new GuildMember(bot.client, { user: userData(id, botAccount),
@@ -126,7 +127,7 @@ test('plugin compila funções e eventos em staging e falha sem instalar parte d
   }), /desconhecida/);
   assert.equal(f.bot.client.listenerCount('guildMemberAdd'), listeners);
   assert.equal(f.bot.listCommands().length, 0);
-  assert.throws(() => f.bot.runtime.compile('$pluginText'), /desconhecida/);
+  assert.throws(() => f.bot.engine!.compile('$pluginText'), /desconhecida/);
   f.bot.plugin({ name: 'atomic', functions: [{ name: 'pluginText', ...metadata, minArgs: 0, maxArgs: 0, execute: () => 'plugin' }],
     scriptEvents: [{ event: 'guildMemberAdd', code: '$pluginText', channelID: '300' }] });
   f.bot.client.emit('guildMemberAdd', f.member());

@@ -1,5 +1,5 @@
 import { MemoryStore, Yuzuha } from 'yuzuha';
-import { script } from 'yuzuha/functions';
+import { functions, script } from 'yuzuha/functions';
 import { MockTransport, mockMessage } from 'yuzuha/testing';
 
 // Mesmo embed do exemplo nativo, montado em function mode. Cada parte é validada pelas mesmas regras.
@@ -22,7 +22,7 @@ const code = [
 ].join('');
 
 const transport = new MockTransport();
-const bot = new Yuzuha({ transport, store: new MemoryStore() });
+const bot = new Yuzuha({ transport, store: new MemoryStore(), engine: functions() });
 
 bot.command(script({ name: 'relatorio', code }));
 

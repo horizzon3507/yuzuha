@@ -1,4 +1,4 @@
-import { createCanvas } from 'yuzuha/canvas';
+import { createCard } from 'yuzuha/canvas/card';
 
 const sampleEntries = [
   { name: 'Lia', score: 96 }, { name: 'Domingos Ribeiro', score: 88 }, { name: 'Samira', score: 82 },
@@ -9,7 +9,7 @@ const sampleEntries = [
 
 export function buildRanking(entries = sampleEntries) {
   if (entries.length !== 10) throw new RangeError('O exemplo de ranking recebe dez posições.');
-  const canvas = createCanvas(1000, 700, { background: '#101722' })
+  const canvas = createCard(1000, 700, { background: '#101722' })
     .rect({ x: 0, y: 0, width: 8, height: 700, fill: '#70d8bc' })
     .text('Community activity', { x: 42, y: 34, maxWidth: 600, fontSize: 34, weight: 700, color: '#f2f4f5' })
     .text('Ten sample positions · demonstration data', { x: 42, y: 78, maxWidth: 700, fontSize: 16, color: '#9ca9b5' })

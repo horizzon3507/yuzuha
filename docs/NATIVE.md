@@ -214,13 +214,13 @@ await ctx.reply(`${membro.displayName}: ${canais.length} canais, ${fixadas.lengt
 |---|---|
 | `users` | `user`, `member`, `members`, `memberCount`, `guild`, `bans`, `auditLogs`, `setPresence`, `searchMembers`, `setNickname`, `editGuild` |
 | `roles` | `list`, `resolve`, `has`, `create`, `edit`, `delete`, `add`, `remove`, `move` |
-| `channels` | `list`, `get`, `create`, `edit`, `delete`, `setSlowmode`, `overwrite`, `permissionsFor`, `move`, `setCategory` |
-| `messages` | Histórico com cursores, `pinnedPage`, `reactionUsersPage`, `dm`, `forward`, `search`/`searchAll` com filtros avançados, `bulkFetch`, `sendFiles`, `sendBytes`, `sendAttachments` |
+| `channels` | `list`, `get`, `create`, `edit`, `delete`, `setSlowmode`, `slowmode`, `sendTyping`, `rtcRegions`, `overwrite`, `permissionsFor`, `move`, `setCategory` |
+| `messages` | Histórico com cursores, `pinnedPage`, `reactionUsersPage`, `dm`, `forward`, `search`/`searchAll` com filtros avançados, `bulkFetch`, `bulkDelete`, `bulkDeleteOwn`, `acknowledgePins`, `clearReadState`, `sendFiles`, `sendBytes`, `sendAttachments` |
 | `collectors` | `awaitMessage`, `awaitReaction`, streams `collectMessages`/`collectReactions` (AsyncIterable) |
 | `gateway` | `requestMembers`, `requestGuildCounts`, `requestChannelCounts`, `requestForumUnreads`, `subscribeThreads`, `send` (fire-and-forget) |
 | `instance` | `describe`, `gatewayInfo`, `application`, `oauthApplications`, `emojiMetadata`, `stickerMetadata`, `resolveEmoji` |
 | `self` | `fetch`, `guilds`, `leaveGuild` e `deleteMyMessages` com verificação sudo |
-| `cache` | `stats`, `sweepMessages`, `sweepMembers` |
+| `cache` | `stats`, `sweepMessages`, `sweepMembers`, `sweepUsers`, `sweepChannels`, `sweepGuilds` |
 | `webhooks` | `list`, `create`, `send`, `edit`, `delete` |
 | `expressions` | CRUD de emojis/stickers, `cloneEmoji`, `cloneSticker` |
 | `threads` | `create`, `archive`, `unarchive`, `forumPost`, `addMember`, `removeMember`, `members`, `member`, `edit`, `join`, `leave`, `search` |
@@ -229,7 +229,7 @@ await ctx.reply(`${membro.displayName}: ${canais.length} canais, ${fixadas.lengt
 Os retornos são objetos normalizados e serializáveis (`UserInfo`, `MemberInfo`,
 `MessageInfo` etc.), não instâncias do SDK. Isso mantém os mesmos dados nos
 scripts, nos testes e no contexto nativo. Para métodos não cobertos, use
-`ctx.client`; a lista de lacunas está em [FUNCTION-GAPS.md](FUNCTION-GAPS.md).
+`ctx.client`; a lista de lacunas está em [FUNCTION-GAPS.md](functions/FUNCTION-GAPS.md).
 
 `messages.pinnedPage(canal, { limit, before })` mantém a ordem de fixação e retorna
 `messages`, `pinnedAt`, `hasMore` e `nextBefore`. `messages.reactionUsersPage`
@@ -620,8 +620,9 @@ conflitos de comandos/funções e eventos inválidos são rejeitados antes de
 registrar as capacidades do plugin.
 
 O comando nativo e o comando com `code` usam a mesma registry: nomes e aliases
-não podem disputar o mesmo espaço. Registrar um comando com `code` ativa o
-function mode automaticamente; `bot.enableFunctions()` apenas antecipa o registro. Plugins não constituem um sandbox de JS/TS;
+não podem disputar o mesmo espaço. Comandos com `code` e eventos de script
+exigem um engine instalado: `engine: functions()` nas opções ou `bot.useEngine(...)`.
+Plugins não constituem um sandbox de JS/TS;
 seu código tem as permissões normais do processo Node.
 
 A [referência do framework](FRAMEWORK.md) detalha carregamento de diretórios,

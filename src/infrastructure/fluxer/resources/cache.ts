@@ -1,8 +1,9 @@
-import type { Client } from '@fluxerjs/core';
+import type { Client, GuildChannel } from '@fluxerjs/core';
 import { YuzuhaError } from '../../../errors.js';
 import type { CacheResources } from '../../../ports/resources/cache.js';
 import { toMessageInfo } from './messages.js';
-import { toMemberInfo } from './users.js';
+import { toGuildInfo, toMemberInfo, toUserInfo } from './users.js';
+import { toChannelInfo } from './channels.js';
 
 function bounded(value: number): number | null {
   return Number.isFinite(value) ? value : null;
@@ -47,6 +48,15 @@ export function createCacheResources(client: Client): CacheResources {
         if (guildID !== undefined && guildId !== guildID) return false;
         return keep ? !keep(toMemberInfo(member), guildId) : true;
       });
+    },
+    async sweepUsers(input = {}) {
+      return client.cache.sweepUsers((user, id) => (input.keep ? !input.keep(toUserInfo(user), id) : true));
+    },
+    async sweepChannels(input = {}) {
+      return client.cache.sweepChannels((channel, id) => (input.keep ? !input.keep(toChannelInfo(channel as GuildChannel), id) : true));
+    },
+    async sweepGuilds(input = {}) {
+      return client.cache.sweepGuilds((guild, id) => (input.keep ? !input.keep(toGuildInfo(guild), id) : true));
     },
   };
 }

@@ -1,4 +1,5 @@
 import type { ActivityInfo, PresenceStatus } from './common.js';
+import type { ChannelInfo } from './channels.js';
 
 export interface UserInfo {
   id: string;
@@ -59,6 +60,7 @@ export interface UsersResources {
   searchMembers(guildID: string, query: string, limit?: number, offset?: number): Promise<MemberSearchPage>;
   setNickname(guildID: string, userID: string, nickname: string | null, reason: string): Promise<MemberInfo>;
   editGuild(guildID: string, input: GuildEditInput): Promise<GuildInfo>;
+  createDM(userID: string): Promise<ChannelInfo>;
   leaveGuild?(guildID: string): Promise<void>;
 }
 

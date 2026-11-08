@@ -47,7 +47,7 @@ export async function scaffold(directory: string, language: 'js' | 'ts', functio
     'package.json': `${JSON.stringify(manifest, null, 2)}\n`,
     '.env.example': 'FLUXER_BOT_TOKEN=\n',
     '.gitignore': 'node_modules/\n.env\ndata/\n',
-    [`yuzuha.config.${language}`]: `import { defineConfig } from 'yuzuha';\n\nexport default defineConfig({\n  name: ${JSON.stringify(name)},\n  prefix: '!',\n  commands: './commands',\n});\n`,
+    [`yuzuha.config.${language}`]: `import { defineConfig } from 'yuzuha';\n${functions ? "import { functions } from 'yuzuha/functions';\n" : ''}\nexport default defineConfig({\n  name: ${JSON.stringify(name)},\n  prefix: '!',\n  commands: './commands',${functions ? '\n  engine: functions(),' : ''}\n});\n`,
     'README.md': `# ${name}\n\nBot do Fluxer com Yuzuha.\n\n1. Execute \`npm install\`.\n2. Execute \`npm run check\` e \`npm test\` para validar offline.\n3. Copie \`.env.example\` para \`.env\` e preencha o token.\n4. Execute \`npm run dev\` ou \`npm start\`.\n\n${template ? templateReadme(template) : 'Comandos: `!ping`, `!hello`, `!ban @membro motivo`.'}${functions ? '\nFunction mode: `!eco texto`.' : ''}\n\n${local ? 'A dependência local aponta para a instalação que gerou este projeto. Para compartilhar, troque-a pela versão publicada no npm.' : 'A dependência do Yuzuha usa a versão do npm, permitindo instalar o projeto em outra máquina.'}\nO teste de exemplo usa \`yuzuha/testing\`, sem token nem conexão ao Fluxer.\nCasos e variáveis ficam no diretório XDG de dados do Yuzuha, sob o nome deste bot.\n`,
   };
   if (template) {

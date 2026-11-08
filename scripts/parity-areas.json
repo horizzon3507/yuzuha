@@ -1,27 +1,220 @@
 {
   "areas": {
-    "Cliente e eventos": ["Base", "Client", "ClientUser", "Events", "CacheController", "DEFAULT_CACHE_LIMITS", "normalizeCacheLimit", "resolveCacheLimits"],
-    "Instância e discovery": ["DEFAULT_INSTANCE_ENDPOINTS", "INSTANCE_DISCOVERY_PATH", "instanceDiscoveryUrl", "normalizeApiOrigin", "parseInstanceDiscovery", "resolveInstanceEndpoints"],
-    "Mensagens e reações": ["Message", "MessageManager", "PartialMessage", "MessageReaction", "MessageReactionManager", "MessageSticker"],
-    "Coletores": ["MessageCollector", "ReactionCollector"],
-    "Embeds e payloads": ["AllowedMentions", "AttachmentBuilder", "AttachmentMeta", "EmbedBuilder", "MessagePayload"],
-    "Expressões": ["GuildEmoji", "GuildSticker"],
-    "Canais": ["AnnouncementChannel", "CategoryChannel", "Channel", "ChannelManager", "DMChannel", "ForumChannel", "GuildChannel", "LinkChannel", "MediaChannel", "PermissionOverwrite", "PermissionOverwriteManager", "TextChannel", "VoiceChannel"],
-    "Threads": ["ThreadChannel", "ThreadManager", "ThreadMember", "ThreadMemberManager", "fetchActiveThreads"],
-    "Usuários e membros": ["GuildMember", "GuildMemberManager", "GuildMemberRoleManager", "PartialGuildMember", "User", "UserManager"],
-    "Servidores e bans": ["Guild", "GuildBan", "GuildManager"],
-    "Cargos": ["Role", "GuildRoleManager"],
-    "Convites": ["Invite", "inviteUrl"],
-    "Webhooks": ["Webhook"],
-    "Constantes e bitfields": ["FLUXER_EPOCH", "GatewayDispatchEvents", "GatewayErrorCodes", "GatewayIdentifyFlags", "EmbedMediaFlags", "GuildMemberProfileFlags", "GuildOperations", "MessageAttachmentFlags", "MessageFlags", "MessageFlagsBitField", "MessageFlagsBits", "PermissionFlags", "PermissionsBitField", "PublicUserFlags", "Routes", "SystemChannelFlags", "ThreadMemberFlags", "UserFlagsBitField", "UserFlagsBits", "resolvePermissionsToBitfield"],
-    "CDN": ["CDN_URL", "STATIC_CDN_URL", "cdnAvatarURL", "cdnBannerURL", "cdnDefaultAvatarURL", "cdnDisplayAvatarURL", "cdnEmojiURL", "cdnGuildAssetURL", "cdnMemberAvatarURL", "cdnMemberBannerURL", "cdnStickerURL"],
-    "Erros e logs": ["ErrorCodes", "FluxerError", "createLogger", "serializeError"],
-    "Texto e guards": ["isGroupDmInvite", "isGuildInvite", "isUploadedAttachment", "parsePrefixCommand", "parseUserMention", "resolveKlipyToImageUrl"]
+    "Cliente e eventos": [
+      "Base",
+      "Client",
+      "ClientUser",
+      "Events",
+      "CacheController",
+      "DEFAULT_CACHE_LIMITS",
+      "normalizeCacheLimit",
+      "resolveCacheLimits"
+    ],
+    "Instância e discovery": [
+      "DEFAULT_INSTANCE_ENDPOINTS",
+      "INSTANCE_DISCOVERY_PATH",
+      "instanceDiscoveryUrl",
+      "normalizeApiOrigin",
+      "parseInstanceDiscovery",
+      "resolveInstanceEndpoints"
+    ],
+    "Mensagens e reações": [
+      "Message",
+      "MessageManager",
+      "PartialMessage",
+      "MessageReaction",
+      "MessageReactionManager",
+      "MessageSticker"
+    ],
+    "Coletores": [
+      "MessageCollector",
+      "ReactionCollector"
+    ],
+    "Embeds e payloads": [
+      "AllowedMentions",
+      "AttachmentBuilder",
+      "AttachmentMeta",
+      "EmbedBuilder",
+      "MessagePayload"
+    ],
+    "Expressões": [
+      "GuildEmoji",
+      "GuildSticker"
+    ],
+    "Canais": [
+      "AnnouncementChannel",
+      "CategoryChannel",
+      "Channel",
+      "ChannelManager",
+      "DMChannel",
+      "ForumChannel",
+      "GuildChannel",
+      "LinkChannel",
+      "MediaChannel",
+      "PermissionOverwrite",
+      "PermissionOverwriteManager",
+      "TextChannel",
+      "VoiceChannel"
+    ],
+    "Threads": [
+      "ThreadChannel",
+      "ThreadManager",
+      "ThreadMember",
+      "ThreadMemberManager",
+      "fetchActiveThreads"
+    ],
+    "Usuários e membros": [
+      "GuildMember",
+      "GuildMemberManager",
+      "GuildMemberRoleManager",
+      "PartialGuildMember",
+      "User",
+      "UserManager"
+    ],
+    "Servidores e bans": [
+      "Guild",
+      "GuildBan",
+      "GuildManager"
+    ],
+    "Cargos": [
+      "Role",
+      "GuildRoleManager"
+    ],
+    "Convites": [
+      "Invite",
+      "inviteUrl"
+    ],
+    "Webhooks": [
+      "Webhook"
+    ],
+    "Constantes e bitfields": [
+      "FLUXER_EPOCH",
+      "GatewayDispatchEvents",
+      "GatewayErrorCodes",
+      "GatewayIdentifyFlags",
+      "EmbedMediaFlags",
+      "GuildMemberProfileFlags",
+      "GuildOperations",
+      "MessageAttachmentFlags",
+      "MessageFlags",
+      "MessageFlagsBitField",
+      "MessageFlagsBits",
+      "PermissionFlags",
+      "PermissionsBitField",
+      "PublicUserFlags",
+      "Routes",
+      "SystemChannelFlags",
+      "ThreadMemberFlags",
+      "UserFlagsBitField",
+      "UserFlagsBits",
+      "resolvePermissionsToBitfield"
+    ],
+    "CDN": [
+      "CDN_URL",
+      "STATIC_CDN_URL",
+      "cdnAvatarURL",
+      "cdnBannerURL",
+      "cdnDefaultAvatarURL",
+      "cdnDisplayAvatarURL",
+      "cdnEmojiURL",
+      "cdnGuildAssetURL",
+      "cdnMemberAvatarURL",
+      "cdnMemberBannerURL",
+      "cdnStickerURL"
+    ],
+    "Erros e logs": [
+      "ErrorCodes",
+      "FluxerError",
+      "createLogger",
+      "serializeError"
+    ],
+    "Texto e guards": [
+      "isGroupDmInvite",
+      "isGuildInvite",
+      "isUploadedAttachment",
+      "parsePrefixCommand",
+      "parseUserMention",
+      "resolveKlipyToImageUrl"
+    ]
   },
   "sdkOnly": {
     "Sharding e cluster": {
-      "exports": ["BETA_CLIENT_CLUSTER_WARNING", "ClientCluster", "ClientClusterEvents"],
+      "exports": [
+        "BETA_CLIENT_CLUSTER_WARNING",
+        "ClientCluster",
+        "ClientClusterEvents"
+      ],
       "note": "Fora deste lote. O Yuzuha expõe shardCount e shardIds em clientOptions; o wrapper yuzuha/sharding fica como seguimento."
+    },
+    "CDN e helpers de URL": {
+      "exports": [
+        "CDN_URL",
+        "STATIC_CDN_URL",
+        "cdnAvatarURL",
+        "cdnBannerURL",
+        "cdnDefaultAvatarURL",
+        "cdnDisplayAvatarURL",
+        "cdnEmojiURL",
+        "cdnGuildAssetURL",
+        "cdnMemberAvatarURL",
+        "cdnMemberBannerURL",
+        "cdnStickerURL",
+        "inviteUrl"
+      ],
+      "note": "Disponível por `yuzuha/sdk` (e `SDK` na raiz); sem wrapper nativo por serem constantes, helpers puros ou classes de dados."
+    },
+    "Constantes e bitfields puros": {
+      "exports": [
+        "GuildMemberProfileFlags",
+        "GuildOperations",
+        "MessageAttachmentFlags",
+        "MessageFlags",
+        "MessageFlagsBitField",
+        "MessageFlagsBits",
+        "PublicUserFlags",
+        "Routes",
+        "SystemChannelFlags",
+        "ThreadMemberFlags",
+        "UserFlagsBitField",
+        "UserFlagsBits",
+        "resolvePermissionsToBitfield",
+        "ErrorCodes"
+      ],
+      "note": "Disponível por `yuzuha/sdk` (e `SDK` na raiz); sem wrapper nativo por serem constantes, helpers puros ou classes de dados."
+    },
+    "Instância, cache e logs": {
+      "exports": [
+        "DEFAULT_INSTANCE_ENDPOINTS",
+        "INSTANCE_DISCOVERY_PATH",
+        "instanceDiscoveryUrl",
+        "normalizeApiOrigin",
+        "parseInstanceDiscovery",
+        "resolveInstanceEndpoints",
+        "DEFAULT_CACHE_LIMITS",
+        "normalizeCacheLimit",
+        "resolveCacheLimits",
+        "createLogger",
+        "serializeError"
+      ],
+      "note": "Disponível por `yuzuha/sdk` (e `SDK` na raiz); sem wrapper nativo por serem constantes, helpers puros ou classes de dados."
+    },
+    "Texto e parsing puros": {
+      "exports": [
+        "parsePrefixCommand",
+        "parseUserMention",
+        "resolveKlipyToImageUrl"
+      ],
+      "note": "Disponível por `yuzuha/sdk` (e `SDK` na raiz); sem wrapper nativo por serem constantes, helpers puros ou classes de dados."
+    },
+    "Classes de dados do SDK": {
+      "exports": [
+        "AnnouncementChannel",
+        "CategoryChannel",
+        "ForumChannel",
+        "MediaChannel",
+        "GuildRoleManager"
+      ],
+      "note": "Disponível por `yuzuha/sdk` (e `SDK` na raiz); sem wrapper nativo por serem constantes, helpers puros ou classes de dados."
     }
   }
 }

@@ -1,10 +1,12 @@
 import { defineConfig, defineEvent } from 'yuzuha';
+import { functions } from 'yuzuha/functions';
 import { Events } from 'yuzuha/sdk';
 
 export default defineConfig({
   name: 'yuzuha-example',
   prefix: ['!', 'y!'],
   commands: './commands',
+  engine: functions(),
   setup(bot) {
     bot.plugin({
       name: 'greetings',
