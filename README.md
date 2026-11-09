@@ -10,7 +10,7 @@ pacotes satélites por `yuzuha/sdk/*` (client, errors, message, cluster, interna
 types, rest, ws, builders, collection e util, além de voice e sharding como peers
 opcionais).
 
-[0.3.1](CHANGELOG.md) · Node **22.13+** · ESM · [MIT](LICENSE)
+[0.3.2](CHANGELOG.md) · Node **22.13+** · ESM · [MIT](LICENSE)
 
 [Começar](#começar) · [Comandos](#escrever-comandos) · [Recursos](#recursos) · [Testes](#testar-sem-token) · [Documentação](#documentação)
 
@@ -19,7 +19,7 @@ opcionais).
 ### Criar um bot
 
 ```sh
-npx yuzuha@0.3.1 init ./meu-bot --ts
+npx yuzuha@0.3.2 init ./meu-bot --ts
 cd meu-bot
 npm install
 npm run check
@@ -45,7 +45,7 @@ para incluir um comando de exemplo com scripts.
 ### Usar em um projeto existente
 
 ```sh
-npm install yuzuha@0.3.1
+npm install yuzuha@0.3.2
 ```
 
 Use `"type": "module"` no `package.json`. O [guia inicial](docs/QUICKSTART.md)

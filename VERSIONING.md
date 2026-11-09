@@ -1,16 +1,16 @@
 # Versionamento
 
 O Yuzuha aplica o formato Hory ao histórico e usa **SemVer simples** no pacote.
-A versão desta atualização é **0.3.1**.
+A versão desta atualização é **0.3.2**.
 
 ## Pacote e histórico
 
 | Lugar | Formato nesta versão |
 |---|---|
-| `package.json` e entrada raiz de `package-lock.json` | `0.3.1` |
-| Pacote npm e saída de `yuzuha --version` | `0.3.1` |
-| Título do changelog | `## v0.3.1 · 06/11/2026` |
-| Tag Git | `v0.3.1` |
+| `package.json` e entrada raiz de `package-lock.json` | `0.3.2` |
+| Pacote npm e saída de `yuzuha --version` | `0.3.2` |
+| Título do changelog | `## v0.3.2 · 09/11/2026` |
+| Tag Git | `v0.3.2` |
 
 O SDK e a CLI pertencem ao mesmo pacote. Para bibliotecas, a convenção Hory mantém
 SemVer sem `m`, sem seções por superfície e sem sufixos de canal.
@@ -41,6 +41,29 @@ A versão do SDK é fixada separadamente. Atualizá-la exige revisar
 gerado por `init` pertence ao consumidor e não precisa acompanhar a biblioteca.
 
 ## Preparar uma atualização
+
+### Migrar para 0.3.2
+
+A 0.3.2 é aditiva, com uma nota de contrato: `MessagesResources` ganhou o
+método obrigatório `purge(channelID, { limit, authorID?, include? })`, que
+devolve `{ deleted, deletedIDs, via }` — adapters `Resources` completos
+precisam implementá-lo; `mockResources` continua aceitando parciais.
+`messages.bulkDelete` aceita um terceiro parâmetro opcional
+`{ fallback?: 'each' }`, compatível com implementações anteriores que
+ignoram argumentos extras; quem implementa pode aceitar a opção ou
+mantê-la sem efeito.
+
+`MemberService.resolveUser` aceita consulta opcional e
+`{ default?: 'author' | userID }` — `resolveUser('', { default: 'author' })`
+resolve o autor do contexto, inclusive em DMs. `ctx.expire` agenda a
+exclusão de mensagens existentes com a mesma validação de `ttlMs` de
+`send`/`reply`, e `ctx.purge`/`YuzuhaOptions.emoji` (`bot.emoji`/`ctx.emoji`)
+são aditivos. Imports e schema persistido (2) permanecem; não há migração
+de dados.
+
+```sh
+npm install yuzuha@0.3.2
+```
 
 ### Migrar para 0.3.1
 

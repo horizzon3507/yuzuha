@@ -215,7 +215,7 @@ await ctx.reply(`${membro.displayName}: ${canais.length} canais, ${fixadas.lengt
 | `users` | `user`, `member`, `members`, `memberCount`, `guild`, `bans`, `auditLogs`, `setPresence`, `searchMembers`, `setNickname`, `editGuild`, `me`, `transferOwnership`, `discoveryStatus`, `applyForDiscovery`, `editDiscoveryApplication`, `withdrawDiscoveryApplication` |
 | `roles` | `list`, `resolve`, `has`, `create`, `edit`, `delete`, `add`, `remove`, `move`, `setRoleHoistPositions`, `resetRoleHoistPositions` |
 | `channels` | `list`, `get`, `create`, `edit`, `delete`, `setSlowmode`, `slowmode`, `sendTyping`, `rtcRegions`, `addRecipient`/`removeRecipient` em grupos de DM, `editThreadDefaults`, `setDefaultForumLayout`, `overwrite`, `permissionsFor`, `move`, `setCategory` |
-| `messages` | Histórico com cursores, `pinnedPage`, `reactionUsersPage`, `dm`, `forward`, `search`/`searchAll` com filtros avançados, `bulkFetch`, `bulkDelete`, `bulkDeleteOwn`, `acknowledgePins`, `clearReadState`, `purgeDM`, `deleteAttachment`, `sendTo`, `sendFiles`, `sendBytes`, `sendAttachments` |
+| `messages` | Histórico com cursores, `pinnedPage`, `reactionUsersPage`, `dm`, `forward`, `search`/`searchAll` com filtros avançados, `bulkFetch`, `bulkDelete`, `purge`, `bulkDeleteOwn`, `acknowledgePins`, `clearReadState`, `purgeDM`, `deleteAttachment`, `sendTo`, `sendFiles`, `sendBytes`, `sendAttachments` |
 | `collectors` | `awaitMessage`, `awaitReaction`, streams `collectMessages`/`collectReactions` (AsyncIterable) |
 | `gateway` | `requestMembers`, `requestGuildCounts`, `requestChannelCounts`, `requestForumUnreads`, `subscribeThreads`, `send` (fire-and-forget) |
 | `instance` | `describe`, `gatewayInfo`, `application`, `oauthApplications`, `emojiMetadata`, `stickerMetadata`, `resolveEmoji` |
@@ -227,6 +227,23 @@ await ctx.reply(`${membro.displayName}: ${canais.length} canais, ${fixadas.lengt
 | `invites` | `get`, `create`, `delete`, `list`, `vanity`, `setVanity` |
 
 Também há `ctx.deleteCommandMessage()` (degrada `reply` para `send`) e `send`/`reply` aceitam `{ ttlMs }` para mensagens temporárias excluídas pelo timer do bot.
+`ctx.expire(messageID, ttlMs, channelID?)` agenda a exclusão de uma mensagem
+já existente — par agendado de `ctx.delete`, com a mesma validação de `ttlMs`
+(1s–24h, `INVALID_ARGUMENT` síncrono) e o mesmo `deleteLater` injetável do bot.
+
+`ctx.purge(count, { of? })` apaga as últimas `count` mensagens do canal
+(1 a 1000; com `of`, só as desse autor) e inclui a mensagem do comando fora
+da contagem. Devolve `{ deleted, via }`: `via` é `'bulk'` ou `'each'` quando
+a rota em lote falha e a exclusão recai mensagem a mensagem. O caminho de
+recursos é `messages.purge(channelID, { limit, authorID?, include? })` —
+lista as últimas `limit` mensagens, filtra por autor, prefixa os `include`
+deduplicados ao lote e devolve `{ deleted, deletedIDs, via }`: `deletedIDs`
+traz tudo que foi removido (inclusive os `include` apagados) e `deleted`
+conta só o que veio da listagem. `messages.bulkDelete(channelID, ids,
+{ fallback: 'each' })` aceita um terceiro parâmetro opcional: com `each`,
+uma falha da própria rota em lote (ex.: 404/405) repete a exclusão por
+mensagem — falhas por ID propagam como antes. Em `ctx.resources`, `purge`
+e `bulkDelete` exigem `ManageMessages` de autor e bot em canais de servidor.
 
 `ctx.mod.canBan`/`canKick`/`canModerate` devolvem `false` para falhas de guarda — permissão, hierarquia, alvo inválido e membro ausente (`MEMBER_NOT_FOUND`); erros reais continuam sendo lançados.
 
@@ -309,9 +326,12 @@ menção (`<@id>`), ID de snowflake, nome exato ou prefixo — sensível a nada
 de acentuação nem caixa (normalização NFD). O resultado é `{ status }` com
 `found` (`id`, `label` apelido > nome de exibição > nome de usuário,
 `mention`, `via`), `ambiguous` (`candidates` com até 5 itens em ordem
-determinística) ou `missing` (`query`). `ctx.members.resolveUser(query)`
-resolve por menção/ID para usuários que talvez não sejam membros (só
-`found`/`missing`). `ctx.members.resolveBan(query)` faz o mesmo sobre a
+determinística) ou `missing` (`query`). `ctx.members.resolveUser(query,
+{ default? })` resolve por menção/ID para usuários que talvez não sejam
+membros (só `found`/`missing`); com consulta vazia ou ausente,
+`default: 'author'` resolve o autor do contexto — inclusive em DMs, sem
+exigir servidor — e um ID ou menção em `default` serve de substituto.
+`ctx.members.resolveBan(query)` faz o mesmo sobre a
 lista de banidos (o encontrado traz `reason`); `users.resolveBan(guildID,
 query)` é a forma em recursos.
 
@@ -341,6 +361,12 @@ servidor, emoji) já saem com a extensão correta para assets animados.
 `memberAvatar`, `memberBanner`, `emoji`, `sticker` e `asset(url, { size?,
 format? })` (tamanhos de 16 a 4096 em potências de dois). A base de mídia é
 configurável por `YuzuhaOptions.cdn.mediaBase` (URL https).
+
+`YuzuhaOptions.emoji` registra um mapa nome → emoji exposto como `bot.emoji`
+e `ctx.emoji` em comandos e eventos com contexto (`ctx.emoji['check']`).
+O mapa é vivo: mutações por `bot.emoji` ou pelo objeto passado nas opções
+aparecem nos próximos contextos sem recriar o bot; um mapa novo exige novas
+opções na construção, pois o reload de comandos não reconstrói o bot.
 compartilha as verificações de `$nickname`: autor e bot precisam de permissão,
 o bot precisa superar o alvo na hierarquia, e o dono é protegido. Para alterar
 o próprio apelido, o autor pode usar `ChangeNickname`; `ManageNicknames` também
