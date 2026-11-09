@@ -312,6 +312,17 @@ query)` é a forma em recursos.
 `cleanReason(texto, { maxLength? })` remove menções de usuário, cargo e
 canal, colapsa espaços e trunca em 512 caracteres (o limite de motivos) —
 use para compor o motivo a partir do resto do texto do comando.
+
+`channels.overwrite(canal, alvo, input, { merge: true })` aplica os bits
+de `input.allow`/`input.deny` como PATCH sobre o overwrite existente:
+bits de allow são removidos de deny (e vice-versa), `input.neutral`
+devolve bits ao estado herdado e qualquer outro bit é preservado. Sem
+`merge` o comportamento é o PUT integral de sempre (`neutral` vira erro).
+`channels.lock(canal, { permission?, targetID?, reason? })` nega a
+permissão (padrão `SendMessages` em texto, `Connect` em voz; alvo padrão
+`@everyone`); `channels.unlock` devolve o bit ao herdado — sem conceder
+allow. Ambos retornam `{ channelID, targetID, permission, locked }` e são
+idempotentes, com a mesma autorização de `overwrite` (`ManageChannels`).
 compartilha as verificações de `$nickname`: autor e bot precisam de permissão,
 o bot precisa superar o alvo na hierarquia, e o dono é protegido. Para alterar
 o próprio apelido, o autor pode usar `ChangeNickname`; `ManageNicknames` também

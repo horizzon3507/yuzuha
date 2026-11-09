@@ -168,19 +168,17 @@ export function createChannelsResources(client: Client): ChannelsResources {
         });
         return;
       }
-      const existing = channel.permissionOverwrites.cache.get(targetID) as { allow?: { has(name: string): boolean }; deny?: { has(name: string): boolean } } | undefined;
-      const has = (side: { has(name: string): boolean } | undefined, name: string) => side?.has(name) === true;
-      const names = new Set<string>([...(input.allow ?? []), ...(input.deny ?? []), ...(input.neutral ?? [])]);
-      const allow = input.allow ?? [];
-      const deny = input.deny ?? [];
-      const neutral = input.neutral ?? [];
-      for (const name of names) validatePermission(name);
+      for (const name of [...(input.allow ?? []), ...(input.deny ?? []), ...(input.neutral ?? [])]) validatePermission(name);
+      const existing = channel.permissionOverwrites.cache.get(targetID);
+      const bits = (names: string[]) => names.reduce((acc, name) => acc | PermissionFlags[name as keyof typeof PermissionFlags], 0n);
+      const allowBits = bits(input.allow ?? []);
+      const denyBits = bits(input.deny ?? []);
+      const neutralBits = bits(input.neutral ?? []);
+      const allow = ((existing?.allow.bitfield ?? 0n) | allowBits) & ~denyBits & ~neutralBits;
+      const deny = ((existing?.deny.bitfield ?? 0n) | denyBits) & ~allowBits & ~neutralBits;
       await channel.permissionOverwrites.edit(targetID, {
         type: await overwriteKind(client, channel, targetID, input.type),
-        allow: [...allow, ...(existing ? [] : [])].filter(name => !deny.includes(name) && !neutral.includes(name))
-          .filter((name, i, arr) => arr.indexOf(name) === i),
-        deny: [...deny].filter(name => !allow.includes(name) && !neutral.includes(name))
-          .filter((name, i, arr) => arr.indexOf(name) === i),
+        allow, deny,
       });
     },
     async lock(channelID, options = {}) {
