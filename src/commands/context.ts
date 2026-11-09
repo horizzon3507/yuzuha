@@ -22,6 +22,7 @@ import { NativeModeration } from '../services/native-moderation.js';
 import { ScopedData } from '../services/native-data.js';
 import type { NativeData } from '../services/native-data.js';
 import { bindAuthorizedResources } from '../services/resource-authorization.js';
+import { createCdn } from '../domain/cdn.js';
 import { MemberService } from '../services/members.js';
 import type { MusicManager } from '../services/music.js';
 import type { NativeVoice } from '../ports/voice.js';
@@ -157,6 +158,8 @@ export class CommandContext {
     if (!this.resources.users.leaveGuild) throw new YuzuhaError('NATIVE_UNAVAILABLE', 'O recurso de servidor não implementa leaveGuild.');
     await this.resources.users.leaveGuild(guildID);
   }
+  get cdn() { return createCdn(); }
+
   get mod(): NativeModeration {
     return this.nativeMod ??= new NativeModeration(
       (action, target, reason, options) => this.moderate(action, target, reason, options),
