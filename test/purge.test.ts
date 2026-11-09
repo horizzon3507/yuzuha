@@ -28,6 +28,7 @@ function adapterFixture(options: {
   bulkDelete?: (ids: string[]) => Promise<string[]>;
   missingBulk?: boolean;
   perID?: (id: string) => Promise<void>;
+  reliability?: { requests?: number; delayMs?: number };
 } = {}) {
   const client = new Client();
   const fetched: unknown[] = [];
@@ -55,7 +56,8 @@ function adapterFixture(options: {
     each.push(id);
     if (options.perID) await options.perID(id);
   });
-  return { client, resources: createMessagesResources(client), fetched, bulk, each };
+  return { client, resources: createMessagesResources(client, options.reliability ? { retry: options.reliability } : {}),
+    fetched, bulk, each };
 }
 
 test('purge lista mensagens, filtra autor, exclui include e apaga em lote', async t => {
@@ -66,7 +68,7 @@ test('purge lista mensagens, filtra autor, exclui include e apaga em lote', asyn
     ])],
   });
   t.after(() => client.destroy());
-  const result = await resources.purge('200', { limit: 4, authorID: '7', include: ['600'] });
+  const result = await resources.purge!('200', { limit: 4, authorID: '7', include: ['600'] });
   assert.deepEqual(bulk, [['600', '500', '498', '497']]);
   assert.deepEqual(result.deletedIDs, ['600', '500', '498', '497']);
   assert.equal(result.deleted, 3);
@@ -80,7 +82,7 @@ test('purge pagina a listagem até atingir o limite', async t => {
   ];
   const { client, resources, fetched, bulk } = adapterFixture({ pages });
   t.after(() => client.destroy());
-  const result = await resources.purge('200', { limit: 150 });
+  const result = await resources.purge!('200', { limit: 150 });
   assert.deepEqual(fetched.map(input => (input as { limit: number }).limit), [100, 50]);
   assert.equal(bulk.length, 2);
   assert.equal(result.deleted, 150);
@@ -93,7 +95,7 @@ test('purge recua para exclusão individual em falha de rota e mantém deleted s
     bulkDelete: async () => { throw Object.assign(new Error('Sem rota'), { status: 405 }); },
   });
   t.after(() => client.destroy());
-  const result = await resources.purge('200', { limit: 2, include: ['600', '500'] });
+  const result = await resources.purge!('200', { limit: 2, include: ['600', '500'] });
   assert.deepEqual(each, ['600', '500', '499']);
   assert.deepEqual(result.deletedIDs, ['600', '500', '499']);
   assert.equal(result.deleted, 1);
@@ -106,7 +108,7 @@ test('purge propaga falha comum do lote sem recuar e falhas por id no fallback',
     bulkDelete: async () => { throw new Error('apagou 1 de 3'); },
   });
   t.after(() => partial.client.destroy());
-  await assert.rejects(partial.resources.purge('200', { limit: 2 }), /apagou 1 de 3/);
+  await assert.rejects(partial.resources.purge!('200', { limit: 2 }), /apagou 1 de 3/);
   assert.deepEqual(partial.each, []);
 
   const perID = adapterFixture({
@@ -115,17 +117,17 @@ test('purge propaga falha comum do lote sem recuar e falhas por id no fallback',
     perID: async id => { if (id === '500') throw new Error('permissão perdida'); },
   });
   t.after(() => perID.client.destroy());
-  await assert.rejects(perID.resources.purge('200', { limit: 1 }), /permissão perdida/);
+  await assert.rejects(perID.resources.purge!('200', { limit: 1 }), /permissão perdida/);
   assert.deepEqual(perID.each, ['500']);
 });
 
 test('purge valida a entrada e ignora includes fora do formato', async t => {
   const { client, resources } = adapterFixture();
   t.after(() => client.destroy());
-  await assert.rejects(resources.purge('200', { limit: 0 }), YuzuhaError);
-  await assert.rejects(resources.purge('200', { limit: 1001 }), YuzuhaError);
-  await assert.rejects(resources.purge('200', { limit: 1, include: ['abc'] }), YuzuhaError);
-  await assert.rejects(resources.purge('200', { limit: 1, extra: 1 } as never), YuzuhaError);
+  await assert.rejects(resources.purge!('200', { limit: 0 }), YuzuhaError);
+  await assert.rejects(resources.purge!('200', { limit: 1001 }), YuzuhaError);
+  await assert.rejects(resources.purge!('200', { limit: 1, include: ['abc'] }), YuzuhaError);
+  await assert.rejects(resources.purge!('200', { limit: 1, extra: 1 } as never), YuzuhaError);
 });
 
 test('bulkDelete com fallback each repete por mensagem em falha de rota', async t => {
@@ -134,6 +136,20 @@ test('bulkDelete com fallback each repete por mensagem em falha de rota', async 
   });
   t.after(() => client.destroy());
   assert.deepEqual(await resources.bulkDelete('200', ['10', '11'], { fallback: 'each' }), ['10', '11']);
+  assert.deepEqual(each, ['10', '11']);
+});
+
+test('bulkDelete não retenta a fase por mensagem: falha transitória preserva a tentativa única', async t => {
+  let bulkCalls = 0;
+  const { client, resources, bulk, each } = adapterFixture({
+    reliability: { requests: 2, delayMs: 1 },
+    bulkDelete: async () => { bulkCalls++; throw Object.assign(new Error('Sem rota'), { status: 405 }); },
+    perID: async id => { if (id === '11') throw Object.assign(new Error('rede caiu'), { code: 'ECONNRESET' }); },
+  });
+  t.after(() => client.destroy());
+  await assert.rejects(resources.bulkDelete('200', ['10', '11', '12'], { fallback: 'each' }), /rede caiu/);
+  assert.equal(bulkCalls, 1);
+  assert.deepEqual(bulk, [['10', '11', '12']]);
   assert.deepEqual(each, ['10', '11']);
 });
 
@@ -148,7 +164,7 @@ test('bulkDelete sem fallback propaga a falha e rejeita fallback inválido', asy
 });
 
 function authorized(options: { author?: bigint; bot?: bigint; purge?: (input: unknown) => Promise<PurgeResult>;
-  guildID?: string; channelGuild?: string | null } = {}) {
+  guildID?: string; channelGuild?: string | null; noPurge?: boolean } = {}) {
   const calls: unknown[] = [];
   const transport = new MockTransport();
   transport.member = async (_guildID: string, id: string) =>
@@ -156,7 +172,7 @@ function authorized(options: { author?: bigint; bot?: bigint; purge?: (input: un
   const source = mockResources({
     channels: { get: async () => ({ ...channel, guildID: options.channelGuild === undefined ? '100' : options.channelGuild }) },
     messages: {
-      purge: async (_c: string, input: unknown) => {
+      purge: options.noPurge ? undefined : async (_c: string, input: unknown) => {
         calls.push(input);
         return options.purge ? options.purge(input) : { deleted: 2, deletedIDs: ['9', '8'], via: 'bulk' } as PurgeResult;
       },
@@ -168,14 +184,14 @@ function authorized(options: { author?: bigint; bot?: bigint; purge?: (input: un
 
 test('purge autorizado exige ManageMessages do autor e do bot e restringe ao servidor', async () => {
   const { resources, calls } = authorized({ author: MANAGE, bot: MANAGE });
-  assert.deepEqual(await resources.messages.purge('200', { limit: 2 }), { deleted: 2, deletedIDs: ['9', '8'], via: 'bulk' });
+  assert.deepEqual(await resources.messages.purge!('200', { limit: 2 }), { deleted: 2, deletedIDs: ['9', '8'], via: 'bulk' });
   assert.deepEqual(calls, [{ limit: 2 }]);
-  await assert.rejects(authorized({ author: 0n, bot: MANAGE }).resources.messages.purge('200', { limit: 1 }), GuardError);
-  await assert.rejects(authorized({ author: MANAGE, bot: 0n }).resources.messages.purge('200', { limit: 1 }), GuardError);
-  await assert.rejects(authorized({ author: MANAGE, bot: MANAGE, channelGuild: '999' }).resources.messages.purge('200', { limit: 1 }), GuardError);
-  await assert.rejects(authorized({ author: MANAGE, bot: MANAGE, guildID: '' }).resources.messages.purge('200', { limit: 1 }),
+  await assert.rejects(authorized({ author: 0n, bot: MANAGE }).resources.messages.purge!('200', { limit: 1 }), GuardError);
+  await assert.rejects(authorized({ author: MANAGE, bot: 0n }).resources.messages.purge!('200', { limit: 1 }), GuardError);
+  await assert.rejects(authorized({ author: MANAGE, bot: MANAGE, channelGuild: '999' }).resources.messages.purge!('200', { limit: 1 }), GuardError);
+  await assert.rejects(authorized({ author: MANAGE, bot: MANAGE, guildID: '' }).resources.messages.purge!('200', { limit: 1 }),
     (error: unknown) => error instanceof GuardError && error.reason === 'NOT_IN_GUILD');
-  await assert.rejects(authorized({ author: MANAGE, bot: MANAGE, channelGuild: null }).resources.messages.purge('200', { limit: 1 }), GuardError);
+  await assert.rejects(authorized({ author: MANAGE, bot: MANAGE, channelGuild: null }).resources.messages.purge!('200', { limit: 1 }), GuardError);
 });
 
 test('bulkDelete autorizado repassa o fallback ao recurso', async () => {
@@ -220,4 +236,14 @@ test('ctx.purge recusa fora de servidor', async () => {
     resources: mockResources({ channels: { get: async () => channel } }) });
   await assert.rejects(ctx.purge(2), (error: unknown) =>
     error instanceof GuardError && error.reason === 'NOT_IN_GUILD');
+});
+
+test('purge é opcional no port: sem ele o wrapper expõe undefined e ctx.purge lança NATIVE_UNAVAILABLE', async () => {
+  const { resources } = authorized({ author: MANAGE, bot: MANAGE, noPurge: true });
+  assert.equal(resources.messages.purge, undefined);
+  const ctx = new CommandContext({ message: mockMessage('!x'), command: { name: 'x' },
+    store: new MemoryStore(), transport: new MockTransport(), cooldown: () => 0,
+    resources: mockResources({ channels: { get: async () => channel }, messages: { purge: undefined } }) });
+  await assert.rejects(ctx.purge(2), (error: unknown) =>
+    error instanceof YuzuhaError && error.code === 'NATIVE_UNAVAILABLE');
 });

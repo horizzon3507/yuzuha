@@ -303,6 +303,9 @@ export class CommandContext {
     if (!Number.isInteger(count) || count < 1 || count > 1000) {
       throw new GuardError('Informe uma quantidade inteira entre 1 e 1000.', 'INVALID_ARGUMENT');
     }
+    if (!this.resources.messages.purge) {
+      throw new YuzuhaError('NATIVE_UNAVAILABLE', 'O recurso de mensagens não implementa purge.');
+    }
     const result = await this.resources.messages.purge(this.channelID, {
       limit: count, authorID: options?.of, include: [this.message.id] });
     return { deleted: result.deleted, via: result.via };

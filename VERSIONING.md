@@ -44,10 +44,11 @@ gerado por `init` pertence ao consumidor e não precisa acompanhar a biblioteca.
 
 ### Migrar para 0.3.2
 
-A 0.3.2 é aditiva, com uma nota de contrato: `MessagesResources` ganhou o
-método obrigatório `purge(channelID, { limit, authorID?, include? })`, que
-devolve `{ deleted, deletedIDs, via }` — adapters `Resources` completos
-precisam implementá-lo; `mockResources` continua aceitando parciais.
+A 0.3.2 é aditiva e não exige mudanças em adaptadores: `MessagesResources`
+ganhou o método **opcional** `purge?(channelID, { limit, authorID?, include? })`,
+que devolve `{ deleted, deletedIDs, via }` — em adaptadores próprios sem ele,
+`ctx.resources.messages.purge` fica `undefined` e `ctx.purge` falha com
+`NATIVE_UNAVAILABLE`, sem quebrar a implementação existente.
 `messages.bulkDelete` aceita um terceiro parâmetro opcional
 `{ fallback?: 'each' }`, compatível com implementações anteriores que
 ignoram argumentos extras; quem implementa pode aceitar a opção ou
