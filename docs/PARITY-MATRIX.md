@@ -16,9 +16,9 @@ A cobertura é por nome: um método `send` de uma classe conta como coberto se q
 
 | Status | Exports de runtime | Membros |
 |---|---:|---:|
-| coberto-recurso | 50 | 424 |
-| coberto-nativo | 4 | 129 |
-| coberto-equivalente | 0 | 56 |
+| coberto-recurso | 51 | 428 |
+| coberto-nativo | 3 | 126 |
+| coberto-equivalente | 0 | 55 |
 | só-SDK | 63 | 113 |
 | lacuna | 0 | 0 |
 
@@ -102,7 +102,7 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são
 | @fluxerjs/core | `parseUserMention` | function | Texto e guards | só-SDK |  |
 | @fluxerjs/core | `PartialGuildMember` | class | Usuários e membros | coberto-recurso | builtins |
 | @fluxerjs/core | `PartialMessage` | class | Mensagens e reações | coberto-recurso | builtins |
-| @fluxerjs/core | `PermissionFlags` | variable | Constantes e bitfields | coberto-nativo | código nativo |
+| @fluxerjs/core | `PermissionFlags` | variable | Constantes e bitfields | coberto-recurso | builtins |
 | @fluxerjs/core | `PermissionOverwrite` | class | Canais | coberto-recurso | builtins |
 | @fluxerjs/core | `PermissionOverwriteManager` | class | Canais | coberto-recurso | builtins |
 | @fluxerjs/core | `PermissionsBitField` | class | Constantes e bitfields | coberto-recurso | builtins |
@@ -227,7 +227,7 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são
 | `Channel` | `isLink` | método | coberto-equivalente |
 | `Channel` | `isMedia` | método | coberto-recurso |
 | `Channel` | `isPersonalNotes` | método | coberto-equivalente |
-| `Channel` | `isText` | método | coberto-equivalente |
+| `Channel` | `isText` | método | coberto-nativo |
 | `Channel` | `isTextBased` | método | coberto-recurso |
 | `Channel` | `isThread` | método | coberto-recurso |
 | `Channel` | `isVoice` | método | coberto-nativo |
@@ -259,7 +259,7 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são
 | `Client` | `_ws` | propriedade | só-SDK |
 | `Client` | `assertReady` | método | coberto-nativo |
 | `Client` | `bulkFetchMessages` | método | coberto-nativo |
-| `Client` | `cache` | propriedade | coberto-nativo |
+| `Client` | `cache` | propriedade | coberto-recurso |
 | `Client` | `channels` | propriedade | coberto-recurso |
 | `Client` | `destroy` | método | coberto-nativo |
 | `Client` | `emit` | método | coberto-nativo |
@@ -533,7 +533,7 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são
 | `GuildMemberManager` | `search` | método | coberto-recurso |
 | `GuildMemberRoleManager` | `_patch` | método | só-SDK |
 | `GuildMemberRoleManager` | `add` | método | coberto-recurso |
-| `GuildMemberRoleManager` | `cache` | acessor | coberto-nativo |
+| `GuildMemberRoleManager` | `cache` | acessor | coberto-recurso |
 | `GuildMemberRoleManager` | `has` | método | coberto-recurso |
 | `GuildMemberRoleManager` | `remove` | método | coberto-recurso |
 | `GuildMemberRoleManager` | `roleIds` | acessor | coberto-recurso |
@@ -683,7 +683,7 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são
 | `MessageReaction` | `messageId` | propriedade | coberto-recurso |
 | `MessageReactionManager` | `_patch` | método | só-SDK |
 | `MessageReactionManager` | `[Symbol.iterator]` | método | só-SDK |
-| `MessageReactionManager` | `cache` | acessor | coberto-nativo |
+| `MessageReactionManager` | `cache` | acessor | coberto-recurso |
 | `MessageReactionManager` | `size` | acessor | coberto-recurso |
 | `MessageSticker` | `animated` | propriedade | coberto-recurso |
 | `MessageSticker` | `client` | propriedade | coberto-recurso |
@@ -722,7 +722,7 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são
 | `PermissionOverwrite` | `type` | propriedade | coberto-recurso |
 | `PermissionOverwriteManager` | `_patch` | método | só-SDK |
 | `PermissionOverwriteManager` | `[Symbol.iterator]` | método | só-SDK |
-| `PermissionOverwriteManager` | `cache` | acessor | coberto-nativo |
+| `PermissionOverwriteManager` | `cache` | acessor | coberto-recurso |
 | `PermissionOverwriteManager` | `delete` | método | coberto-recurso |
 | `PermissionOverwriteManager` | `edit` | método | coberto-recurso |
 | `PermissionOverwriteManager` | `size` | acessor | coberto-recurso |
