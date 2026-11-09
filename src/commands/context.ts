@@ -60,6 +60,7 @@ export interface ContextOptions {
   event?: Readonly<ScriptEventData>;
   messageAvailable?: boolean;
   deleteLater?: (channelID: string, messageID: string, ttlMs: number) => void;
+  cdn?: import('../domain/cdn.js').Cdn;
   actor?: { guildID: string; authorID: string };
 }
 
@@ -80,6 +81,7 @@ export class CommandContext {
   readonly event?: Readonly<ScriptEventData>;
   private readonly messageAvailable: boolean;
   private readonly deleteLaterFn?: (channelID: string, messageID: string, ttlMs: number) => void;
+  private cdnService = createCdn();
   private readonly actor?: { guildID: string; authorID: string };
   readonly transport: Transport;
   readonly store: Store;
@@ -134,6 +136,7 @@ export class CommandContext {
     this.httpService = options.http;
     this.musicService = options.music;
     this.voiceService = options.voice;
+    this.cdnService = options.cdn ?? createCdn();
     this.canvasRenderer = options.canvas?.renderer;
     this.canvasConfig = options.canvas?.config;
     this.nativeResources = options.resources;
@@ -158,7 +161,7 @@ export class CommandContext {
     if (!this.resources.users.leaveGuild) throw new YuzuhaError('NATIVE_UNAVAILABLE', 'O recurso de servidor não implementa leaveGuild.');
     await this.resources.users.leaveGuild(guildID);
   }
-  get cdn() { return createCdn(); }
+  get cdn() { return this.cdnService; }
 
   get mod(): NativeModeration {
     return this.nativeMod ??= new NativeModeration(

@@ -1,4 +1,4 @@
-import { GuardError } from '../shared/errors.js';
+import { GuardError, YuzuhaError } from '../shared/errors.js';
 import { cdnAvatarURL, cdnBannerURL, cdnEmojiURL, cdnGuildAssetURL,
   cdnMemberAvatarURL, cdnMemberBannerURL, cdnStickerURL } from '@fluxerjs/core';
 import type { CdnUrlOptions } from '@fluxerjs/core';
@@ -17,22 +17,27 @@ export interface Cdn {
   guildSplash(guildID: string, hash: string | null, options?: Pick<CdnUrlOptions, 'size' | 'mediaBase'>): string | null;
   memberAvatar(guildID: string, userID: string, hash: string | null, options?: CdnUrlOptions): string | null;
   memberBanner(guildID: string, userID: string, hash: string | null, options?: CdnUrlOptions): string | null;
-  emoji(id: string, options?: CdnUrlOptions): string | null;
-  sticker(id: string, options?: CdnUrlOptions): string | null;
+  emoji(id: string, options?: CdnUrlOptions & { animated?: boolean }): string;
+  sticker(id: string, options?: CdnUrlOptions & { animated?: boolean }): string;
   asset(url: string, options?: { size?: number; format?: 'png' | 'jpg' | 'jpeg' | 'webp' | 'gif' }): string;
 }
 
-export function createCdn(): Cdn {
+export function createCdn(mediaBase?: string): Cdn {
+  if (mediaBase !== undefined && !/^https:\/\//.test(mediaBase)) {
+    throw new YuzuhaError('OPTIONS', 'cdn.mediaBase deve ser uma URL https.');
+  }
+  const base = <T extends { mediaBase?: string }>(options: T | undefined): T | undefined =>
+    mediaBase === undefined ? options : { ...options, mediaBase } as T;
   return {
-    avatar: (userID, hash, options) => fixAnimatedAssetUrl(cdnAvatarURL(userID, hash, options)),
-    banner: (userID, hash, options) => fixAnimatedAssetUrl(cdnBannerURL(userID, hash, options)),
-    guildIcon: (guildID, hash, options) => fixAnimatedAssetUrl(cdnGuildAssetURL('icons', guildID, hash, options)),
-    guildBanner: (guildID, hash, options) => fixAnimatedAssetUrl(cdnGuildAssetURL('banners', guildID, hash, options)),
-    guildSplash: (guildID, hash, options) => fixAnimatedAssetUrl(cdnGuildAssetURL('splashes', guildID, hash, options)),
-    memberAvatar: (guildID, userID, hash, options) => fixAnimatedAssetUrl(cdnMemberAvatarURL(guildID, userID, hash, options)),
-    memberBanner: (guildID, userID, hash, options) => fixAnimatedAssetUrl(cdnMemberBannerURL(guildID, userID, hash, options)),
-    emoji: (id, options) => cdnEmojiURL(id, id.startsWith('a_'), options),
-    sticker: (id, options) => cdnStickerURL(id, id.startsWith('a_'), options),
+    avatar: (userID, hash, options) => fixAnimatedAssetUrl(cdnAvatarURL(userID, hash, base(options))),
+    banner: (userID, hash, options) => fixAnimatedAssetUrl(cdnBannerURL(userID, hash, base(options))),
+    guildIcon: (guildID, hash, options) => fixAnimatedAssetUrl(cdnGuildAssetURL('icons', guildID, hash, base(options))),
+    guildBanner: (guildID, hash, options) => fixAnimatedAssetUrl(cdnGuildAssetURL('banners', guildID, hash, base(options))),
+    guildSplash: (guildID, hash, options) => fixAnimatedAssetUrl(cdnGuildAssetURL('splashes', guildID, hash, base(options))),
+    memberAvatar: (guildID, userID, hash, options) => fixAnimatedAssetUrl(cdnMemberAvatarURL(guildID, userID, hash, base(options))),
+    memberBanner: (guildID, userID, hash, options) => fixAnimatedAssetUrl(cdnMemberBannerURL(guildID, userID, hash, base(options))),
+    emoji: (id, options) => cdnEmojiURL(id, options?.animated ?? false, base(options)),
+    sticker: (id, options) => cdnStickerURL(id, options?.animated ?? false, base(options)),
     asset: (url, options = {}) => {
       if (options.size !== undefined && !VALID_SIZES.has(options.size))
         throw new GuardError('size deve ser potência de dois entre 16 e 4096.', 'INVALID_ARGUMENT');

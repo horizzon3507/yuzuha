@@ -47,6 +47,7 @@ export interface AuditLogInfo {
 
 export interface UsersResources {
   profile(userID: string, guildID?: string): Promise<UserProfileInfo>;
+  bannerURL(userID: string, guildID?: string, options?: { size?: number }): Promise<string | null>;
   guildCounts(guildID: string, input?: LiveCountsInput): Promise<GuildCountsInfo>;
   channelCounts(guildID: string, channelID: string, input?: LiveCountsInput): Promise<ChannelCountsInfo>;
   user(id: string): Promise<UserInfo>;
@@ -75,6 +76,7 @@ export interface ProfileInfo {
   pronouns: string | null;
   bio: string | null;
   banner: string | null;
+  bannerURL: string | null;
   accentColor: number | null;
   bannerColor: number | null;
   theme: string | null;

@@ -323,6 +323,18 @@ permissão (padrão `SendMessages` em texto, `Connect` em voz; alvo padrão
 `@everyone`); `channels.unlock` devolve o bit ao herdado — sem conceder
 allow. Ambos retornam `{ channelID, targetID, permission, locked }` e são
 idempotentes, com a mesma autorização de `overwrite` (`ManageChannels`).
+
+`users.bannerURL(userID, guildID?, { size? })` lê o banner pelo endpoint de
+perfil (banner de servidor primeiro quando `guildID` é dado, depois o
+global) — hashes animados (`a_*`) viram `.gif`. `UserProfileInfo` (global e
+de servidor) traz `bannerURL` pronto. Objetos de info (usuário, membro,
+servidor, emoji) já saem com a extensão correta para assets animados.
+
+`cdn` (raiz e `ctx.cdn`, sem depender do cliente) monta URLs do CDN:
+`avatar`, `banner`, `guildIcon`, `guildBanner`, `guildSplash`,
+`memberAvatar`, `memberBanner`, `emoji`, `sticker` e `asset(url, { size?,
+format? })` (tamanhos de 16 a 4096 em potências de dois). A base de mídia é
+configurável por `YuzuhaOptions.cdn.mediaBase` (URL https).
 compartilha as verificações de `$nickname`: autor e bot precisam de permissão,
 o bot precisa superar o alvo na hierarquia, e o dono é protegido. Para alterar
 o próprio apelido, o autor pode usar `ChangeNickname`; `ManageNicknames` também

@@ -1,10 +1,11 @@
+import { fixAnimatedAssetUrl } from '../../../domain/cdn.js';
 import type { Client, GuildEmoji, GuildSticker } from '@fluxerjs/core';
 import { YuzuhaError } from '../../../errors.js';
 import { emojiBatch, stickerBatch } from '../../../domain/resource-batches.js';
 import type { EmojiInfo, ExpressionsResources, StickerInfo } from '../../../ports/resources/expressions.js';
 
 function toEmojiInfo(emoji: GuildEmoji): EmojiInfo {
-  return { id: emoji.id, name: emoji.name, animated: emoji.animated, url: emoji.url ?? null };
+  return { id: emoji.id, name: emoji.name, animated: emoji.animated, url: fixAnimatedAssetUrl(emoji.url) };
 }
 
 function toStickerInfo(sticker: GuildSticker): StickerInfo {

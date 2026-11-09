@@ -44,4 +44,5 @@ export interface YuzuhaOptions {
   onLog?: (record: LogRecord) => void | Promise<void>;
   retry?: false | { requests?: number; delayMs?: number };
   timers?: { setTimeout(fn: () => void, ms: number): unknown; clearTimeout(handle: unknown): void };
+  cdn?: { mediaBase?: string };
 }
