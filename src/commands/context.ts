@@ -60,6 +60,8 @@ export interface ContextOptions {
   event?: Readonly<ScriptEventData>;
   messageAvailable?: boolean;
   deleteLater?: (channelID: string, messageID: string, ttlMs: number) => void;
+  /** Mapa nome → emoji do bot, compartilhado por referência. */
+  emoji?: Record<string, string>;
   cdn?: import('../domain/cdn.js').Cdn;
   disableResourceAuthorization?: boolean;
   actor?: { guildID: string; authorID: string };
@@ -83,6 +85,7 @@ export class CommandContext {
   private readonly messageAvailable: boolean;
   private readonly deleteLaterFn?: (channelID: string, messageID: string, ttlMs: number) => void;
   private cdnService = createCdn();
+  private readonly emojiMap: Record<string, string> = {};
   private disableResourceAuthorization = false;
   private readonly actor?: { guildID: string; authorID: string };
   readonly transport: Transport;
@@ -139,6 +142,7 @@ export class CommandContext {
     this.musicService = options.music;
     this.voiceService = options.voice;
     this.cdnService = options.cdn ?? createCdn();
+    this.emojiMap = options.emoji ?? {};
     this.disableResourceAuthorization = options.disableResourceAuthorization === true;
     this.canvasRenderer = options.canvas?.renderer;
     this.canvasConfig = options.canvas?.config;
@@ -165,6 +169,8 @@ export class CommandContext {
     await this.resources.users.leaveGuild(guildID);
   }
   get cdn() { return this.cdnService; }
+  /** Mapa nome → emoji configurado no bot (`YuzuhaOptions.emoji`). */
+  get emoji(): Record<string, string> { return this.emojiMap; }
 
   get mod(): NativeModeration {
     return this.nativeMod ??= new NativeModeration(

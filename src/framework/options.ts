@@ -45,5 +45,7 @@ export interface YuzuhaOptions {
   retry?: false | { requests?: number; delayMs?: number };
   timers?: { setTimeout(fn: () => void, ms: number): unknown; clearTimeout(handle: unknown): void };
   cdn?: { mediaBase?: string };
+  /** Mapa nome → emoji exposto como `bot.emoji` e `ctx.emoji`; é um mapa vivo: mutações refletem-se nos contextos. */
+  emoji?: Record<string, string>;
   unsafeDisableResourceAuthorization?: boolean;
 }
