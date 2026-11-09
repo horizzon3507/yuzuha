@@ -93,6 +93,11 @@ export function bindAuthorizedResources(source: Resources, transport: Transport,
       if (target.bot) throw new GuardError('A propriedade não pode ser transferida para um bot.', 'BOT_TARGET');
       return source.users.transferOwnership(guildID, userID);
     },
+    async resolveBan(guildID: string, query: string) {
+      guild(guildID);
+      await allowed('BanMembers');
+      return source.users.resolveBan(guildID, query);
+    },
   }), messages: Object.assign(Object.create(source.messages), {
     async deleteAttachment(channelID: string, messageID: string, attachmentID: string) {
       const message = await source.messages.fetch(channelID, messageID);

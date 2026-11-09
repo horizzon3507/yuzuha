@@ -55,6 +55,7 @@ export interface UsersResources {
   memberCount(guildID: string): Promise<number>;
   guild(guildID: string): Promise<GuildInfo>;
   bans(guildID: string, limit?: number): Promise<BanInfo[]>;
+  resolveBan(guildID: string, query: string): Promise<import('../../domain/resolvers.js').ResolvedBan>;
   auditLogs(guildID: string, limit?: number): Promise<AuditLogInfo[]>;
   setPresence(status: PresenceStatus, activity?: ActivityInfo): Promise<void>;
   searchMembers(guildID: string, query: string, limit?: number, offset?: number): Promise<MemberSearchPage>;

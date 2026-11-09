@@ -159,6 +159,24 @@ export function createUsersResources(client: Client): UsersResources {
     async guild(guildID: string): Promise<GuildInfo> {
       return toGuildInfo(await client.guilds.fetch(guildID, { force: true }));
     },
+    async resolveBan(guildID, query) {
+      const { matchCandidates, mentionID, rankCandidates } = await import('../../../domain/resolvers.js');
+      const text = query.trim();
+      const bans = await this.bans(guildID, 1000);
+      const id = mentionID(text);
+      if (id) {
+        const ban = bans.find(entry => entry.userID === id);
+        if (!ban) return { status: 'missing' as const, query: text };
+        return { status: 'found' as const, id, label: ban.username, reason: ban.reason, via: /^\d+$/.test(text) ? 'id' as const : 'mention' as const };
+      }
+      const match = matchCandidates(text, bans.map(ban => ({ id: ban.userID, label: ban.username, reason: ban.reason, names: [ban.username] })));
+      if (!match) return { status: 'missing' as const, query: text };
+      if (match.items.length === 1) {
+        const ban = match.items[0]!;
+        return { status: 'found' as const, id: ban.id, label: ban.label, reason: ban.reason ?? null, via: match.kind };
+      }
+      return { status: 'ambiguous' as const, candidates: rankCandidates(match.items.map(ban => ({ id: ban.id, label: ban.label }))) };
+    },
     async bans(guildID: string, limit?: number): Promise<BanInfo[]> {
       const guild = await client.guilds.fetch(guildID, { force: true });
       const capped = limitOf(limit, 50, 1000);
