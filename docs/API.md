@@ -362,3 +362,11 @@ Para compor cartões, consulte [CANVAS.md](CANVAS.md) e os subpaths opcionais
 `yuzuha/images` exporta `transformImage`, `ImageTransform`, `ImageOptions` e
 `ImageResult`. A raiz não importa Sharp. Não há funções de imagem registradas
 implicitamente no function mode.
+
+
+## Resolvers e motivos
+
+`cleanReason(texto, { maxLength? })` limpa menções e trunca (512 por
+padrão). `ctx.members.resolve`/`resolveUser`/`resolveBan` resolvem texto
+livre em alvos com `status` `found`/`ambiguous`/`missing`; veja
+docs/NATIVE.md para a forma do resultado.

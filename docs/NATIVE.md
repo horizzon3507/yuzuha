@@ -297,6 +297,21 @@ use `mockResources`, que aceita implementações parciais por método.
 
 `ctx.members.search(nome, limite?, offset?)` retorna `members`, `total`, `hasMore`
 e `indexing`. `ctx.members.setNickname(usuarioOuObjeto, apelidoOuNull, motivo)`
+
+`ctx.members.resolve(query)` resolve um membro a partir de texto livre:
+menção (`<@id>`), ID de snowflake, nome exato ou prefixo — sensível a nada
+de acentuação nem caixa (normalização NFD). O resultado é `{ status }` com
+`found` (`id`, `label` apelido > nome de exibição > nome de usuário,
+`mention`, `via`), `ambiguous` (`candidates` com até 5 itens em ordem
+determinística) ou `missing` (`query`). `ctx.members.resolveUser(query)`
+resolve por menção/ID para usuários que talvez não sejam membros (só
+`found`/`missing`). `ctx.members.resolveBan(query)` faz o mesmo sobre a
+lista de banidos (o encontrado traz `reason`); `users.resolveBan(guildID,
+query)` é a forma em recursos.
+
+`cleanReason(texto, { maxLength? })` remove menções de usuário, cargo e
+canal, colapsa espaços e trunca em 512 caracteres (o limite de motivos) —
+use para compor o motivo a partir do resto do texto do comando.
 compartilha as verificações de `$nickname`: autor e bot precisam de permissão,
 o bot precisa superar o alvo na hierarquia, e o dono é protegido. Para alterar
 o próprio apelido, o autor pode usar `ChangeNickname`; `ManageNicknames` também
