@@ -23,9 +23,16 @@ documentos. Veja a [política completa](VERSIONING.md).
 
 ## v0.3.1 · 06/11/2026
 
+Erros tipados de guarda, retentativa de transporte, resolvers e helpers de canais e CDN — a atualização da biblioteca Yuzuha foi preparada em 06/11/2026 (v0.3.1).
+
+**Notas de comportamento**
+- `GuardError.reason` é aditivo (`code: 'GUARD'` inalterado); `ctx.mod.can*` devolve `false` para `MEMBER_NOT_FOUND`.
+- `YuzuhaOptions.retry` fica LIGADO por padrão (`{ requests: 1, delayMs: 750 }`) só em falhas de rede transitórias; `send`/`reply` reenviam só quando a falha prova que a mensagem não saiu.
+- `Resources` ganhou métodos exigidos — `users.bannerURL`, `users.resolveBan`, `channels.lock`/`unlock` e a opção `merge` de `overwrite`; adapters completos devem implementá-los.
+
 - `GuardError` ganhou `reason` tipado (`GuardReason`, ex.: `PERMISSION_MISSING_AUTHOR`, `HIERARCHY`, `SELF_TARGET`, `MEMBER_NOT_FOUND`, `NOT_BANNED`, `COOLDOWN`) e o helper `isGuardReason(error, ...reasons)`; mensagens e `code: 'GUARD'` inalterados.
 - Falhas de alvo ausente em moderação agora viram `GuardError` — `MEMBER_NOT_FOUND` (`Membro não encontrado.`) e `NOT_BANNED` (`Este usuário não está banido.`) — mapeadas pelo adaptador via `code`/`status` do SDK; `ctx.mod.can*` devolve `false` nesses casos.
-`ctx.deleteCommandMessage()` apaga a mensagem de comando e degrada `reply` para `send`; `transport.reply` reenvia sem referência quando o alvo já não existe (404).
+- `ctx.deleteCommandMessage()` apaga a mensagem de comando e degrada `reply` para `send`; `transport.reply` reenvia sem referência quando o alvo já não existe (404).
 - `ctx.send`/`ctx.reply` aceitam `{ ttlMs }` (1s–24h) e agendam a exclusão via `timers` injetável do bot; pendências são canceladas em `bot.destroy()` e falhas viram `onLog` `message.ttl_failed`.
 - `YuzuhaOptions.retry` controla retentativas de transporte (`{ requests: 1, delayMs: 750 }` por padrão; `false` desliga) só em falhas transitórias de rede, detectadas por `error.code`/`cause.code` — erros de API nunca repetem; emissões por `onLog` `transport.retry`.
 - `ctx.members.resolve`, `resolveUser` e `resolveBan` resolvem texto livre (menção, ID, nome exato ou prefixo, insensível a caixa e acentos) em `found`/`ambiguous`/`missing`; `users.resolveBan` expõe o mesmo em recursos com guarda `BanMembers`.

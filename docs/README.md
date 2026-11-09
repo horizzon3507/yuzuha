@@ -1,6 +1,6 @@
 # Documentação da Yuzuha
 
-Esta documentação cobre a Yuzuha 0.3.0, em JavaScript ESM e TypeScript, para
+Esta documentação cobre a Yuzuha 0.3.1, em JavaScript ESM e TypeScript, para
 Node >=22.13. O pacote usa `@fluxerjs/core` 3.3.0.
 
 JS/TS é o caminho principal da biblioteca. Function mode (`$...`) é opcional e

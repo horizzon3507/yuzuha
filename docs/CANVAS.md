@@ -13,7 +13,7 @@ quiser transformá-la com Sharp.
 O backend é um peer opcional. Instale-o somente nos bots que renderizam Canvas:
 
 ```sh
-npm install yuzuha@0.3.0 @napi-rs/canvas@^1.0.13
+npm install yuzuha@0.3.1 @napi-rs/canvas@^1.0.13
 ```
 
 Os imports `yuzuha`, `yuzuha/functions` e `yuzuha/canvas/card` continuam
