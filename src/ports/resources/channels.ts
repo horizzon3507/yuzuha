@@ -44,8 +44,16 @@ export interface ChannelEditInput {
 export interface ChannelOverwriteInput {
   allow?: string[];
   deny?: string[];
+  neutral?: string[];
   type?: 'role' | 'member';
   reason?: string;
+}
+
+export interface ChannelLockResult {
+  channelID: string;
+  targetID: string;
+  permission: string;
+  locked: boolean;
 }
 
 export interface ChannelsResources {
@@ -60,7 +68,9 @@ export interface ChannelsResources {
   slowmode(channelID: string): Promise<number>;
   sendTyping(channelID: string): Promise<void>;
   rtcRegions(channelID: string): Promise<RtcRegionInfo[]>;
-  overwrite(channelID: string, targetID: string, input: ChannelOverwriteInput): Promise<void>;
+  overwrite(channelID: string, targetID: string, input: ChannelOverwriteInput, options?: { merge?: boolean }): Promise<void>;
+  lock(channelID: string, options?: { permission?: string; targetID?: string; reason?: string }): Promise<ChannelLockResult>;
+  unlock(channelID: string, options?: { permission?: string; targetID?: string; reason?: string }): Promise<ChannelLockResult>;
   permissionsFor(guildID: string, channelID: string, userID: string): Promise<string>;
   editThreadDefaults(channelID: string, input: ThreadDefaultsInput): Promise<void>;
   setDefaultForumLayout(channelID: string, layout: 'default' | 'list' | 'grid' | null, reason?: string): Promise<void>;
