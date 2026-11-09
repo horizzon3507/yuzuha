@@ -44,7 +44,10 @@ function order(messages: MessageInfo[]): MessageInfo[] {
   return [...messages].sort((a, b) => b.createdTimestamp - a.createdTimestamp);
 }
 
-export function createMessagesResources(client: Client): MessagesResources {
+import { isNotFound, isTransientError, isUndeliveredSend, withRetry } from '../../../services/retry.js';
+import type { Reliability } from '../../../services/retry.js';
+
+export function createMessagesResources(client: Client, reliability: Reliability = {}): MessagesResources {
   const send = async (channelID: string, files: (AttachmentSpec | BinaryAttachmentSpec)[], content?: string): Promise<string> => {
     if (files.length < 1 || files.length > 10 || files.reduce((size, file) => size + ('data' in file ? file.data.byteLength : 0), 0) > 10_000_000) {
       throw new YuzuhaError('ATTACHMENTS', 'Envie de 1 a 10 anexos, com até 10 MB de bytes no total.');
@@ -181,20 +184,30 @@ export function createMessagesResources(client: Client): MessagesResources {
       return { users: page.users.map(user => user.id), hasMore: page.hasMore, nextAfter: page.nextAfter };
     },
     async deleteAttachment(channelID, messageID, attachmentID): Promise<void> {
-      await (await client.channels.fetchMessage(channelID, messageID)).deleteAttachment(attachmentID);
+      await withRetry(async attempt => {
+        await (await client.channels.fetchMessage(channelID, messageID)).deleteAttachment(attachmentID).catch(error => {
+          if (attempt > 0 && isNotFound(error)) return;
+          throw error;
+        });
+      }, reliability);
     },
     async sendTo(channelID, content): Promise<string> {
-      return (await client.channels.send(channelID, { content, allowedMentions: { parse: [], repliedUser: false } })).id;
+      return withRetry(() => client.channels.send(channelID, { content, allowedMentions: { parse: [], repliedUser: false } }).then(m => m.id),
+        reliability, isUndeliveredSend);
     },
     async bulkDelete(channelID, messageIDs): Promise<string[]> {
-      const channel = await client.channels.fetch(channelID, { force: true });
-      if (!channel.isTextBased()) throw new YuzuhaError('CHANNEL_TEXT', 'Canal sem suporte a mensagens.');
-      return channel.bulkDelete(messageIDs);
+      return withRetry(async () => {
+        const channel = await client.channels.fetch(channelID, { force: true });
+        if (!channel.isTextBased()) throw new YuzuhaError('CHANNEL_TEXT', 'Canal sem suporte a mensagens.');
+        return channel.bulkDelete(messageIDs);
+      }, reliability);
     },
     async bulkDeleteOwn(channelID): Promise<void> {
-      const channel = await client.channels.fetch(channelID, { force: true });
-      if (!channel.isTextBased()) throw new YuzuhaError('CHANNEL_TEXT', 'Canal sem suporte a mensagens.');
-      await channel.bulkDeleteMyMessages();
+      return withRetry(async () => {
+        const channel = await client.channels.fetch(channelID, { force: true });
+        if (!channel.isTextBased()) throw new YuzuhaError('CHANNEL_TEXT', 'Canal sem suporte a mensagens.');
+        await channel.bulkDeleteMyMessages();
+      }, reliability);
     },
     async acknowledgePins(channelID): Promise<void> {
       const channel = await client.channels.fetch(channelID, { force: true });

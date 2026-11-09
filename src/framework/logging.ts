@@ -2,12 +2,16 @@ import type { DispatchResult, YuzuhaOptions } from './options.js';
 import type { SchedulerEvent } from '../services/scheduler.js';
 
 type LogEvent = SchedulerEvent | {
-  event: 'command.start' | 'command.finish' | 'event.start' | 'event.finish' | 'error';
+  event: 'command.start' | 'command.finish' | 'event.start' | 'event.finish' | 'error'
+    | 'transport.retry' | 'message.ttl_failed';
   executionID?: string;
   command?: string;
   outcome?: DispatchResult;
   durationMs?: number;
   errorCode?: string;
+  attempt?: number;
+  messageID?: string;
+  channelID?: string;
 };
 export type LogRecord = Readonly<{ timestamp: string } & LogEvent>;
 

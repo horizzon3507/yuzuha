@@ -1,32 +1,47 @@
 import { Client, Message } from '@fluxerjs/core';
 import type { IncomingMessage, ModerationAction, ModerationMember, Payload, Transport } from '../../contracts.js';
 import { GuardError, YuzuhaError } from '../../errors.js';
+import { isNotFound, isTransientError, isUndeliveredSend, resolvePolicy, withRetry } from '../../services/retry.js';
+import type { Reliability } from '../../services/retry.js';
 import { replyTarget, safePayload as safe } from './payload.js';
 import type { VoiceModerationOptions } from '../../domain/moderation.js';
 
 export class FluxerTransport implements Transport {
-  constructor(public readonly client: Client) {}
+  constructor(public readonly client: Client, private readonly reliability: Reliability = {}) {}
+
+  private reliably<T>(fn: (attempt: number) => Promise<T>, safe = isTransientError): Promise<T> {
+    return withRetry(fn, this.reliability, safe);
+  }
   get botID(): string { return this.client.user?.id ?? ''; }
   get ping(): number { return this.client.readyAt ? this.client.ws.ping : -1; }
   async reply(message: IncomingMessage, payload: Payload): Promise<string> {
     if (message.raw instanceof Message && !payload.reply) return (await message.raw.reply(safe(payload))).id;
     const replyTo = payload.reply ? replyTarget(payload.reply) : { channelId: message.channelID, messageId: message.id, guildId: message.guildID };
-    return (await this.client.channels.send(message.channelID, { ...safe(payload), replyTo })).id;
+    return this.reliably(() => this.client.channels.send(message.channelID, { ...safe(payload), replyTo }).then(m => m.id)
+      .catch(error => isNotFound(error)
+        ? this.client.channels.send(message.channelID, { ...safe(payload) }).then(m => m.id)
+        : Promise.reject(error)), isUndeliveredSend);
   }
   async send(channelID: string, payload: Payload): Promise<string> {
     const replyTo = payload.reply ? replyTarget(payload.reply) : undefined;
-    return (await this.client.channels.send(channelID, { ...safe(payload), ...(replyTo ? { replyTo } : {}) })).id;
+    return this.reliably(() => this.client.channels.send(channelID, { ...safe(payload), ...(replyTo ? { replyTo } : {}) }).then(m => m.id),
+      isUndeliveredSend);
   }
   async edit(channelID: string, messageID: string, payload: Payload): Promise<void> {
     // Edição não aceita resposta, TTS nem stickers: esses campos são descartados aqui.
     const { tts: _tts, stickerIds: _stickers, ...options } = safe(payload);
-    await (await this.client.channels.fetchMessage(channelID, messageID)).edit(options);
+    await this.reliably(async () => { await (await this.client.channels.fetchMessage(channelID, messageID)).edit(options); });
   }
   async delete(channelID: string, messageID: string): Promise<void> {
-    await (await this.client.channels.fetchMessage(channelID, messageID)).delete();
+    await this.reliably(async attempt => {
+      await (await this.client.channels.fetchMessage(channelID, messageID)).delete().catch(error => {
+        if (attempt > 0 && isNotFound(error)) return;
+        throw error;
+      });
+    });
   }
   async react(channelID: string, messageID: string, emoji: string): Promise<void> {
-    await (await this.client.channels.fetchMessage(channelID, messageID)).react(emoji);
+    await this.reliably(async () => { await (await this.client.channels.fetchMessage(channelID, messageID)).react(emoji); });
   }
   async member(guildID: string, userID: string, channelID?: string): Promise<ModerationMember> {
     const guild = await this.client.guilds.fetch(guildID, { force: true });
