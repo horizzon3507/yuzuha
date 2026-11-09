@@ -25,10 +25,14 @@ function validateValue(definition: ArgumentDefinition, value: ArgumentValue): vo
 
 export function validateArgumentDefinitions(definitions: readonly ArgumentDefinition[], commandName = 'comando'): void {
   const names = new Set<string>();
+  if (definitions.filter(definition => definition.anywhere).length > 1) {
+    throw new YuzuhaError('COMMAND_ARGS', `No máximo um argumento anywhere em ${commandName}.`);
+  }
   for (const [index, definition] of definitions.entries()) {
     if (typeof definition.name !== 'string' || !definition.name || names.has(definition.name)
       || (definition.required !== undefined && typeof definition.required !== 'boolean')
       || (definition.rest !== undefined && typeof definition.rest !== 'boolean')
+      || (definition.anywhere !== undefined && (definition.type !== 'user' || definition.rest === true))
       || (definition.description !== undefined && typeof definition.description !== 'string')
       || (definition.aliases !== undefined && (!Array.isArray(definition.aliases) || definition.aliases.some(alias => typeof alias !== 'string')))
       || (definition.rest && index !== definitions.length - 1)
@@ -99,9 +103,19 @@ function parseValue(definition: ArgumentDefinition, input: string | undefined, r
 
 export function parseArguments(definitions: readonly ArgumentDefinition[], tokens: readonly string[]): Map<string, ArgumentValue> {
   const args = new Map<string, ArgumentValue>();
+  const positional = [...tokens];
+  const matched = new Map<string, string>();
+  for (const definition of definitions) {
+    if (!definition.anywhere) continue;
+    const index = positional.findIndex(token => /^<@!?\d+>$|^\d{17,20}$/.test(token));
+    if (index >= 0) matched.set(definition.name, positional.splice(index, 1)[0]!);
+  }
+  let position = 0;
   for (let index = 0; index < definitions.length; index++) {
     const definition = definitions[index]!;
-    const input = definition.rest ? tokens.slice(index).join(' ') : tokens[index];
+    const input = definition.rest ? positional.slice(position).join(' ')
+      : definition.anywhere ? matched.get(definition.name)
+      : positional[position++];
     const value = parseValue(definition, input);
     if (value !== undefined) args.set(definition.name, value);
   }

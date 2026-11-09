@@ -29,6 +29,10 @@ export class ArgumentBuilder<T extends ArgumentValue, Required extends boolean =
   optional(): ArgumentBuilder<T, false> { return this.copy<T, false>({ required: false, defaultValue: undefined }); }
   default(value: T): ArgumentBuilder<T, true> { return this.copy<T, true>({ defaultValue: value, required: false }); }
   rest(): ArgumentBuilder<T, Required> { return this.copy({ rest: true }); }
+  anywhere(): ArgumentBuilder<T, Required> {
+    if (this.definition.type !== 'user') throw new YuzuhaError('ARGUMENT_SCHEMA', '.anywhere() só vale para arg.user().');
+    return this.copy({ anywhere: true });
+  }
   min(value: number): ArgumentBuilder<T, Required> { return this.copy({ min: value }); }
   max(value: number): ArgumentBuilder<T, Required> { return this.copy({ max: value }); }
   alias(...aliases: string[]): ArgumentBuilder<T, Required> { return this.copy({ aliases: [...aliases] }); }
