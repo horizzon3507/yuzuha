@@ -5,7 +5,7 @@ import { cleanReason, normalize, matchCandidates, mentionID } from '../src/domai
 import { MemberService } from '../src/services/members.js';
 import { MockTransport, mockResources } from '../src/testing.js';
 
-const members = [
+const members: { id: string; username: string; displayName: string; nickname: string | null }[] = [
   { id: '1', username: 'Alice', displayName: 'Alice', nickname: null },
   { id: '2', username: 'Alisson', displayName: 'Alisson', nickname: 'Ali' },
   { id: '3', username: 'bob', displayName: 'Bob', nickname: null },
@@ -19,7 +19,7 @@ function svc(overrides: { users?: Record<string, unknown> } = {}) {
     },
     user: async (id: string) => ({ id, username: 'Alice', displayName: 'Alice', bot: false, avatarURL: null, bannerURL: null, createdTimestamp: 0 }),
     searchMembers: async () => ({ members: [], total: null, hasMore: false, indexing: false }),
-    members: async () => members,
+    members: async () => members.map(m => ({ ...m, joinedTimestamp: 0, roles: [], permissions: '0', timedOutUntil: null, bot: false, avatarURL: null, bannerURL: null, createdTimestamp: 0 })),
     bans: async () => [{ userID: '9', username: 'banned', reason: 'spam' }],
     ...overrides.users,
   } });
