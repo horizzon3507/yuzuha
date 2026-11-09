@@ -5,7 +5,7 @@ import { GuardError } from '../shared/errors.js';
 export class ArgumentBag extends Map<string, ArgumentValue> {
   require(name: string): ArgumentValue {
     const value = this.get(name);
-    if (value === undefined) throw new GuardError(`Informe o argumento ${name}.`);
+    if (value === undefined) throw new GuardError(`Informe o argumento ${name}.`, 'INVALID_ARGUMENT');
     return value;
   }
 
@@ -16,7 +16,7 @@ export class ArgumentBag extends Map<string, ArgumentValue> {
   private typed<T extends 'string' | 'number' | 'boolean'>(name: string, type: T):
     (T extends 'string' ? string : T extends 'number' ? number : boolean) | undefined {
     const value = this.get(name);
-    if (value !== undefined && typeof value !== type) throw new GuardError(`O argumento ${name} deve ser ${type}.`);
+    if (value !== undefined && typeof value !== type) throw new GuardError(`O argumento ${name} deve ser ${type}.`, 'INVALID_ARGUMENT');
     return value as (T extends 'string' ? string : T extends 'number' ? number : boolean) | undefined;
   }
 }

@@ -3,6 +3,7 @@ export type { YuzuhaOptions, YuzuhaPlugin, Middleware, DispatchResult } from './
 export { CommandContext, defineCommand, parseDuration } from './context.js';
 export type { Command, ArgumentDefinition } from './context.js';
 export { commandUsage, commandHelp } from './commands/help.js';
+export { formatDuration, MAX_TIMEOUT_MS } from './domain/values.js';
 export type { ContextOptions } from './context.js';
 export { arg, ArgumentBuilder } from './commands/builders.js';
 export type { ArgumentSchema, InferArgument } from './commands/builders.js';
@@ -71,3 +72,6 @@ export { decimal, decimalCompare, decimalRound } from './domain/decimal.js';
 export { embed } from './domain/embeds.js';
 export type { VariableQueryOptions, VariableQuery, VariableEntry, VariablePage } from './domain/variable-query.js';
 export type { StreamAttachmentOptions } from './services/attachments.js';
+
+export { GuardError, isGuardReason } from './shared/errors.js';
+export type { GuardReason } from './shared/errors.js';
