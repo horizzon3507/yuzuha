@@ -132,7 +132,8 @@ const minimal = {
   purge: async () => ({ deleted: 0, via: 'bulk' as const }), expire: () => {},
   authorID: '2', authorName: 'a', channelID: '200', guildID: '100', args: undefined as never,
   members: undefined as never, mod: undefined as never, resources: undefined as never,
-  cdn: undefined as never, canvas: undefined as never, tokens: [] as string[],
+  cdn: undefined as never, canvas: undefined as never, emoji: {} as Record<string, string>,
+  tokens: [] as string[],
   command: undefined as never, executionID: 'x', input: '', message: undefined as never,
   event: undefined,
 };

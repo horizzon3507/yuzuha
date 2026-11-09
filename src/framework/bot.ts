@@ -39,6 +39,19 @@ import { canvasRenderer } from '../infrastructure/canvas/render.js';
 type RoutedCommand = { compiled: CompiledCommand; input: string; prefix: string };
 const ignored: Promise<DispatchResult> = Promise.resolve('ignored');
 
+function emojiRegistry(input: Record<string, string> | undefined): Record<string, string> {
+  if (input === undefined) return {};
+  if (!input || typeof input !== 'object' || Array.isArray(input)) {
+    throw new YuzuhaError('EMOJI_OPTIONS', 'emoji deve ser um objeto nome → texto.');
+  }
+  for (const [name, value] of Object.entries(input)) {
+    if (!name || typeof value !== 'string' || !value) {
+      throw new YuzuhaError('EMOJI_OPTIONS', 'emoji deve mapear nomes não vazios para textos não vazios.');
+    }
+  }
+  return input;
+}
+
 function assertEngine(engine: unknown): ScriptEngine {
   const candidate = engine as Partial<Record<keyof ScriptEngine, unknown>> | null | undefined;
   if (!candidate || (['compile', 'execute', 'functions', 'registerAll', 'fork', 'text'] as const).some(key => typeof candidate[key] !== 'function')) {
@@ -67,6 +80,7 @@ export class Yuzuha {
   private timers: NonNullable<YuzuhaOptions['timers']> = { setTimeout: (fn: () => void, ms: number) => setTimeout(fn, ms), clearTimeout: () => {} };
   private readonly pendingTimers = new Set<unknown>();
   private cdnService: import('../domain/cdn.js').Cdn = createCdn();
+  private readonly emojiMap: Record<string, string>;
   private readonly events: NativeEvents;
   private readonly execution = new AsyncLocalStorage<boolean>();
   private listening = false;
@@ -106,6 +120,7 @@ export class Yuzuha {
     this.transport = options.transport ?? new FluxerTransport(this.client, this.reliability);
     this.resources = options.resources ?? new FluxerResources(this.client, this.cdnService, this.reliability);
     this.cdnService = createCdn(options.cdn?.mediaBase);
+    this.emojiMap = emojiRegistry(options.emoji);
     if (options.unsafeDisableResourceAuthorization && options.onLog)
       void emitLog(this.options, { event: 'authorization.disabled' });
     this.timers = options.timers ?? { setTimeout: (fn: () => void, ms: number) => setTimeout(fn, ms).unref(), clearTimeout: (handle: unknown) => clearTimeout(handle as never) };
@@ -132,6 +147,9 @@ export class Yuzuha {
 
   /** Engine de function mode instalado, quando presente. */
   get engine(): ScriptEngine | undefined { return this.scriptEngine; }
+
+  /** Mapa nome → emoji compartilhado com `ctx.emoji`; mutações são visíveis imediatamente. */
+  get emoji(): Record<string, string> { return this.emojiMap; }
 
   /** Instala o motor de function mode; exigido por comandos com `code` e eventos de script. */
   useEngine(engine: ScriptEngine): this {
@@ -230,7 +248,7 @@ export class Yuzuha {
         scheduler: this.scheduler, http: this.http, music: this.music, voice: this.voice,
         canvas: { renderer: canvasRenderer, config: this.options.canvas }, now: this.options.now,
         cdn: this.cdnService, disableResourceAuthorization: this.options.unsafeDisableResourceAuthorization === true,
-        cooldown: this.contextCooldown, signal: this.shutdown.signal,
+        cooldown: this.contextCooldown, signal: this.shutdown.signal, emoji: this.emojiMap,
         deleteLater: (channelID, messageID, ttlMs) => this.deleteLater(channelID, messageID, ttlMs) });
       try { await definition.run(ctx, ...args as ClientEvents[K]); }
       catch (error) { await reportError(this.options, error, ctx); }
@@ -260,7 +278,7 @@ export class Yuzuha {
       policy: definition.http, transport: this.transport, store: this.store, resources: this.resources,
       scheduler: this.scheduler, http: this.http, music: this.music, voice: this.voice,
       canvas: { renderer: canvasRenderer, config: this.options.canvas }, now: this.options.now, cooldown: this.contextCooldown, signal,
-      cdn: this.cdnService, disableResourceAuthorization: this.options.unsafeDisableResourceAuthorization === true,
+      cdn: this.cdnService, disableResourceAuthorization: this.options.unsafeDisableResourceAuthorization === true, emoji: this.emojiMap,
       deleteLater: (channelID, messageID, ttlMs) => this.deleteLater(channelID, messageID, ttlMs) });
     const started = this.options.onLog ? performance.now() : 0;
     let outcome: DispatchResult = 'success';
@@ -429,7 +447,7 @@ export class Yuzuha {
         native: { client: this.client, message: message.raw instanceof Message ? message.raw : undefined },
         resources: this.resources, scheduler: this.scheduler, http: this.http, music: this.music, voice: this.voice,
         canvas: { renderer: canvasRenderer, config: this.options.canvas }, now: this.options.now, signal, executionID,
-        cdn: this.cdnService, disableResourceAuthorization: this.options.unsafeDisableResourceAuthorization === true,
+        cdn: this.cdnService, disableResourceAuthorization: this.options.unsafeDisableResourceAuthorization === true, emoji: this.emojiMap,
         deleteLater: (channelID, messageID, ttlMs) => this.deleteLater(channelID, messageID, ttlMs) });
       if (this.options.onLog) await emitLog(this.options, { event: 'command.start', executionID: ctx.executionID, command: ctx.command.name });
       if (signal.aborted) throw cancellationError();
