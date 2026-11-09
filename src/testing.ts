@@ -119,9 +119,30 @@ export interface TestBotOptions extends Omit<YuzuhaOptions, 'now' | 'transport' 
   now?: number;
 }
 
+export interface FakeTimers {
+  setTimeout(fn: () => void, ms: number): unknown;
+  clearTimeout(handle: unknown): void;
+  advance(ms: number): void;
+}
+
+export function fakeTimers(): FakeTimers {
+  const pending = new Map<unknown, { fn: () => void; at: number }>();
+  let now = 0;
+  let seq = 0;
+  return {
+    setTimeout: (fn, ms) => { const handle = ++seq; pending.set(handle, { fn, at: now + ms }); return handle; },
+    clearTimeout: handle => { pending.delete(handle); },
+    advance: ms => {
+      now += ms;
+      for (const [handle, timer] of [...pending]) if (timer.at <= now) { pending.delete(handle); timer.fn(); }
+    },
+  };
+}
+
 export interface TestBot {
   readonly bot: Yuzuha;
   readonly transport: MockTransport;
+  readonly timers: FakeTimers;
   readonly store: Store;
   readonly clock: TestClock;
   readonly messages: MockTransport['messages'];
@@ -143,7 +164,8 @@ export function createTestBot(options: TestBotOptions = {}): TestBot {
   const store = options.store ?? new MemoryStore();
   const errors: unknown[] = [], results: DispatchResult[] = [];
   const defaults = structuredClone(message ?? {});
-  const bot = new Yuzuha({ ...botOptions, transport, resources: mockResources(resources), store,
+  const timers = (options.timers ?? fakeTimers()) as FakeTimers;
+  const bot = new Yuzuha({ timers, ...botOptions, transport, resources: mockResources(resources), store,
     now: clock.now, http: options.http ?? false,
     onError: async (error, ctx) => { errors.push(error); await onError?.(error, ctx); },
   });
@@ -159,7 +181,7 @@ export function createTestBot(options: TestBotOptions = {}): TestBot {
     return bot.destroy();
   };
   return {
-    bot, transport, store, clock, messages: transport.messages, errors, results,
+    bot, transport, store, clock, timers, messages: transport.messages, errors, results,
     async send(content, overrides) {
       const outcome = await bot.handle(mockMessage(content, { ...defaults, id: String(++messageID), ...overrides }));
       results.push(outcome);

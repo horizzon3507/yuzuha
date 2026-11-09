@@ -30,11 +30,11 @@ export class FluxerResources implements Resources {
   readonly self;
   readonly cache;
 
-  constructor(client: Client) {
+  constructor(client: Client, private readonly reliability: import('../../services/retry.js').Reliability = {}) {
     this.users = createUsersResources(client);
     this.roles = createRolesResources(client);
     this.channels = createChannelsResources(client);
-    this.messages = createMessagesResources(client);
+    this.messages = createMessagesResources(client, this.reliability);
     this.collectors = createCollectorsResources(client);
     this.webhooks = createWebhooksResources(client);
     this.expressions = createExpressionsResources(client);

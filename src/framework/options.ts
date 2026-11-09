@@ -42,4 +42,6 @@ export interface YuzuhaOptions {
   onError?: (error: unknown, ctx?: CommandContext) => void | Promise<void>;
   onCommand?: (ctx: CommandContext, outcome: DispatchResult) => void | Promise<void>;
   onLog?: (record: LogRecord) => void | Promise<void>;
+  retry?: false | { requests?: number; delayMs?: number };
+  timers?: { setTimeout(fn: () => void, ms: number): unknown; clearTimeout(handle: unknown): void };
 }

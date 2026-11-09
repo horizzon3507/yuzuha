@@ -226,6 +226,8 @@ await ctx.reply(`${membro.displayName}: ${canais.length} canais, ${fixadas.lengt
 | `threads` | `create`, `archive`, `unarchive`, `forumPost`, `addMember`, `removeMember`, `members`, `member`, `edit`, `join`, `leave`, `setLocked`, `editSelf`, `editDefaults`, `search` |
 | `invites` | `get`, `create`, `delete`, `list`, `vanity`, `setVanity` |
 
+Também há `ctx.deleteCommandMessage()` (degrada `reply` para `send`) e `send`/`reply` aceitam `{ ttlMs }` para mensagens temporárias excluídas pelo timer do bot.
+
 `ctx.mod.canBan`/`canKick`/`canModerate` devolvem `false` para falhas de guarda — permissão, hierarquia, alvo inválido e membro ausente (`MEMBER_NOT_FOUND`); erros reais continuam sendo lançados.
 
 `purgeDM` em canais de anotações pessoais (tipo 999) só pode ser chamado por

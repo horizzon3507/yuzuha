@@ -62,6 +62,9 @@ export class Yuzuha {
   private readonly limits: RateLimits;
   private readonly active = new Set<Promise<unknown>>();
   private readonly shutdown = new AbortController();
+  private reliability: import('../services/retry.js').Reliability = {};
+  private timers: NonNullable<YuzuhaOptions['timers']> = { setTimeout: (fn: () => void, ms: number) => setTimeout(fn, ms), clearTimeout: () => {} };
+  private readonly pendingTimers = new Set<unknown>();
   private readonly events: NativeEvents;
   private readonly execution = new AsyncLocalStorage<boolean>();
   private listening = false;
@@ -96,8 +99,11 @@ export class Yuzuha {
     setMaxListeners(0, this.shutdown.signal);
     this.limits = new RateLimits(options.now);
     this.client = options.client ?? new Client(options.clientOptions);
-    this.transport = options.transport ?? new FluxerTransport(this.client);
-    this.resources = options.resources ?? new FluxerResources(this.client);
+    this.reliability = { retry: options.retry, signal: this.shutdown.signal,
+      onRetry: attempt => { if (options.onLog) void emitLog(this.options, { event: 'transport.retry', attempt }); } };
+    this.transport = options.transport ?? new FluxerTransport(this.client, this.reliability);
+    this.resources = options.resources ?? new FluxerResources(this.client, this.reliability);
+    this.timers = options.timers ?? { setTimeout: (fn: () => void, ms: number) => setTimeout(fn, ms).unref(), clearTimeout: (handle: unknown) => clearTimeout(handle as never) };
     this.store = options.store ?? new JsonStore(defaultDataPath(options.name));
     this.scheduler = options.scheduler === false ? undefined : options.scheduler ?? new Scheduler(this.store,
       (task, signal) => this.runScheduled(task, signal), {
@@ -175,6 +181,16 @@ export class Yuzuha {
   listCommands(): Command[] { return this.registry.list(); }
   help(command?: string, prefix = ''): string { return this.registry.help(command, prefix); }
   get signal(): AbortSignal { return this.shutdown.signal; }
+  deleteLater(channelID: string, messageID: string, ttlMs: number): void {
+    const handle = this.timers.setTimeout(() => {
+      this.pendingTimers.delete(handle);
+      void this.transport.delete(channelID, messageID).catch(error => {
+        if (this.options.onLog) void emitLog(this.options, { event: 'message.ttl_failed', messageID, channelID,
+          errorCode: (error as { code?: string }).code });
+      });
+    }, ttlMs);
+    this.pendingTimers.add(handle);
+  }
   isReady(): boolean { return this.client.isReady(); }
   get uptime(): number | null { return this.client.uptime; }
   assertReady(): void {
@@ -208,7 +224,8 @@ export class Yuzuha {
         policy: definition.http, transport: this.transport, store: this.store, resources: this.resources,
         scheduler: this.scheduler, http: this.http, music: this.music, voice: this.voice,
         canvas: { renderer: canvasRenderer, config: this.options.canvas }, now: this.options.now,
-        cooldown: this.contextCooldown, signal: this.shutdown.signal });
+        cooldown: this.contextCooldown, signal: this.shutdown.signal,
+        deleteLater: (channelID, messageID, ttlMs) => this.deleteLater(channelID, messageID, ttlMs) });
       try { await definition.run(ctx, ...args as ClientEvents[K]); }
       catch (error) { await reportError(this.options, error, ctx); }
     } });
@@ -299,6 +316,8 @@ export class Yuzuha {
       const needsShardListener = !this.client.listeners(Events.ShardError).includes(this.shardErrorListener);
       if (needsErrorListener) this.client.on(Events.Error, this.errorListener);
       if (needsShardListener) this.client.on(Events.ShardError, this.shardErrorListener);
+      for (const handle of this.pendingTimers) this.timers.clearTimeout(handle);
+      this.pendingTimers.clear();
       try { await this.client.destroy(); }
       finally {
         if (needsErrorListener) this.client.off(Events.Error, this.errorListener);
@@ -330,7 +349,9 @@ export class Yuzuha {
         if (failures.length) throw new AggregateError(failures.map(item => item.reason), 'Falha ao encerrar música ou voz.');
       }
       finally {
-        try { await this.client.destroy(); }
+        for (const handle of this.pendingTimers) this.timers.clearTimeout(handle);
+      this.pendingTimers.clear();
+      try { await this.client.destroy(); }
         finally {
           this.client.off(Events.Error, this.errorListener);
           this.client.off(Events.ShardError, this.shardErrorListener);
@@ -423,7 +444,7 @@ export class Yuzuha {
     } catch (error) {
       onFailure?.(error, ctx);
       outcome = error instanceof GuardError ? 'guarded' : 'error';
-      try { if (!signal.aborted) await this.transport.reply(message, { content: userError(error, ctx) }); }
+      try { if (!signal.aborted) await (ctx ? ctx.reply(userError(error, ctx)) : this.transport.reply(message, { content: userError(error, ctx) })); }
       catch (replyError) { await reportError(this.options, replyError, ctx); }
       if (!(error instanceof GuardError)) await reportError(this.options, error, ctx);
     }

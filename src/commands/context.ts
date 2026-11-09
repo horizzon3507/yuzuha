@@ -34,6 +34,8 @@ import { commandUsage } from './help.js';
 import { ArgumentBag } from './typed-arguments.js';
 import type { Command } from './definition.js';
 
+export interface SendOptions { ttlMs?: number }
+
 export interface ContextOptions {
   message: IncomingMessage;
   transport: Transport;
@@ -56,6 +58,7 @@ export interface ContextOptions {
   executionID?: string;
   event?: Readonly<ScriptEventData>;
   messageAvailable?: boolean;
+  deleteLater?: (channelID: string, messageID: string, ttlMs: number) => void;
   actor?: { guildID: string; authorID: string };
 }
 
@@ -75,6 +78,7 @@ export class CommandContext {
   private readonly sourceMessage: IncomingMessage;
   readonly event?: Readonly<ScriptEventData>;
   private readonly messageAvailable: boolean;
+  private readonly deleteLaterFn?: (channelID: string, messageID: string, ttlMs: number) => void;
   private readonly actor?: { guildID: string; authorID: string };
   readonly transport: Transport;
   readonly store: Store;
@@ -110,6 +114,7 @@ export class CommandContext {
     this.scope = { guildID: this.guildID, authorID: this.authorID };
     this.transport = options.transport;
     this.store = options.store;
+    this.deleteLaterFn = options.deleteLater;
     this.command = options.command;
     this.lineage = options.lineage ?? [options.command];
     this.prefix = options.prefix ?? '';
@@ -228,12 +233,35 @@ export class CommandContext {
     if (!condition) throw new GuardError(message, 'GENERIC');
   }
 
-  reply(payload: string | Payload): Promise<string> {
-    return this.transport.reply(this.message, typeof payload === 'string' ? { content: payload } : payload);
+  reply(payload: string | Payload, options?: SendOptions): Promise<string> {
+    if (this.commandMessageDeleted) return this.send(payload, undefined, options);
+    return this.sendVia(this.transport.reply(this.message, typeof payload === 'string' ? { content: payload } : payload),
+      this.message.channelID, options);
   }
 
-  send(payload: string | Payload, channelID = this.message.channelID): Promise<string> {
-    return this.transport.send(channelID, typeof payload === 'string' ? { content: payload } : payload);
+  send(payload: string | Payload, channelID = this.message.channelID, options?: SendOptions): Promise<string> {
+    return this.sendVia(this.transport.send(channelID, typeof payload === 'string' ? { content: payload } : payload), channelID, options);
+  }
+  private commandMessageDeleted = false;
+  async deleteCommandMessage(): Promise<void> {
+    try { await this.transport.delete(this.message.channelID, this.message.id); }
+    catch (error) {
+      const candidate = error as { status?: number; code?: number | string } | null | undefined;
+      if (candidate?.status !== 404 && candidate?.code !== 10008 && candidate?.code !== 'NOT_FOUND') throw error;
+    }
+    this.commandMessageDeleted = true;
+  }
+  private async sendVia(pending: Promise<string>, channelID: string, options?: SendOptions): Promise<string> {
+    const ttlMs = options?.ttlMs;
+    if (ttlMs !== undefined && (!Number.isInteger(ttlMs) || ttlMs < 1_000 || ttlMs > 86_400_000)) {
+      throw new GuardError('ttlMs deve ser um inteiro entre 1000 e 86400000.', 'INVALID_ARGUMENT');
+    }
+    const id = await pending;
+    if (ttlMs !== undefined) this.deleteLater(channelID, id, ttlMs);
+    return id;
+  }
+  private deleteLater(channelID: string, messageID: string, ttlMs: number): void {
+    this.deleteLaterFn?.(channelID, messageID, ttlMs);
   }
 
   sendStream(source: ReadableStream<Uint8Array>, options: StreamAttachmentOptions, channelID = this.message.channelID): Promise<string> {
