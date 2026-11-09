@@ -1,3 +1,4 @@
+import { fixAnimatedAssetUrl, createCdn } from '../../../domain/cdn.js';
 import type { Client, DiscoveryApplicationPayload, Guild, GuildMember, PresenceUpdateOptions, User, ProfilePayload } from '@fluxerjs/core';
 import type { ActivityInfo, ActivityType, PresenceStatus } from '../../../ports/resources/common.js';
 import { limitOf } from '../../../ports/resources/common.js';
@@ -18,10 +19,11 @@ import { YuzuhaError } from '../../../errors.js';
 /** Época Fluxer (01/01/2015 UTC) para derivar timestamps de snowflakes. */
 const FLUXER_EPOCH = 1420070400000n;
 
-function profileInfo(profile: ProfilePayload | null): ProfileInfo | null {
+function profileInfo(profile: ProfilePayload | null, buildURL?: (hash: string) => string | null): ProfileInfo | null {
   if (!profile) return null;
   const fields = profile.userProfile;
   return { pronouns: fields?.pronouns ?? null, bio: fields?.bio ?? null, banner: fields?.banner ?? null,
+    bannerURL: fields?.banner ? (buildURL ? buildURL(fields.banner) : null) : null,
     accentColor: fields?.accentColor ?? null, bannerColor: fields?.bannerColor ?? null, theme: fields?.theme ?? null,
     mutualGuildIDs: [...new Set([...(profile.mutualGuildIds ?? []), ...(profile.mutualGuilds ?? []).map(guild => guild.id)])],
     connectedAccounts: (profile.connectedAccounts ?? []).map(account => ({ name: account.name ?? null, type: account.type ?? null })) };
@@ -73,8 +75,8 @@ export function toUserInfo(user: User): UserInfo {
     username: user.username,
     displayName: user.globalName ?? user.username,
     bot: user.bot,
-    avatarURL: user.avatarURL(),
-    bannerURL: user.bannerURL(),
+    avatarURL: fixAnimatedAssetUrl(user.avatarURL()),
+    bannerURL: fixAnimatedAssetUrl(user.bannerURL()),
     createdTimestamp: user.createdTimestamp,
   };
 }
@@ -86,8 +88,8 @@ export function toMemberInfo(member: GuildMember): MemberInfo {
     username: user.username,
     displayName: member.displayName,
     bot: user.bot,
-    avatarURL: member.displayAvatarURL(),
-    bannerURL: member.bannerURL() ?? user.bannerURL(),
+    avatarURL: fixAnimatedAssetUrl(member.displayAvatarURL()),
+    bannerURL: fixAnimatedAssetUrl(member.bannerURL() ?? user.bannerURL()),
     createdTimestamp: user.createdTimestamp,
     nickname: member.nick,
     joinedTimestamp: member.joinedAt.getTime(),
@@ -102,8 +104,8 @@ export function toGuildInfo(guild: Guild): GuildInfo {
     id: guild.id,
     name: guild.name,
     ownerID: guild.ownerId,
-    iconURL: guild.iconURL(),
-    bannerURL: guild.bannerURL(),
+    iconURL: fixAnimatedAssetUrl(guild.iconURL()),
+    bannerURL: fixAnimatedAssetUrl(guild.bannerURL()),
     memberCount: guild.memberCount,
     createdTimestamp: guild.createdTimestamp,
     features: [...guild.features],
@@ -123,10 +125,18 @@ export function createUsersResources(client: Client): UsersResources {
       if (!client.user) throw new YuzuhaError('NATIVE_UNAVAILABLE', 'O client ainda não possui um usuário autenticado.');
       await client.user.leaveGuild(guildID);
     },
+    async bannerURL(userID, guildID, options) {
+      const result = await client.users.fetchWithProfile(userID, { guildId: guildID });
+      const serverHash = guildID ? result.serverProfile?.userProfile?.banner : null;
+      if (serverHash) return createCdn().memberBanner(guildID!, userID, serverHash, options);
+      const globalHash = result.globalProfile?.userProfile?.banner;
+      return globalHash ? createCdn().banner(userID, globalHash, options) : null;
+    },
     async profile(userID, guildID) {
       const result = await client.users.fetchWithProfile(userID, { guildId: guildID });
       return { user: toUserInfo(result.user), member: result.member ? toMemberInfo(result.member) : null,
-        globalProfile: profileInfo(result.globalProfile), serverProfile: profileInfo(result.serverProfile) };
+        globalProfile: profileInfo(result.globalProfile, hash => createCdn().banner(userID, hash)),
+        serverProfile: profileInfo(result.serverProfile, hash => guildID ? createCdn().memberBanner(guildID, userID, hash) : null) };
     },
     async guildCounts(guildID, input) {
       return liveCounts(client, 'guildCountsUpdate', payload => {

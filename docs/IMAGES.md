@@ -108,3 +108,12 @@ refere-se à leitura, não ao upload do SDK. Depois de iniciar o envio, o métod
 aguarda a confirmação ou falha do transporte; não devolve cancelamento como se
 uma mensagem já enviada pudesse ser desfeita. `ATTACHMENT_TIMEOUT` identifica
 prazo de leitura e `EXECUTION_LIMIT` identifica bytes/chunks excessivos.
+
+
+## URLs do CDN
+
+`cdn`/`ctx.cdn` (`avatar`, `banner`, `guildIcon`, `guildBanner`,
+`guildSplash`, `memberAvatar`, `memberBanner`, `emoji`, `sticker`,
+`asset(url, { size?, format? })`) monta URLs sem depender do cliente;
+hashes `a_*` produzem `.gif`. `users.bannerURL` resolve o banner pelo
+endpoint de perfil. Base configurável por `YuzuhaOptions.cdn.mediaBase`.

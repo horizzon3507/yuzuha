@@ -367,6 +367,9 @@ implicitamente no function mode.
 ## Resolvers e motivos
 
 `cleanReason(texto, { maxLength? })` limpa menções e trunca (512 por
-padrão). `ctx.members.resolve`/`resolveUser`/`resolveBan` resolvem texto
+padrão). `cdn`/`ctx.cdn` monta URLs do CDN (`avatar`, `banner`,
+`guildIcon`, `memberBanner`, `emoji`, `sticker`, `asset(url, { size,
+format })`); `users.bannerURL(userID, guildID?)` resolve o banner pelo
+perfil. A base é configurável por `YuzuhaOptions.cdn.mediaBase`. `ctx.members.resolve`/`resolveUser`/`resolveBan` resolvem texto
 livre em alvos com `status` `found`/`ambiguous`/`missing`; veja
 docs/NATIVE.md para a forma do resultado.

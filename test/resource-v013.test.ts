@@ -255,7 +255,7 @@ test('perfil completo normaliza campos, ausências e IDs mútuos sem vazar dados
   assert.equal(profile.user.displayName, 'Alice');
   assert.equal(profile.member, null);
   assert.equal(profile.serverProfile, null);
-  assert.deepEqual(profile.globalProfile, { bio: 'bio', pronouns: 'ela', banner: null, accentColor: 0,
+  assert.deepEqual(profile.globalProfile, { bio: 'bio', pronouns: 'ela', banner: null, bannerURL: null, accentColor: 0,
     bannerColor: null, theme: null, mutualGuildIDs: ['100', '101'],
     connectedAccounts: [{ name: 'alice', type: 'github' }, { name: null, type: null }] });
   assert.equal(Object.hasOwn(profile, 'userData'), false);

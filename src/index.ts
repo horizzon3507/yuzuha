@@ -79,3 +79,7 @@ export { isTransientError } from './services/retry.js';
 export type { SendOptions } from './commands/context.js';
 export { cleanReason } from './domain/resolvers.js';
 export type { ResolvedMember, ResolvedBan, ResolvedUser, ResolvedLabel } from './domain/resolvers.js';
+export { createCdn, fixAnimatedAssetUrl } from './domain/cdn.js';
+export type { Cdn } from './domain/cdn.js';
+import { createCdn as _createCdn } from './domain/cdn.js';
+export const cdn = _createCdn();

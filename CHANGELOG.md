@@ -29,6 +29,8 @@ documentos. Veja a [política completa](VERSIONING.md).
 - `ctx.send`/`ctx.reply` aceitam `{ ttlMs }` (1s–24h) e agendam a exclusão via `timers` injetável do bot; pendências são canceladas em `bot.destroy()` e falhas viram `onLog` `message.ttl_failed`.
 - `YuzuhaOptions.retry` controla retentativas de transporte (`{ requests: 1, delayMs: 750 }` por padrão; `false` desliga) só em falhas transitórias de rede, detectadas por `error.code`/`cause.code` — erros de API nunca repetem; emissões por `onLog` `transport.retry`.
 - `ctx.members.resolve`, `resolveUser` e `resolveBan` resolvem texto livre (menção, ID, nome exato ou prefixo, insensível a caixa e acentos) em `found`/`ambiguous`/`missing`; `users.resolveBan` expõe o mesmo em recursos com guarda `BanMembers`.
+- `users.bannerURL(userID, guildID?)` resolve o banner pelo perfil (servidor primeiro) e `UserProfileInfo` traz `bannerURL`; assets animados (`a_*`) saem como `.gif` em todos os objetos de info.
+- Novo `cdn`/`ctx.cdn` monta URLs do CDN sem cliente nativo (`avatar`, `banner`, `guildIcon`, `memberBanner`, `emoji`, `sticker`, `asset(url, { size, format })`); `YuzuhaOptions.cdn.mediaBase` define a base.
 - `channels.overwrite` ganhou `merge: true` para PATCH de bits (`allow`/`deny`/`neutral`) preservando bits não relacionados; `channels.lock`/`unlock` bloqueiam a permissão por tipo de canal (`SendMessages`/`Connect`) de forma idempotente.
 - Novo `cleanReason(texto, { maxLength? })` remove menções e trunca no limite de motivos para compor razões de moderação.
 - Novos exports `formatDuration(ms)` (pt-BR, ex.: `10 minutos`) e `MAX_TIMEOUT_MS` (28 dias), junto a `parseDuration`; `CaseRecord.duration` é sempre em milissegundos.

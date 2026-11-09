@@ -25,6 +25,7 @@ import type { ContextEventDefinition, NativeEvent, NativeListener } from './even
 import { ScheduleExecutionError, Scheduler } from '../services/scheduler.js';
 import type { ScheduleRecord } from '../domain/state.js';
 import { HttpService } from '../services/http.js';
+import { createCdn } from '../domain/cdn.js';
 import { emitLog } from './logging.js';
 import { cancellationError } from '../services/cancellation.js';
 import { EventContext } from '../commands/event-context.js';
@@ -65,6 +66,7 @@ export class Yuzuha {
   private reliability: import('../services/retry.js').Reliability = {};
   private timers: NonNullable<YuzuhaOptions['timers']> = { setTimeout: (fn: () => void, ms: number) => setTimeout(fn, ms), clearTimeout: () => {} };
   private readonly pendingTimers = new Set<unknown>();
+  private cdnService: import('../domain/cdn.js').Cdn = createCdn();
   private readonly events: NativeEvents;
   private readonly execution = new AsyncLocalStorage<boolean>();
   private listening = false;
@@ -103,6 +105,7 @@ export class Yuzuha {
       onRetry: attempt => { if (options.onLog) void emitLog(this.options, { event: 'transport.retry', attempt }); } };
     this.transport = options.transport ?? new FluxerTransport(this.client, this.reliability);
     this.resources = options.resources ?? new FluxerResources(this.client, this.reliability);
+    this.cdnService = createCdn(options.cdn?.mediaBase);
     this.timers = options.timers ?? { setTimeout: (fn: () => void, ms: number) => setTimeout(fn, ms).unref(), clearTimeout: (handle: unknown) => clearTimeout(handle as never) };
     this.store = options.store ?? new JsonStore(defaultDataPath(options.name));
     this.scheduler = options.scheduler === false ? undefined : options.scheduler ?? new Scheduler(this.store,
@@ -224,7 +227,7 @@ export class Yuzuha {
         policy: definition.http, transport: this.transport, store: this.store, resources: this.resources,
         scheduler: this.scheduler, http: this.http, music: this.music, voice: this.voice,
         canvas: { renderer: canvasRenderer, config: this.options.canvas }, now: this.options.now,
-        cooldown: this.contextCooldown, signal: this.shutdown.signal,
+        cdn: this.cdnService, cooldown: this.contextCooldown, signal: this.shutdown.signal,
         deleteLater: (channelID, messageID, ttlMs) => this.deleteLater(channelID, messageID, ttlMs) });
       try { await definition.run(ctx, ...args as ClientEvents[K]); }
       catch (error) { await reportError(this.options, error, ctx); }
