@@ -25,6 +25,7 @@ A fonte das assinaturas completas são as declarações TypeScript distribuídas
 | `voice` | `NativeVoice` injetado, exposto em `ctx.voice`; bot encerra suas conexões |
 | `limits` | Subconjunto de `calls`, `depth`, `output`, `timeoutMs` |
 | `now` | Função que retorna epoch em ms para cooldown, dados e scheduler; padrão `Date.now` |
+| `emoji` | Mapa nome → emoji exposto em `bot.emoji`/`ctx.emoji`; referência viva |
 | `onError(error, ctx?)` | Observação de falhas internas e operacionais |
 | `onCommand(ctx, outcome)` | Observação do resultado de comandos encontrados |
 | `onLog(record)` | Eventos estruturados opcionais, sem conteúdo/segredos automáticos |
@@ -136,6 +137,9 @@ Nomes/aliases são únicos sem distinção entre maiúsculas e minúsculas.
 | `vars` | Map local daquela execução |
 | `reply(stringOuPayload)` | Retorna o ID da resposta |
 | `send`, `edit`, `delete`, `react` | Helpers do transporte, usando o canal/mensagem atuais como padrão |
+| `expire(messageID, ttlMs, channelID?)` | Agenda a exclusão de uma mensagem existente no timer do bot |
+| `purge(count, { of? })` | Apaga as últimas mensagens do canal (1–1000, `of` por autor) com a mensagem do comando fora da contagem; devolve `{ deleted, via }` |
+| `emoji` | Mapa nome → emoji de `YuzuhaOptions.emoji`, compartilhado com `bot.emoji` |
 | `client`, `nativeMessage` | Client real e mensagem original opcional do SDK |
 | `mod` | ban/kick/timeout/unban/move/mute/deafen com registro de caso por padrão |
 | `resources` | Contratos nativos de usuários, cargos, canais, mensagens, coletores, webhooks, emojis, threads e convites |
@@ -371,5 +375,6 @@ padrão). `cdn`/`ctx.cdn` monta URLs do CDN (`avatar`, `banner`,
 `guildIcon`, `memberBanner`, `emoji`, `sticker`, `asset(url, { size,
 format })`); `users.bannerURL(userID, guildID?)` resolve o banner pelo
 perfil. A base é configurável por `YuzuhaOptions.cdn.mediaBase`. `ctx.members.resolve`/`resolveUser`/`resolveBan` resolvem texto
-livre em alvos com `status` `found`/`ambiguous`/`missing`; veja
-docs/NATIVE.md para a forma do resultado.
+livre em alvos com `status` `found`/`ambiguous`/`missing`;
+`resolveUser('', { default: 'author' })` resolve o autor do contexto, inclusive
+em DMs; veja docs/NATIVE.md para a forma do resultado.

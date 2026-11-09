@@ -21,6 +21,23 @@ documentos. Veja a [política completa](VERSIONING.md).
 
 </details>
 
+## v0.3.2 · 09/11/2026
+
+Limpeza de mensagens com `ctx.purge`, TTL de mensagens existentes, resolver com autor padrão e registro de emoji — a atualização da biblioteca Yuzuha foi preparada em 09/11/2026 (v0.3.2).
+
+**Notas de comportamento**
+- `messages.bulkDelete` aceita um terceiro parâmetro opcional `{ fallback?: 'each' }`; a assinatura anterior continua válida.
+- `Resources` ganhou `messages.purge` como método obrigatório — adapters completos devem implementá-lo (veja [VERSIONING.md](VERSIONING.md)).
+- `MemberService.resolveUser` aceita consulta opcional e `{ default?: 'author' | userID }`; a chamada com um argumento continua igual.
+
+- `ctx.purge(count, { of? })` apaga as últimas `count` mensagens do canal (1 a 1000, opcionalmente só de um autor) e inclui a mensagem do comando fora da contagem; devolve `{ deleted, via }` — `via` é `'bulk'` ou `'each'` quando a rota em lote falha e a exclusão recai por mensagem.
+- `messages.purge(channelID, { limit, authorID?, include? })` lista as últimas `limit` mensagens, filtra por autor, prefixa os `include` deduplicados e tenta a rota em lote; falha de rota (ex.: 404/405) recai para exclusão por mensagem, falhas por ID propagam como antes e `deleted` exclui os `include` removidos (`deletedIDs` os contém).
+- `messages.bulkDelete(channelID, ids, { fallback: 'each' })` repete a exclusão mensagem a mensagem só quando a própria rota em lote falha; `ctx.resources` exige `ManageMessages` de autor e bot para `purge` e `bulkDelete` em canais de servidor.
+- `ctx.expire(messageID, ttlMs, channelID?)` agenda a exclusão de uma mensagem existente — par agendado de `ctx.delete` com a mesma validação de `ttlMs` (1s–24h) e o mesmo `deleteLater` injetável de `send`/`reply`.
+- `ctx.members.resolveUser(query?, { default? })` resolve menção ou ID como antes e, com consulta vazia ou ausente, `default: 'author'` resolve o autor do contexto — inclusive em DMs, sem exigir servidor; um ID ou menção em `default` também serve de substituto.
+- `YuzuhaOptions.emoji` registra um mapa nome → emoji exposto por `bot.emoji` e `ctx.emoji` em comandos e eventos com contexto; o mapa é vivo — mutações refletem-se nos contextos, então ajustes em tempo de execução usam `bot.emoji` ou um novo bot com novas opções.
+- `CommandContextLike` tipa `purge`, `expire` e `emoji` junto aos membros anteriores.
+
 ## v0.3.1 · 06/11/2026
 
 Erros tipados de guarda, retentativa de transporte, resolvers e helpers de canais e CDN — a atualização da biblioteca Yuzuha foi preparada em 06/11/2026 (v0.3.1).
