@@ -34,6 +34,14 @@ export interface PinnedMessagesInput {
   before?: string;
 }
 
+/** Entrada de `messages.purge`: últimas `limit` mensagens do canal, filtradas por autor. */
+export interface PurgeInput {
+  limit: number;
+  authorID?: string;
+  /** IDs apagados fora da listagem (ex.: a mensagem do comando); sempre entram no lote. */
+  include?: string[];
+}
+
 const SEARCH_KEYS = new Set(['content', 'contents', 'exactPhrases', 'guildID', 'channelID', 'channelIDs',
   'excludeChannelIDs', 'authorID', 'authorIDs', 'excludeAuthorIDs', 'authorType', 'excludeAuthorType',
   'mentions', 'excludeMentions', 'mentionEveryone', 'pinned', 'includeNsfw', 'has', 'excludeHas',
@@ -120,6 +128,20 @@ export function messageSearchInput(raw: unknown): MessageSearchInput {
     throw new YuzuhaError('MESSAGE_OPTIONS', 'Opções de busca excedem 32 KiB.');
   }
   return result as MessageSearchInput;
+}
+
+export function purgeInput(raw: unknown): PurgeInput {
+  const input = options(raw, new Set(['limit', 'authorID', 'include']));
+  const limit = integer(input['limit'], 'limit', 1, 1000);
+  const authorID = input['authorID'];
+  const include = input['include'];
+  if (include !== undefined && (!Array.isArray(include) || include.length > 100
+    || include.some(item => typeof item !== 'string' || !/^\d{1,20}$/.test(item)))) {
+    throw new YuzuhaError('MESSAGE_OPTIONS', 'include deve ser uma lista de até 100 IDs de mensagens.');
+  }
+  return { limit,
+    ...(authorID === undefined ? {} : { authorID: id(authorID, 'authorID') }),
+    ...(include === undefined ? {} : { include: [...new Set(include as string[])] }) };
 }
 
 export function pinnedMessagesInput(raw: unknown = {}): PinnedMessagesInput {

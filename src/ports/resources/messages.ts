@@ -1,8 +1,8 @@
 import type { AttachmentSpec, BinaryAttachmentSpec } from './common.js';
 import type { APIMessage } from '@fluxerjs/types';
-import type { MessageSearchInput, PinnedMessagesInput } from '../../domain/message-query.js';
+import type { MessageSearchInput, PinnedMessagesInput, PurgeInput } from '../../domain/message-query.js';
 import type { ReceivedEmbed } from '../../domain/messages.js';
-export type { MessageSearchInput, PinnedMessagesInput } from '../../domain/message-query.js';
+export type { MessageSearchInput, PinnedMessagesInput, PurgeInput } from '../../domain/message-query.js';
 
 export interface AttachmentInfo {
   id: string;
@@ -47,7 +47,8 @@ export interface MessagesResources {
   sendAttachments(channelID: string, files: (AttachmentSpec | BinaryAttachmentSpec)[], content?: string): Promise<string>;
   deleteAttachment(channelID: string, messageID: string, attachmentID: string): Promise<void>;
   sendTo(channelID: string, content: string): Promise<string>;
-  bulkDelete(channelID: string, messageIDs: string[]): Promise<string[]>;
+  bulkDelete(channelID: string, messageIDs: string[], options?: BulkDeleteOptions): Promise<string[]>;
+  purge(channelID: string, input: PurgeInput): Promise<PurgeResult>;
   bulkDeleteOwn(channelID: string): Promise<void>;
   acknowledgePins(channelID: string): Promise<void>;
   clearReadState(channelID: string): Promise<void>;
@@ -55,6 +56,21 @@ export interface MessagesResources {
 }
 
 export interface MessageCursor { before?: string; after?: string; around?: string }
+
+/** Opções de `bulkDelete`. `fallback: 'each'` repete a exclusão mensagem a mensagem quando a rota em lote falha. */
+export interface BulkDeleteOptions {
+  fallback?: 'each';
+}
+
+/** Resultado de `messages.purge`. */
+export interface PurgeResult {
+  /** Mensagens apagadas vindas da listagem do canal; os IDs de `include` apagados não contam aqui. */
+  deleted: number;
+  /** Todos os IDs apagados, incluindo os de `include` que foram removidos. */
+  deletedIDs: string[];
+  /** Caminho usado: rota em lote ou exclusão individual após falha da rota. */
+  via: 'bulk' | 'each';
+}
 export interface PinnedMessagesPage {
   messages: MessageInfo[];
   pinnedAt: string[];

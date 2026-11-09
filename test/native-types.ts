@@ -129,6 +129,7 @@ const likeHelper = (ctx: CommandContextLike): string => ctx.channelID;
 const minimal = {
   reply: async () => '1', send: async () => '1', edit: async () => {}, delete: async () => {},
   react: async () => {}, deleteCommandMessage: async () => {},
+  purge: async () => ({ deleted: 0, via: 'bulk' as const }),
   authorID: '2', authorName: 'a', channelID: '200', guildID: '100', args: undefined as never,
   members: undefined as never, mod: undefined as never, resources: undefined as never,
   cdn: undefined as never, canvas: undefined as never, tokens: [] as string[],

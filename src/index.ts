@@ -31,7 +31,7 @@ export type {
 } from './ports/resources/channels.js';
 export type { AttachmentInfo, MessageInfo, MessagesResources, MessageCursor, MessageSearchInput, MessageSearchPage,
   PinnedMessagesInput, PinnedMessagesPage, ReactionUsersPage,
-  BulkFetchRequest, BulkFetchInput, BulkFetchRawChannel } from './ports/resources/messages.js';
+  BulkFetchRequest, BulkFetchInput, BulkFetchRawChannel, BulkDeleteOptions, PurgeInput, PurgeResult } from './ports/resources/messages.js';
 export type { AwaitMessageInput, CollectedMessageInfo, CollectMessagesInput, CollectReactionsInput, CollectorsResources, ReactionVote } from './ports/resources/collectors.js';
 export type { WebhookInfo, WebhookSendInput, WebhooksResources } from './ports/resources/webhooks.js';
 export type { EmojiInfo, EmojiCreateInput, EmojiBulkResult, StickerInfo, StickerCreateInput, StickerEditInput, ExpressionsResources } from './ports/resources/expressions.js';
