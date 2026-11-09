@@ -81,8 +81,14 @@ export class MemberService {
       displayName: member.displayName, nickname: member.nickname }));
   }
 
-  async resolveUser(query: string): Promise<ResolvedUser> {
-    const text = query.trim();
+  /** Resolve um usuário por menção ou ID; `default: 'author'` usa o autor quando a consulta está vazia (inclusive em DMs). */
+  async resolveUser(query?: string, options?: { default?: 'author' | string }): Promise<ResolvedUser> {
+    let text = query?.trim() ?? '';
+    if (!text) {
+      const fallback = options?.default === 'author' ? requireActor(this.scope.authorID) : options?.default?.trim() ?? '';
+      if (!fallback) return { status: 'missing', query: '' };
+      text = fallback;
+    }
     const id = mentionID(text);
     if (!id) return { status: 'missing', query: text };
     const user = await this.users().user(id).catch(error => { if (absent(error) === undefined) throw error; return null; });
