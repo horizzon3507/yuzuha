@@ -225,18 +225,18 @@ export function createMessagesResources(client: Client, reliability: Reliability
       if (options?.fallback !== undefined && options.fallback !== 'each') {
         throw new YuzuhaError('BULK_DELETE_OPTIONS', 'fallback aceita somente each.');
       }
-      return withRetry(async () => {
-        const channel = await textChannel(channelID);
-        if (options?.fallback === 'each' && typeof channel.bulkDelete !== 'function') {
-          return deleteEach(channelID, messageIDs);
-        }
-        try {
-          return await channel.bulkDelete(messageIDs);
-        } catch (error) {
-          if (options?.fallback !== 'each' || !isRouteLevelError(error)) throw error;
-          return deleteEach(channelID, messageIDs);
-        }
-      }, reliability);
+      const channel = await withRetry(() => textChannel(channelID), reliability);
+      if (options?.fallback !== 'each') {
+        return withRetry(() => channel.bulkDelete(messageIDs), reliability);
+      }
+      if (typeof channel.bulkDelete !== 'function') return deleteEach(channelID, messageIDs);
+      try {
+        return await withRetry(() => channel.bulkDelete(messageIDs), reliability);
+      } catch (error) {
+        if (!isRouteLevelError(error)) throw error;
+        // A fase por mensagem não é retentada: repeti-la perderia os IDs já apagados.
+        return deleteEach(channelID, messageIDs);
+      }
     },
     async purge(channelID, rawInput): Promise<PurgeResult> {
       const input = purgeInput(rawInput);

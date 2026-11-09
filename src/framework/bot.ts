@@ -40,16 +40,19 @@ type RoutedCommand = { compiled: CompiledCommand; input: string; prefix: string 
 const ignored: Promise<DispatchResult> = Promise.resolve('ignored');
 
 function emojiRegistry(input: Record<string, string> | undefined): Record<string, string> {
-  if (input === undefined) return {};
-  if (!input || typeof input !== 'object' || Array.isArray(input)) {
+  const registry: Record<string, string> = Object.create(null);
+  if (input === undefined) return registry;
+  const prototype = input === null || typeof input !== 'object' ? undefined : Object.getPrototypeOf(input);
+  if (prototype !== Object.prototype && prototype !== null) {
     throw new YuzuhaError('EMOJI_OPTIONS', 'emoji deve ser um objeto nome → texto.');
   }
   for (const [name, value] of Object.entries(input)) {
     if (!name || typeof value !== 'string' || !value) {
       throw new YuzuhaError('EMOJI_OPTIONS', 'emoji deve mapear nomes não vazios para textos não vazios.');
     }
+    registry[name] = value;
   }
-  return input;
+  return registry;
 }
 
 function assertEngine(engine: unknown): ScriptEngine {

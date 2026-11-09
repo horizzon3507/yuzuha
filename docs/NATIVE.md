@@ -232,18 +232,22 @@ já existente — par agendado de `ctx.delete`, com a mesma validação de `ttlM
 (1s–24h, `INVALID_ARGUMENT` síncrono) e o mesmo `deleteLater` injetável do bot.
 
 `ctx.purge(count, { of? })` apaga as últimas `count` mensagens do canal
-(1 a 1000; com `of`, só as desse autor) e inclui a mensagem do comando fora
-da contagem. Devolve `{ deleted, via }`: `via` é `'bulk'` ou `'each'` quando
-a rota em lote falha e a exclusão recai mensagem a mensagem. O caminho de
-recursos é `messages.purge(channelID, { limit, authorID?, include? })` —
-lista as últimas `limit` mensagens, filtra por autor, prefixa os `include`
-deduplicados ao lote e devolve `{ deleted, deletedIDs, via }`: `deletedIDs`
-traz tudo que foi removido (inclusive os `include` apagados) e `deleted`
-conta só o que veio da listagem. `messages.bulkDelete(channelID, ids,
-{ fallback: 'each' })` aceita um terceiro parâmetro opcional: com `each`,
-uma falha da própria rota em lote (ex.: 404/405) repete a exclusão por
-mensagem — falhas por ID propagam como antes. Em `ctx.resources`, `purge`
-e `bulkDelete` exigem `ManageMessages` de autor e bot em canais de servidor.
+(1 a 1000; com `of`, só as desse autor) e inclui a mensagem do comando no
+lote, fora da contagem. Devolve `{ deleted, via }` — `deleted` exclui os
+ids de `include`, portanto a mensagem do comando apagada não conta; `via`
+é `'bulk'` ou `'each'` quando a rota em lote falha e a exclusão recai
+mensagem a mensagem. O caminho de recursos é `messages.purge(channelID,
+{ limit, authorID?, include? })` — lista as últimas `limit` mensagens,
+filtra por autor, prefixa os `include` deduplicados ao lote e devolve
+`{ deleted, deletedIDs, via }`: `deletedIDs` traz tudo que foi removido
+(inclusive os `include` apagados) e `deleted` conta só o que veio da
+listagem. `messages.bulkDelete(channelID, ids, { fallback: 'each' })`
+aceita um terceiro parâmetro opcional: com `each`, uma falha da própria
+rota em lote (ex.: 404/405) repete a exclusão por mensagem — falhas por ID
+propagam como antes e a fase por mensagem não é retentada. Em
+`ctx.resources`, `purge` e `bulkDelete` exigem `ManageMessages` de autor
+e bot em canais de servidor. `purge` é opcional em adaptadores `Resources`
+próprios; sem ele, `ctx.purge` lança `NATIVE_UNAVAILABLE`.
 
 `ctx.mod.canBan`/`canKick`/`canModerate` devolvem `false` para falhas de guarda — permissão, hierarquia, alvo inválido e membro ausente (`MEMBER_NOT_FOUND`); erros reais continuam sendo lançados.
 
@@ -364,9 +368,11 @@ configurável por `YuzuhaOptions.cdn.mediaBase` (URL https).
 
 `YuzuhaOptions.emoji` registra um mapa nome → emoji exposto como `bot.emoji`
 e `ctx.emoji` em comandos e eventos com contexto (`ctx.emoji['check']`).
-O mapa é vivo: mutações por `bot.emoji` ou pelo objeto passado nas opções
-aparecem nos próximos contextos sem recriar o bot; um mapa novo exige novas
-opções na construção, pois o reload de comandos não reconstrói o bot.
+As entradas são copiadas na construção para um registro sem protótipo
+(`ctx.emoji['constructor']` não resolve membros herdados). O registro é
+vivo: mutações por `bot.emoji` aparecem nos próximos contextos sem recriar
+o bot; um conjunto novo exige novas opções na construção, pois o reload de
+comandos não reconstrói o bot.
 compartilha as verificações de `$nickname`: autor e bot precisam de permissão,
 o bot precisa superar o alvo na hierarquia, e o dono é protegido. Para alterar
 o próprio apelido, o autor pode usar `ChangeNickname`; `ManageNicknames` também

@@ -48,7 +48,8 @@ export interface MessagesResources {
   deleteAttachment(channelID: string, messageID: string, attachmentID: string): Promise<void>;
   sendTo(channelID: string, content: string): Promise<string>;
   bulkDelete(channelID: string, messageIDs: string[], options?: BulkDeleteOptions): Promise<string[]>;
-  purge(channelID: string, input: PurgeInput): Promise<PurgeResult>;
+  /** Opcional em adaptadores próprios; sem ele, `ctx.purge` lança `NATIVE_UNAVAILABLE`. */
+  purge?(channelID: string, input: PurgeInput): Promise<PurgeResult>;
   bulkDeleteOwn(channelID: string): Promise<void>;
   acknowledgePins(channelID: string): Promise<void>;
   clearReadState(channelID: string): Promise<void>;

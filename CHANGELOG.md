@@ -27,7 +27,7 @@ Limpeza de mensagens com `ctx.purge`, TTL de mensagens existentes, resolver com 
 
 **Notas de comportamento**
 - `messages.bulkDelete` aceita um terceiro parâmetro opcional `{ fallback?: 'each' }`; a assinatura anterior continua válida.
-- `Resources` ganhou `messages.purge` como método obrigatório — adapters completos devem implementá-lo (veja [VERSIONING.md](VERSIONING.md)).
+- `MessagesResources.purge` é opcional (`purge?`): adaptadores sem ele fazem `ctx.purge` falhar com `NATIVE_UNAVAILABLE` — não quebra implementações existentes.
 - `MemberService.resolveUser` aceita consulta opcional e `{ default?: 'author' | userID }`; a chamada com um argumento continua igual.
 
 - `ctx.purge(count, { of? })` apaga as últimas `count` mensagens do canal (1 a 1000, opcionalmente só de um autor) e inclui a mensagem do comando fora da contagem; devolve `{ deleted, via }` — `via` é `'bulk'` ou `'each'` quando a rota em lote falha e a exclusão recai por mensagem.

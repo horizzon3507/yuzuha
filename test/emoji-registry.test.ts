@@ -1,13 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { Yuzuha } from '../src/framework/bot.js';
-import { YuzuhaError } from '../src/shared/errors.js';
 import { CommandContext } from '../src/commands/context.js';
 import { MemoryStore } from '../src/infrastructure/storage/memory.js';
 import { createTestBot, MockTransport, mockMessage, mockResources } from '../src/testing.js';
 import type { CommandContextLike } from '../src/commands/context-like.js';
 
-test('ctx.emoji expõe a mesma referência configurada no bot sem client nativo', async () => {
+test('ctx.emoji expõe o registro do bot com as entradas configuradas, sem client nativo', async () => {
   let seen: Record<string, string> | undefined;
   let same = false;
   const emoji = { ok: '<:ok:1>', no: '<:no:2>' };
@@ -19,8 +18,8 @@ test('ctx.emoji expõe a mesma referência configurada no bot sem client nativo'
     } }] });
   try {
     await fixture.send('!e');
-    assert.equal(fixture.bot.emoji, emoji);
-    assert.equal(seen, emoji);
+    assert.deepEqual({ ...fixture.bot.emoji }, emoji);
+    assert.equal(seen, fixture.bot.emoji);
     assert.equal(same, true);
     assert.deepEqual(fixture.messages[0]!.payload, { content: '<:ok:1>' });
   } finally { await fixture.destroy(); }
@@ -39,6 +38,16 @@ test('emoji é um mapa vivo: mutações via bot.emoji aparecem no contexto', asy
   } finally { await fixture.destroy(); }
 });
 
+test('o registro não tem protótipo: só chaves próprias resolvem', async () => {
+  const fixture = createTestBot({ prefix: '!', emoji: { ok: '✅' } });
+  try {
+    assert.equal(Object.getPrototypeOf(fixture.bot.emoji), null);
+    for (const inherited of ['constructor', 'toString', 'hasOwnProperty', 'valueOf', '__proto__']) {
+      assert.equal(fixture.bot.emoji[inherited], undefined, inherited);
+    }
+  } finally { await fixture.destroy(); }
+});
+
 test('ctx.emoji funciona sem client nativo em contexto direto', () => {
   const ctx = new CommandContext({ message: mockMessage('!x'), command: { name: 'x' },
     store: new MemoryStore(), transport: new MockTransport(), cooldown: () => 0,
@@ -51,11 +60,19 @@ test('ctx.emoji funciona sem client nativo em contexto direto', () => {
   assert.equal(like.emoji['ok'], undefined);
 });
 
-test('YuzuhaOptions.emoji rejeita mapas malformados', () => {
-  for (const emoji of ['mapa', ['a'], { '': 'x' }, { ok: '' }, { ok: 1 }, { ok: null }]) {
-    assert.throws(() => new Yuzuha({ emoji: emoji as never }), { code: 'EMOJI_OPTIONS' });
+test('YuzuhaOptions.emoji rejeita entradas que não são objetos simples', async t => {
+  const options = (emoji: unknown) => ({ emoji: emoji as never,
+    transport: new MockTransport(), resources: mockResources(), store: new MemoryStore() });
+  for (const emoji of ['mapa', ['a'], new Map([['ok', '✅']]), new (class { ok = '✅'; })(),
+    { '': 'x' }, { ok: '' }, { ok: 1 }, { ok: null }]) {
+    assert.throws(() => new Yuzuha(options(emoji)), { code: 'EMOJI_OPTIONS' });
   }
-  assert.doesNotThrow(() => new Yuzuha({ emoji: { ok: '✅' } }));
-  const bot = new Yuzuha();
-  assert.deepEqual(bot.emoji, {});
+  const bot = new Yuzuha(options({ ok: '✅', fromNullProto: '<:f:1>' }));
+  t.after(() => bot.destroy());
+  assert.equal(bot.emoji['ok'], '✅');
+  const nullProto = Object.create(null) as Record<string, string>;
+  nullProto['ok'] = '✅';
+  const fromNull = new Yuzuha(options(nullProto));
+  t.after(() => fromNull.destroy());
+  assert.equal(fromNull.emoji['ok'], '✅');
 });
