@@ -46,8 +46,8 @@ gerado por `init` pertence ao consumidor e não precisa acompanhar a biblioteca.
 
 A 0.3.2 é aditiva e não exige mudanças em adaptadores: `MessagesResources`
 ganhou o método **opcional** `purge?(channelID, { limit, authorID?, include? })`,
-que devolve `{ deleted, deletedIDs, via }` — adaptadores próprios sem ele
-fazem `ctx.purge`/`ctx.resources.messages.purge` falhar com
+que devolve `{ deleted, deletedIDs, via }` — em adaptadores próprios sem ele,
+`ctx.resources.messages.purge` fica `undefined` e `ctx.purge` falha com
 `NATIVE_UNAVAILABLE`, sem quebrar a implementação existente.
 `messages.bulkDelete` aceita um terceiro parâmetro opcional
 `{ fallback?: 'each' }`, compatível com implementações anteriores que
