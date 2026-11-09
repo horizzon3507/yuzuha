@@ -10,7 +10,7 @@ pacotes satélites por `yuzuha/sdk/*` (client, errors, message, cluster, interna
 types, rest, ws, builders, collection e util, além de voice e sharding como peers
 opcionais).
 
-[0.3.0](CHANGELOG.md) · Node **22.13+** · ESM · [MIT](LICENSE)
+[0.3.1](CHANGELOG.md) · Node **22.13+** · ESM · [MIT](LICENSE)
 
 [Começar](#começar) · [Comandos](#escrever-comandos) · [Recursos](#recursos) · [Testes](#testar-sem-token) · [Documentação](#documentação)
 

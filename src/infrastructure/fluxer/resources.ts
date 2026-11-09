@@ -1,3 +1,4 @@
+import { createCdn } from '../../domain/cdn.js';
 import type { Client } from '@fluxerjs/core';
 import type { Resources } from '../../ports/resources.js';
 import { createCacheResources } from './resources/cache.js';
@@ -30,8 +31,8 @@ export class FluxerResources implements Resources {
   readonly self;
   readonly cache;
 
-  constructor(client: Client, private readonly reliability: import('../../services/retry.js').Reliability = {}) {
-    this.users = createUsersResources(client);
+  constructor(client: Client, private readonly cdn: import('../../domain/cdn.js').Cdn = createCdn(), private readonly reliability: import('../../services/retry.js').Reliability = {}) {
+    this.users = createUsersResources(client, this.cdn);
     this.roles = createRolesResources(client);
     this.channels = createChannelsResources(client);
     this.messages = createMessagesResources(client, this.reliability);

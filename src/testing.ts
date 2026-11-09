@@ -1,7 +1,7 @@
 import type { IncomingMessage, ModerationAction, ModerationMember, Payload, Transport } from './contracts.js';
 import type { Resources } from './ports/resources.js';
 import { PermissionFlags } from '@fluxerjs/core';
-import { YuzuhaError } from './errors.js';
+import { GuardError, YuzuhaError } from './errors.js';
 import type { VoiceModerationOptions } from './domain/moderation.js';
 import { Yuzuha } from './framework/bot.js';
 import type { DispatchResult, YuzuhaOptions } from './framework/options.js';
@@ -78,7 +78,7 @@ export class MockTransport implements Transport {
   async react(channelID: string, messageID: string, emoji: string): Promise<void> { this.reactions.push({ channelID, messageID, emoji }); }
   async member(guildID: string, userID: string): Promise<ModerationMember> {
     const member = this.members.get(JSON.stringify([guildID, userID]));
-    if (!member) throw new YuzuhaError('MEMBER_NOT_FOUND', 'Membro não encontrado.');
+    if (!member) throw new GuardError('Membro não encontrado.', 'MEMBER_NOT_FOUND');
     return structuredClone(member);
   }
   async moderate(guildID: string, action: ModerationAction, targetID: string, reason: string, duration?: number, voice?: VoiceModerationOptions): Promise<void> {

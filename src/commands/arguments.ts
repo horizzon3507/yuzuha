@@ -6,7 +6,7 @@ export type ArgumentValue = string | number | boolean;
 
 function validateValue(definition: ArgumentDefinition, value: ArgumentValue): void {
   if (definition.choices && !definition.choices.some(choice => String(choice) === String(value))) {
-    throw new GuardError(`${definition.name}: escolha ${definition.choices.join(', ')}.`);
+    throw new GuardError(`${definition.name}: escolha ${definition.choices.join(', ')}.`, 'INVALID_ARGUMENT');
   }
   const size = typeof value === 'string' ? value.length : value;
   if (typeof size === 'number') {
@@ -32,7 +32,7 @@ export function validateArgumentDefinitions(definitions: readonly ArgumentDefini
     if (typeof definition.name !== 'string' || !definition.name || names.has(definition.name)
       || (definition.required !== undefined && typeof definition.required !== 'boolean')
       || (definition.rest !== undefined && typeof definition.rest !== 'boolean')
-      || (definition.anywhere !== undefined && (definition.type !== 'user' || definition.rest === true))
+      || (definition.anywhere !== undefined && (typeof definition.anywhere !== 'boolean' || definition.type !== 'user' || definition.rest === true))
       || (definition.description !== undefined && typeof definition.description !== 'string')
       || (definition.aliases !== undefined && (!Array.isArray(definition.aliases) || definition.aliases.some(alias => typeof alias !== 'string')))
       || (definition.rest && index !== definitions.length - 1)
@@ -107,7 +107,12 @@ export function parseArguments(definitions: readonly ArgumentDefinition[], token
   const matched = new Map<string, string>();
   for (const definition of definitions) {
     if (!definition.anywhere) continue;
-    const index = positional.findIndex(token => /^<@!?\d+>$|^\d{17,20}$/.test(token));
+    let index = positional.findIndex(token => /^<@!?\d+>$/.test(token));
+    if (index < 0) {
+      for (let candidate = positional.length - 1; candidate >= 0; candidate--) {
+        if (/^\d{17,20}$/.test(positional[candidate]!)) { index = candidate; break; }
+      }
+    }
     if (index >= 0) matched.set(definition.name, positional.splice(index, 1)[0]!);
   }
   let position = 0;
@@ -142,6 +147,9 @@ export function tokenize(input: string): string[] {
 }
 
 export function validateFlagDefinitions(definitions: readonly ArgumentDefinition[], commandName: string): void {
+  if (definitions.some(definition => definition.anywhere)) {
+    throw new YuzuhaError('ARGUMENT_SCHEMA', `.anywhere() só vale para argumentos posicionais de user em ${commandName}.`);
+  }
   validateArgumentDefinitions(definitions, commandName);
   const names = new Set<string>();
   for (const definition of definitions) {
@@ -170,7 +178,7 @@ export function parseFlags(definitions: readonly ArgumentDefinition[] | undefine
     if (!(token.startsWith('--') || /^-[^\d.]/u.test(token)) || token === '-') { positional.push(token); continue; }
     const match = /^--?([^=]+)(?:=([\s\S]*))?$/.exec(token);
     const definition = match && lookup.get(match[1]!);
-    if (!match || !definition) throw new GuardError(`Flag desconhecida: ${token.split('=')[0]}.`);
+    if (!match || !definition) throw new GuardError(`Flag desconhecida: ${token.split('=')[0]}.`, 'INVALID_ARGUMENT');
     if (values.has(definition.name)) throw new GuardError(`Flag repetida: --${definition.name}.`, 'INVALID_ARGUMENT');
     let input = match[2];
     if (input === undefined) {

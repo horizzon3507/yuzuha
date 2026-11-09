@@ -9,7 +9,7 @@ A versão desta atualização é **0.3.1**.
 |---|---|
 | `package.json` e entrada raiz de `package-lock.json` | `0.3.1` |
 | Pacote npm e saída de `yuzuha --version` | `0.3.1` |
-| Título do changelog | `## v0.3.0 · 04/11/2026` |
+| Título do changelog | `## v0.3.1 · 06/11/2026` |
 | Tag Git | `v0.3.1` |
 
 O SDK e a CLI pertencem ao mesmo pacote. Para bibliotecas, a convenção Hory mantém
@@ -79,7 +79,7 @@ compatível com `@napi-rs/canvas`. Há três mudanças incompatíveis:
 O schema persistido permanece em 2 e o SDK em 3.3.0; não há migração de dados.
 
 ```sh
-npm install yuzuha@0.3.1
+npm install yuzuha@0.3.0
 ```
 
 ### Migrar para 0.2.1

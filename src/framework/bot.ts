@@ -104,7 +104,7 @@ export class Yuzuha {
     this.reliability = { retry: options.retry, signal: this.shutdown.signal,
       onRetry: attempt => { if (options.onLog) void emitLog(this.options, { event: 'transport.retry', attempt }); } };
     this.transport = options.transport ?? new FluxerTransport(this.client, this.reliability);
-    this.resources = options.resources ?? new FluxerResources(this.client, this.reliability);
+    this.resources = options.resources ?? new FluxerResources(this.client, this.cdnService, this.reliability);
     this.cdnService = createCdn(options.cdn?.mediaBase);
     if (options.unsafeDisableResourceAuthorization && options.onLog)
       void emitLog(this.options, { event: 'authorization.disabled' });
@@ -259,7 +259,9 @@ export class Yuzuha {
     const ctx = new EventContext({ ...source, channelID: definition.channelID, actorID: definition.actorID,
       policy: definition.http, transport: this.transport, store: this.store, resources: this.resources,
       scheduler: this.scheduler, http: this.http, music: this.music, voice: this.voice,
-      canvas: { renderer: canvasRenderer, config: this.options.canvas }, now: this.options.now, cooldown: this.contextCooldown, signal });
+      canvas: { renderer: canvasRenderer, config: this.options.canvas }, now: this.options.now, cooldown: this.contextCooldown, signal,
+      cdn: this.cdnService, disableResourceAuthorization: this.options.unsafeDisableResourceAuthorization === true,
+      deleteLater: (channelID, messageID, ttlMs) => this.deleteLater(channelID, messageID, ttlMs) });
     const started = this.options.onLog ? performance.now() : 0;
     let outcome: DispatchResult = 'success';
     try {

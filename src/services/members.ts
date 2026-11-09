@@ -46,7 +46,7 @@ export class MemberService {
     const text = query.trim();
     const id = mentionID(text);
     if (id) {
-      const member = await this.users().member(guildID, id).catch(() => null);
+      const member = await this.users().member(guildID, id).catch(error => { if (absent(error) === undefined) throw error; return null; });
       if (!member) return { status: 'missing', query: text };
       return { status: 'found', id, label: member.nickname ?? member.displayName ?? member.username, mention: `<@${id}>`, via: /^\d+$/.test(text) ? 'id' : 'mention' };
     }
@@ -63,11 +63,15 @@ export class MemberService {
   }
 
   private async candidates(guildID: string, query: string) {
-    const page = await this.users().searchMembers(guildID, query, 25).catch(error => {
-      if (error instanceof GuardError) throw error;
-      return { members: [], total: null, hasMore: false, indexing: false };
-    });
-    const hits = new Map(page.members.map(member => [member.userID, member]));
+    const hits = new Map<string, { userID: string; username: string; displayName: string; nickname: string | null }>();
+    for (let pageIndex = 0; pageIndex < 10; pageIndex++) {
+      const page = await this.users().searchMembers(guildID, query, 25, pageIndex * 25).catch(error => {
+        if (error instanceof GuardError) throw error;
+        return { members: [], total: null, hasMore: false, indexing: false };
+      });
+      for (const member of page.members) hits.set(member.userID, member);
+      if (!page.hasMore) break;
+    }
     if (!hits.size) {
       const listed = await this.users().members(guildID, 100);
       for (const member of listed) hits.set(member.id, { userID: member.id, username: member.username,
@@ -81,7 +85,7 @@ export class MemberService {
     const text = query.trim();
     const id = mentionID(text);
     if (!id) return { status: 'missing', query: text };
-    const user = await this.users().user(id).catch(() => null);
+    const user = await this.users().user(id).catch(error => { if (absent(error) === undefined) throw error; return null; });
     if (!user) return { status: 'missing', query: text };
     return { status: 'found', id, label: user.displayName ?? user.username, mention: `<@${id}>`,
       via: /^\d+$/.test(text) ? 'id' : 'mention' };
@@ -89,21 +93,14 @@ export class MemberService {
 
   async resolveBan(query: string): Promise<ResolvedBan> {
     const guildID = requireGuild(this.scope.guildID);
-    const text = query.trim();
-    const bans = await this.users().bans(guildID, 1000);
-    const id = mentionID(text);
-    if (id) {
-      const ban = bans.find(entry => entry.userID === id);
-      if (!ban) return { status: 'missing', query: text };
-      return { status: 'found', id, label: ban.username, reason: ban.reason, via: /^\d+$/.test(text) ? 'id' : 'mention' };
-    }
-    const match = matchCandidates(text, bans.map(ban => ({ id: ban.userID, label: ban.username,
-      reason: ban.reason, names: [ban.username] })));
-    if (!match) return { status: 'missing', query: text };
-    if (match.items.length === 1) {
-      const ban = match.items[0]!;
-      return { status: 'found', id: ban.id, label: ban.label, reason: ban.reason ?? null, via: match.kind };
-    }
-    return { status: 'ambiguous', candidates: rankCandidates(match.items.map(ban => ({ id: ban.id, label: ban.label }))) };
+    return this.users().resolveBan(guildID, query);
   }
+}
+
+
+function absent(error: unknown): null | undefined {
+  const candidate = error as { code?: number | string; status?: number; reason?: string } | null | undefined;
+  if (candidate instanceof GuardError && candidate.reason === 'MEMBER_NOT_FOUND') return null;
+  if (candidate?.status === 404 || candidate?.code === 10007 || candidate?.code === 10026 || candidate?.code === 'NOT_FOUND') return null;
+  return undefined;
 }

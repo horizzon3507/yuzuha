@@ -16,11 +16,11 @@ A cobertura é por nome: um método `send` de uma classe conta como coberto se q
 
 | Status | Exports de runtime | Membros |
 |---|---:|---:|
-| coberto-recurso | 51 | 428 |
-| coberto-nativo | 3 | 129 |
+| coberto-recurso | 51 | 431 |
+| coberto-nativo | 10 | 128 |
 | coberto-equivalente | 0 | 55 |
-| só-SDK | 63 | 110 |
-| lacuna | 0 | 0 |
+| só-SDK | 51 | 108 |
+| lacuna | 5 | 0 |
 
 Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são listados, mas não contam como lacuna.
 
@@ -40,16 +40,16 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são
 | @fluxerjs/core | `BETA_CLIENT_CLUSTER_WARNING` | variable | só SDK | só-SDK |  |
 | @fluxerjs/core | `CacheController` | class | Cliente e eventos | coberto-nativo | código nativo |
 | @fluxerjs/core | `CategoryChannel` | class | Canais | só-SDK |  |
-| @fluxerjs/core | `CDN_URL` | variable | CDN | só-SDK |  |
-| @fluxerjs/core | `cdnAvatarURL` | function | CDN | só-SDK | código nativo |
-| @fluxerjs/core | `cdnBannerURL` | function | CDN | só-SDK | código nativo |
-| @fluxerjs/core | `cdnDefaultAvatarURL` | function | CDN | só-SDK |  |
-| @fluxerjs/core | `cdnDisplayAvatarURL` | function | CDN | só-SDK |  |
-| @fluxerjs/core | `cdnEmojiURL` | function | CDN | só-SDK | código nativo |
-| @fluxerjs/core | `cdnGuildAssetURL` | function | CDN | só-SDK | código nativo |
-| @fluxerjs/core | `cdnMemberAvatarURL` | function | CDN | só-SDK | código nativo |
-| @fluxerjs/core | `cdnMemberBannerURL` | function | CDN | só-SDK | código nativo |
-| @fluxerjs/core | `cdnStickerURL` | function | CDN | só-SDK | código nativo |
+| @fluxerjs/core | `CDN_URL` | variable | CDN | lacuna |  |
+| @fluxerjs/core | `cdnAvatarURL` | function | CDN | coberto-nativo | código nativo |
+| @fluxerjs/core | `cdnBannerURL` | function | CDN | coberto-nativo | código nativo |
+| @fluxerjs/core | `cdnDefaultAvatarURL` | function | CDN | lacuna |  |
+| @fluxerjs/core | `cdnDisplayAvatarURL` | function | CDN | lacuna |  |
+| @fluxerjs/core | `cdnEmojiURL` | function | CDN | coberto-nativo | código nativo |
+| @fluxerjs/core | `cdnGuildAssetURL` | function | CDN | coberto-nativo | código nativo |
+| @fluxerjs/core | `cdnMemberAvatarURL` | function | CDN | coberto-nativo | código nativo |
+| @fluxerjs/core | `cdnMemberBannerURL` | function | CDN | coberto-nativo | código nativo |
+| @fluxerjs/core | `cdnStickerURL` | function | CDN | coberto-nativo | código nativo |
 | @fluxerjs/core | `Channel` | class | Canais | coberto-recurso | builtins |
 | @fluxerjs/core | `ChannelManager` | class | Canais | coberto-recurso | builtins |
 | @fluxerjs/core | `Client` | class | Cliente e eventos | coberto-recurso | builtins |
@@ -81,7 +81,7 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são
 | @fluxerjs/core | `INSTANCE_DISCOVERY_PATH` | variable | Instância e discovery | só-SDK |  |
 | @fluxerjs/core | `instanceDiscoveryUrl` | function | Instância e discovery | só-SDK |  |
 | @fluxerjs/core | `Invite` | class | Convites | coberto-recurso | builtins |
-| @fluxerjs/core | `inviteUrl` | function | Convites | só-SDK |  |
+| @fluxerjs/core | `inviteUrl` | function | Convites | lacuna |  |
 | @fluxerjs/core | `LinkChannel` | class | Canais | coberto-recurso | builtins |
 | @fluxerjs/core | `MediaChannel` | class | Canais | só-SDK |  |
 | @fluxerjs/core | `Message` | class | Mensagens e reações | coberto-recurso | builtins |
@@ -113,9 +113,9 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são
 | @fluxerjs/core | `resolveKlipyToImageUrl` | function | Texto e guards | só-SDK |  |
 | @fluxerjs/core | `resolvePermissionsToBitfield` | function | Constantes e bitfields | só-SDK |  |
 | @fluxerjs/core | `Role` | class | Cargos | coberto-recurso | builtins |
-| @fluxerjs/core | `Routes` | variable | Constantes e bitfields | só-SDK |  |
+| @fluxerjs/core | `Routes` | variable | Constantes e bitfields | só-SDK | builtins |
 | @fluxerjs/core | `serializeError` | function | Erros e logs | só-SDK |  |
-| @fluxerjs/core | `STATIC_CDN_URL` | variable | CDN | só-SDK |  |
+| @fluxerjs/core | `STATIC_CDN_URL` | variable | CDN | lacuna |  |
 | @fluxerjs/core | `SystemChannelFlags` | variable | Constantes e bitfields | só-SDK |  |
 | @fluxerjs/core | `TextChannel` | class | Canais | coberto-recurso | builtins |
 | @fluxerjs/core | `ThreadChannel` | class | Threads | coberto-recurso | builtins |
@@ -142,7 +142,7 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são
 | @fluxerjs/types | `MessageAttachmentFlags` | variable | Constantes e bitfields | só-SDK |  |
 | @fluxerjs/types | `MessageFlags` | variable | Constantes e bitfields | só-SDK |  |
 | @fluxerjs/types | `PublicUserFlags` | variable | Constantes e bitfields | só-SDK |  |
-| @fluxerjs/types | `Routes` | variable | Constantes e bitfields | só-SDK |  |
+| @fluxerjs/types | `Routes` | variable | Constantes e bitfields | só-SDK | builtins |
 | @fluxerjs/types | `SystemChannelFlags` | variable | Constantes e bitfields | só-SDK |  |
 | @fluxerjs/types | `ThreadMemberFlags` | variable | Constantes e bitfields | só-SDK |  |
 
@@ -289,8 +289,8 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são
 | `Client` | `requestGuildCounts` | método | coberto-recurso |
 | `Client` | `requestGuildMembers` | método | coberto-nativo |
 | `Client` | `resolveEmoji` | método | coberto-recurso |
-| `Client` | `rest` | propriedade | só-SDK |
-| `Client` | `Routes` | acessor | só-SDK |
+| `Client` | `rest` | propriedade | coberto-recurso |
+| `Client` | `Routes` | acessor | coberto-recurso |
 | `Client` | `searchMessages` | método | coberto-recurso |
 | `Client` | `sendToGateway` | método | coberto-nativo |
 | `Client` | `subscribeThreads` | método | coberto-nativo |
@@ -537,7 +537,7 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são
 | `GuildMemberRoleManager` | `has` | método | coberto-recurso |
 | `GuildMemberRoleManager` | `remove` | método | coberto-recurso |
 | `GuildMemberRoleManager` | `roleIds` | acessor | coberto-recurso |
-| `GuildMemberRoleManager` | `set` | método | coberto-nativo |
+| `GuildMemberRoleManager` | `set` | método | coberto-recurso |
 | `GuildRoleManager` | `everyone` | acessor | coberto-equivalente |
 | `GuildSticker` | `_patch` | método | só-SDK |
 | `GuildSticker` | `animated` | propriedade | coberto-recurso |
@@ -951,7 +951,6 @@ Eventos do function mode que o SDK não declara: nenhum.
 ## Exceções intencionais (só SDK)
 
 - **Sharding e cluster** (`BETA_CLIENT_CLUSTER_WARNING`, `ClientCluster`, `ClientClusterEvents`): Fora deste lote. O Yuzuha expõe shardCount e shardIds em clientOptions; o wrapper yuzuha/sharding fica como seguimento.
-- **CDN e helpers de URL** (`CDN_URL`, `STATIC_CDN_URL`, `cdnAvatarURL`, `cdnBannerURL`, `cdnDefaultAvatarURL`, `cdnDisplayAvatarURL`, `cdnEmojiURL`, `cdnGuildAssetURL`, `cdnMemberAvatarURL`, `cdnMemberBannerURL`, `cdnStickerURL`, `inviteUrl`): Disponível por `yuzuha/sdk` (e `SDK` na raiz); sem wrapper nativo por serem constantes, helpers puros ou classes de dados.
 - **Constantes e bitfields puros** (`GuildMemberProfileFlags`, `GuildOperations`, `MessageAttachmentFlags`, `MessageFlags`, `MessageFlagsBitField`, `MessageFlagsBits`, `PublicUserFlags`, `Routes`, `SystemChannelFlags`, `ThreadMemberFlags`, `UserFlagsBitField`, `UserFlagsBits`, `resolvePermissionsToBitfield`, `ErrorCodes`): Disponível por `yuzuha/sdk` (e `SDK` na raiz); sem wrapper nativo por serem constantes, helpers puros ou classes de dados.
 - **Instância, cache e logs** (`DEFAULT_INSTANCE_ENDPOINTS`, `INSTANCE_DISCOVERY_PATH`, `instanceDiscoveryUrl`, `normalizeApiOrigin`, `parseInstanceDiscovery`, `resolveInstanceEndpoints`, `DEFAULT_CACHE_LIMITS`, `normalizeCacheLimit`, `resolveCacheLimits`, `createLogger`, `serializeError`): Disponível por `yuzuha/sdk` (e `SDK` na raiz); sem wrapper nativo por serem constantes, helpers puros ou classes de dados.
 - **Texto e parsing puros** (`parsePrefixCommand`, `parseUserMention`, `resolveKlipyToImageUrl`): Disponível por `yuzuha/sdk` (e `SDK` na raiz); sem wrapper nativo por serem constantes, helpers puros ou classes de dados.

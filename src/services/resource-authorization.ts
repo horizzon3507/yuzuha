@@ -263,7 +263,7 @@ export function bindAuthorizedResources(source: Resources, transport: Transport,
       if (parentID) await parent(parentID);
       return source.channels.setCategory(id, parentID, reason);
     },
-    async overwrite(id, targetID, input) {
+    async overwrite(id, targetID, input, options) {
       await channel(id, 'ManageRoles');
       const roles = await source.roles.list(requireGuild(scope.guildID));
       const targetRole = roles.find(candidate => candidate.id === targetID);
@@ -274,7 +274,7 @@ export function bindAuthorizedResources(source: Resources, transport: Transport,
       await permissions(input.allow, id);
       await permissions(input.deny, id);
       await permissions(input.neutral, id);
-      return source.channels.overwrite(id, targetID, { ...input, type: targetRole && input.type !== 'member' ? 'role' : 'member' });
+      return source.channels.overwrite(id, targetID, { ...input, type: targetRole && input.type !== 'member' ? 'role' : 'member' }, options);
     },
     async lock(id: string, options: { permission?: string; targetID?: string; reason?: string } = {}) {
       await channel(id, 'ManageChannels');

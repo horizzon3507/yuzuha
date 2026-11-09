@@ -203,11 +203,9 @@ export function createMessagesResources(client: Client, reliability: Reliability
       }, reliability);
     },
     async bulkDeleteOwn(channelID): Promise<void> {
-      return withRetry(async () => {
-        const channel = await client.channels.fetch(channelID, { force: true });
-        if (!channel.isTextBased()) throw new YuzuhaError('CHANNEL_TEXT', 'Canal sem suporte a mensagens.');
-        await channel.bulkDeleteMyMessages();
-      }, reliability);
+      const channel = await client.channels.fetch(channelID, { force: true });
+      if (!channel.isTextBased()) throw new YuzuhaError('CHANNEL_TEXT', 'Canal sem suporte a mensagens.');
+      await channel.bulkDeleteMyMessages();
     },
     async acknowledgePins(channelID): Promise<void> {
       const channel = await client.channels.fetch(channelID, { force: true });
