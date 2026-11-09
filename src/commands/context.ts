@@ -61,6 +61,7 @@ export interface ContextOptions {
   messageAvailable?: boolean;
   deleteLater?: (channelID: string, messageID: string, ttlMs: number) => void;
   cdn?: import('../domain/cdn.js').Cdn;
+  disableResourceAuthorization?: boolean;
   actor?: { guildID: string; authorID: string };
 }
 
@@ -82,6 +83,7 @@ export class CommandContext {
   private readonly messageAvailable: boolean;
   private readonly deleteLaterFn?: (channelID: string, messageID: string, ttlMs: number) => void;
   private cdnService = createCdn();
+  private disableResourceAuthorization = false;
   private readonly actor?: { guildID: string; authorID: string };
   readonly transport: Transport;
   readonly store: Store;
@@ -137,6 +139,7 @@ export class CommandContext {
     this.musicService = options.music;
     this.voiceService = options.voice;
     this.cdnService = options.cdn ?? createCdn();
+    this.disableResourceAuthorization = options.disableResourceAuthorization === true;
     this.canvasRenderer = options.canvas?.renderer;
     this.canvasConfig = options.canvas?.config;
     this.nativeResources = options.resources;
@@ -196,7 +199,9 @@ export class CommandContext {
   get resources(): Resources {
     if (!this.nativeResources) throw new YuzuhaError('NATIVE_UNAVAILABLE', 'Os recursos nativos não foram fornecidos a este contexto.');
     if (this.scopedResources) return this.scopedResources;
-    const source = bindAuthorizedResources(this.nativeResources, this.transport, { guildID: this.guildID, authorID: this.authorID }), collectors = source.collectors;
+    const source = this.disableResourceAuthorization ? this.nativeResources
+      : bindAuthorizedResources(this.nativeResources, this.transport, { guildID: this.guildID, authorID: this.authorID });
+    const collectors = source.collectors;
     return this.scopedResources = { users: source.users, roles: source.roles, channels: source.channels,
       messages: source.messages, webhooks: source.webhooks, expressions: source.expressions,
       threads: source.threads, invites: source.invites, gateway: source.gateway,

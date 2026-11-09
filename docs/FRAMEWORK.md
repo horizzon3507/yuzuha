@@ -219,3 +219,16 @@ await bot.destroy();
 
 O mock usa IDs `1` para autor/dono, `2` para alvo, `999` para bot, `100` para
 servidor e `200` para canal. Configure outros membros com `setMember`.
+
+
+## Emojis personalizados
+
+Não feche sobre valores de emoji capturados no load do módulo: comandos
+são reimportados por `reload(dir)`, e o cache de emojis do SDK muda em
+runtime. Resolva em tempo de chamada — por exemplo um getter de módulo
+que lê `bot.client.guilds` → `guild.emojis` quando o comando executa.
+
+```ts
+const emoji = (guildID: string, name: string) =>
+  [...bot.client.guilds.resolve(guildID).emojis.values()].find(e => e.name === name);
+```

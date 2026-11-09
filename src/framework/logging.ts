@@ -3,7 +3,7 @@ import type { SchedulerEvent } from '../services/scheduler.js';
 
 type LogEvent = SchedulerEvent | {
   event: 'command.start' | 'command.finish' | 'event.start' | 'event.finish' | 'error'
-    | 'transport.retry' | 'message.ttl_failed';
+    | 'transport.retry' | 'message.ttl_failed' | 'authorization.disabled';
   executionID?: string;
   command?: string;
   outcome?: DispatchResult;

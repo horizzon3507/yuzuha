@@ -106,6 +106,8 @@ export class Yuzuha {
     this.transport = options.transport ?? new FluxerTransport(this.client, this.reliability);
     this.resources = options.resources ?? new FluxerResources(this.client, this.reliability);
     this.cdnService = createCdn(options.cdn?.mediaBase);
+    if (options.unsafeDisableResourceAuthorization && options.onLog)
+      void emitLog(this.options, { event: 'authorization.disabled' });
     this.timers = options.timers ?? { setTimeout: (fn: () => void, ms: number) => setTimeout(fn, ms).unref(), clearTimeout: (handle: unknown) => clearTimeout(handle as never) };
     this.store = options.store ?? new JsonStore(defaultDataPath(options.name));
     this.scheduler = options.scheduler === false ? undefined : options.scheduler ?? new Scheduler(this.store,
@@ -227,7 +229,8 @@ export class Yuzuha {
         policy: definition.http, transport: this.transport, store: this.store, resources: this.resources,
         scheduler: this.scheduler, http: this.http, music: this.music, voice: this.voice,
         canvas: { renderer: canvasRenderer, config: this.options.canvas }, now: this.options.now,
-        cdn: this.cdnService, cooldown: this.contextCooldown, signal: this.shutdown.signal,
+        cdn: this.cdnService, disableResourceAuthorization: this.options.unsafeDisableResourceAuthorization === true,
+        cooldown: this.contextCooldown, signal: this.shutdown.signal,
         deleteLater: (channelID, messageID, ttlMs) => this.deleteLater(channelID, messageID, ttlMs) });
       try { await definition.run(ctx, ...args as ClientEvents[K]); }
       catch (error) { await reportError(this.options, error, ctx); }
@@ -423,7 +426,9 @@ export class Yuzuha {
         help: this.contextHelp, cooldown: this.contextCooldown,
         native: { client: this.client, message: message.raw instanceof Message ? message.raw : undefined },
         resources: this.resources, scheduler: this.scheduler, http: this.http, music: this.music, voice: this.voice,
-        canvas: { renderer: canvasRenderer, config: this.options.canvas }, now: this.options.now, signal, executionID });
+        canvas: { renderer: canvasRenderer, config: this.options.canvas }, now: this.options.now, signal, executionID,
+        cdn: this.cdnService, disableResourceAuthorization: this.options.unsafeDisableResourceAuthorization === true,
+        deleteLater: (channelID, messageID, ttlMs) => this.deleteLater(channelID, messageID, ttlMs) });
       if (this.options.onLog) await emitLog(this.options, { event: 'command.start', executionID: ctx.executionID, command: ctx.command.name });
       if (signal.aborted) throw cancellationError();
       await ctx.prepare();
