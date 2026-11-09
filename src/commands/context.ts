@@ -286,6 +286,12 @@ export class CommandContext {
     return this.transport.delete(channelID, messageID);
   }
 
+  /** Agenda a exclusão de uma mensagem após `ttlMs`; par agendado de {@link delete}. */
+  expire(messageID: string, ttlMs: number, channelID = this.message.channelID): void {
+    assertTtl(ttlMs);
+    this.deleteLater(channelID, messageID, ttlMs);
+  }
+
   /** Apaga as últimas `count` mensagens do canal (1 a 1000), incluindo a mensagem do comando fora da contagem. */
   async purge(count: number, options?: { of?: string }): Promise<{ deleted: number; via: 'bulk' | 'each' }> {
     if (!Number.isInteger(count) || count < 1 || count > 1000) {
@@ -361,9 +367,12 @@ export class CommandContext {
   }
 }
 
-function validateTtl(options?: SendOptions): void {
-  const ttlMs = options?.ttlMs;
-  if (ttlMs !== undefined && (!Number.isInteger(ttlMs) || ttlMs < 1_000 || ttlMs > 86_400_000)) {
+function assertTtl(ttlMs: number): void {
+  if (!Number.isInteger(ttlMs) || ttlMs < 1_000 || ttlMs > 86_400_000) {
     throw new GuardError('ttlMs deve ser um inteiro entre 1000 e 86400000.', 'INVALID_ARGUMENT');
   }
+}
+
+function validateTtl(options?: SendOptions): void {
+  if (options?.ttlMs !== undefined) assertTtl(options.ttlMs);
 }
