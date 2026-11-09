@@ -28,6 +28,8 @@ documentos. Veja a [política completa](VERSIONING.md).
 `ctx.deleteCommandMessage()` apaga a mensagem de comando e degrada `reply` para `send`; `transport.reply` reenvia sem referência quando o alvo já não existe (404).
 - `ctx.send`/`ctx.reply` aceitam `{ ttlMs }` (1s–24h) e agendam a exclusão via `timers` injetável do bot; pendências são canceladas em `bot.destroy()` e falhas viram `onLog` `message.ttl_failed`.
 - `YuzuhaOptions.retry` controla retentativas de transporte (`{ requests: 1, delayMs: 750 }` por padrão; `false` desliga) só em falhas transitórias de rede, detectadas por `error.code`/`cause.code` — erros de API nunca repetem; emissões por `onLog` `transport.retry`.
+- `ctx.members.resolve`, `resolveUser` e `resolveBan` resolvem texto livre (menção, ID, nome exato ou prefixo, insensível a caixa e acentos) em `found`/`ambiguous`/`missing`; `users.resolveBan` expõe o mesmo em recursos com guarda `BanMembers`.
+- Novo `cleanReason(texto, { maxLength? })` remove menções e trunca no limite de motivos para compor razões de moderação.
 - Novos exports `formatDuration(ms)` (pt-BR, ex.: `10 minutos`) e `MAX_TIMEOUT_MS` (28 dias), junto a `parseDuration`; `CaseRecord.duration` é sempre em milissegundos.
 
 ## v0.3.0 · 04/11/2026
