@@ -1,7 +1,7 @@
-import { OverwriteType, ForumLayout } from '@fluxerjs/core';
+import { OverwriteType, ForumLayout, PermissionFlags } from '@fluxerjs/core';
 import type { ChannelEditOptions, ChannelType, Client, DMChannel, GuildChannel, PermissionResolvable } from '@fluxerjs/core';
 import type { ChannelCreateInput, ChannelEditInput, ChannelInfo, ChannelOverwriteInput, ChannelsResources } from '../../../ports/resources/channels.js';
-import { YuzuhaError } from '../../../errors.js';
+import { GuardError, YuzuhaError } from '../../../errors.js';
 
 type ChannelExtras = {
   topic?: string | null;
@@ -157,13 +157,45 @@ export function createChannelsResources(client: Client): ChannelsResources {
       const channel = await guildChannel(client, channelID);
       return (await channel.fetchRtcRegions()).map(region => ({ id: region.id, name: region.name, emoji: region.emoji }));
     },
-    async overwrite(channelID, targetID, input: ChannelOverwriteInput): Promise<void> {
+    async overwrite(channelID, targetID, input: ChannelOverwriteInput, options?: { merge?: boolean }): Promise<void> {
       const channel = await guildChannel(client, channelID);
+      if (!options?.merge) {
+        if (input.neutral !== undefined) throw new YuzuhaError('CHANNEL_OVERWRITE', 'neutral só é aceito com merge: true.');
+        await channel.permissionOverwrites.edit(targetID, {
+          type: await overwriteKind(client, channel, targetID, input.type),
+          ...(input.allow !== undefined ? { allow: input.allow as PermissionResolvable } : {}),
+          ...(input.deny !== undefined ? { deny: input.deny as PermissionResolvable } : {}),
+        });
+        return;
+      }
+      const existing = channel.permissionOverwrites.cache.get(targetID) as { allow?: { has(name: string): boolean }; deny?: { has(name: string): boolean } } | undefined;
+      const has = (side: { has(name: string): boolean } | undefined, name: string) => side?.has(name) === true;
+      const names = new Set<string>([...(input.allow ?? []), ...(input.deny ?? []), ...(input.neutral ?? [])]);
+      const allow = input.allow ?? [];
+      const deny = input.deny ?? [];
+      const neutral = input.neutral ?? [];
+      for (const name of names) validatePermission(name);
       await channel.permissionOverwrites.edit(targetID, {
         type: await overwriteKind(client, channel, targetID, input.type),
-        ...(input.allow !== undefined ? { allow: input.allow as PermissionResolvable } : {}),
-        ...(input.deny !== undefined ? { deny: input.deny as PermissionResolvable } : {}),
+        allow: [...allow, ...(existing ? [] : [])].filter(name => !deny.includes(name) && !neutral.includes(name))
+          .filter((name, i, arr) => arr.indexOf(name) === i),
+        deny: [...deny].filter(name => !allow.includes(name) && !neutral.includes(name))
+          .filter((name, i, arr) => arr.indexOf(name) === i),
       });
+    },
+    async lock(channelID, options = {}) {
+      const channel = await guildChannel(client, channelID);
+      const permission = lockPermission(channel, options.permission);
+      const targetID = options.targetID ?? channel.guildId!;
+      await this.overwrite(channelID, targetID, { deny: [permission], reason: options.reason }, { merge: true });
+      return { channelID, targetID, permission, locked: true };
+    },
+    async unlock(channelID, options = {}) {
+      const channel = await guildChannel(client, channelID);
+      const permission = lockPermission(channel, options.permission);
+      const targetID = options.targetID ?? channel.guildId!;
+      await this.overwrite(channelID, targetID, { neutral: [permission], reason: options.reason }, { merge: true });
+      return { channelID, targetID, permission, locked: false };
     },
     async permissionsFor(guildID, channelID, userID): Promise<string> {
       const guild = await client.guilds.resolve(guildID);
@@ -204,4 +236,14 @@ export function createChannelsResources(client: Client): ChannelsResources {
       return toChannelInfo(await channel.edit({ parentId: parentID, reason }));
     },
   };
+}
+
+function validatePermission(name: string): void {
+  if (!(name in PermissionFlags)) throw new GuardError(`Permissão desconhecida: ${name}.`, 'INVALID_ARGUMENT');
+}
+function lockPermission(channel: GuildChannel, permission?: string): string {
+  if (permission !== undefined) { validatePermission(permission); return permission; }
+  if (channel.isVoice()) return 'Connect';
+  if (channel.isText()) return 'SendMessages';
+  throw new GuardError('Este tipo de canal não suporta bloqueio.', 'INVALID_ARGUMENT');
 }

@@ -273,7 +273,16 @@ export function bindAuthorizedResources(source: Resources, transport: Transport,
       } else await memberHierarchy(targetID);
       await permissions(input.allow, id);
       await permissions(input.deny, id);
+      await permissions(input.neutral, id);
       return source.channels.overwrite(id, targetID, { ...input, type: targetRole && input.type !== 'member' ? 'role' : 'member' });
+    },
+    async lock(id: string, options: { permission?: string; targetID?: string; reason?: string } = {}) {
+      await channel(id, 'ManageChannels');
+      return source.channels.lock(id, options);
+    },
+    async unlock(id: string, options: { permission?: string; targetID?: string; reason?: string } = {}) {
+      await channel(id, 'ManageChannels');
+      return source.channels.unlock(id, options);
     },
   }, webhooks: {
     async fetch(id) {
