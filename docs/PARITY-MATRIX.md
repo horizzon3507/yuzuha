@@ -17,9 +17,9 @@ A cobertura é por nome: um método `send` de uma classe conta como coberto se q
 | Status | Exports de runtime | Membros |
 |---|---:|---:|
 | coberto-recurso | 51 | 428 |
-| coberto-nativo | 3 | 126 |
+| coberto-nativo | 3 | 129 |
 | coberto-equivalente | 0 | 55 |
-| só-SDK | 63 | 113 |
+| só-SDK | 63 | 110 |
 | lacuna | 0 | 0 |
 
 Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são listados, mas não contam como lacuna.
@@ -41,15 +41,15 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são
 | @fluxerjs/core | `CacheController` | class | Cliente e eventos | coberto-nativo | código nativo |
 | @fluxerjs/core | `CategoryChannel` | class | Canais | só-SDK |  |
 | @fluxerjs/core | `CDN_URL` | variable | CDN | só-SDK |  |
-| @fluxerjs/core | `cdnAvatarURL` | function | CDN | só-SDK |  |
-| @fluxerjs/core | `cdnBannerURL` | function | CDN | só-SDK |  |
+| @fluxerjs/core | `cdnAvatarURL` | function | CDN | só-SDK | código nativo |
+| @fluxerjs/core | `cdnBannerURL` | function | CDN | só-SDK | código nativo |
 | @fluxerjs/core | `cdnDefaultAvatarURL` | function | CDN | só-SDK |  |
 | @fluxerjs/core | `cdnDisplayAvatarURL` | function | CDN | só-SDK |  |
-| @fluxerjs/core | `cdnEmojiURL` | function | CDN | só-SDK |  |
-| @fluxerjs/core | `cdnGuildAssetURL` | function | CDN | só-SDK |  |
-| @fluxerjs/core | `cdnMemberAvatarURL` | function | CDN | só-SDK |  |
-| @fluxerjs/core | `cdnMemberBannerURL` | function | CDN | só-SDK |  |
-| @fluxerjs/core | `cdnStickerURL` | function | CDN | só-SDK |  |
+| @fluxerjs/core | `cdnEmojiURL` | function | CDN | só-SDK | código nativo |
+| @fluxerjs/core | `cdnGuildAssetURL` | function | CDN | só-SDK | código nativo |
+| @fluxerjs/core | `cdnMemberAvatarURL` | function | CDN | só-SDK | código nativo |
+| @fluxerjs/core | `cdnMemberBannerURL` | function | CDN | só-SDK | código nativo |
+| @fluxerjs/core | `cdnStickerURL` | function | CDN | só-SDK | código nativo |
 | @fluxerjs/core | `Channel` | class | Canais | coberto-recurso | builtins |
 | @fluxerjs/core | `ChannelManager` | class | Canais | coberto-recurso | builtins |
 | @fluxerjs/core | `Client` | class | Cliente e eventos | coberto-recurso | builtins |
@@ -494,7 +494,7 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são
 | `GuildMember` | `_clone` | método | só-SDK |
 | `GuildMember` | `_patch` | método | só-SDK |
 | `GuildMember` | `accentColor` | propriedade | coberto-recurso |
-| `GuildMember` | `avatar` | propriedade | só-SDK |
+| `GuildMember` | `avatar` | propriedade | coberto-nativo |
 | `GuildMember` | `avatarURL` | método | coberto-recurso |
 | `GuildMember` | `ban` | método | coberto-recurso |
 | `GuildMember` | `bannable` | acessor | coberto-equivalente |
@@ -814,7 +814,7 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são
 | `ThreadMemberManager` | `fetchOne` | método | coberto-recurso |
 | `ThreadMemberManager` | `remove` | método | coberto-recurso |
 | `User` | `_patch` | método | só-SDK |
-| `User` | `avatar` | propriedade | só-SDK |
+| `User` | `avatar` | propriedade | coberto-nativo |
 | `User` | `avatarColor` | propriedade | só-SDK |
 | `User` | `avatarURL` | método | coberto-recurso |
 | `User` | `banner` | propriedade | coberto-recurso |
@@ -852,7 +852,7 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são
 | `VoiceChannel` | `topic` | propriedade | coberto-recurso |
 | `VoiceChannel` | `userLimit` | propriedade | só-SDK |
 | `VoiceChannel` | `voiceConnectionLimit` | propriedade | só-SDK |
-| `Webhook` | `avatar` | propriedade | só-SDK |
+| `Webhook` | `avatar` | propriedade | coberto-nativo |
 | `Webhook` | `avatarURL` | método | coberto-recurso |
 | `Webhook` | `channelId` | propriedade | coberto-recurso |
 | `Webhook` | `client` | propriedade | coberto-recurso |
