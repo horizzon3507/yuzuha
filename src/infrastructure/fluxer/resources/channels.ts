@@ -1,4 +1,5 @@
-import { OverwriteType, ForumLayout, PermissionFlags } from '@fluxerjs/core';
+import { OverwriteType, ForumLayout, PermissionFlags, PermissionOverwrite } from '@fluxerjs/core';
+import { Routes } from '@fluxerjs/types';
 import type { ChannelEditOptions, ChannelType, Client, DMChannel, GuildChannel, PermissionResolvable } from '@fluxerjs/core';
 import type { ChannelCreateInput, ChannelEditInput, ChannelInfo, ChannelOverwriteInput, ChannelsResources } from '../../../ports/resources/channels.js';
 import { GuardError, YuzuhaError } from '../../../errors.js';
@@ -176,10 +177,14 @@ export function createChannelsResources(client: Client): ChannelsResources {
       const neutralBits = bits(input.neutral ?? []);
       const allow = ((existing?.allow.bitfield ?? 0n) | allowBits) & ~denyBits & ~neutralBits;
       const deny = ((existing?.deny.bitfield ?? 0n) | denyBits) & ~allowBits & ~neutralBits;
-      await channel.permissionOverwrites.edit(targetID, {
-        type: await overwriteKind(client, channel, targetID, input.type),
-        allow, deny,
-      });
+      const type = await overwriteKind(client, channel, targetID, input.type);
+      if (input.reason !== undefined) {
+        await client.rest.put(Routes.channelPermission(channel.id, targetID), {
+          body: { type, allow: String(allow), deny: String(deny) }, auth: true, headers: { 'X-Audit-Log-Reason': input.reason } });
+        channel.permissionOverwrites.cache.set(targetID, new PermissionOverwrite({ id: targetID, type, allow: String(allow), deny: String(deny) } as never));
+      } else {
+        await channel.permissionOverwrites.edit(targetID, { type, allow, deny });
+      }
     },
     async lock(channelID, options = {}) {
       const channel = await guildChannel(client, channelID);

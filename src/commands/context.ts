@@ -246,11 +246,13 @@ export class CommandContext {
 
   reply(payload: string | Payload, options?: SendOptions): Promise<string> {
     if (this.commandMessageDeleted) return this.send(payload, undefined, options);
+    validateTtl(options);
     return this.sendVia(this.transport.reply(this.message, typeof payload === 'string' ? { content: payload } : payload),
       this.message.channelID, options);
   }
 
   send(payload: string | Payload, channelID = this.message.channelID, options?: SendOptions): Promise<string> {
+    validateTtl(options);
     return this.sendVia(this.transport.send(channelID, typeof payload === 'string' ? { content: payload } : payload), channelID, options);
   }
   private commandMessageDeleted = false;
@@ -264,9 +266,6 @@ export class CommandContext {
   }
   private async sendVia(pending: Promise<string>, channelID: string, options?: SendOptions): Promise<string> {
     const ttlMs = options?.ttlMs;
-    if (ttlMs !== undefined && (!Number.isInteger(ttlMs) || ttlMs < 1_000 || ttlMs > 86_400_000)) {
-      throw new GuardError('ttlMs deve ser um inteiro entre 1000 e 86400000.', 'INVALID_ARGUMENT');
-    }
     const id = await pending;
     if (ttlMs !== undefined) this.deleteLater(channelID, id, ttlMs);
     return id;
@@ -299,7 +298,7 @@ export class CommandContext {
     const key = JSON.stringify([this.guildID, this.message.channelID, this.authorID, this.command.name]);
     const remaining = this.claimCooldown(key, parseDuration(duration));
     if (remaining > 0) throw new GuardError((message ?? 'Aguarde {remaining} antes de usar novamente.')
-      .replaceAll('{remaining}', `${Math.ceil(remaining / 1000)}s`));
+      .replaceAll('{remaining}', `${Math.ceil(remaining / 1000)}s`), 'COOLDOWN');
   }
 
   async prepare(): Promise<void> {
@@ -349,5 +348,12 @@ export class CommandContext {
 
   deleteVariable(scope: VariableScope, name: string): Promise<void> {
     return this.variables.delete(scope, name);
+  }
+}
+
+function validateTtl(options?: SendOptions): void {
+  const ttlMs = options?.ttlMs;
+  if (ttlMs !== undefined && (!Number.isInteger(ttlMs) || ttlMs < 1_000 || ttlMs > 86_400_000)) {
+    throw new GuardError('ttlMs deve ser um inteiro entre 1000 e 86400000.', 'INVALID_ARGUMENT');
   }
 }

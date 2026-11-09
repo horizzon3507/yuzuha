@@ -119,7 +119,7 @@ function toDiscoveryApplicationInfo(payload: DiscoveryApplicationPayload): Disco
     guildNsfwLevel: payload.guildNsfwLevel ?? null };
 }
 
-export function createUsersResources(client: Client): UsersResources {
+export function createUsersResources(client: Client, cdn: import('../../../domain/cdn.js').Cdn = createCdn()): UsersResources {
   return {
     async leaveGuild(guildID) {
       if (!client.user) throw new YuzuhaError('NATIVE_UNAVAILABLE', 'O client ainda não possui um usuário autenticado.');
@@ -128,15 +128,15 @@ export function createUsersResources(client: Client): UsersResources {
     async bannerURL(userID, guildID, options) {
       const result = await client.users.fetchWithProfile(userID, { guildId: guildID });
       const serverHash = guildID ? result.serverProfile?.userProfile?.banner : null;
-      if (serverHash) return createCdn().memberBanner(guildID!, userID, serverHash, options);
+      if (serverHash) return cdn.memberBanner(guildID!, userID, serverHash, options);
       const globalHash = result.globalProfile?.userProfile?.banner;
-      return globalHash ? createCdn().banner(userID, globalHash, options) : null;
+      return globalHash ? cdn.banner(userID, globalHash, options) : null;
     },
     async profile(userID, guildID) {
       const result = await client.users.fetchWithProfile(userID, { guildId: guildID });
       return { user: toUserInfo(result.user), member: result.member ? toMemberInfo(result.member) : null,
-        globalProfile: profileInfo(result.globalProfile, hash => createCdn().banner(userID, hash)),
-        serverProfile: profileInfo(result.serverProfile, hash => guildID ? createCdn().memberBanner(guildID, userID, hash) : null) };
+        globalProfile: profileInfo(result.globalProfile, hash => cdn.banner(userID, hash)),
+        serverProfile: profileInfo(result.serverProfile, hash => guildID ? cdn.memberBanner(guildID, userID, hash) : null) };
     },
     async guildCounts(guildID, input) {
       return liveCounts(client, 'guildCountsUpdate', payload => {
@@ -172,7 +172,8 @@ export function createUsersResources(client: Client): UsersResources {
     async resolveBan(guildID, query) {
       const { matchCandidates, mentionID, rankCandidates } = await import('../../../domain/resolvers.js');
       const text = query.trim();
-      const bans = await this.bans(guildID, 1000);
+      const guild = await client.guilds.fetch(guildID, { force: true });
+      const bans = (await guild.fetchBans()).map(ban => ({ userID: ban.user.id, username: ban.user.username, reason: ban.reason }));
       const id = mentionID(text);
       if (id) {
         const ban = bans.find(entry => entry.userID === id);

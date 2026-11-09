@@ -146,24 +146,6 @@
       ],
       "note": "Fora deste lote. O Yuzuha expõe shardCount e shardIds em clientOptions; o wrapper yuzuha/sharding fica como seguimento."
     },
-    "CDN e helpers de URL": {
-      "exports": [
-        "CDN_URL",
-        "STATIC_CDN_URL",
-        "cdnAvatarURL",
-        "cdnBannerURL",
-        "cdnDefaultAvatarURL",
-        "cdnDisplayAvatarURL",
-        "cdnEmojiURL",
-        "cdnGuildAssetURL",
-        "cdnMemberAvatarURL",
-        "cdnMemberBannerURL",
-        "cdnStickerURL",
-        "inviteUrl"
-      ],
-      "note": "Disponível por `yuzuha/sdk` (e `SDK` na raiz); sem wrapper nativo por serem constantes, helpers puros ou classes de dados.",
-      "via": "sdk"
-    },
     "Constantes e bitfields puros": {
       "exports": [
         "GuildMemberProfileFlags",

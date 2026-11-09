@@ -15,7 +15,12 @@ export class FluxerTransport implements Transport {
   get botID(): string { return this.client.user?.id ?? ''; }
   get ping(): number { return this.client.readyAt ? this.client.ws.ping : -1; }
   async reply(message: IncomingMessage, payload: Payload): Promise<string> {
-    if (message.raw instanceof Message && !payload.reply) return (await message.raw.reply(safe(payload))).id;
+    if (message.raw instanceof Message && !payload.reply) {
+      return message.raw.reply(safe(payload)).then(m => m.id)
+        .catch(error => isNotFound(error)
+          ? this.client.channels.send(message.channelID, { ...safe(payload) }).then(m => m.id)
+          : Promise.reject(error));
+    }
     const replyTo = payload.reply ? replyTarget(payload.reply) : { channelId: message.channelID, messageId: message.id, guildId: message.guildID };
     return this.reliably(() => this.client.channels.send(message.channelID, { ...safe(payload), replyTo }).then(m => m.id)
       .catch(error => isNotFound(error)
@@ -34,10 +39,9 @@ export class FluxerTransport implements Transport {
   }
   async delete(channelID: string, messageID: string): Promise<void> {
     await this.reliably(async attempt => {
-      await (await this.client.channels.fetchMessage(channelID, messageID)).delete().catch(error => {
-        if (attempt > 0 && isNotFound(error)) return;
-        throw error;
-      });
+      await this.client.channels.fetchMessage(channelID, messageID)
+        .then(message => message.delete())
+        .catch(error => { if (attempt > 0 && isNotFound(error)) return; throw error; });
     });
   }
   async react(channelID: string, messageID: string, emoji: string): Promise<void> {

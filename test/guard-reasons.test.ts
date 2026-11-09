@@ -24,7 +24,14 @@ function mod(perms: bigint, targetRank = 1, targetOwner = false) {
 }
 const cases: [string, () => Promise<unknown>, string][] = [
   ['PERMISSION_MISSING_AUTHOR', () => mod(0n).execute('ban', '9', 'x', { record: false }), 'PERMISSION_MISSING_AUTHOR'],
-  ['PERMISSION_MISSING_BOT', () => mod(0n).execute('ban', '9', 'x', { record: false }), 'PERMISSION_MISSING_AUTHOR'],
+  ['PERMISSION_MISSING_BOT', () => {
+    const transport = new MockTransport();
+    const botID = transport.botID;
+    transport.member = async (_g: string, id: string) =>
+      member(id, id === botID ? 0n : PermissionFlags.Administrator, id === '9' ? { rank: 1 } : {});
+    const service = new ModerationService(transport, new MemoryStore(), { guildID: '100', authorID: '2' });
+    return service.execute('ban', '9', 'x', { record: false });
+  }, 'PERMISSION_MISSING_BOT'],
   ['HIERARCHY', () => mod(PermissionFlags.Administrator, 99).execute('ban', '9', 'x', { record: false }), 'HIERARCHY'],
   ['SELF_TARGET', () => mod(PermissionFlags.Administrator).execute('ban', '2', 'x', { record: false }), 'SELF_TARGET'],
   ['BOT_TARGET', () => mod(PermissionFlags.Administrator).execute('ban', new MockTransport().botID, 'x', { record: false }), 'BOT_TARGET'],

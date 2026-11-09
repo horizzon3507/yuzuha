@@ -44,8 +44,10 @@ export function createCdn(mediaBase?: string): Cdn {
       let out = url;
       if (options.format) out = out.replace(/\.(png|jpg|jpeg|webp|gif)(\?|$)/, `.${options.format}$2`);
       if (options.size !== undefined) {
-        out = /[?&]size=\d+/.test(out) ? out.replace(/([?&]size=)\d+/, `$1${options.size}`)
-          : out + (out.includes('?') ? '&' : '?') + `size=${options.size}`;
+        const [main = '', fragment] = out.split('#', 2);
+        const sized = /[?&]size=\d+/.test(main) ? main.replace(/([?&]size=)\d+/, `$1${options.size}`)
+          : main + (main.includes('?') ? '&' : '?') + `size=${options.size}`;
+        out = sized + (fragment !== undefined ? '#' + fragment : '');
       }
       return fixAnimatedAssetUrl(out)!;
     },
