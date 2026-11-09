@@ -122,3 +122,19 @@ bot.command({ name: 'direct-flags', flags: { enabled: arg.boolean().default(fals
   return ctx.reply(String(enabled));
 } });
 bot.command({ name: 'group', subcommands: [typedFlags] });
+
+// CommandContextLike: a minimal fixture satisfies helpers typed on the subset.
+import type { CommandContextLike } from '../src/commands/context-like.js';
+const likeHelper = (ctx: CommandContextLike): string => ctx.channelID;
+const minimal = {
+  reply: async () => '1', send: async () => '1', edit: async () => {}, delete: async () => {},
+  react: async () => {}, deleteCommandMessage: async () => {},
+  authorID: '2', authorName: 'a', channelID: '200', guildID: '100', args: undefined as never,
+  members: undefined as never, mod: undefined as never, resources: undefined as never,
+  cdn: undefined as never, canvas: undefined as never, tokens: [] as string[],
+  command: undefined as never, executionID: 'x', input: '', message: undefined as never,
+  event: undefined,
+};
+likeHelper(minimal as CommandContextLike);
+// @ts-expect-error Missing members are required by CommandContextLike.
+likeHelper({ reply: async () => '1', send: async () => '1' });

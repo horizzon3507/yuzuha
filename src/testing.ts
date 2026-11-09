@@ -114,6 +114,7 @@ export class TestClock {
 export interface TestBotOptions extends Omit<YuzuhaOptions, 'now' | 'transport' | 'resources'> {
   commands?: readonly Command[];
   transport?: MockTransport;
+  authorization?: 'on' | 'off';
   resources?: MockResourceOverrides;
   message?: Partial<IncomingMessage>;
   now?: number;
@@ -165,6 +166,7 @@ export function createTestBot(options: TestBotOptions = {}): TestBot {
   const errors: unknown[] = [], results: DispatchResult[] = [];
   const defaults = structuredClone(message ?? {});
   const timers = (options.timers ?? fakeTimers()) as FakeTimers;
+  if (botOptions.authorization === 'off') (botOptions as { unsafeDisableResourceAuthorization?: boolean }).unsafeDisableResourceAuthorization = true;
   const bot = new Yuzuha({ timers, ...botOptions, transport, resources: mockResources(resources), store,
     now: clock.now, http: options.http ?? false,
     onError: async (error, ctx) => { errors.push(error); await onError?.(error, ctx); },

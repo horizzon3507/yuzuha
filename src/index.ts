@@ -83,3 +83,4 @@ export { createCdn, fixAnimatedAssetUrl } from './domain/cdn.js';
 export type { Cdn } from './domain/cdn.js';
 import { createCdn as _createCdn } from './domain/cdn.js';
 export const cdn = _createCdn();
+export type { CommandContextLike } from './commands/context-like.js';

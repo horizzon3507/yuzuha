@@ -232,3 +232,19 @@ autorizados, com alvos de teste e um store separado.
 A matriz de CI está configurada para Node 22, 24 e 26. Execução configurada
 não equivale a execução remota concluída. Resultados efetivamente observados
 estão em [VALIDATION.md](VALIDATION.md).
+
+
+## Autorização em testes
+
+`createTestBot({ authorization: 'off' })` desliga o wrapper
+`bindAuthorizedResources` — `ctx.resources` expõe os recursos brutos do
+mock sem precisar simular o grafo de permissões. O padrão `'on'` mantém a
+autorização real (use para testar guards). O switch usa
+`YuzuhaOptions.unsafeDisableResourceAuthorization`, marcado apenas para
+testes e registrado via `onLog` `authorization.disabled`; guards de
+comando, `ctx.mod` e `requirePermission` não são afetados.
+
+`CommandContextLike` (export de `yuzuha`) é um `Pick` estrutural de
+`CommandContext` (`reply`, `send`, `args`, `members`, `mod`, `resources`,
+`cdn`, `tokens`, `command`, `executionID`, `message`, `event`...) para
+tipar helpers que também recebem fixtures.
