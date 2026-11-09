@@ -293,7 +293,13 @@ use `mockResources`, que aceita implementações parciais por método.
 
 ## Membros, mensagens e transações
 
-### Consulta e gestão de membros e mensagens
+#`arg.user().anywhere()` marca um argumento `user` que pode vir em qualquer
+posição: a menção (`<@id>`/`<@!id>`) ou ID de 17–20 dígitos é removida dos
+tokens antes do parse posicional (`purge 2 @user` e `purge @user 2` ligam
+`count=2`/`target=id`), e o resto (`arg.string().rest()`) recebe os tokens
+restantes. Apenas um `anywhere()` por comando e só em `arg.user()`.
+
+## Consulta e gestão de membros e mensagens
 
 `ctx.members.search(nome, limite?, offset?)` retorna `members`, `total`, `hasMore`
 e `indexing`. `ctx.members.setNickname(usuarioOuObjeto, apelidoOuNull, motivo)`

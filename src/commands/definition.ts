@@ -10,6 +10,7 @@ export interface ArgumentDefinition {
   type?: 'string' | 'number' | 'integer' | 'user' | 'duration' | 'boolean';
   required?: boolean;
   rest?: boolean;
+  anywhere?: boolean;
   choices?: readonly ArgumentValue[];
   defaultValue?: ArgumentValue;
   min?: number;
