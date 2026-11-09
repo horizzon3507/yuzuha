@@ -14,13 +14,15 @@ function svc(overrides: { users?: Record<string, unknown> } = {}) {
   const users = mockResources({ users: {
     member: async (_g: string, id: string) => {
       const found = members.find(m => m.id === id);
-      if (!found) throw new Error('missing');
+      if (!found) throw Object.assign(new Error('missing'), { status: 404 });
       return { ...found, joinedTimestamp: 0, roles: [], permissions: '0', timedOutUntil: null, bot: false, avatarURL: null, bannerURL: null, createdTimestamp: 0 };
     },
     user: async (id: string) => ({ id, username: 'Alice', displayName: 'Alice', bot: false, avatarURL: null, bannerURL: null, createdTimestamp: 0 }),
     searchMembers: async () => ({ members: [], total: null, hasMore: false, indexing: false }),
     members: async () => members.map(m => ({ ...m, joinedTimestamp: 0, roles: [], permissions: '0', timedOutUntil: null, bot: false, avatarURL: null, bannerURL: null, createdTimestamp: 0 })),
-    bans: async () => [{ userID: '9', username: 'banned', reason: 'spam' }],
+    resolveBan: async (_g: string, query: string) => query === 'banned'
+      ? { status: 'found', id: '9', label: 'banned', reason: 'spam', via: 'exact' }
+      : { status: 'missing', query },
     ...overrides.users,
   } });
   return new MemberService(new MockTransport(), { guildID: '100', authorID: '2' }, () => users.users);

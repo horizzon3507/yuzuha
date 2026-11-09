@@ -67,5 +67,5 @@ test('ctx.send com ttlMs agenda exclusão via timers', async () => {
   pending[0]![0]();
   await new Promise(r => setTimeout(r, 10));
   assert.equal(deleted, 1);
-  await assert.rejects(ctx.send('x', undefined, { ttlMs: 500 }), (e: unknown) => e instanceof GuardError);
+  assert.throws(() => ctx.send('x', undefined, { ttlMs: 500 }), (e: unknown) => e instanceof GuardError);
 });

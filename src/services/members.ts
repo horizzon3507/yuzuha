@@ -46,7 +46,7 @@ export class MemberService {
     const text = query.trim();
     const id = mentionID(text);
     if (id) {
-      const member = await this.users().member(guildID, id).catch(error => { throw absent(error) ?? error; });
+      const member = await this.users().member(guildID, id).catch(error => { if (absent(error) === undefined) throw error; return null; });
       if (!member) return { status: 'missing', query: text };
       return { status: 'found', id, label: member.nickname ?? member.displayName ?? member.username, mention: `<@${id}>`, via: /^\d+$/.test(text) ? 'id' : 'mention' };
     }
@@ -85,7 +85,7 @@ export class MemberService {
     const text = query.trim();
     const id = mentionID(text);
     if (!id) return { status: 'missing', query: text };
-    const user = await this.users().user(id).catch(error => { throw absent(error) ?? error; });
+    const user = await this.users().user(id).catch(error => { if (absent(error) === undefined) throw error; return null; });
     if (!user) return { status: 'missing', query: text };
     return { status: 'found', id, label: user.displayName ?? user.username, mention: `<@${id}>`,
       via: /^\d+$/.test(text) ? 'id' : 'mention' };
