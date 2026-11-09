@@ -10,8 +10,8 @@ function validateValue(definition: ArgumentDefinition, value: ArgumentValue): vo
   }
   const size = typeof value === 'string' ? value.length : value;
   if (typeof size === 'number') {
-    if (definition.min !== undefined && size < definition.min) throw new GuardError(`${definition.name}: mínimo ${definition.min}${typeof value === 'string' ? ' caracteres' : ''}.`);
-    if (definition.max !== undefined && size > definition.max) throw new GuardError(`${definition.name}: máximo ${definition.max}${typeof value === 'string' ? ' caracteres' : ''}.`);
+    if (definition.min !== undefined && size < definition.min) throw new GuardError(`${definition.name}: mínimo ${definition.min}${typeof value === 'string' ? ' caracteres' : ''}.`, 'INVALID_ARGUMENT');
+    if (definition.max !== undefined && size > definition.max) throw new GuardError(`${definition.name}: máximo ${definition.max}${typeof value === 'string' ? ' caracteres' : ''}.`, 'INVALID_ARGUMENT');
   }
   for (const validator of definition.validators ?? []) {
     const accepted: unknown = validator.check(value);
@@ -19,7 +19,7 @@ function validateValue(definition: ArgumentDefinition, value: ArgumentValue): vo
       void Promise.resolve(accepted).catch(() => undefined);
       throw new YuzuhaError('COMMAND_ARGS', `Validador de ${definition.name} deve retornar um booleano síncrono.`);
     }
-    if (!accepted) throw new GuardError(validator.message);
+    if (!accepted) throw new GuardError(validator.message, 'INVALID_ARGUMENT');
   }
 }
 
@@ -70,19 +70,19 @@ function parseValue(definition: ArgumentDefinition, input: string | undefined, r
       const value = definition.type === 'user' ? userID(String(definition.defaultValue)) : definition.defaultValue;
       validateValue(definition, value);
       return value;
-    } else if (required) throw new GuardError(`Informe o argumento ${definition.name}.`);
+    } else if (required) throw new GuardError(`Informe o argumento ${definition.name}.`, 'INVALID_ARGUMENT');
     return undefined;
   }
   let value: ArgumentValue = input;
   if (definition.type === 'number' || definition.type === 'integer') {
     value = Number(input);
     if (!input.trim() || !Number.isFinite(value) || (definition.type === 'integer' && !Number.isSafeInteger(value))) {
-      throw new GuardError(`${definition.name} deve ser um número${definition.type === 'integer' ? ' inteiro' : ''}.`);
+      throw new GuardError(`${definition.name} deve ser um número${definition.type === 'integer' ? ' inteiro' : ''}.`, 'INVALID_ARGUMENT');
     }
   } else if (definition.type === 'boolean') {
     const normalized = input.toLowerCase();
     if (!['true', 'false', 'yes', 'no', 'sim', 'não', 'nao', '1', '0'].includes(normalized)) {
-      throw new GuardError(`${definition.name} deve ser true ou false.`);
+      throw new GuardError(`${definition.name} deve ser true ou false.`, 'INVALID_ARGUMENT');
     }
     value = ['true', 'yes', 'sim', '1'].includes(normalized);
   } else if (definition.type === 'user') value = userID(input);
@@ -90,7 +90,7 @@ function parseValue(definition: ArgumentDefinition, input: string | undefined, r
     try { value = parseDuration(input); }
     catch (error) {
       if (!(error instanceof YuzuhaError) || error.code !== 'DURATION') throw error;
-      throw new GuardError(`${definition.name}: ${error.message}`);
+      throw new GuardError(`${definition.name}: ${error.message}`, 'INVALID_ARGUMENT');
     }
   }
   validateValue(definition, value);
@@ -122,7 +122,7 @@ export function tokenize(input: string): string[] {
       token = ''; last = ''; started = false;
     } else { token += character; last = character; started = true; }
   }
-  if (quote) throw new GuardError('Feche as aspas do argumento.');
+  if (quote) throw new GuardError('Feche as aspas do argumento.', 'INVALID_ARGUMENT');
   if (started) result.push(token);
   return result;
 }
@@ -157,13 +157,13 @@ export function parseFlags(definitions: readonly ArgumentDefinition[] | undefine
     const match = /^--?([^=]+)(?:=([\s\S]*))?$/.exec(token);
     const definition = match && lookup.get(match[1]!);
     if (!match || !definition) throw new GuardError(`Flag desconhecida: ${token.split('=')[0]}.`);
-    if (values.has(definition.name)) throw new GuardError(`Flag repetida: --${definition.name}.`);
+    if (values.has(definition.name)) throw new GuardError(`Flag repetida: --${definition.name}.`, 'INVALID_ARGUMENT');
     let input = match[2];
     if (input === undefined) {
       if (definition.type === 'boolean') input = 'true';
       else {
         input = tokens[index + 1];
-        if (input === undefined || input.startsWith('--') || /^-[^\d.]/u.test(input)) throw new GuardError(`Informe o valor de --${definition.name}.`);
+        if (input === undefined || input.startsWith('--') || /^-[^\d.]/u.test(input)) throw new GuardError(`Informe o valor de --${definition.name}.`, 'INVALID_ARGUMENT');
         index++;
       }
     }

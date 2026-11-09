@@ -13,7 +13,7 @@ import type { ActorScope } from './authorization.js';
 export function bindAuthorizedResources(source: Resources, transport: Transport, scope: ActorScope): Resources {
   const authorization = new AuthorizationService(transport, scope);
   const guild = (id: string) => {
-    if (id !== requireGuild(scope.guildID)) throw new GuardError('O recurso deve pertencer ao servidor atual.');
+    if (id !== requireGuild(scope.guildID)) throw new GuardError('O recurso deve pertencer ao servidor atual.', 'GENERIC');
     return id;
   };
   const allowed = async (name: string, channelID?: string) => {
@@ -32,13 +32,13 @@ export function bindAuthorizedResources(source: Resources, transport: Transport,
   };
   const roleHierarchy = async (role: RoleInfo, everyone = false) => {
     if (role.managed !== false || (!everyone && role.id === scope.guildID)) {
-      throw new GuardError('Cargos gerenciados e @everyone não podem ser alterados por esta operação.');
+      throw new GuardError('Cargos gerenciados e @everyone não podem ser alterados por esta operação.', 'HIERARCHY');
     }
     if (everyone && role.id === scope.guildID) return;
     const [author, bot] = await actors();
     const target = { id: role.id, owner: false, rank: role.position, topRoleID: role.id, permissions: 0n };
     if ((!author.owner && !isAbove(author, target)) || !isAbove(bot, target)) {
-      throw new GuardError('O cargo deve estar abaixo dos cargos do autor e do bot.');
+      throw new GuardError('O cargo deve estar abaixo dos cargos do autor e do bot.', 'HIERARCHY');
     }
   };
   const memberHierarchy = async (id: string) => {
@@ -46,7 +46,7 @@ export function bindAuthorizedResources(source: Resources, transport: Transport,
     const target = await transport.member(requireGuild(scope.guildID), id);
     if (target.owner || (id !== author.id && !author.owner && !isAbove(author, target))
       || (id !== bot.id && !isAbove(bot, target))) {
-      throw new GuardError('O membro deve estar abaixo dos cargos do autor e do bot.');
+      throw new GuardError('O membro deve estar abaixo dos cargos do autor e do bot.', 'HIERARCHY');
     }
   };
   const role = async (guildID: string, query: string) => {
@@ -66,13 +66,13 @@ export function bindAuthorizedResources(source: Resources, transport: Transport,
   const dm = async (id: string) => {
     const target = await source.channels.get(id);
     if (target.guildID !== null || !target.recipientIDs?.includes(scope.authorID)) {
-      throw new GuardError('Esta operação exige um canal de DM do qual o autor participe.');
+      throw new GuardError('Esta operação exige um canal de DM do qual o autor participe.', 'GENERIC');
     }
     return target;
   };
   const parent = async (id: string) => {
     const target = await channel(id);
-    if (target.type !== 4) throw new GuardError('O canal pai deve ser uma categoria.');
+    if (target.type !== 4) throw new GuardError('O canal pai deve ser uma categoria.', 'INVALID_ARGUMENT');
   };
   const webhook = async (id: string) => {
     requireGuild(scope.guildID);
@@ -88,9 +88,9 @@ export function bindAuthorizedResources(source: Resources, transport: Transport,
     async transferOwnership(guildID: string, userID: string) {
       requireGuild(guildID);
       const [author] = await actors();
-      if (!author.owner) throw new GuardError('Apenas o dono do servidor pode transferir a propriedade.');
+      if (!author.owner) throw new GuardError('Apenas o dono do servidor pode transferir a propriedade.', 'PERMISSION_MISSING_AUTHOR');
       const target = await source.users.member(guildID, userID);
-      if (target.bot) throw new GuardError('A propriedade não pode ser transferida para um bot.');
+      if (target.bot) throw new GuardError('A propriedade não pode ser transferida para um bot.', 'BOT_TARGET');
       return source.users.transferOwnership(guildID, userID);
     },
   }), messages: Object.assign(Object.create(source.messages), {
@@ -103,7 +103,7 @@ export function bindAuthorizedResources(source: Resources, transport: Transport,
     async bulkDelete(channelID: string, messageIDs: string[]) {
       await channel(channelID, 'ManageMessages');
       const ids = [...new Set(messageIDs)];
-      if (!ids.length) throw new GuardError('Informe ao menos uma mensagem para apagar.');
+      if (!ids.length) throw new GuardError('Informe ao menos uma mensagem para apagar.', 'INVALID_ARGUMENT');
       if (ids.length > 100) throw new YuzuhaError('BULK_DELETE_LIMIT', 'Exclusão em massa aceita no máximo 100 mensagens por chamada.');
       return source.messages.bulkDelete(channelID, ids);
     },
@@ -113,7 +113,7 @@ export function bindAuthorizedResources(source: Resources, transport: Transport,
     async purgeDM(channelID: string) {
       const channel = await source.channels.get(channelID);
       if (channel.type === 999) {
-        throw new GuardError('O canal de anotações pessoais só pode ser esvaziado por bot.resources.messages.purgeDM.');
+        throw new GuardError('O canal de anotações pessoais só pode ser esvaziado por bot.resources.messages.purgeDM.', 'GENERIC');
       }
       await dm(channelID);
       return source.messages.purgeDM(channelID);
@@ -213,7 +213,7 @@ export function bindAuthorizedResources(source: Resources, transport: Transport,
     },
     async move(guildID, query, position) {
       const target = await role(guildID, query);
-      if (!Number.isSafeInteger(position) || position < 1) throw new GuardError('Posição de cargo deve ser um inteiro maior que zero.');
+      if (!Number.isSafeInteger(position) || position < 1) throw new GuardError('Posição de cargo deve ser um inteiro maior que zero.', 'INVALID_ARGUMENT');
       await roleHierarchy({ ...target, position });
       return source.roles.move(guildID, target.id, position);
     },
@@ -235,14 +235,14 @@ export function bindAuthorizedResources(source: Resources, transport: Transport,
     async addRecipient(id, userID) {
       const target = await dm(id);
       if (!target.ownerID || target.ownerID !== scope.authorID) {
-        throw new GuardError('Apenas o dono do grupo pode adicionar participantes.');
+        throw new GuardError('Apenas o dono do grupo pode adicionar participantes.', 'PERMISSION_MISSING_AUTHOR');
       }
       return source.channels.addRecipient(id, userID);
     },
     async removeRecipient(id, userID, options) {
       const target = await dm(id);
       if (userID !== scope.authorID && (!target.ownerID || target.ownerID !== scope.authorID)) {
-        throw new GuardError('Apenas o dono do grupo pode remover outros participantes.');
+        throw new GuardError('Apenas o dono do grupo pode remover outros participantes.', 'PERMISSION_MISSING_AUTHOR');
       }
       return source.channels.removeRecipient(id, userID, options);
     },
@@ -263,7 +263,7 @@ export function bindAuthorizedResources(source: Resources, transport: Transport,
       const roles = await source.roles.list(requireGuild(scope.guildID));
       const targetRole = roles.find(candidate => candidate.id === targetID);
       if (input.type === 'role' || (input.type === undefined && targetRole)) {
-        if (!targetRole) throw new GuardError('Cargo não encontrado no servidor atual.');
+        if (!targetRole) throw new GuardError('Cargo não encontrado no servidor atual.', 'GENERIC');
         await roleHierarchy(targetRole, true);
       } else await memberHierarchy(targetID);
       await permissions(input.allow, id);
@@ -292,7 +292,7 @@ export function bindAuthorizedResources(source: Resources, transport: Transport,
     const bits = BigInt(target.permissions);
     for (const actor of [author, bot]) {
       if (!hasPermission(actor.permissions, 'Administrator', actor.owner) && (bits & actor.permissions) !== bits) {
-        throw new GuardError('O cargo contém permissões que o autor ou o bot não possui.');
+        throw new GuardError('O cargo contém permissões que o autor ou o bot não possui.', 'HIERARCHY');
       }
     }
   }

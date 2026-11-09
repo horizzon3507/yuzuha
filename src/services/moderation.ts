@@ -1,5 +1,5 @@
 import type { CaseRecord, ModerationAction, ModerationOptions } from '../domain/moderation.js';
-import { userID } from '../domain/values.js';
+import { MAX_TIMEOUT_MS, userID } from '../domain/values.js';
 import type { Store } from '../ports/store.js';
 import type { Transport } from '../ports/transport.js';
 import { GuardError, PartialModerationError, YuzuhaError } from '../shared/errors.js';
@@ -20,22 +20,22 @@ export class ModerationService {
     const guildID = requireGuild(this.scope.guildID);
     if (!['ban', 'kick', 'timeout', 'unban', 'move', 'mute', 'deafen'].includes(action)) throw new YuzuhaError('MODERATION_ACTION', 'Ação de moderação inválida.');
     const targetID = userID(target);
-    if (!reason.trim()) throw new GuardError('Informe o motivo.');
-    if (reason.length > 512) throw new GuardError('O motivo deve ter até 512 caracteres.');
+    if (!reason.trim()) throw new GuardError('Informe o motivo.', 'INVALID_REASON');
+    if (reason.length > 512) throw new GuardError('O motivo deve ter até 512 caracteres.', 'INVALID_REASON');
     if (action === 'timeout' && (!Number.isSafeInteger(options.duration) || !options.duration
-      || options.duration < 0 || options.duration > 28 * 86400_000)) {
-      throw new GuardError('Informe uma duração de até 28 dias.');
+      || options.duration < 0 || options.duration > MAX_TIMEOUT_MS)) {
+      throw new GuardError('Informe uma duração de até 28 dias.', 'INVALID_DURATION');
     }
     if (options.duration !== undefined && (!Number.isSafeInteger(options.duration) || options.duration <= 0)) {
-      throw new GuardError('Informe uma duração válida em milissegundos inteiros.');
+      throw new GuardError('Informe uma duração válida em milissegundos inteiros.', 'INVALID_DURATION');
     }
     const days = options.deleteMessageDays ?? 0;
-    if (!Number.isInteger(days) || days < 0 || days > 7) throw new GuardError('O histórico a remover deve ser de 0 a 7 dias.');
+    if (!Number.isInteger(days) || days < 0 || days > 7) throw new GuardError('O histórico a remover deve ser de 0 a 7 dias.', 'INVALID_ARGUMENT');
     if (action === 'move' && options.channelID !== null && (typeof options.channelID !== 'string' || !/^\d+$/.test(options.channelID))) {
-      throw new GuardError('Informe o ID do canal de voz ou null para desconectar.');
+      throw new GuardError('Informe o ID do canal de voz ou null para desconectar.', 'INVALID_ARGUMENT');
     }
     if ((action === 'mute' || action === 'deafen') && typeof options.enabled !== 'boolean') {
-      throw new GuardError('Informe true ou false para o estado de voz.');
+      throw new GuardError('Informe true ou false para o estado de voz.', 'INVALID_ARGUMENT');
     }
     await this.authorization.requireModeratable(action, targetID, options.channelID);
     if (options.record) await this.cases.ready();

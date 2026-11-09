@@ -21,6 +21,12 @@ documentos. Veja a [política completa](VERSIONING.md).
 
 </details>
 
+## v0.3.1 · 06/11/2026
+
+- `GuardError` ganhou `reason` tipado (`GuardReason`, ex.: `PERMISSION_MISSING_AUTHOR`, `HIERARCHY`, `SELF_TARGET`, `MEMBER_NOT_FOUND`, `NOT_BANNED`, `COOLDOWN`) e o helper `isGuardReason(error, ...reasons)`; mensagens e `code: 'GUARD'` inalterados.
+- Falhas de alvo ausente em moderação agora viram `GuardError` — `MEMBER_NOT_FOUND` (`Membro não encontrado.`) e `NOT_BANNED` (`Este usuário não está banido.`) — mapeadas pelo adaptador via `code`/`status` do SDK; `ctx.mod.can*` devolve `false` nesses casos.
+- Novos exports `formatDuration(ms)` (pt-BR, ex.: `10 minutos`) e `MAX_TIMEOUT_MS` (28 dias), junto a `parseDuration`; `CaseRecord.duration` é sempre em milissegundos.
+
 ## v0.3.0 · 04/11/2026
 
 Function mode isolado da raiz e `yuzuha/canvas` compatível com `@napi-rs/canvas`. Esta atualização da biblioteca Yuzuha foi preparada em 04/11/2026 (v0.3.0).

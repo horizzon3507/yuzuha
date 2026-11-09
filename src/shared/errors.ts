@@ -19,8 +19,17 @@ export class ScriptError extends YuzuhaError {
   }
 }
 
+export type GuardReason = 'GENERIC' | 'NOT_IN_GUILD' | 'NO_AUTHOR' | 'PERMISSION_MISSING_AUTHOR'
+  | 'PERMISSION_MISSING_BOT' | 'HIERARCHY' | 'ADMIN_IMMUNE' | 'SELF_TARGET' | 'BOT_TARGET'
+  | 'OWNER_TARGET' | 'MEMBER_NOT_FOUND' | 'NOT_BANNED' | 'INVALID_ARGUMENT' | 'INVALID_REASON'
+  | 'INVALID_DURATION' | 'COOLDOWN';
+
 export class GuardError extends YuzuhaError {
-  constructor(message: string) { super('GUARD', message); }
+  constructor(message: string, public readonly reason: GuardReason = 'GENERIC') { super('GUARD', message); }
+}
+
+export function isGuardReason(error: unknown, ...reasons: GuardReason[]): error is GuardError {
+  return error instanceof GuardError && reasons.includes(error.reason);
 }
 
 export function assert(condition: unknown, message: string): asserts condition {

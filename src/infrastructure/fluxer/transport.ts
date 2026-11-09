@@ -1,6 +1,6 @@
 import { Client, Message } from '@fluxerjs/core';
 import type { IncomingMessage, ModerationAction, ModerationMember, Payload, Transport } from '../../contracts.js';
-import { YuzuhaError } from '../../errors.js';
+import { GuardError, YuzuhaError } from '../../errors.js';
 import { replyTarget, safePayload as safe } from './payload.js';
 import type { VoiceModerationOptions } from '../../domain/moderation.js';
 
@@ -31,7 +31,7 @@ export class FluxerTransport implements Transport {
   async member(guildID: string, userID: string, channelID?: string): Promise<ModerationMember> {
     const guild = await this.client.guilds.fetch(guildID, { force: true });
     await guild.fetchRoles();
-    const member = await guild.members.fetch(userID, { force: true });
+    const member = await guild.members.fetch(userID, { force: true }).catch(error => { throw missingTarget('timeout', error) ?? error; });
     const roles = [...member.roles.cache.values(), ...[guild.roles.get(guildID)].filter(role => role !== undefined)];
     roles.sort((a, b) => b.position - a.position || (BigInt(a.id) < BigInt(b.id) ? -1 : BigInt(a.id) > BigInt(b.id) ? 1 : 0));
     if (!roles.length) throw new YuzuhaError('ROLES_UNAVAILABLE', 'Não foi possível verificar os cargos.');
@@ -54,11 +54,12 @@ export class FluxerTransport implements Transport {
       }
     }
     const guild = await this.client.guilds.resolve(guildID);
-    if (action === 'ban') await guild.ban(targetID, { reason, deleteMessageDays: duration ?? 0 });
-    else if (action === 'kick') await guild.kick(targetID, reason);
-    else if (action === 'unban') await guild.unban(targetID, reason);
+    const guard = (error: unknown): never => { throw missingTarget(action, error) ?? error; };
+    if (action === 'ban') await guild.ban(targetID, { reason, deleteMessageDays: duration ?? 0 }).catch(guard);
+    else if (action === 'kick') await guild.kick(targetID, reason).catch(guard);
+    else if (action === 'unban') await guild.unban(targetID, reason).catch(guard);
     else {
-      const member = await guild.members.fetch(targetID, { force: true });
+      const member = await guild.members.fetch(targetID, { force: true }).catch(guard);
       if (action === 'timeout') await member.timeout(duration!, reason);
       else if (action === 'move') await member.edit({ channelId: voice!.channelID!, reason });
       else if (action === 'mute') await member.edit({ mute: voice!.enabled!, reason });
@@ -66,4 +67,13 @@ export class FluxerTransport implements Transport {
       else throw new YuzuhaError('MODERATION_ACTION', 'Ação de moderação inválida.');
     }
   }
+}
+
+
+function missingTarget(action: string, error: unknown): GuardError | undefined {
+  const candidate = error as { code?: number | string; status?: number } | null | undefined;
+  if (candidate?.code !== 10007 && candidate?.code !== 10026 && candidate?.status !== 404) return;
+  return action === 'unban'
+    ? new GuardError('Este usuário não está banido.', 'NOT_BANNED')
+    : new GuardError('Membro não encontrado.', 'MEMBER_NOT_FOUND');
 }

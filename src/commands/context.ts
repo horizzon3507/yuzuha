@@ -116,7 +116,7 @@ export class CommandContext {
     this.input = options.input ?? '';
     try { this.tokens = tokenize(this.input); }
     catch (error) {
-      if (error instanceof GuardError) throw new GuardError(`${error.message}\nUso: ${commandUsage(this.command, this.prefix)}`);
+      if (error instanceof GuardError) throw new GuardError(`${error.message}\nUso: ${commandUsage(this.command, this.prefix)}`, error.reason);
       throw error;
     }
     this.claimCooldown = options.cooldown;
@@ -167,7 +167,7 @@ export class CommandContext {
   }
 
   get message(): IncomingMessage {
-    if (!this.messageAvailable) throw new GuardError('Este evento não fornece uma mensagem completa. Use os campos de evento e um canal explícito.');
+    if (!this.messageAvailable) throw new GuardError('Este evento não fornece uma mensagem completa. Use os campos de evento e um canal explícito.', 'GENERIC');
     return this.sourceMessage;
   }
   get authorID(): string { return this.actor?.authorID ?? this.sourceMessage.authorID; }
@@ -225,7 +225,7 @@ export class CommandContext {
   requireGuild(): string { return requireGuild(this.guildID); }
 
   assert(condition: unknown, message: string): void {
-    if (!condition) throw new GuardError(message);
+    if (!condition) throw new GuardError(message, 'GENERIC');
   }
 
   reply(payload: string | Payload): Promise<string> {
@@ -275,14 +275,14 @@ export class CommandContext {
       }
       if (this.command.args?.length) for (const [name, value] of parseArguments(this.command.args, this.tokens)) this.args.set(name, value);
     } catch (error) {
-      if (error instanceof GuardError) throw new GuardError(`${error.message}\nUso: ${commandUsage(this.command, this.prefix)}`);
+      if (error instanceof GuardError) throw new GuardError(`${error.message}\nUso: ${commandUsage(this.command, this.prefix)}`, error.reason);
       throw error;
     }
     for (const command of this.lineage) {
       if (command.cooldown === undefined) continue;
       const key = JSON.stringify([this.guildID, this.message.channelID, this.authorID, command.name]);
       const remaining = this.claimCooldown(key, parseDuration(command.cooldown));
-      if (remaining > 0) throw new GuardError(`Aguarde ${Math.ceil(remaining / 1000)}s antes de usar novamente.`);
+      if (remaining > 0) throw new GuardError(`Aguarde ${Math.ceil(remaining / 1000)}s antes de usar novamente.`, 'COOLDOWN');
     }
   }
 
