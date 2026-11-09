@@ -1,16 +1,16 @@
 # Versionamento
 
 O Yuzuha aplica o formato Hory ao histórico e usa **SemVer simples** no pacote.
-A versão desta atualização é **0.3.0**.
+A versão desta atualização é **0.3.1**.
 
 ## Pacote e histórico
 
 | Lugar | Formato nesta versão |
 |---|---|
-| `package.json` e entrada raiz de `package-lock.json` | `0.3.0` |
-| Pacote npm e saída de `yuzuha --version` | `0.3.0` |
+| `package.json` e entrada raiz de `package-lock.json` | `0.3.1` |
+| Pacote npm e saída de `yuzuha --version` | `0.3.1` |
 | Título do changelog | `## v0.3.0 · 04/11/2026` |
-| Tag Git | `v0.3.0` |
+| Tag Git | `v0.3.1` |
 
 O SDK e a CLI pertencem ao mesmo pacote. Para bibliotecas, a convenção Hory mantém
 SemVer sem `m`, sem seções por superfície e sem sufixos de canal.
@@ -42,6 +42,19 @@ gerado por `init` pertence ao consumidor e não precisa acompanhar a biblioteca.
 
 ## Preparar uma atualização
 
+### Migrar para 0.3.1
+
+A 0.3.1 é aditiva com três notas de comportamento: `GuardError` ganhou
+`reason` (aditivo, `code` inalterado); `ctx.mod.can*` passou a devolver
+`false` quando o alvo não existe (`MEMBER_NOT_FOUND` agora é GuardError);
+e `YuzuhaOptions.retry` fica LIGADO por padrão (1 tentativa, 750 ms) só
+para falhas transitórias de rede — deletes, edições, reações e envios que
+comprovadamente não saíram (falha de conexão), nunca erros de API, e o
+404 na retentativa de delete conta como sucesso. Adapters `Resources`
+completos devem implementar os novos métodos exigidos:
+`users.bannerURL`, `users.resolveBan`, `channels.lock`/`unlock` e a
+opção `merge` de `channels.overwrite`.
+
 ### Migrar para 0.3.0
 
 As interfaces `Resources` ganharam métodos obrigatórios; quem mantém um adaptador `Resources` próprio precisa implementá-los (veja o CHANGELOG `v0.3.0` para a lista).
@@ -66,7 +79,7 @@ compatível com `@napi-rs/canvas`. Há três mudanças incompatíveis:
 O schema persistido permanece em 2 e o SDK em 3.3.0; não há migração de dados.
 
 ```sh
-npm install yuzuha@0.3.0
+npm install yuzuha@0.3.1
 ```
 
 ### Migrar para 0.2.1

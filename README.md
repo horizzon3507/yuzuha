@@ -19,7 +19,7 @@ opcionais).
 ### Criar um bot
 
 ```sh
-npx yuzuha@0.3.0 init ./meu-bot --ts
+npx yuzuha@0.3.1 init ./meu-bot --ts
 cd meu-bot
 npm install
 npm run check
@@ -45,7 +45,7 @@ para incluir um comando de exemplo com scripts.
 ### Usar em um projeto existente
 
 ```sh
-npm install yuzuha@0.3.0
+npm install yuzuha@0.3.1
 ```
 
 Use `"type": "module"` no `package.json`. O [guia inicial](docs/QUICKSTART.md)
