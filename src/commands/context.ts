@@ -286,6 +286,16 @@ export class CommandContext {
     return this.transport.delete(channelID, messageID);
   }
 
+  /** Apaga as últimas `count` mensagens do canal (1 a 1000), incluindo a mensagem do comando fora da contagem. */
+  async purge(count: number, options?: { of?: string }): Promise<{ deleted: number; via: 'bulk' | 'each' }> {
+    if (!Number.isInteger(count) || count < 1 || count > 1000) {
+      throw new GuardError('Informe uma quantidade inteira entre 1 e 1000.', 'INVALID_ARGUMENT');
+    }
+    const result = await this.resources.messages.purge(this.channelID, {
+      limit: count, authorID: options?.of, include: [this.message.id] });
+    return { deleted: result.deleted, via: result.via };
+  }
+
   react(emoji: string, messageID = this.message.id, channelID = this.message.channelID): Promise<void> {
     return this.transport.react(channelID, messageID, emoji);
   }

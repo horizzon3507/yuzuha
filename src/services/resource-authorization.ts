@@ -105,12 +105,16 @@ export function bindAuthorizedResources(source: Resources, transport: Transport,
       if (message.authorID !== transport.botID) await authorization.requirePermission('ManageMessages', true, undefined, channelID);
       return source.messages.deleteAttachment(channelID, messageID, attachmentID);
     },
-    async bulkDelete(channelID: string, messageIDs: string[]) {
+    async bulkDelete(channelID: string, messageIDs: string[], options?: { fallback?: 'each' }) {
       await channel(channelID, 'ManageMessages');
       const ids = [...new Set(messageIDs)];
       if (!ids.length) throw new GuardError('Informe ao menos uma mensagem para apagar.', 'INVALID_ARGUMENT');
       if (ids.length > 100) throw new YuzuhaError('BULK_DELETE_LIMIT', 'Exclusão em massa aceita no máximo 100 mensagens por chamada.');
-      return source.messages.bulkDelete(channelID, ids);
+      return source.messages.bulkDelete(channelID, ids, options);
+    },
+    async purge(channelID: string, input: import('../ports/resources/messages.js').PurgeInput) {
+      await channel(channelID, 'ManageMessages');
+      return source.messages.purge(channelID, input);
     },
     async bulkDeleteOwn(channelID: string) { await channel(channelID, 'SendMessages'); return source.messages.bulkDeleteOwn(channelID); },
     async acknowledgePins(channelID: string) { await channel(channelID, 'ReadMessageHistory'); return source.messages.acknowledgePins(channelID); },

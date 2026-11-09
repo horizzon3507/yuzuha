@@ -1,12 +1,13 @@
 import { AttachmentBuilder, Message } from '@fluxerjs/core';
 import type { Client, MessageEmbed, MessageEmbedMedia } from '@fluxerjs/core';
+import { Routes } from '@fluxerjs/types';
 import type { ReceivedEmbed, ReceivedEmbedMedia } from '../../../domain/messages.js';
 import { limitOf } from '../../../ports/resources/common.js';
 import type { AttachmentSpec, BinaryAttachmentSpec } from '../../../ports/resources/common.js';
 import { YuzuhaError } from '../../../errors.js';
-import type { BulkFetchRawChannel, MessageInfo, MessageSearchInput, MessageSearchPage, MessagesResources } from '../../../ports/resources/messages.js';
+import type { BulkFetchRawChannel, MessageInfo, MessageSearchInput, MessageSearchPage, MessagesResources, PurgeResult } from '../../../ports/resources/messages.js';
 import { preloadChannels } from '../../../domain/resource-batches.js';
-import { messageSearchInput, pinnedMessagesInput, reactionUsersInput } from '../../../domain/message-query.js';
+import { messageSearchInput, pinnedMessagesInput, purgeInput, reactionUsersInput } from '../../../domain/message-query.js';
 
 function receivedMedia(media: MessageEmbedMedia | null): ReceivedEmbedMedia | null {
   return media && { url: media.url, proxyURL: media.proxyUrl, contentType: media.contentType,
@@ -47,7 +48,32 @@ function order(messages: MessageInfo[]): MessageInfo[] {
 import { isNotFound, isTransientError, isUndeliveredSend, withRetry } from '../../../services/retry.js';
 import type { Reliability } from '../../../services/retry.js';
 
+/** Falha da própria rota em lote (ex.: 404/405/501), distinta de erros de permissão ou parciais. */
+function isRouteLevelError(error: unknown): boolean {
+  const candidate = error as { status?: unknown; code?: unknown } | null | undefined;
+  return candidate?.status === 404 || candidate?.status === 405 || candidate?.status === 501
+    || candidate?.code === 'NOT_FOUND' || candidate?.code === 'METHOD_NOT_ALLOWED';
+}
+
 export function createMessagesResources(client: Client, reliability: Reliability = {}): MessagesResources {
+  const textChannel = async (channelID: string) => {
+    const channel = await client.channels.fetch(channelID, { force: true });
+    if (!channel.isTextBased()) throw new YuzuhaError('CHANNEL_TEXT', 'Canal sem suporte a mensagens.');
+    return channel;
+  };
+  const deleteEach = async (channelID: string, ids: readonly string[]): Promise<string[]> => {
+    const deleted: string[] = [];
+    for (const id of ids) {
+      try {
+        await client.rest.delete(Routes.channelMessage(channelID, id), { auth: true });
+        deleted.push(id);
+      } catch (error) {
+        if (isNotFound(error)) continue;
+        throw error;
+      }
+    }
+    return deleted;
+  };
   const send = async (channelID: string, files: (AttachmentSpec | BinaryAttachmentSpec)[], content?: string): Promise<string> => {
     if (files.length < 1 || files.length > 10 || files.reduce((size, file) => size + ('data' in file ? file.data.byteLength : 0), 0) > 10_000_000) {
       throw new YuzuhaError('ATTACHMENTS', 'Envie de 1 a 10 anexos, com até 10 MB de bytes no total.');
@@ -195,12 +221,62 @@ export function createMessagesResources(client: Client, reliability: Reliability
       return withRetry(() => client.channels.send(channelID, { content, allowedMentions: { parse: [], repliedUser: false } }).then(m => m.id),
         reliability, isUndeliveredSend);
     },
-    async bulkDelete(channelID, messageIDs): Promise<string[]> {
+    async bulkDelete(channelID, messageIDs, options): Promise<string[]> {
+      if (options?.fallback !== undefined && options.fallback !== 'each') {
+        throw new YuzuhaError('BULK_DELETE_OPTIONS', 'fallback aceita somente each.');
+      }
       return withRetry(async () => {
-        const channel = await client.channels.fetch(channelID, { force: true });
-        if (!channel.isTextBased()) throw new YuzuhaError('CHANNEL_TEXT', 'Canal sem suporte a mensagens.');
-        return channel.bulkDelete(messageIDs);
+        const channel = await textChannel(channelID);
+        if (options?.fallback === 'each' && typeof channel.bulkDelete !== 'function') {
+          return deleteEach(channelID, messageIDs);
+        }
+        try {
+          return await channel.bulkDelete(messageIDs);
+        } catch (error) {
+          if (options?.fallback !== 'each' || !isRouteLevelError(error)) throw error;
+          return deleteEach(channelID, messageIDs);
+        }
       }, reliability);
+    },
+    async purge(channelID, rawInput): Promise<PurgeResult> {
+      const input = purgeInput(rawInput);
+      const include = new Set(input.include ?? []);
+      const channel = await textChannel(channelID);
+      const candidates: string[] = [];
+      let scanned = 0, before: string | undefined;
+      while (scanned < input.limit) {
+        const wanted = Math.min(100, input.limit - scanned);
+        const page = await withRetry(() => channel.messages.fetch({ limit: wanted, ...(before === undefined ? {} : { before }) }), reliability);
+        if (page.size === 0) break;
+        scanned += page.size;
+        for (const message of page.values()) {
+          if (before === undefined || BigInt(message.id) < BigInt(before)) before = message.id;
+          if (include.has(message.id)) continue;
+          if (input.authorID !== undefined && message.author.id !== input.authorID) continue;
+          candidates.push(message.id);
+        }
+        if (page.size < wanted) break;
+      }
+      const batch = [...new Set([...include, ...candidates])];
+      const deletedIDs: string[] = [];
+      let via: PurgeResult['via'] = 'bulk';
+      let bulkUnavailable = typeof channel.bulkDelete !== 'function';
+      for (let index = 0; index < batch.length; index += 100) {
+        const chunk = batch.slice(index, index + 100);
+        if (!bulkUnavailable) {
+          try {
+            deletedIDs.push(...await withRetry(() => channel.bulkDelete(chunk), reliability));
+            continue;
+          } catch (error) {
+            if (!isRouteLevelError(error)) throw error;
+            bulkUnavailable = true;
+          }
+        }
+        via = 'each';
+        deletedIDs.push(...await deleteEach(channelID, chunk));
+      }
+      const deleted = deletedIDs.length - deletedIDs.filter(id => include.has(id)).length;
+      return { deleted, deletedIDs, via };
     },
     async bulkDeleteOwn(channelID): Promise<void> {
       const channel = await client.channels.fetch(channelID, { force: true });
