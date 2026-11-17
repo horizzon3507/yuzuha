@@ -1,1 +1,18 @@
-export { emptyState, isState, assertState, decodeState, assertSynchronous } from '../../domain/state-validation.js';
+export {
+  emptyState,
+  isPlainRecord,
+  isState,
+  assertState,
+  decodeState,
+  assertSynchronous,
+  validateVariableValue,
+  validateExpiration,
+  validateVariables,
+  validateVariableExpirations,
+  validateCasesForGuild,
+  validateCases,
+  validateScheduleRecord,
+  validateSchedules,
+  validateScheduleHistoryEntry,
+  validateScheduleHistory,
+} from '../../domain/state-validation.js';
