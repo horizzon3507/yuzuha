@@ -10,13 +10,13 @@ import type { Command, ContextOptions } from '../context.js';
 import { defineCommand } from '../commands/definition.js';
 import type { NativeCommandDefinition } from '../commands/definition.js';
 import type { ArgumentSchema } from '../commands/builders.js';
-import type { IncomingMessage, Store, Transport } from '../contracts.js';
+import type { IncomingMessage, Payload, Store, Transport } from '../contracts.js';
 import { ConfigError, GuardError, PartialModerationError, YuzuhaError } from '../errors.js';
 import { JsonStore, defaultDataPath } from '../store.js';
 import { CommandRegistry, functionsRequired } from './command-registry.js';
 import type { CompiledCommand } from './command-registry.js';
 import { runMiddleware } from './middleware.js';
-import type { DispatchResult, Middleware, YuzuhaOptions, YuzuhaPlugin } from './options.js';
+import type { DispatchResult, Middleware, UnknownCommandContext, YuzuhaOptions, YuzuhaPlugin } from './options.js';
 import { RateLimits, resolveRateLimitOptions } from './rate-limits.js';
 import { ConcurrencyLimiter } from './concurrency.js';
 import { reportError, resolveErrorReply } from './reporting.js';
@@ -40,8 +40,22 @@ import type { MusicManager } from '../services/music.js';
 import type { NativeVoice } from '../ports/voice.js';
 import { canvasRenderer } from '../infrastructure/canvas/render.js';
 
-type RoutedCommand = { compiled: CompiledCommand; input: string; prefix: string };
+type RoutedCommand = { kind: 'command'; compiled: CompiledCommand; input: string; prefix: string }
+  | { kind: 'unknown'; unknown: UnknownCommandContext };
 const ignored: Promise<DispatchResult> = Promise.resolve('ignored');
+
+function validateHooks(hooks: YuzuhaOptions['hooks']): void {
+  if (hooks === undefined) return;
+  const prototype = hooks === null || typeof hooks !== 'object' || Array.isArray(hooks) ? undefined : Object.getPrototypeOf(hooks);
+  if (prototype !== Object.prototype && prototype !== null) {
+    throw new ConfigError('OPTIONS', 'hooks deve ser um objeto.');
+  }
+  for (const key of ['onCooldown', 'onDenied', 'onUnknownCommand'] as const) {
+    if (hooks[key] !== undefined && typeof hooks[key] !== 'function') {
+      throw new ConfigError('OPTIONS', `hooks.${key} deve ser uma função.`);
+    }
+  }
+}
 
 function emojiRegistry(input: Record<string, string> | undefined): Record<string, string> {
   const registry: Record<string, string> = Object.create(null);
@@ -161,6 +175,7 @@ export class Yuzuha {
     if (options.errorReply !== undefined && typeof options.errorReply !== 'function') {
       throw new ConfigError('OPTIONS', 'errorReply deve ser uma função.');
     }
+    validateHooks(options.hooks);
     const rateLimitOptions = resolveRateLimitOptions(options.rateLimits);
     this.limits = new RateLimits({
       ...rateLimitOptions,
@@ -593,25 +608,29 @@ export class Yuzuha {
     }
   }
 
-  private resolveCommand(message: IncomingMessage, configured: string | string[]): RoutedCommand | undefined {
+  private resolveRoute(message: IncomingMessage, configured: string | string[]): RoutedCommand | undefined {
     const routed = route(message.content, this.resolvePrefixes(configured));
     if (!routed) return;
     const resolved = this.registry.resolve(routed.name, routed.input);
-    if (!resolved || this.limits.duplicate(message.channelID, message.id)) return;
-    return { ...resolved, prefix: routed.prefix };
+    if (!resolved) {
+      if (!this.options.hooks?.onUnknownCommand || this.limits.duplicate(message.channelID, message.id)) return;
+      return { kind: 'unknown', unknown: Object.freeze({ name: routed.name, input: routed.input, prefix: routed.prefix, message }) };
+    }
+    if (this.limits.duplicate(message.channelID, message.id)) return;
+    return { kind: 'command', ...resolved, prefix: routed.prefix };
   }
 
   private handleMessage(message: IncomingMessage, onFailure?: (error: unknown, ctx?: CommandContext) => void, parentSignal?: AbortSignal, executionID?: string): Promise<DispatchResult> {
     if (this.closing || message.authorBot || message.authorID === this.transport.botID) return ignored;
     let routed: RoutedCommand | undefined;
     if (typeof this.options.prefix !== 'function') {
-      try { routed = this.resolveCommand(message, this.options.prefix ?? '!'); }
+      try { routed = this.resolveRoute(message, this.options.prefix ?? '!'); }
       catch (error) { return Promise.reject(error); }
       if (!routed) return ignored;
     } else if (this.dynamicPrefixCache) {
       const cached = this.dynamicPrefixCache.get(prefixCacheKey(message));
       if (cached) {
-        routed = this.resolveCommand(message, cached);
+        routed = this.resolveRoute(message, cached);
         if (!routed) return ignored;
       }
     }
@@ -622,15 +641,30 @@ export class Yuzuha {
     return task;
   }
 
+  private async runUnknownCommand(info: UnknownCommandContext, message: IncomingMessage, signal: AbortSignal): Promise<void> {
+    const hook = this.options.hooks?.onUnknownCommand;
+    if (!hook || this.closing || signal.aborted) return;
+    let reply: Payload | string | null | void;
+    try { reply = await hook(info); }
+    catch (error) { await reportError(this.options, error); return; }
+    if (signal.aborted || reply === undefined || reply === null) return;
+    try { await this.transport.reply(message, typeof reply === 'string' ? { content: reply } : reply); }
+    catch (replyError) { await reportError(this.options, replyError); }
+  }
+
   private async dispatch(message: IncomingMessage, signal: AbortSignal, onFailure?: (error: unknown, ctx?: CommandContext) => void, executionID?: string, resolved?: RoutedCommand): Promise<DispatchResult> {
     if (!resolved) {
       const prefixes = typeof this.options.prefix === 'function'
         ? await this.resolveDynamicPrefixes(message, this.options.prefix, signal)
         : this.resolvePrefixes(this.options.prefix ?? '!');
       if (!prefixes || this.closing || signal.aborted) return 'ignored';
-      resolved = this.resolveCommand(message, prefixes);
+      resolved = this.resolveRoute(message, prefixes);
     }
     if (!resolved) return 'ignored';
+    if (resolved.kind === 'unknown') {
+      await this.runUnknownCommand(resolved.unknown, message, signal);
+      return 'ignored';
+    }
     let releaseSlot: (() => void) | undefined;
     try {
       if (this.concurrencyLimiter) {

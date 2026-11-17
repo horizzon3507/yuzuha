@@ -1,6 +1,7 @@
 import type { Client, ClientOptions } from '@fluxerjs/core';
 import type { CommandContext } from '../context.js';
 import type { IncomingMessage, Payload, Store, Transport } from '../contracts.js';
+import type { GuardError } from '../errors.js';
 import type { ScriptEngine, ScriptFunctionDefinition } from '../ports/script-engine.js';
 import type { Command } from '../context.js';
 import type { Resources } from '../ports/resources.js';
@@ -20,6 +21,17 @@ export type { ConcurrencyOptions, PrefixCacheOptions };
 
 export type DispatchResult = 'ignored' | 'success' | 'guarded' | 'error';
 export type ErrorReplyResult = Payload | string | null | undefined;
+export interface UnknownCommandContext {
+  readonly name: string;
+  readonly input: string;
+  readonly prefix: string;
+  readonly message: IncomingMessage;
+}
+export interface YuzuhaHooks {
+  onCooldown?: (remainingMs: number, ctx: CommandContext, error: GuardError) => ErrorReplyResult | void | Promise<ErrorReplyResult | void>;
+  onDenied?: (error: GuardError, ctx: CommandContext) => ErrorReplyResult | void | Promise<ErrorReplyResult | void>;
+  onUnknownCommand?: (info: UnknownCommandContext) => Payload | string | null | void | Promise<Payload | string | null | void>;
+}
 export type Middleware = (ctx: CommandContext, next: () => Promise<void>) => Promise<void>;
 export interface YuzuhaPlugin {
   name: string;
@@ -57,6 +69,7 @@ export interface YuzuhaOptions {
   canvas?: CanvasConfig;
   onError?: (error: unknown, ctx?: CommandContext) => void | Promise<void>;
   errorReply?: (error: unknown, ctx?: CommandContext) => ErrorReplyResult | Promise<ErrorReplyResult>;
+  hooks?: YuzuhaHooks;
   onCommand?: (ctx: CommandContext, outcome: DispatchResult) => void | Promise<void>;
   onLog?: (record: LogRecord) => void | Promise<void>;
   retry?: false | { requests?: number; delayMs?: number };

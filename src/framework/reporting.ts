@@ -19,11 +19,34 @@ export async function reportError(options: YuzuhaOptions, error: unknown, ctx?: 
   } catch { console.error('[yuzuha] ERROR_HANDLER_FAILED'); }
 }
 
+async function runGuardHook(
+  options: YuzuhaOptions,
+  error: GuardError,
+  ctx: CommandContext,
+): Promise<{ handled: true; reply: Payload | string | null } | { handled: false }> {
+  const hook = error.reason === 'COOLDOWN'
+    ? (options.hooks?.onCooldown ? () => options.hooks!.onCooldown!(error.remainingMs ?? 0, ctx, error) : undefined)
+    : (options.hooks?.onDenied ? () => options.hooks!.onDenied!(error, ctx) : undefined);
+  if (!hook) return { handled: false };
+  try {
+    const result = await hook();
+    if (result === undefined) return { handled: false };
+    return { handled: true, reply: result };
+  } catch (hookError) {
+    await reportError(options, hookError, ctx);
+    return { handled: true, reply: userError(error, ctx) };
+  }
+}
+
 export async function resolveErrorReply(
   options: YuzuhaOptions,
   error: unknown,
   ctx?: CommandContext,
 ): Promise<Payload | string | null> {
+  if (error instanceof GuardError && ctx) {
+    const guarded = await runGuardHook(options, error, ctx);
+    if (guarded.handled) return guarded.reply;
+  }
   if (options.errorReply) {
     try {
       const custom = await options.errorReply(error, ctx);
