@@ -32,6 +32,13 @@ export interface YuzuhaHooks {
   onDenied?: (error: GuardError, ctx: CommandContext) => ErrorReplyResult | void | Promise<ErrorReplyResult | void>;
   onUnknownCommand?: (info: UnknownCommandContext) => Payload | string | null | void | Promise<Payload | string | null | void>;
 }
+export type ErrorSource = 'command' | 'event' | 'gateway' | 'scheduler' | 'hook';
+export interface ErrorReportInfo {
+  readonly source: ErrorSource;
+  readonly event?: string;
+  readonly ctx?: CommandContext;
+  readonly executionID?: string;
+}
 export type Middleware = (ctx: CommandContext, next: () => Promise<void>) => Promise<void>;
 export interface YuzuhaPlugin {
   name: string;
@@ -67,7 +74,7 @@ export interface YuzuhaOptions {
   music?: MusicManager;
   voice?: NativeVoice;
   canvas?: CanvasConfig;
-  onError?: (error: unknown, ctx?: CommandContext) => void | Promise<void>;
+  onError?: (error: unknown, ctx: CommandContext | undefined, info: ErrorReportInfo) => void | Promise<void>;
   errorReply?: (error: unknown, ctx?: CommandContext) => ErrorReplyResult | Promise<ErrorReplyResult>;
   hooks?: YuzuhaHooks;
   onCommand?: (ctx: CommandContext, outcome: DispatchResult) => void | Promise<void>;

@@ -150,16 +150,16 @@ export class Yuzuha {
   private readonly gatewayReports = new Set<Promise<void>>();
   private readonly errorListener = (error: Error): void => {
     if (this.gatewayErrors.delete(error)) return;
-    this.reportGatewayError(error);
+    this.reportGatewayError(error, 'error');
   };
   private readonly shardErrorListener = (_shardID: number, error: Error): void => {
     // The SDK emits shardError followed synchronously by error for the same failure.
     this.gatewayErrors.add(error);
     queueMicrotask(() => this.gatewayErrors.delete(error));
-    this.reportGatewayError(error);
+    this.reportGatewayError(error, 'shardError');
   };
-  private reportGatewayError(error: Error): void {
-    const task = this.execution.run(true, () => reportError(this.options, error));
+  private reportGatewayError(error: Error, event: 'error' | 'shardError'): void {
+    const task = this.execution.run(true, () => reportError(this.options, error, undefined, { source: 'gateway', event }));
     this.gatewayReports.add(task);
     void task.then(() => this.gatewayReports.delete(task), () => this.gatewayReports.delete(task));
   }
@@ -226,7 +226,7 @@ export class Yuzuha {
         now: options.now,
         timers: this.timers,
         onEvent: event => this.execution.run(true, () => emitLog(this.options, event)),
-        onError: error => this.execution.run(true, () => reportError(this.options, error)),
+        onError: error => this.execution.run(true, () => reportError(this.options, error, undefined, { source: 'scheduler' })),
       });
     this.http = options.http === false ? undefined : options.http ?? new HttpService();
     this.music = options.music;
@@ -235,17 +235,17 @@ export class Yuzuha {
     this.registry = new CommandRegistry(() => this.scriptEngine, command => {
       if (command.http) (this.http ?? new HttpService()).withPolicy(command.http);
     });
-    this.events = new NativeEvents(this.client, work => this.scheduleEvent(work));
+    this.events = new NativeEvents(this.client, (work, event) => this.scheduleEvent(work, event));
     if (typeof options.prefix !== 'function') this.resolvePrefixes(options.prefix ?? '!');
     this.listener = message => {
       if (this.closing || message.author.bot || message.author.id === this.transport.botID) return;
       if (typeof this.options.prefix !== 'function') {
         let prefixes: string[];
         try { prefixes = this.resolvePrefixes(this.options.prefix ?? '!'); }
-        catch (error) { void reportError(this.options, error); return; }
+        catch (error) { void reportError(this.options, error, undefined, { source: 'event', event: 'messageCreate' }); return; }
         if (!prefixes.some(prefix => message.content.startsWith(prefix))) return;
       }
-      void this.handle(incoming(message)).catch(error => reportError(this.options, error));
+      void this.handle(incoming(message)).catch(error => reportError(this.options, error, undefined, { source: 'event', event: 'messageCreate' }));
     };
     this.client.on(Events.Error, this.errorListener);
     this.client.on(Events.ShardError, this.shardErrorListener);
@@ -417,7 +417,7 @@ export class Yuzuha {
         cooldown: this.contextCooldown, signal: this.shutdown.signal, emoji: this.emojiMap,
         deleteLater: this.contextDeleteLater });
       try { await definition.run(ctx, ...args as ClientEvents[K]); }
-      catch (error) { await reportError(this.options, error, ctx); }
+      catch (error) { await reportError(this.options, error, ctx, { source: 'event', event: definition.event, executionID: ctx.executionID }); }
     } });
     return this;
   }
@@ -457,17 +457,18 @@ export class Yuzuha {
       }
     } catch (error) {
       outcome = error instanceof GuardError ? 'guarded' : 'error';
-      await reportError(this.options, error, ctx);
+      await reportError(this.options, error, ctx, { source: 'event', event: definition.event, executionID: ctx.executionID });
     } finally {
       if (this.options.onLog) await emitLog(this.options, { event: 'event.finish', executionID: ctx.executionID,
         command: ctx.command.name, outcome, durationMs: performance.now() - started });
     }
   }
 
-  private scheduleEvent(work: () => unknown | Promise<unknown>): void {
+  private scheduleEvent(work: () => unknown | Promise<unknown>, event: ClientEventName): void {
     if (this.closing) return;
     const task = this.execution.run(true, async () => {
-      try { await Promise.resolve().then(work); } catch (error) { await reportError(this.options, error); }
+      try { await Promise.resolve().then(work); }
+      catch (error) { await reportError(this.options, error, undefined, { source: 'event', event }); }
     });
     this.active.add(task);
     void task.then(() => this.active.delete(task), () => this.active.delete(task));
@@ -646,10 +647,10 @@ export class Yuzuha {
     if (!hook || this.closing || signal.aborted) return;
     let reply: Payload | string | null | void;
     try { reply = await hook(info); }
-    catch (error) { await reportError(this.options, error); return; }
+    catch (error) { await reportError(this.options, error, undefined, { source: 'hook', event: 'onUnknownCommand' }); return; }
     if (signal.aborted || reply === undefined || reply === null) return;
     try { await this.transport.reply(message, typeof reply === 'string' ? { content: reply } : reply); }
-    catch (replyError) { await reportError(this.options, replyError); }
+    catch (replyError) { await reportError(this.options, replyError, undefined, { source: 'hook', event: 'onUnknownCommand' }); }
   }
 
   private async dispatch(message: IncomingMessage, signal: AbortSignal, onFailure?: (error: unknown, ctx?: CommandContext) => void, executionID?: string, resolved?: RoutedCommand): Promise<DispatchResult> {
@@ -725,15 +726,15 @@ export class Yuzuha {
             try {
               await (ctx ? ctx.reply(reply) : this.transport.reply(message, typeof reply === 'string' ? { content: reply } : reply));
             } catch (replyError) {
-              await reportError(this.options, replyError, ctx);
+              await reportError(this.options, replyError, ctx, { source: 'command' });
             }
           }
         }
-        if (!(error instanceof GuardError)) await reportError(this.options, error, ctx);
+        if (!(error instanceof GuardError)) await reportError(this.options, error, ctx, { source: 'command' });
       }
       if (ctx && this.options.onCommand) {
         try { await this.options.onCommand(ctx, outcome); }
-        catch (error) { await reportError(this.options, error, ctx); }
+        catch (error) { await reportError(this.options, error, ctx, { source: 'command' }); }
       }
       if (ctx && this.options.onLog) await emitLog(this.options, { event: 'command.finish', executionID: ctx.executionID,
         command: ctx.command.name, outcome, durationMs: performance.now() - started });

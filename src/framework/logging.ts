@@ -1,4 +1,4 @@
-import type { DispatchResult, YuzuhaOptions } from './options.js';
+import type { DispatchResult, ErrorSource, YuzuhaOptions } from './options.js';
 import type { SchedulerEvent } from '../services/scheduler.js';
 
 type LogEvent = SchedulerEvent | {
@@ -9,6 +9,8 @@ type LogEvent = SchedulerEvent | {
   outcome?: DispatchResult;
   durationMs?: number;
   errorCode?: string;
+  source?: ErrorSource;
+  trigger?: string;
   attempt?: number;
   messageID?: string;
   channelID?: string;

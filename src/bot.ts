@@ -4,6 +4,8 @@ export type {
   ErrorReplyResult,
   UnknownCommandContext,
   YuzuhaHooks,
+  ErrorSource,
+  ErrorReportInfo,
   VariableSweepOptions,
   ConcurrencyOptions,
   PrefixCacheOptions,
