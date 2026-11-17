@@ -30,7 +30,7 @@ nos seguintes níveis:
 |---|---|
 | `debug` | `command.start`, `command.finish`, `event.start`, `event.finish` |
 | `info` | `schedule.start`, `schedule.finish` |
-| `warn` | `transport.retry`, `message.ttl_failed`, `authorization.disabled`, `dispatch.dropped`, `rate_limit.evicted` |
+| `warn` | `transport.retry`, `message.ttl_failed`, `authorization.disabled`, `dispatch.dropped`, `rate_limit.evicted`, `shutdown.timeout` |
 | `error` | `error`, `schedule.error` |
 
 Se `logger.debug` for omitido, eventos `debug` são ignorados sem erro. Falhas
@@ -59,6 +59,7 @@ Os registros têm `timestamp` ISO e um `event`:
 | `authorization.disabled` | Sem campos extras |
 | `dispatch.dropped` | `reason`, `guildID?`, `channelID?` |
 | `rate_limit.evicted` | Sem campos extras |
+| `shutdown.timeout` | `pending?` com a quantidade de execuções ainda ativas no prazo |
 | `schedule.start` | `scheduleID`, `executionID` da claim |
 | `schedule.finish` | Mesmos campos, `status`, `durationMs`, `retryable`, `errorCode?` |
 | `schedule.error` | `errorCode` da falha de manutenção |

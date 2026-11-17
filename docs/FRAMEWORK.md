@@ -258,12 +258,31 @@ await bot.login(process.env.FLUXER_BOT_TOKEN);
 
 Use um token emitido pela instância. Endpoints, REST, gateway e cache continuam
 sob responsabilidade do SDK. O Yuzuha conecta apenas quando `login` é chamado.
-`destroy()` remove o listener, recusa novas mensagens, aguarda os comandos ativos
-e encerra o client. Chamadas externas aguardam todo o encerramento; chamadas de
-dentro de um comando, middleware ou hook apenas solicitam o encerramento e retornam
-para o handler poder terminar. O login pendente recebe um sinal de cancelamento.
-O bot fecha seu store padrão, mas não um store fornecido pelo chamador. Veja
-[STORAGE.md](STORAGE.md) para propriedade e fechamento.
+`destroy(opções?)` remove o listener, recusa novas mensagens, aguarda os comandos
+ativos e encerra o client. Chamadas externas aguardam todo o encerramento;
+chamadas de dentro de um comando, middleware ou hook do próprio bot apenas
+solicitam o encerramento e retornam para o handler poder terminar. O login
+pendente recebe um sinal de cancelamento.
+
+Passando `{ timeoutMs }` (inteiro entre `1` e `600_000`; valores inválidos
+rejeitam com `SHUTDOWN_OPTIONS`), o encerramento limita a drenagem de comandos,
+eventos e scheduler: se o prazo vencer antes do término, emite o evento
+`shutdown.timeout` (`pending`) em nível `warn` e prossegue com o fechamento de
+música, voz, timers, client e store. Para encerrar processos próprios em
+resposta a sinais do sistema:
+
+```ts
+const dispose = bot.handleSignals({
+  signals: ['SIGINT', 'SIGTERM'],
+  timeoutMs: 10_000,
+  onExit: code => { process.exitCode = code; },
+});
+```
+
+`handleSignals` retorna um removedor idempotente e também é desconectado
+automaticamente quando `bot.destroy()` executa. O bot fecha seu store padrão,
+mas não um store fornecido pelo chamador. Veja [STORAGE.md](STORAGE.md) para
+propriedade e fechamento.
 
 ### Cache de membros
 
