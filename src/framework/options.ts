@@ -8,7 +8,7 @@ import type { Resources } from '../ports/resources.js';
 import type { HttpService } from '../services/http.js';
 import type { Scheduler } from '../services/scheduler.js';
 import type { NativeEvent } from './events.js';
-import type { LogRecord } from './logging.js';
+import type { LogRecord, YuzuhaLogger } from './logging.js';
 import type { ScriptEventDefinition } from './script-events.js';
 import type { MusicManager } from '../services/music.js';
 import type { NativeVoice } from '../ports/voice.js';
@@ -80,6 +80,7 @@ export interface YuzuhaOptions {
   hooks?: YuzuhaHooks;
   onCommand?: (ctx: CommandContext, outcome: DispatchResult) => void | Promise<void>;
   onLog?: (record: LogRecord) => void | Promise<void>;
+  logger?: YuzuhaLogger | false;
   retry?: false | TransportRetryPolicy;
   timers?: { setTimeout(fn: () => void, ms: number): unknown; clearTimeout(handle: unknown): void };
   cdn?: { mediaBase?: string };

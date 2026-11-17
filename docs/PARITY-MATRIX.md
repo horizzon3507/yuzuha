@@ -17,9 +17,9 @@ A cobertura é por nome: um método `send` de uma classe conta como coberto se q
 | Status | Exports de runtime | Membros |
 |---|---:|---:|
 | coberto-recurso | 51 | 432 |
-| coberto-nativo | 10 | 129 |
+| coberto-nativo | 10 | 130 |
 | coberto-equivalente | 0 | 55 |
-| só-SDK | 51 | 106 |
+| só-SDK | 51 | 105 |
 | lacuna | 5 | 0 |
 
 Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são listados, mas não contam como lacuna.
@@ -275,7 +275,7 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são
 | `Client` | `guilds` | propriedade | coberto-recurso |
 | `Client` | `instance` | propriedade | coberto-nativo |
 | `Client` | `isReady` | método | coberto-nativo |
-| `Client` | `logger` | propriedade | só-SDK |
+| `Client` | `logger` | propriedade | coberto-nativo |
 | `Client` | `login` | método | coberto-nativo |
 | `Client` | `off` | método | coberto-recurso |
 | `Client` | `on` | método | coberto-recurso |

@@ -17,6 +17,7 @@ export async function reportError(
   ctx?: CommandContext,
   info?: Partial<Omit<ErrorReportInfo, 'ctx'>>,
 ): Promise<void> {
+  const code = errorCode(error);
   const executionID = info?.executionID ?? ctx?.executionID;
   const reportInfo: ErrorReportInfo = Object.freeze({
     source: info?.source ?? (ctx ? 'command' : 'event'),
@@ -26,16 +27,37 @@ export async function reportError(
   });
   await emitLog(options, {
     event: 'error',
-    errorCode: errorCode(error),
+    errorCode: code,
     source: reportInfo.source,
     ...(reportInfo.event ? { trigger: reportInfo.event } : {}),
     ...(executionID ? { executionID } : {}),
     ...(ctx ? { command: ctx.command.name } : {}),
   });
   try {
-    if (options.onError) await options.onError(error, ctx, reportInfo);
-    else console.error(`[yuzuha] ${error instanceof YuzuhaError ? error.code : 'UNEXPECTED_ERROR'}`, error);
-  } catch { console.error('[yuzuha] ERROR_HANDLER_FAILED'); }
+    if (options.onError) {
+      await options.onError(error, ctx, reportInfo);
+    } else if (options.logger) {
+      try {
+        options.logger.error({
+          code,
+          source: reportInfo.source,
+          ...(reportInfo.event ? { trigger: reportInfo.event } : {}),
+          ...(executionID ? { executionID } : {}),
+          ...(ctx ? { command: ctx.command.name } : {}),
+          err: error,
+        }, '[yuzuha]');
+      } catch {}
+    } else if (options.logger !== false) {
+      console.error(`[yuzuha] ${error instanceof YuzuhaError ? error.code : 'UNEXPECTED_ERROR'}`, error);
+    }
+  } catch {
+    if (options.logger) {
+      try { options.logger.error({ code: 'ERROR_HANDLER_FAILED' }, '[yuzuha]'); }
+      catch { console.error('[yuzuha] ERROR_HANDLER_FAILED'); }
+    } else if (options.logger !== false) {
+      console.error('[yuzuha] ERROR_HANDLER_FAILED');
+    }
+  }
 }
 
 async function runGuardHook(
