@@ -17,6 +17,9 @@ test('dedup FIFO stays bounded, isolates arbitrary channel IDs and preserves ref
   assert.equal(other.duplicate('channel', 'a'), true);
   other.duplicate('channel', 'evict'); assert.equal(other.duplicate('channel', 'a'), false);
   now += 60_000; assert.equal(other.duplicate('channel', 'a'), false);
+  const highRate = new RateLimits(() => now);
+  for (let i = 0; i < 15_000; i++) assert.equal(highRate.duplicate('channel', `burst-${i}`), false);
+  for (let i = 0; i < 15_000; i++) assert.equal(highRate.duplicate('channel', `burst-${i}`), true);
 });
 
 test('static prefix snapshots detect in-place edits and dynamic prefix shutdown stays tracked', async () => {
