@@ -12,6 +12,7 @@ import type { ScriptEventDefinition } from './script-events.js';
 import type { MusicManager } from '../services/music.js';
 import type { NativeVoice } from '../ports/voice.js';
 import type { CanvasConfig } from '../domain/canvas.js';
+import type { MemberCacheOptions } from '../infrastructure/fluxer/member-cache.js';
 
 export type DispatchResult = 'ignored' | 'success' | 'guarded' | 'error';
 export type Middleware = (ctx: CommandContext, next: () => Promise<void>) => Promise<void>;
@@ -47,5 +48,6 @@ export interface YuzuhaOptions {
   cdn?: { mediaBase?: string };
   /** Mapa nome → emoji copiado para um registro sem protótipo, exposto como `bot.emoji` e `ctx.emoji` (mapa vivo). */
   emoji?: Record<string, string>;
+  memberCache?: false | MemberCacheOptions;
   unsafeDisableResourceAuthorization?: boolean;
 }

@@ -2,7 +2,7 @@ import { AsyncLocalStorage } from 'node:async_hooks';
 import { setMaxListeners } from 'node:events';
 import { Client, Events, Message } from '@fluxerjs/core';
 import type { ClientEventName, ClientEvents } from '@fluxerjs/core';
-import { FluxerTransport, incoming } from '../adapter.js';
+import { FluxerTransport, MemberCache, incoming } from '../adapter.js';
 import { FluxerResources } from '../infrastructure/fluxer/resources.js';
 import type { Resources } from '../ports/resources.js';
 import { CommandContext } from '../context.js';
@@ -84,6 +84,8 @@ export class Yuzuha {
   private readonly pendingTimers = new Set<unknown>();
   private cdnService: import('../domain/cdn.js').Cdn = createCdn();
   private readonly emojiMap: Record<string, string>;
+  private readonly memberCache?: MemberCache;
+  private detachMemberCache?: () => void;
   private readonly events: NativeEvents;
   private readonly execution = new AsyncLocalStorage<boolean>();
   private listening = false;
@@ -120,7 +122,16 @@ export class Yuzuha {
     this.client = options.client ?? new Client(options.clientOptions);
     this.reliability = { retry: options.retry, signal: this.shutdown.signal,
       onRetry: attempt => { if (options.onLog) void emitLog(this.options, { event: 'transport.retry', attempt }); } };
-    this.transport = options.transport ?? new FluxerTransport(this.client, this.reliability);
+    if (options.memberCache !== undefined && options.memberCache !== false) {
+      const cacheOptions = options.memberCache && typeof options.memberCache === 'object' && !Array.isArray(options.memberCache)
+        ? { ...options.memberCache, now: options.memberCache.now ?? options.now }
+        : options.memberCache;
+      this.memberCache = new MemberCache(cacheOptions);
+    }
+    this.transport = options.transport ?? new FluxerTransport(this.client, this.reliability, this.memberCache);
+    if (this.memberCache && !options.transport && this.transport instanceof FluxerTransport) {
+      this.detachMemberCache = this.transport.attachCacheInvalidation(this.client);
+    }
     this.resources = options.resources ?? new FluxerResources(this.client, this.cdnService, this.reliability);
     this.cdnService = createCdn(options.cdn?.mediaBase);
     this.emojiMap = emojiRegistry(options.emoji);
@@ -331,6 +342,9 @@ export class Yuzuha {
     if (this.closing) return Promise.reject(new YuzuhaError('BOT_CLOSED', 'O bot está encerrado.'));
     if (!token?.trim()) return Promise.reject(new YuzuhaError('TOKEN_MISSING', 'Defina FLUXER_BOT_TOKEN.'));
     if (this.loginTask) return this.loginTask;
+    if (this.memberCache && !this.detachMemberCache && !this.options.transport && this.transport instanceof FluxerTransport) {
+      this.detachMemberCache = this.transport.attachCacheInvalidation(this.client);
+    }
     this.scheduler?.start();
     this.client.on(Events.MessageCreate, this.listener);
     this.listening = true;
@@ -351,6 +365,9 @@ export class Yuzuha {
       finally {
         if (needsErrorListener) this.client.off(Events.Error, this.errorListener);
         if (needsShardListener) this.client.off(Events.ShardError, this.shardErrorListener);
+        this.detachMemberCache?.();
+        this.detachMemberCache = undefined;
+        this.memberCache?.clear();
         await Promise.allSettled([...this.gatewayReports]);
       }
       throw error;
@@ -384,6 +401,9 @@ export class Yuzuha {
         finally {
           this.client.off(Events.Error, this.errorListener);
           this.client.off(Events.ShardError, this.shardErrorListener);
+          this.detachMemberCache?.();
+          this.detachMemberCache = undefined;
+          this.memberCache?.clear();
           await Promise.allSettled([...this.gatewayReports]);
           if (!this.options.store) await this.store.close?.();
         }
