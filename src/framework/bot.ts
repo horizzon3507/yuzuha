@@ -7,6 +7,9 @@ import { FluxerResources } from '../infrastructure/fluxer/resources.js';
 import type { Resources } from '../ports/resources.js';
 import { CommandContext } from '../context.js';
 import type { Command, ContextOptions } from '../context.js';
+import { createLocaleProbeContext } from '../commands/context.js';
+import { resolveMessagesConfig } from '../domain/i18n.js';
+import type { MessageTranslator, ResolvedMessages } from '../domain/i18n.js';
 import { defineCommand } from '../commands/definition.js';
 import type { NativeCommandDefinition } from '../commands/definition.js';
 import type { ArgumentSchema } from '../commands/builders.js';
@@ -38,6 +41,7 @@ import { currentExecution, isExecutionOwner, runInExecution } from './execution.
 import { cancellationError } from '../services/cancellation.js';
 import { resolvePolicy } from '../services/retry.js';
 import { EventContext } from '../commands/event-context.js';
+import type { EventContextOptions } from '../commands/event-context.js';
 import { adaptScriptEvent, scriptEventNames, validateScriptEvent } from './script-events.js';
 import type { ScriptEventDefinition } from './script-events.js';
 import type { ScriptEngine } from '../ports/script-engine.js';
@@ -190,6 +194,7 @@ export class Yuzuha {
   private readonly pendingTimers = new Set<unknown>();
   private cdnService: import('../domain/cdn.js').Cdn = createCdn();
   private readonly emojiMap: Record<string, string>;
+  private readonly messagesRuntime: ResolvedMessages;
   private readonly memberCache?: MemberCache;
   private detachMemberCache?: () => void;
   private readonly concurrencyLimiter?: ConcurrencyLimiter;
@@ -233,7 +238,7 @@ export class Yuzuha {
   private readonly validatedPrefixes = new ValidatedPrefixCache();
   private readonly dynamicPrefixCache?: DynamicPrefixCache;
   private readonly contextCooldown = (key: string, duration: number) => this.limits.cooldown(key, duration);
-  private readonly contextHelp = () => this.help();
+  private readonly contextHelp = (command?: string, prefix = '') => this.help(command, prefix);
   private readonly contextDeleteLater = (channelID: string, messageID: string, ttlMs: number) => this.deleteLater(channelID, messageID, ttlMs);
   private readonly canvasContext: ContextOptions['canvas'];
 
@@ -246,6 +251,10 @@ export class Yuzuha {
       throw new ConfigError('OPTIONS', 'errorReply deve ser uma função.');
     }
     validateHooks(options.hooks);
+    if (options.locale !== undefined && typeof options.locale !== 'string' && typeof options.locale !== 'function') {
+      throw new ConfigError('MESSAGES_OPTIONS', 'locale deve ser texto ou função.');
+    }
+    this.messagesRuntime = resolveMessagesConfig(options.messages, typeof options.locale === 'string' ? options.locale : undefined);
     const rateLimitOptions = resolveRateLimitOptions(options.rateLimits);
     const customRateLimiter = assertRateLimiter(options.rateLimiter);
     const lock = validateLock(options.lock);
@@ -510,26 +519,63 @@ export class Yuzuha {
     this.events.add({ event: definition.event, once: definition.once ?? false, invoke: async (args: unknown[]) => {
       const source = adaptScriptEvent(definition.event, args);
       if ((definition.ignoreBots ?? true) && source.event.userBot) return;
-      const ctx = new EventContext({ ...source, channelID: definition.channelID, actorID: definition.actorID,
+      const baseEventOptions: EventContextOptions = { ...source, channelID: definition.channelID, actorID: definition.actorID,
         policy: definition.http, transport: this.transport, store: this.store, resources: this.resources,
         scheduler: this.scheduler, http: this.http, music: this.music, voice: this.voice,
-        canvas: this.canvasContext, now: this.options.now,
+        canvas: this.canvasContext, now: this.options.now, help: this.contextHelp,
         cdn: this.cdnService, disableResourceAuthorization: this.options.unsafeDisableResourceAuthorization === true,
         cooldown: this.contextCooldown, signal: this.shutdown.signal, emoji: this.emojiMap,
-        deleteLater: this.contextDeleteLater });
+        deleteLater: this.contextDeleteLater, locale: this.messagesRuntime.defaultLocale,
+        translator: this.messagesRuntime.defaultTranslator };
+      const prelim = new EventContext(baseEventOptions);
       await runInExecution(this, {
-        executionID: ctx.executionID,
+        executionID: prelim.executionID,
         source: 'event',
         event: definition.event,
-        guildID: ctx.guildID || undefined,
-        channelID: ctx.channelID || undefined,
-        userID: ctx.authorID || undefined,
+        guildID: prelim.guildID || undefined,
+        channelID: prelim.channelID || undefined,
+        userID: prelim.authorID || undefined,
       }, async () => {
-        try { await definition.run(ctx, ...args as ClientEvents[K]); }
-        catch (error) { await reportError(this.options, error, ctx, { source: 'event', event: definition.event, executionID: ctx.executionID }); }
+        let ctx = prelim;
+        try {
+          if (typeof this.options.locale === 'function') {
+            const resolvedLocale = await this.resolveEventLocale(baseEventOptions, prelim.executionID);
+            if (this.closing || this.shutdown.signal.aborted) return;
+            ctx = new EventContext({ ...baseEventOptions, executionID: prelim.executionID,
+              locale: resolvedLocale.locale, translator: resolvedLocale.translator });
+          }
+          await definition.run(ctx, ...args as ClientEvents[K]);
+        } catch (error) {
+          await reportError(this.options, error, ctx, { source: 'event', event: definition.event, executionID: prelim.executionID });
+        }
       });
     } });
     return this;
+  }
+
+  private async resolveEventLocale(
+    options: EventContextOptions,
+    executionID: string,
+  ): Promise<{ readonly locale: string; readonly translator: MessageTranslator }> {
+    if (typeof this.options.locale !== 'function') {
+      return { locale: this.messagesRuntime.defaultLocale, translator: this.messagesRuntime.defaultTranslator };
+    }
+    const event = options.event;
+    const probe = new EventContext({
+      ...options,
+      executionID,
+      message: options.message ?? {
+        id: `event-${executionID}`,
+        content: '',
+        authorID: event.userID ?? '',
+        authorName: event.userName ?? '',
+        authorBot: event.userBot,
+        channelID: options.channelID ?? event.channelID ?? '',
+        guildID: event.guildID ?? undefined,
+        mentions: [],
+      },
+    });
+    return this.messagesRuntime.resolve(await this.options.locale(probe));
   }
 
   scriptEvent(definition: ScriptEventDefinition): this {
@@ -550,23 +596,32 @@ export class Yuzuha {
     const source = adaptScriptEvent(definition.event, args);
     if ((definition.ignoreBots ?? true) && source.event.userBot) return;
     const signal = this.shutdown.signal;
-    const ctx = new EventContext({ ...source, channelID: definition.channelID, actorID: definition.actorID,
+    const baseEventOptions: EventContextOptions = { ...source, channelID: definition.channelID, actorID: definition.actorID,
       policy: definition.http, transport: this.transport, store: this.store, resources: this.resources,
       scheduler: this.scheduler, http: this.http, music: this.music, voice: this.voice,
-      canvas: this.canvasContext, now: this.options.now, cooldown: this.contextCooldown, signal,
+      canvas: this.canvasContext, now: this.options.now, help: this.contextHelp, cooldown: this.contextCooldown, signal,
       cdn: this.cdnService, disableResourceAuthorization: this.options.unsafeDisableResourceAuthorization === true, emoji: this.emojiMap,
-      deleteLater: this.contextDeleteLater });
+      deleteLater: this.contextDeleteLater, locale: this.messagesRuntime.defaultLocale,
+      translator: this.messagesRuntime.defaultTranslator };
+    const prelim = new EventContext(baseEventOptions);
     await runInExecution(this, {
-      executionID: ctx.executionID,
+      executionID: prelim.executionID,
       source: 'event',
       event: definition.event,
-      guildID: ctx.guildID || undefined,
-      channelID: ctx.channelID || undefined,
-      userID: ctx.authorID || undefined,
+      guildID: prelim.guildID || undefined,
+      channelID: prelim.channelID || undefined,
+      userID: prelim.authorID || undefined,
     }, async () => {
       const started = this.hasLogSink ? performance.now() : 0;
       let outcome: DispatchResult = 'success';
+      let ctx = prelim;
       try {
+        if (typeof this.options.locale === 'function') {
+          const resolvedLocale = await this.resolveEventLocale(baseEventOptions, prelim.executionID);
+          if (this.closing || signal.aborted) throw cancellationError();
+          ctx = new EventContext({ ...baseEventOptions, executionID: prelim.executionID,
+            locale: resolvedLocale.locale, translator: resolvedLocale.translator });
+        }
         if (this.hasLogSink) await emitLog(this.options, { event: 'event.start', executionID: ctx.executionID, command: ctx.command.name });
         const output = engine.text(await engine.execute(program, ctx)).trim();
         if (output) {
@@ -831,7 +886,17 @@ export class Yuzuha {
   ): RoutedCommand | undefined {
     if (duplicated) return undefined;
     if (!resolved) {
-      return { kind: 'unknown', unknown: Object.freeze({ name: routed.name, input: routed.input, prefix: routed.prefix, message }) };
+      return {
+        kind: 'unknown',
+        unknown: Object.freeze({
+          name: routed.name,
+          input: routed.input,
+          prefix: routed.prefix,
+          message,
+          locale: this.messagesRuntime.defaultLocale,
+          t: this.messagesRuntime.defaultTranslator,
+        }),
+      };
     }
     return { kind: 'command', ...resolved, prefix: routed.prefix };
   }
@@ -888,8 +953,19 @@ export class Yuzuha {
   private async runUnknownCommand(info: UnknownCommandContext, message: IncomingMessage, signal: AbortSignal): Promise<void> {
     const hook = this.options.hooks?.onUnknownCommand;
     if (!hook || this.closing || signal.aborted) return;
+    let activeInfo = info;
+    if (typeof this.options.locale === 'function') {
+      try {
+        const resolvedLocale = this.messagesRuntime.resolve(await this.options.locale(info));
+        activeInfo = Object.freeze({ ...info, locale: resolvedLocale.locale, t: resolvedLocale.translator });
+      } catch (error) {
+        await reportError(this.options, error, undefined, { source: 'hook', event: 'onUnknownCommand' });
+        return;
+      }
+      if (this.closing || signal.aborted) return;
+    }
     let reply: Payload | string | null | void;
-    try { reply = await hook(info); }
+    try { reply = await hook(activeInfo); }
     catch (error) { await reportError(this.options, error, undefined, { source: 'hook', event: 'onUnknownCommand' }); return; }
     if (signal.aborted || reply === undefined || reply === null) return;
     try { await this.transport.reply(message, typeof reply === 'string' ? { content: reply } : reply); }
@@ -960,17 +1036,28 @@ export class Yuzuha {
           if (this.closing || signal.aborted) return 'ignored';
         }
         let ctx: CommandContext | undefined;
+        let activeLocale = this.messagesRuntime.defaultLocale;
+        let activeTranslator = this.messagesRuntime.defaultTranslator;
         let outcome: DispatchResult = 'success';
         const started = this.hasLogSink ? performance.now() : 0;
         try {
-          ctx = new CommandContext({ message, transport: this.transport, store: this.store, command: compiled.command,
+          const baseContextOptions: ContextOptions = { message, transport: this.transport, store: this.store, command: compiled.command,
             flagLookup: compiled.flagLookup, input: resolved.input, prefix, lineage: compiled.lineage,
             help: this.contextHelp, cooldown: this.contextCooldown,
             native: { client: this.client, message: message.raw instanceof Message ? message.raw : undefined },
             resources: this.resources, scheduler: this.scheduler, http: this.http, music: this.music, voice: this.voice,
             canvas: this.canvasContext, now: this.options.now, signal, executionID,
             cdn: this.cdnService, disableResourceAuthorization: this.options.unsafeDisableResourceAuthorization === true, emoji: this.emojiMap,
-            deleteLater: this.contextDeleteLater });
+            deleteLater: this.contextDeleteLater, locale: activeLocale, translator: activeTranslator };
+          if (typeof this.options.locale === 'function') {
+            const probe = createLocaleProbeContext(baseContextOptions);
+            const dynamicLocale = await this.options.locale(probe);
+            if (this.closing || signal.aborted) throw cancellationError();
+            const resolvedLocale = this.messagesRuntime.resolve(dynamicLocale);
+            activeLocale = resolvedLocale.locale;
+            activeTranslator = resolvedLocale.translator;
+          }
+          ctx = new CommandContext({ ...baseContextOptions, locale: activeLocale, translator: activeTranslator });
           if (this.hasLogSink) await emitLog(this.options, { event: 'command.start', executionID: ctx.executionID, command: ctx.command.name });
           if (signal.aborted) throw cancellationError();
           await ctx.prepare();
