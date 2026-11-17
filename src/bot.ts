@@ -13,5 +13,8 @@ export type {
   YuzuhaPlugin,
   Middleware,
   DispatchResult,
+  DestroyOptions,
+  SignalHandlerOptions,
+  SignalHandlerTarget,
 } from './framework/options.js';
 export type { TransportRetryPolicy } from './services/retry.js';

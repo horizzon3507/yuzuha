@@ -13,6 +13,9 @@ export type {
   YuzuhaPlugin,
   Middleware,
   DispatchResult,
+  DestroyOptions,
+  SignalHandlerOptions,
+  SignalHandlerTarget,
 } from './bot.js';
 export { CommandContext, defineCommand, parseDuration } from './context.js';
 export type { Command, ArgumentDefinition } from './context.js';

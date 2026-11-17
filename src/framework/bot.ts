@@ -16,7 +16,9 @@ import { JsonStore, defaultDataPath } from '../store.js';
 import { CommandRegistry, functionsRequired } from './command-registry.js';
 import type { CompiledCommand } from './command-registry.js';
 import { runMiddleware } from './middleware.js';
-import type { DispatchResult, Middleware, UnknownCommandContext, YuzuhaOptions, YuzuhaPlugin } from './options.js';
+import type {
+  DestroyOptions, DispatchResult, Middleware, SignalHandlerOptions, UnknownCommandContext, YuzuhaOptions, YuzuhaPlugin,
+} from './options.js';
 import { RateLimits, resolveRateLimitOptions } from './rate-limits.js';
 import { ConcurrencyLimiter } from './concurrency.js';
 import { reportError, resolveErrorReply } from './reporting.js';
@@ -125,6 +127,22 @@ function assertLogger(logger: YuzuhaOptions['logger']): void {
   }
 }
 
+const MAX_SHUTDOWN_TIMEOUT_MS = 600_000;
+
+function resolveDestroyTimeout(options?: DestroyOptions): number | undefined {
+  if (options === undefined) return undefined;
+  const prototype = options === null || typeof options !== 'object' || Array.isArray(options)
+    ? undefined : Object.getPrototypeOf(options);
+  if (prototype !== Object.prototype && prototype !== null) {
+    throw new ConfigError('SHUTDOWN_OPTIONS', 'Opções de encerramento inválidas.');
+  }
+  if (options.timeoutMs === undefined) return undefined;
+  if (!Number.isSafeInteger(options.timeoutMs) || options.timeoutMs < 1 || options.timeoutMs > MAX_SHUTDOWN_TIMEOUT_MS) {
+    throw new ConfigError('SHUTDOWN_OPTIONS', `timeoutMs deve ser inteiro entre 1 e ${MAX_SHUTDOWN_TIMEOUT_MS}.`);
+  }
+  return options.timeoutMs;
+}
+
 export class Yuzuha {
   readonly client: Client;
   readonly transport: Transport;
@@ -159,6 +177,7 @@ export class Yuzuha {
   private sweepGeneration = 0;
   private sweepTask?: Promise<void>;
   private readonly events: NativeEvents;
+  private readonly signalDisposers = new Set<() => void>();
   private listening = false;
   private closing = false;
   private closeTask?: Promise<void>;
@@ -613,7 +632,62 @@ export class Yuzuha {
     return task;
   }
 
-  destroy(): Promise<void> {
+  private disposeSignals(): void {
+    for (const dispose of [...this.signalDisposers]) dispose();
+  }
+
+  /** Instala handlers de sinais do processo para encerrar o bot de forma controlada e retorna um removedor idempotente. */
+  handleSignals(options?: SignalHandlerOptions): () => void {
+    if (this.closing) throw new YuzuhaError('BOT_CLOSED', 'O bot está encerrado.');
+    if (options !== undefined) {
+      const prototype = options === null || typeof options !== 'object' || Array.isArray(options)
+        ? undefined : Object.getPrototypeOf(options);
+      if (prototype !== Object.prototype && prototype !== null) {
+        throw new ConfigError('SHUTDOWN_OPTIONS', 'Opções de tratamento de sinais inválidas.');
+      }
+    }
+    const timeoutMs = resolveDestroyTimeout(options?.timeoutMs !== undefined ? { timeoutMs: options.timeoutMs } : undefined);
+    const rawSignals = options?.signals === undefined ? (['SIGINT', 'SIGTERM'] as const) : options.signals;
+    if (!Array.isArray(rawSignals) || rawSignals.length === 0 || rawSignals.some(sig => typeof sig !== 'string' || !sig)) {
+      throw new ConfigError('SHUTDOWN_OPTIONS', 'signals deve ser uma lista não vazia de nomes de sinais.');
+    }
+    const uniqueSignals = [...new Set(rawSignals)];
+    const rawTarget = options?.target ?? process;
+    if (!rawTarget || typeof (rawTarget as { on?: unknown }).on !== 'function' || typeof (rawTarget as { off?: unknown }).off !== 'function') {
+      throw new ConfigError('SHUTDOWN_OPTIONS', 'target deve implementar on e off.');
+    }
+    if (options?.onExit !== undefined && typeof options.onExit !== 'function') {
+      throw new ConfigError('SHUTDOWN_OPTIONS', 'onExit deve ser uma função.');
+    }
+    const target = rawTarget as {
+      on(event: string, listener: (...args: unknown[]) => void): unknown;
+      off(event: string, listener: (...args: unknown[]) => void): unknown;
+    };
+    const onExit = options?.onExit;
+    let disposed = false;
+    const onSignal = (): void => {
+      dispose();
+      void this.destroy(timeoutMs !== undefined ? { timeoutMs } : undefined).then(
+        () => { onExit?.(0); },
+        () => { onExit?.(1); },
+      );
+    };
+    const dispose = (): void => {
+      if (disposed) return;
+      disposed = true;
+      this.signalDisposers.delete(dispose);
+      for (const sig of uniqueSignals) target.off(sig, onSignal);
+    };
+    for (const sig of uniqueSignals) target.on(sig, onSignal);
+    this.signalDisposers.add(dispose);
+    return dispose;
+  }
+
+  destroy(options?: DestroyOptions): Promise<void> {
+    let timeoutMs: number | undefined;
+    try { timeoutMs = resolveDestroyTimeout(options); }
+    catch (error) { return Promise.reject(error); }
+    this.disposeSignals();
     if (this.closeTask) return isExecutionOwner(this) ? Promise.resolve() : this.closeTask;
     this.closing = true;
     this.shutdown.abort();
@@ -626,9 +700,35 @@ export class Yuzuha {
     if (this.listening) this.client.off(Events.MessageCreate, this.listener);
     this.listening = false;
     this.closeTask = (async () => {
-      await Promise.allSettled([...this.active]);
-      await this.scheduler?.drain();
-      await Promise.allSettled(this.sweepTask ? [this.sweepTask] : []);
+      const drainWork = Promise.allSettled([...this.active])
+        .then(() => this.scheduler?.drain())
+        .then(() => Promise.allSettled(this.sweepTask ? [this.sweepTask] : []));
+      if (timeoutMs !== undefined) {
+        let deadlineHandle: unknown;
+        let timedOut = false;
+        let settled = false;
+        const deadline = new Promise<void>(resolve => {
+          deadlineHandle = this.timers.setTimeout(() => {
+            if (!settled) {
+              timedOut = true;
+              resolve();
+            }
+          }, timeoutMs);
+        });
+        try {
+          await Promise.race([
+            drainWork.then(() => { settled = true; }),
+            deadline,
+          ]);
+        } finally {
+          this.timers.clearTimeout(deadlineHandle);
+        }
+        if (timedOut && this.hasLogSink) {
+          await emitLog(this.options, { event: 'shutdown.timeout', pending: this.active.size });
+        }
+      } else {
+        await drainWork;
+      }
       try {
         const results = await Promise.allSettled([this.music?.close(), this.voice?.close()]);
         const failures = results.filter((item): item is PromiseRejectedResult => item.status === 'rejected');
@@ -636,8 +736,8 @@ export class Yuzuha {
       }
       finally {
         for (const handle of this.pendingTimers) this.timers.clearTimeout(handle);
-      this.pendingTimers.clear();
-      try { await this.client.destroy(); }
+        this.pendingTimers.clear();
+        try { await this.client.destroy(); }
         finally {
           this.client.off(Events.Error, this.errorListener);
           this.client.off(Events.ShardError, this.shardErrorListener);

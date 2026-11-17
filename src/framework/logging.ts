@@ -67,7 +67,7 @@ export function createConsoleLogger(options?: { level?: ConsoleLogLevel }): Yuzu
 
 export type LogEvent = SchedulerEvent | {
   event: 'command.start' | 'command.finish' | 'event.start' | 'event.finish' | 'error'
-    | 'transport.retry' | 'message.ttl_failed' | 'authorization.disabled' | 'dispatch.dropped' | 'rate_limit.evicted';
+    | 'transport.retry' | 'message.ttl_failed' | 'authorization.disabled' | 'dispatch.dropped' | 'rate_limit.evicted' | 'shutdown.timeout';
   executionID?: string;
   command?: string;
   outcome?: DispatchResult;
@@ -81,6 +81,7 @@ export type LogEvent = SchedulerEvent | {
   channelID?: string;
   guildID?: string;
   reason?: 'concurrency';
+  pending?: number;
 };
 export type LogRecord = Readonly<{ timestamp: string } & LogEvent>;
 
@@ -92,6 +93,7 @@ const EVENT_LEVEL: Record<LogEvent['event'], ConsoleLogLevel> = {
   'authorization.disabled': 'warn',
   'dispatch.dropped': 'warn',
   'rate_limit.evicted': 'warn',
+  'shutdown.timeout': 'warn',
   'schedule.start': 'info',
   'schedule.finish': 'info',
   'command.start': 'debug',

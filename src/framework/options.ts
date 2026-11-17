@@ -59,6 +59,19 @@ export interface RateLimitOptions {
   maxDedupe?: number;
   dedupeWindowMs?: number;
 }
+export interface DestroyOptions {
+  timeoutMs?: number;
+}
+export interface SignalHandlerTarget {
+  on(event: string, listener: (...args: any[]) => void): unknown;
+  off(event: string, listener: (...args: any[]) => void): unknown;
+}
+export interface SignalHandlerOptions {
+  signals?: readonly NodeJS.Signals[];
+  timeoutMs?: number;
+  target?: Pick<NodeJS.Process, 'on' | 'off'> | SignalHandlerTarget;
+  onExit?: (code: number) => void;
+}
 export interface YuzuhaOptions {
   prefix?: string | string[] | ((message: IncomingMessage) => string | string[] | Promise<string | string[]>);
   client?: Client;
