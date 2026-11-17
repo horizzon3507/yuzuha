@@ -43,6 +43,8 @@ export class ScheduleExecutionError extends YuzuhaError {
 }
 const ORPHAN_MS = 5 * 60_000;
 const MAX_DELAY = 7 * 86400_000;
+const DEFAULT_POLL_MS = 30_000;
+const MAX_POLL_MS = 3_600_000;
 
 export interface SchedulerEvent {
   event: 'schedule.start' | 'schedule.finish' | 'schedule.error';
@@ -57,6 +59,8 @@ export interface SchedulerOptions {
   leaseMs?: number;
   heartbeatMs?: number;
   historyLimit?: number;
+  pollMs?: number;
+  timers?: { setTimeout(fn: () => void, ms: number): unknown; clearTimeout(handle: unknown): void };
   now?: () => number;
   concurrency?: number;
   /** Shared-store claim ceiling; every scheduler using that store must use the same value. */
@@ -65,6 +69,10 @@ export interface SchedulerOptions {
   onEvent?: (event: SchedulerEvent) => void | Promise<void>;
   onError?: (error: unknown) => void | Promise<void>;
 }
+const DEFAULT_TIMERS: NonNullable<SchedulerOptions['timers']> = {
+  setTimeout: (fn, ms) => setTimeout(fn, ms).unref(),
+  clearTimeout: handle => clearTimeout(handle as never),
+};
 export function errorCode(error: unknown): string {
   return error instanceof YuzuhaError && /^[A-Z][A-Z0-9_]{0,63}$/.test(error.code) ? error.code : 'UNEXPECTED_ERROR';
 }
@@ -94,9 +102,21 @@ function assertInput(input: ScheduleInput): void {
 function accessible(item: ScheduleRecord, access?: ScheduleAccess): boolean {
   return !access || (item.guildID === access.guildID && item.authorID === access.authorID);
 }
+function nextDueFrom(schedules: readonly ScheduleRecord[]): number | null {
+  let nextDue: number | null = null;
+  for (const item of schedules) {
+    if (item.paused || item.runningAt != null) continue;
+    if (nextDue === null || item.due < nextDue) nextDue = item.due;
+  }
+  return nextDue;
+}
 
 export class Scheduler {
-  private timer?: NodeJS.Timeout;
+  private timer?: unknown;
+  private hasTimer = false;
+  private running = false;
+  private activeCycles = 0;
+  private lastNextDue: number | null | undefined = undefined;
   private readonly activeClaims = new Set<string>();
   private readonly executions = new Set<Promise<void>>();
   private readonly controllers = new Set<AbortController>();
@@ -104,6 +124,9 @@ export class Scheduler {
   private readonly leaseMs: number;
   private readonly heartbeatMs: number;
   private readonly historyLimit: number;
+  private readonly pollMs: number;
+  private activePollMs: number;
+  private readonly timers: NonNullable<SchedulerOptions['timers']>;
   private readonly now: () => number;
   private readonly concurrency: number;
   private ticking?: Promise<void>;
@@ -113,16 +136,57 @@ export class Scheduler {
     this.leaseMs = options.leaseMs ?? ORPHAN_MS;
     this.heartbeatMs = options.heartbeatMs ?? Math.max(1, Math.floor(this.leaseMs / 3));
     this.historyLimit = options.historyLimit ?? 1000;
+    this.pollMs = options.pollMs ?? DEFAULT_POLL_MS;
+    this.activePollMs = this.pollMs;
+    this.timers = options.timers ?? DEFAULT_TIMERS;
     this.now = options.now ?? Date.now;
     this.concurrency = options.concurrency ?? 1;
     if (!Number.isSafeInteger(this.leaseMs) || this.leaseMs < 3
       || !Number.isSafeInteger(this.heartbeatMs) || this.heartbeatMs < 1 || this.heartbeatMs >= this.leaseMs
       || !Number.isSafeInteger(this.historyLimit) || this.historyLimit < 1 || this.historyLimit > 10_000
+      || !Number.isSafeInteger(this.pollMs) || this.pollMs < 1 || this.pollMs > MAX_POLL_MS
       || !Number.isSafeInteger(this.concurrency) || this.concurrency < 1 || this.concurrency > 128
       || (options.globalConcurrency !== undefined && (!Number.isSafeInteger(options.globalConcurrency) || options.globalConcurrency < 1 || options.globalConcurrency > 128))
-      || (options.random !== undefined && typeof options.random !== 'function')) {
-      throw new YuzuhaError('SCHEDULE_OPTIONS', 'Lease, heartbeat, concorrência ou limite do histórico inválido.');
+      || (options.random !== undefined && typeof options.random !== 'function')
+      || !this.timers || typeof this.timers.setTimeout !== 'function' || typeof this.timers.clearTimeout !== 'function') {
+      throw new YuzuhaError('SCHEDULE_OPTIONS', 'Lease, heartbeat, intervalo de polling, concorrência, timers ou limite do histórico inválido.');
     }
+  }
+
+  private clearTimer(): void {
+    if (!this.hasTimer) return;
+    this.timers.clearTimeout(this.timer);
+    this.timer = undefined;
+    this.hasTimer = false;
+  }
+
+  private armTimer(): void {
+    this.clearTimer();
+    if (!this.running) return;
+    const generation = this.generation;
+    const nextDue = this.lastNextDue;
+    const delay = nextDue === null || nextDue === undefined
+      ? this.activePollMs
+      : Math.max(0, Math.min(this.activePollMs, nextDue - this.now()));
+    let fired = false;
+    const handle = this.timers.setTimeout(() => {
+      fired = true;
+      if (!this.running || generation !== this.generation) return;
+      if (this.timer === handle) {
+        this.hasTimer = false;
+        this.timer = undefined;
+      }
+      this.scheduleCycle(generation);
+    }, delay);
+    if (!fired && this.running && generation === this.generation) {
+      this.timer = handle;
+      this.hasTimer = true;
+    }
+  }
+
+  private syncTimer(nextDue: number | null): void {
+    this.lastNextDue = nextDue;
+    if (this.running) this.armTimer();
   }
 
   private async notify(event: SchedulerEvent): Promise<void> {
@@ -140,7 +204,12 @@ export class Scheduler {
     assertInput(input);
     if (input.cron !== undefined) nextCron(input.cron, input.timezone!, input.due - 1);
     const record: ScheduleRecord = { ...structuredClone(input), id: randomUUID(), attempts: 0, runningAt: null };
-    await this.store.update(state => { state.schedules.push(record); });
+    let nextDue: number | null = null;
+    await this.store.update(state => {
+      state.schedules.push(record);
+      nextDue = nextDueFrom(state.schedules);
+    });
+    this.syncTimer(nextDue);
     return record.id;
   }
   async addCron(input: CronScheduleInput): Promise<string> {
@@ -148,14 +217,18 @@ export class Scheduler {
     return this.add({ ...fields, cron: expression, missedRun: input.missedRun ?? 'run-once',
       due: nextCron(expression, input.timezone, after) });
   }
-  cancel(id: string, access?: ScheduleAccess): Promise<boolean> {
-    return this.store.update(state => {
+  async cancel(id: string, access?: ScheduleAccess): Promise<boolean> {
+    let nextDue: number | null = null;
+    const removed = await this.store.update(state => {
       const index = state.schedules.findIndex(item => item.id === id && accessible(item, access));
       if (index < 0) return false;
       if (this.options.globalConcurrency !== undefined && state.schedules[index]!.runningAt != null) throw new YuzuhaError('SCHEDULE_RUNNING', 'Aguarde a tarefa em execução antes de cancelá-la.');
       state.schedules.splice(index, 1);
+      nextDue = nextDueFrom(state.schedules);
       return true;
     });
+    if (removed) this.syncTimer(nextDue);
+    return removed;
   }
   list(): Promise<ScheduleRecord[]> { return this.store.read(state => state.schedules); }
   history(access?: ScheduleAccess): Promise<ScheduleExecutionRecord[]> {
@@ -164,16 +237,20 @@ export class Scheduler {
   failed(access?: ScheduleAccess): Promise<ScheduleExecutionRecord[]> {
     return this.store.read(state => (state.scheduleHistory ?? []).filter(item => item.status === 'failed' && accessible(item.task, access)));
   }
-  retry(executionID: string, due = this.now(), access?: ScheduleAccess): Promise<string | null> {
+  async retry(executionID: string, due = this.now(), access?: ScheduleAccess): Promise<string | null> {
     if (!Number.isFinite(due)) throw new YuzuhaError('SCHEDULE', 'Vencimento do agendamento inválido.');
-    return this.store.update(state => {
+    let nextDue: number | null = null;
+    const id = await this.store.update(state => {
       const entry = (state.scheduleHistory ?? []).find(item => item.id === executionID && item.status === 'failed' && accessible(item.task, access));
       if (!entry) return null;
       if (!entry.retryable) throw new YuzuhaError('SCHEDULE_UNSAFE_RETRY', 'Esta execução terminou com guard ou possível efeito de moderação e não permite reexecução.');
       const task = { ...structuredClone(entry.task), id: randomUUID(), due, attempts: 0, runningAt: null, claimID: null, paused: false };
       state.schedules.push(task);
+      nextDue = nextDueFrom(state.schedules);
       return task.id;
     });
+    if (id !== null) this.syncTimer(nextDue);
+    return id;
   }
 
   edit(id: string, patch: SchedulePatch, access?: ScheduleAccess): Promise<boolean> {
@@ -202,14 +279,18 @@ export class Scheduler {
       assertInput(item);
     });
   }
-  private change(id: string, access: ScheduleAccess | undefined, update: (item: ScheduleRecord) => void): Promise<boolean> {
-    return this.store.update(state => {
+  private async change(id: string, access: ScheduleAccess | undefined, update: (item: ScheduleRecord) => void): Promise<boolean> {
+    let nextDue: number | null = null;
+    const updated = await this.store.update(state => {
       const item = state.schedules.find(task => task.id === id && accessible(task, access));
       if (!item) return false;
       if (item.runningAt != null) throw new YuzuhaError('SCHEDULE_RUNNING', 'Aguarde a tarefa em execução antes de editá-la, pausar ou retomar.');
       update(item);
+      nextDue = nextDueFrom(state.schedules);
       return true;
     });
+    if (updated) this.syncTimer(nextDue);
+    return updated;
   }
 
   tick(now = this.now()): Promise<void> {
@@ -225,28 +306,46 @@ export class Scheduler {
     return work;
   }
   private async runTick(now: number, generation: number): Promise<void> {
-    const due = await this.store.read(state => state.schedules
-      .filter(item => !item.paused && item.due <= now && item.runningAt == null)
-      .sort((a, b) => (b.priority ?? 0) - (a.priority ?? 0) || a.due - b.due).map(item => item.id));
+    const { due, nextDue } = await this.store.read(state => {
+      const eligible: ScheduleRecord[] = [];
+      let earliest: number | null = null;
+      for (const item of state.schedules) {
+        if (item.paused || item.runningAt != null) continue;
+        if (item.due <= now) eligible.push(item);
+        else if (earliest === null || item.due < earliest) earliest = item.due;
+      }
+      eligible.sort((a, b) => (b.priority ?? 0) - (a.priority ?? 0) || a.due - b.due);
+      return { due: eligible.map(item => item.id), nextDue: earliest };
+    });
+    this.lastNextDue = nextDue;
+    if (due.length === 0) {
+      if (this.running && this.activeCycles === 0) this.armTimer();
+      return;
+    }
     let cursor = 0;
     const workers = Array.from({ length: Math.min(this.concurrency, due.length) }, async () => {
       while (cursor < due.length && generation === this.generation) {
         const id = due[cursor++]!;
+        let skippedDue: number | null = null;
         const task = await this.store.update(state => {
           const item = state.schedules.find(task => task.id === id);
           if (generation !== this.generation || !item || item.paused || item.due > now || item.runningAt != null) return null;
           if (item.cron !== undefined && item.attempts === 0 && item.missedRun === 'skip' && item.due + 60_000 <= now) {
             item.due = nextCron(item.cron, item.timezone!, Math.floor(now / 60_000) * 60_000 - 1);
-            if (item.due > now) return null;
+            if (item.due > now) { skippedDue = item.due; return null; }
           }
           if (this.options.globalConcurrency !== undefined && state.schedules.filter(task => task.runningAt != null).length >= this.options.globalConcurrency) return null;
           item.runningAt = now; item.claimID = randomUUID();
           return item;
         });
+        if (skippedDue !== null && (this.lastNextDue == null || skippedDue < this.lastNextDue)) {
+          this.lastNextDue = skippedDue;
+        }
         if (task) await this.runTask(task, now, generation);
       }
     });
     const results = await Promise.allSettled(workers);
+    if (this.running && this.activeCycles === 0) this.armTimer();
     const failure = results.find(result => result.status === 'rejected');
     if (failure?.status === 'rejected') throw failure.reason;
   }
@@ -286,10 +385,14 @@ export class Scheduler {
     await heartbeat;
     const finishedAt = now + Math.max(0, this.now() - started);
     let status: ScheduleExecutionRecord['status'] = ok ? 'success' : 'failed';
+    let nextDue: number | null = null;
     try {
       await this.store.update(state => {
         const index = state.schedules.findIndex(item => item.id === id && item.claimID === claimID);
-        if (index < 0) return;
+        if (index < 0) {
+          nextDue = nextDueFrom(state.schedules);
+          return;
+        }
         const current = state.schedules[index]!;
         if (ok && current.cron !== undefined) {
           try {
@@ -322,7 +425,10 @@ export class Scheduler {
         history.push({ id: claimID, task: snapshot, startedAt: now, finishedAt, status, retryable,
           ...(code ? { errorCode: code } : {}) });
         if (history.length > this.historyLimit) history.splice(0, history.length - this.historyLimit);
+        nextDue = nextDueFrom(state.schedules);
       });
+      this.lastNextDue = nextDue;
+      if (this.running && this.activeCycles === 0) this.armTimer();
       await this.notify({ event: 'schedule.finish', scheduleID: id, executionID: claimID,
         status, durationMs: finishedAt - now, retryable, ...(code ? { errorCode: code } : {}) });
     } finally { this.activeClaims.delete(claimID); this.controllers.delete(controller); }
@@ -331,34 +437,60 @@ export class Scheduler {
     const stale = (item: ScheduleRecord): boolean => item.runningAt != null && now - item.runningAt > this.leaseMs
       && !this.activeClaims.has(item.claimID ?? '');
     if (!await this.store.read(state => state.schedules.some(stale))) return 0;
-    return this.store.update(state => {
-      let freed = 0;
+    let nextDue: number | null = null;
+    const freed = await this.store.update(state => {
+      let count = 0;
       for (const item of state.schedules) {
         if (stale(item)) {
-          item.runningAt = null; item.claimID = null; freed++;
+          item.runningAt = null; item.claimID = null; count++;
         }
       }
-      return freed;
+      if (count > 0) nextDue = nextDueFrom(state.schedules);
+      return count;
     });
+    if (freed > 0) {
+      this.lastNextDue = nextDue;
+      if (this.running && this.activeCycles === 0) this.armTimer();
+    }
+    return freed;
   }
-  start(intervalMs = 1000): void {
-    if (!Number.isSafeInteger(intervalMs) || intervalMs < 1) throw new YuzuhaError('SCHEDULE', 'Intervalo do relógio deve ser inteiro positivo.');
-    if (this.timer) return;
-    const generation = this.generation;
-    const cycle = (): void => {
-      const work = this.recover().then(async () => {
-        if (generation === this.generation) await this.tick();
-      }).catch(error => this.report(error));
-      this.executions.add(work);
-      void work.finally(() => this.executions.delete(work)).catch(() => {});
-    };
-    cycle();
-    this.timer = setInterval(cycle, intervalMs);
-    this.timer.unref();
+  private scheduleCycle(generation: number): void {
+    if (!this.running || generation !== this.generation) return;
+    const work = this.runCycle(generation);
+    this.executions.add(work);
+    void work.finally(() => this.executions.delete(work)).catch(() => {});
+  }
+  private async runCycle(generation: number): Promise<void> {
+    this.activeCycles++;
+    try {
+      await this.recover();
+      if (this.running && generation === this.generation) await this.tick();
+    } catch (error) {
+      if (this.running && generation === this.generation) {
+        this.lastNextDue = undefined;
+        this.armTimer();
+      }
+      await this.report(error);
+      return;
+    } finally {
+      this.activeCycles--;
+    }
+    if (this.running && generation === this.generation) this.armTimer();
+  }
+  start(intervalMs?: number): void {
+    if (intervalMs !== undefined && (!Number.isSafeInteger(intervalMs) || intervalMs < 1)) {
+      throw new YuzuhaError('SCHEDULE', 'Intervalo do relógio deve ser inteiro positivo.');
+    }
+    if (this.running) return;
+    this.running = true;
+    this.activePollMs = intervalMs ?? this.pollMs;
+    this.lastNextDue = undefined;
+    this.scheduleCycle(this.generation);
   }
   stop(): void {
-    if (this.timer) clearInterval(this.timer);
-    this.timer = undefined; this.generation++;
+    this.clearTimer();
+    this.running = false;
+    this.generation++;
     for (const controller of this.controllers) controller.abort();
   }
   async drain(): Promise<void> { await Promise.allSettled([...this.executions]); }

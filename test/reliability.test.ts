@@ -89,7 +89,7 @@ test('stop aborts active tasks and drain waits for durable finalization', async 
 });
 
 test('automatic scheduler store failures reach hooks', async t => {
-  t.mock.timers.enable({ apis: ['setInterval'] });
+  t.mock.timers.enable({ apis: ['setTimeout'] });
   const seen = deferred(), errors: unknown[] = [];
   const store: Store = { read: async () => { throw new Error('disk'); }, update: async () => { throw new Error('disk'); } };
   const scheduler = new Scheduler(store, async () => {}, { onError(error) { errors.push(error); seen.resolve(); } });
