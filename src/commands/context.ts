@@ -46,7 +46,7 @@ export interface ContextOptions {
   lineage?: readonly Command[];
   prefix?: string;
   input?: string;
-  cooldown: (key: string, duration: number) => number;
+  cooldown: (key: string, duration: number) => number | Promise<number>;
   now?: () => number;
   help?: () => string;
   native?: NativeAccess;
@@ -324,11 +324,18 @@ export class CommandContext {
     return this.authorization.requirePermission(name, bot, message);
   }
 
-  cooldown(duration: string | number, message?: string): void {
+  cooldown(duration: string | number, message?: string): void | Promise<void> {
     const key = JSON.stringify([this.guildID, this.message.channelID, this.authorID, this.command.name]);
     const remaining = this.claimCooldown(key, parseDuration(duration));
-    if (remaining > 0) throw new GuardError((message ?? 'Aguarde {remaining} antes de usar novamente.')
-      .replaceAll('{remaining}', `${Math.ceil(remaining / 1000)}s`), 'COOLDOWN', { remainingMs: remaining });
+    const enforce = (ms: number): void => {
+      if (ms > 0) throw new GuardError((message ?? 'Aguarde {remaining} antes de usar novamente.')
+        .replaceAll('{remaining}', `${Math.ceil(ms / 1000)}s`), 'COOLDOWN', { remainingMs: ms });
+    };
+    if (typeof remaining === 'number') {
+      enforce(remaining);
+      return;
+    }
+    return Promise.resolve(remaining).then(enforce);
   }
 
   async prepare(): Promise<void> {
@@ -362,7 +369,8 @@ export class CommandContext {
     for (const command of this.lineage) {
       if (command.cooldown === undefined) continue;
       const key = JSON.stringify([this.guildID, this.message.channelID, this.authorID, command.name]);
-      const remaining = this.claimCooldown(key, parseDuration(command.cooldown));
+      const raw = this.claimCooldown(key, parseDuration(command.cooldown));
+      const remaining = typeof raw === 'number' ? raw : await raw;
       if (remaining > 0) throw new GuardError(`Aguarde ${Math.ceil(remaining / 1000)}s antes de usar novamente.`, 'COOLDOWN', { remainingMs: remaining });
     }
   }
