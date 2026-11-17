@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { PermissionFlags } from '@fluxerjs/core';
 import { CommandContext, GuardError, MemoryStore, YuzuhaError, parseDuration } from '../src/index.js';
 import { parseArguments, validateArgumentDefinitions } from '../src/commands/arguments.js';
-import { isAbove } from '../src/domain/moderation.js';
+import { compareSnowflake, isAbove } from '../src/domain/moderation.js';
 import type { ModerationAction, ModerationMember } from '../src/domain/moderation.js';
 import type { ArgumentDefinition } from '../src/commands/definition.js';
 import { ModerationService } from '../src/services/moderation.js';
@@ -51,9 +51,15 @@ test('role hierarchy compares equal ranks by snowflake and fails closed on malfo
   const member: ModerationMember = { id: '1', owner: false, permissions: 0n, rank: 5, topRoleID: '9007199254740993' };
   assert.equal(isAbove(member, { ...member, topRoleID: '9007199254740994' }), true);
   assert.equal(isAbove(member, { ...member, topRoleID: '9007199254740992' }), false);
+  assert.equal(isAbove({ ...member, topRoleID: '9' }, { ...member, topRoleID: '10' }), true);
+  assert.equal(isAbove({ ...member, topRoleID: '100' }, { ...member, topRoleID: '20' }), false);
   assert.equal(isAbove(member, member), false);
   assert.equal(isAbove(member, { ...member, topRoleID: 'invalid' }), false);
   assert.equal(isAbove({ ...member, topRoleID: undefined }, member), false);
+  assert.equal(compareSnowflake('9', '10') < 0, true);
+  assert.equal(compareSnowflake('100', '20') > 0, true);
+  assert.equal(compareSnowflake('42', '42'), 0);
+  assert.equal(compareSnowflake('abc', 'abd') < 0, true);
 });
 
 test('each moderation action requires the matching author and bot permission', async t => {
