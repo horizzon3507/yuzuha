@@ -4,6 +4,7 @@ import { GuardError, YuzuhaError } from '../../errors.js';
 import { isNotFound, isTransientError, isUndeliveredSend, resolvePolicy, withRetry } from '../../services/retry.js';
 import type { Reliability } from '../../services/retry.js';
 import { replyTarget, safePayload as safe } from './payload.js';
+import { compareSnowflake } from '../../domain/moderation.js';
 import type { VoiceModerationOptions } from '../../domain/moderation.js';
 
 export class FluxerTransport implements Transport {
@@ -48,22 +49,27 @@ export class FluxerTransport implements Transport {
     await this.reliably(async () => { await (await this.client.channels.fetchMessage(channelID, messageID)).react(emoji); });
   }
   async member(guildID: string, userID: string, channelID?: string): Promise<ModerationMember> {
-    const guild = await this.client.guilds.fetch(guildID, { force: true });
-    await guild.fetchRoles();
-    const member = await guild.members.fetch(userID, { force: true }).catch(error => { throw missingTarget('timeout', error) ?? error; });
-    const roles = [...member.roles.cache.values(), ...[guild.roles.get(guildID)].filter(role => role !== undefined)];
-    roles.sort((a, b) => b.position - a.position || (BigInt(a.id) < BigInt(b.id) ? -1 : BigInt(a.id) > BigInt(b.id) ? 1 : 0));
-    if (!roles.length) throw new YuzuhaError('ROLES_UNAVAILABLE', 'Não foi possível verificar os cargos.');
+    const fetchMember = async () => {
+      const guild = await this.client.guilds.fetch(guildID, { force: true });
+      await guild.fetchRoles();
+      const member = await guild.members.fetch(userID, { force: true }).catch(error => { throw missingTarget('timeout', error) ?? error; });
+      return { guild, member };
+    };
+    const [{ guild, member }, channel] = await Promise.all([
+      fetchMember(),
+      channelID ? this.client.channels.fetch(channelID) : Promise.resolve(undefined),
+    ]);
+    const topRole = pickTopRole(member.roles.cache.values(), guild.roles.get(guildID));
+    if (!topRole) throw new YuzuhaError('ROLES_UNAVAILABLE', 'Não foi possível verificar os cargos.');
     let permissions = member.permissions.bitfield;
     if (channelID) {
-      const channel = await this.client.channels.fetch(channelID);
-      if (!channel.isGuild() || channel.guildId !== guildID) {
+      if (!channel || !channel.isGuild() || channel.guildId !== guildID) {
         throw new YuzuhaError('CHANNEL_GUILD', 'O canal deve pertencer ao mesmo servidor.');
       }
       permissions = member.permissionsIn(channel).bitfield;
     }
     return { id: userID, owner: guild.ownerId === userID, permissions,
-      rank: roles[0]!.position, topRoleID: roles[0]!.id };
+      rank: topRole.position, topRoleID: topRole.id };
   }
   async moderate(guildID: string, action: ModerationAction, targetID: string, reason: string, duration?: number, voice?: VoiceModerationOptions): Promise<void> {
     if (action === 'move' && voice?.channelID) {
@@ -88,6 +94,24 @@ export class FluxerTransport implements Transport {
   }
 }
 
+
+interface RankedRole {
+  id: string;
+  position: number;
+}
+
+function pickTopRole(roles: Iterable<RankedRole>, defaultRole?: RankedRole): RankedRole | undefined {
+  let best: RankedRole | undefined;
+  const consider = (role: RankedRole) => {
+    if (!best || role.position > best.position
+      || (role.position === best.position && compareSnowflake(role.id, best.id) < 0)) {
+      best = role;
+    }
+  };
+  for (const role of roles) consider(role);
+  if (defaultRole) consider(defaultRole);
+  return best;
+}
 
 function missingTarget(action: string, error: unknown): GuardError | undefined {
   const candidate = error as { code?: number | string; status?: number } | null | undefined;
