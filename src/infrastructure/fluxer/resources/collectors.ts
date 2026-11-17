@@ -28,8 +28,18 @@ function vote(reaction: ReactionLike, userID: string, wanted: string[]): Reactio
   return matches(reaction, wanted) ? voteInfo(reaction, userID) : null;
 }
 
+const DEFAULT_MAX_BUFFER = 1_000;
+
 function positiveBound(value: number | undefined): number {
   return value !== undefined && Number.isFinite(value) && value > 0 ? value : 0;
+}
+
+function resolveMaxBuffer(value: number | undefined): number {
+  if (value === undefined) return DEFAULT_MAX_BUFFER;
+  if (!Number.isSafeInteger(value) || value < 1) {
+    throw new YuzuhaError('COLLECTOR_BOUNDS', 'maxBuffer do coletor deve ser um inteiro positivo.');
+  }
+  return value;
 }
 
 function requireBounds(time: number, max: number, signal: AbortSignal | undefined): void {
@@ -38,16 +48,56 @@ function requireBounds(time: number, max: number, signal: AbortSignal | undefine
   }
 }
 
+class BoundedQueue<T> {
+  private slots: Array<T | undefined>;
+  private head = 0;
+  private itemCount = 0;
+
+  constructor(private readonly capacity: number) {
+    this.slots = new Array<T | undefined>(Math.min(capacity, 64));
+  }
+
+  enqueue(item: T): void {
+    if (this.itemCount === this.slots.length) {
+      if (this.slots.length < this.capacity) {
+        const nextCapacity = Math.min(this.capacity, this.slots.length * 2);
+        const grown = new Array<T | undefined>(nextCapacity);
+        for (let i = 0; i < this.itemCount; i++) {
+          grown[i] = this.slots[(this.head + i) % this.slots.length];
+        }
+        this.slots = grown;
+        this.head = 0;
+      } else {
+        this.slots[this.head] = item;
+        this.head = (this.head + 1) % this.slots.length;
+        return;
+      }
+    }
+    const tail = (this.head + this.itemCount) % this.slots.length;
+    this.slots[tail] = item;
+    this.itemCount++;
+  }
+
+  dequeue(): T | undefined {
+    if (this.itemCount === 0) return undefined;
+    const item = this.slots[this.head];
+    this.slots[this.head] = undefined;
+    this.head = (this.head + 1) % this.slots.length;
+    this.itemCount--;
+    return item;
+  }
+}
+
 /** Itera itens de um coletor do SDK: enfileira 'collect', encerra no 'end' e limpa ao sair. */
-async function* pump<T>(attach: (push: (item: T) => void, finish: () => void) => () => void): AsyncGenerator<T, void> {
-  const queue: T[] = [];
+async function* pump<T>(maxBuffer: number, attach: (push: (item: T) => void, finish: () => void) => () => void): AsyncGenerator<T, void> {
+  const buffer = new BoundedQueue<T>(maxBuffer);
   let ended = false;
   let waiting: (() => void) | undefined;
   const notify = (): void => { const wake = waiting; waiting = undefined; wake?.(); };
-  const detach = attach(item => { queue.push(item); notify(); }, () => { ended = true; notify(); });
+  const detach = attach(item => { buffer.enqueue(item); notify(); }, () => { ended = true; notify(); });
   try {
     for (;;) {
-      const item = queue.shift();
+      const item = buffer.dequeue();
       if (item !== undefined) { yield item; continue; }
       if (ended) return;
       await new Promise<void>(resolve => { waiting = resolve; });
@@ -127,6 +177,7 @@ export function createCollectorsResources(client: Client): CollectorsResources {
     collectMessages(channelID: string, input: CollectMessagesInput): AsyncIterable<CollectedMessageInfo> {
       const time = positiveBound(input.timeMs);
       const max = positiveBound(input.max);
+      const maxBuffer = resolveMaxBuffer(input.maxBuffer);
       requireBounds(time, max, input.signal);
       const filter = input.userID === undefined && input.contains === undefined
         ? undefined
@@ -134,13 +185,19 @@ export function createCollectorsResources(client: Client): CollectorsResources {
           (input.userID === undefined || message.author.id === input.userID) &&
           (input.contains === undefined || message.content.includes(input.contains));
       const signal = input.signal;
-      return pump<CollectedMessageInfo>((push, finish) => {
+      return pump<CollectedMessageInfo>(maxBuffer, (push, finish) => {
         // O SDK exige time ou max; com só signal o teto de max é inalcançável e o abort encerra.
         const collector = new MessageCollector(client, channelID, {
           filter, time, max: time > 0 || max > 0 ? max : Number.MAX_SAFE_INTEGER,
         });
+        let collectedCount = 0;
         const abort = (): void => collector.stop('user');
-        collector.on('collect', message => push(info(message)));
+        collector.on('collect', message => {
+          push(info(message));
+          (collector as { collected?: { clear(): void } }).collected?.clear();
+          collectedCount++;
+          if (max > 0 && collectedCount >= max) collector.stop('limit');
+        });
         collector.on('end', () => finish());
         signal?.addEventListener('abort', abort, { once: true });
         if (signal?.aborted) collector.stop('user');
@@ -150,18 +207,25 @@ export function createCollectorsResources(client: Client): CollectorsResources {
     collectReactions(channelID: string, input: CollectReactionsInput): AsyncIterable<ReactionVote> {
       const time = positiveBound(input.timeMs);
       const max = positiveBound(input.max);
+      const maxBuffer = resolveMaxBuffer(input.maxBuffer);
       requireBounds(time, max, input.signal);
       if (!input.messageID) throw new YuzuhaError('COLLECTOR_MESSAGE', 'Informe a mensagem (messageID) para coletar reações.');
       const wanted = targets(input.emojis ?? []);
       const signal = input.signal;
-      return pump<ReactionVote>((push, finish) => {
+      return pump<ReactionVote>(maxBuffer, (push, finish) => {
         const collector = new ReactionCollector(client, input.messageID, channelID, {
           time, max,
           filter: (reaction, user) => (input.userID === undefined || user.id === input.userID)
             && (wanted.length === 0 || matches(reaction, wanted)),
         });
+        let collectedCount = 0;
         const abort = (): void => collector.stop('user');
-        collector.on('collect', (reaction, user) => push(voteInfo(reaction, user.id)));
+        collector.on('collect', (reaction, user) => {
+          push(voteInfo(reaction, user.id));
+          (collector as { collected?: { clear(): void } }).collected?.clear();
+          collectedCount++;
+          if (max > 0 && collectedCount >= max) collector.stop('limit');
+        });
         collector.on('end', () => finish());
         signal?.addEventListener('abort', abort, { once: true });
         if (signal?.aborted) collector.stop('user');
