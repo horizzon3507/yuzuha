@@ -19,7 +19,7 @@ import { runMiddleware } from './middleware.js';
 import type { DispatchResult, Middleware, YuzuhaOptions, YuzuhaPlugin } from './options.js';
 import { RateLimits, resolveRateLimitOptions } from './rate-limits.js';
 import { ConcurrencyLimiter } from './concurrency.js';
-import { reportError, userError } from './reporting.js';
+import { reportError, resolveErrorReply } from './reporting.js';
 import { route } from './routing.js';
 import { DynamicPrefixCache, ValidatedPrefixCache, prefixCacheKey, validatePrefixCacheOptions } from './prefix-cache.js';
 import { defineEvent, NativeEvents } from './events.js';
@@ -158,6 +158,9 @@ export class Yuzuha {
 
   constructor(public readonly options: YuzuhaOptions = {}) {
     setMaxListeners(0, this.shutdown.signal);
+    if (options.errorReply !== undefined && typeof options.errorReply !== 'function') {
+      throw new ConfigError('OPTIONS', 'errorReply deve ser uma função.');
+    }
     const rateLimitOptions = resolveRateLimitOptions(options.rateLimits);
     this.limits = new RateLimits({
       ...rateLimitOptions,
@@ -682,8 +685,16 @@ export class Yuzuha {
       } catch (error) {
         onFailure?.(error, ctx);
         outcome = error instanceof GuardError ? 'guarded' : 'error';
-        try { if (!signal.aborted) await (ctx ? ctx.reply(userError(error, ctx)) : this.transport.reply(message, { content: userError(error, ctx) })); }
-        catch (replyError) { await reportError(this.options, replyError, ctx); }
+        if (!signal.aborted) {
+          const reply = await resolveErrorReply(this.options, error, ctx);
+          if (reply !== null && !signal.aborted) {
+            try {
+              await (ctx ? ctx.reply(reply) : this.transport.reply(message, typeof reply === 'string' ? { content: reply } : reply));
+            } catch (replyError) {
+              await reportError(this.options, replyError, ctx);
+            }
+          }
+        }
         if (!(error instanceof GuardError)) await reportError(this.options, error, ctx);
       }
       if (ctx && this.options.onCommand) {

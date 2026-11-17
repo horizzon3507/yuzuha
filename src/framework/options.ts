@@ -1,6 +1,6 @@
 import type { Client, ClientOptions } from '@fluxerjs/core';
 import type { CommandContext } from '../context.js';
-import type { IncomingMessage, Store, Transport } from '../contracts.js';
+import type { IncomingMessage, Payload, Store, Transport } from '../contracts.js';
 import type { ScriptEngine, ScriptFunctionDefinition } from '../ports/script-engine.js';
 import type { Command } from '../context.js';
 import type { Resources } from '../ports/resources.js';
@@ -19,6 +19,7 @@ import type { PrefixCacheOptions } from './prefix-cache.js';
 export type { ConcurrencyOptions, PrefixCacheOptions };
 
 export type DispatchResult = 'ignored' | 'success' | 'guarded' | 'error';
+export type ErrorReplyResult = Payload | string | null | undefined;
 export type Middleware = (ctx: CommandContext, next: () => Promise<void>) => Promise<void>;
 export interface YuzuhaPlugin {
   name: string;
@@ -55,6 +56,7 @@ export interface YuzuhaOptions {
   voice?: NativeVoice;
   canvas?: CanvasConfig;
   onError?: (error: unknown, ctx?: CommandContext) => void | Promise<void>;
+  errorReply?: (error: unknown, ctx?: CommandContext) => ErrorReplyResult | Promise<ErrorReplyResult>;
   onCommand?: (ctx: CommandContext, outcome: DispatchResult) => void | Promise<void>;
   onLog?: (record: LogRecord) => void | Promise<void>;
   retry?: false | { requests?: number; delayMs?: number };

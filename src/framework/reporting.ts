@@ -1,4 +1,5 @@
 import type { CommandContext } from '../context.js';
+import type { Payload } from '../contracts.js';
 import { GuardError, PartialModerationError, YuzuhaError } from '../errors.js';
 import type { YuzuhaOptions } from './options.js';
 import { emitLog } from './logging.js';
@@ -16,4 +17,20 @@ export async function reportError(options: YuzuhaOptions, error: unknown, ctx?: 
     if (options.onError) await options.onError(error, ctx);
     else console.error(`[yuzuha] ${error instanceof YuzuhaError ? error.code : 'UNEXPECTED_ERROR'}`, error);
   } catch { console.error('[yuzuha] ERROR_HANDLER_FAILED'); }
+}
+
+export async function resolveErrorReply(
+  options: YuzuhaOptions,
+  error: unknown,
+  ctx?: CommandContext,
+): Promise<Payload | string | null> {
+  if (options.errorReply) {
+    try {
+      const custom = await options.errorReply(error, ctx);
+      if (custom !== undefined) return custom;
+    } catch (replyHandlerError) {
+      await reportError(options, replyHandlerError, ctx);
+    }
+  }
+  return userError(error, ctx);
 }
