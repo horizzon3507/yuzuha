@@ -117,6 +117,7 @@ export class Scheduler {
   private running = false;
   private activeCycles = 0;
   private lastNextDue: number | null | undefined = undefined;
+  private nextRecoveryAt = 0;
   private readonly activeClaims = new Set<string>();
   private readonly executions = new Set<Promise<void>>();
   private readonly controllers = new Set<AbortController>();
@@ -463,7 +464,13 @@ export class Scheduler {
   private async runCycle(generation: number): Promise<void> {
     this.activeCycles++;
     try {
-      await this.recover();
+      const now = this.now();
+      if (now >= this.nextRecoveryAt) {
+        await this.recover(now);
+        if (this.running && generation === this.generation) {
+          this.nextRecoveryAt = now + Math.max(1_000, Math.floor(this.leaseMs / 3));
+        }
+      }
       if (this.running && generation === this.generation) await this.tick();
     } catch (error) {
       if (this.running && generation === this.generation) {
@@ -485,11 +492,13 @@ export class Scheduler {
     this.running = true;
     this.activePollMs = intervalMs ?? this.pollMs;
     this.lastNextDue = undefined;
+    this.nextRecoveryAt = 0;
     this.scheduleCycle(this.generation);
   }
   stop(): void {
     this.clearTimer();
     this.running = false;
+    this.nextRecoveryAt = 0;
     this.generation++;
     for (const controller of this.controllers) controller.abort();
   }
