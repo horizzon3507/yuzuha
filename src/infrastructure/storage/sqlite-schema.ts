@@ -1,4 +1,4 @@
-import type { DatabaseSync } from 'node:sqlite';
+import type { DatabaseSync, StatementSync } from 'node:sqlite';
 import type { CaseRecord, ModerationAction } from '../../domain/moderation.js';
 import type { JsonValue, ScheduleExecutionRecord, ScheduleRecord, State } from '../../domain/state.js';
 import { variableKey } from '../../domain/state.js';
@@ -101,6 +101,54 @@ export interface SQLiteMeta {
   hasHistory: boolean;
 }
 
+export interface SQLiteStatements {
+  selectMeta: StatementSync;
+  selectVariables: StatementSync;
+  selectRawVariables: StatementSync;
+  selectCases: StatementSync;
+  selectSchedules: StatementSync;
+  selectHistory: StatementSync;
+  upsertMeta: StatementSync;
+  insertVariable: StatementSync;
+  insertRawVariable: StatementSync;
+  insertCase: StatementSync;
+  insertSchedule: StatementSync;
+  insertHistory: StatementSync;
+  selectScopedVariable: StatementSync;
+  selectRawVariable: StatementSync;
+  queryVariables: StatementSync;
+}
+
+export function prepareSQLiteStatements(db: DatabaseSync): SQLiteStatements {
+  return {
+    selectMeta: db.prepare('SELECT schema_version, has_expirations, has_history FROM yuzuha_meta WHERE id=1'),
+    selectVariables: db.prepare('SELECT scope, subject, name_json, value_json, expires_at FROM yuzuha_variables'),
+    selectRawVariables: db.prepare('SELECT key, value_json, expires_at FROM yuzuha_raw_variables'),
+    selectCases: db.prepare('SELECT guild_id, id, action, target_id, moderator_id, reason, created_at, channel_id, channel_id_present, duration, enabled FROM yuzuha_cases ORDER BY guild_id, id'),
+    selectSchedules: db.prepare('SELECT * FROM yuzuha_schedules ORDER BY rowid ASC'),
+    selectHistory: db.prepare('SELECT id, task_json, started_at, finished_at, status, retryable, error_code FROM yuzuha_schedule_history ORDER BY seq ASC'),
+    upsertMeta: db.prepare('INSERT OR REPLACE INTO yuzuha_meta (id, schema_version, has_expirations, has_history) VALUES (1, ?, ?, ?)'),
+    insertVariable: db.prepare('INSERT INTO yuzuha_variables (scope, subject, name_key, name_json, value_json, expires_at) VALUES (?, ?, ?, ?, ?, ?)'),
+    insertRawVariable: db.prepare('INSERT INTO yuzuha_raw_variables (key, value_json, expires_at) VALUES (?, ?, ?)'),
+    insertCase: db.prepare('INSERT INTO yuzuha_cases (guild_id, id, action, target_id, moderator_id, reason, created_at, channel_id, channel_id_present, duration, enabled) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'),
+    insertSchedule: db.prepare(`INSERT INTO yuzuha_schedules (
+      id, guild_id, channel_id, author_id, command, input, due, interval_ms, attempts,
+      running_at, paused, claim_id, max_attempts, retry_delay_ms, retry_backoff,
+      priority, retry_jitter, cron, timezone, missed_run, present_fields
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`),
+    insertHistory: db.prepare('INSERT INTO yuzuha_schedule_history (id, task_json, started_at, finished_at, status, retryable, error_code) VALUES (?, ?, ?, ?, ?, ?, ?)'),
+    selectScopedVariable: db.prepare(
+      'SELECT value_json FROM yuzuha_variables WHERE scope=? AND subject=? AND name_key=? AND (expires_at IS NULL OR expires_at>?)',
+    ),
+    selectRawVariable: db.prepare(
+      'SELECT value_json FROM yuzuha_raw_variables WHERE key=? AND value_json IS NOT NULL AND (expires_at IS NULL OR expires_at>?)',
+    ),
+    queryVariables: db.prepare(`SELECT name_json, value_json, expires_at FROM yuzuha_variables
+      WHERE scope=? AND subject=? AND name_key>=? AND name_key<? AND name_key>?
+      AND (expires_at IS NULL OR expires_at>?) ORDER BY name_key LIMIT ?`),
+  };
+}
+
 export const SCHEDULE_FIELD_RUNNING_AT = 1;
 export const SCHEDULE_FIELD_CLAIM_ID = 2;
 export const SCHEDULE_FIELD_PAUSED = 4;
@@ -128,8 +176,8 @@ export function listYuzuhaTables(db: DatabaseSync): Set<string> {
   return new Set(rows.map(row => String(row['name'])));
 }
 
-export function readSQLiteMeta(db: DatabaseSync): SQLiteMeta {
-  const row = db.prepare('SELECT schema_version, has_expirations, has_history FROM yuzuha_meta WHERE id=1').get();
+export function readSQLiteMeta(db: DatabaseSync, stmt?: StatementSync): SQLiteMeta {
+  const row = (stmt ?? db.prepare('SELECT schema_version, has_expirations, has_history FROM yuzuha_meta WHERE id=1')).get();
   if (!row || Number(row['schema_version']) !== SQLITE_SCHEMA_VERSION) throw corruptStoreError();
   return {
     schemaVersion: SQLITE_SCHEMA_VERSION,
@@ -208,13 +256,14 @@ export function hydrateHistoryRow(row: Record<string, unknown>): ScheduleExecuti
   return entry;
 }
 
-export function readNormalizedState(db: DatabaseSync): State {
-  const meta = readSQLiteMeta(db);
+export function readNormalizedState(db: DatabaseSync, statements?: SQLiteStatements): State {
+  const meta = readSQLiteMeta(db, statements?.selectMeta);
   const variables: Record<string, JsonValue> = {};
   const expirations: Record<string, number> = {};
   let hasAnyExpiration = false;
 
-  for (const row of db.prepare('SELECT scope, subject, name_json, value_json, expires_at FROM yuzuha_variables').all()) {
+  const selectVariables = statements?.selectVariables ?? db.prepare('SELECT scope, subject, name_json, value_json, expires_at FROM yuzuha_variables');
+  for (const row of selectVariables.all()) {
     const scope = String(row['scope']), subject = String(row['subject']);
     const name = parseStoredJson(String(row['name_json']));
     if (!['global', 'guild', 'user'].includes(scope) || typeof name !== 'string' || !name || name.length > 128) {
@@ -228,7 +277,8 @@ export function readNormalizedState(db: DatabaseSync): State {
     }
   }
 
-  for (const row of db.prepare('SELECT key, value_json, expires_at FROM yuzuha_raw_variables').all()) {
+  const selectRawVariables = statements?.selectRawVariables ?? db.prepare('SELECT key, value_json, expires_at FROM yuzuha_raw_variables');
+  for (const row of selectRawVariables.all()) {
     const key = String(row['key']);
     if (row['value_json'] !== null && row['value_json'] !== undefined) {
       setOwnProperty(variables, key, parseStoredJson(String(row['value_json'])) as JsonValue);
@@ -240,7 +290,8 @@ export function readNormalizedState(db: DatabaseSync): State {
   }
 
   const cases: Record<string, CaseRecord[]> = {};
-  for (const row of db.prepare('SELECT guild_id, id, action, target_id, moderator_id, reason, created_at, channel_id, channel_id_present, duration, enabled FROM yuzuha_cases ORDER BY guild_id, id').all()) {
+  const selectCases = statements?.selectCases ?? db.prepare('SELECT guild_id, id, action, target_id, moderator_id, reason, created_at, channel_id, channel_id_present, duration, enabled FROM yuzuha_cases ORDER BY guild_id, id');
+  for (const row of selectCases.all()) {
     const record = hydrateCaseRow(row);
     let list = Object.hasOwn(cases, record.guildID) ? cases[record.guildID] : undefined;
     if (!list) {
@@ -250,8 +301,10 @@ export function readNormalizedState(db: DatabaseSync): State {
     list.push(record);
   }
 
-  const schedules = db.prepare('SELECT * FROM yuzuha_schedules ORDER BY rowid ASC').all().map(hydrateScheduleRow);
-  const history = db.prepare('SELECT id, task_json, started_at, finished_at, status, retryable, error_code FROM yuzuha_schedule_history ORDER BY seq ASC').all().map(hydrateHistoryRow);
+  const selectSchedules = statements?.selectSchedules ?? db.prepare('SELECT * FROM yuzuha_schedules ORDER BY rowid ASC');
+  const selectHistory = statements?.selectHistory ?? db.prepare('SELECT id, task_json, started_at, finished_at, status, retryable, error_code FROM yuzuha_schedule_history ORDER BY seq ASC');
+  const schedules = selectSchedules.all().map(hydrateScheduleRow);
+  const history = selectHistory.all().map(hydrateHistoryRow);
 
   const state: State = { schema: 2, variables, cases, schedules };
   if (meta.hasExpirations || hasAnyExpiration) state.variableExpirations = expirations;
@@ -260,7 +313,7 @@ export function readNormalizedState(db: DatabaseSync): State {
   return state;
 }
 
-export function writeNormalizedState(db: DatabaseSync, state: Readonly<State>): void {
+export function writeNormalizedState(db: DatabaseSync, state: Readonly<State>, statements?: SQLiteStatements): void {
   const seenScheduleIDs = new Set<string>();
   for (const task of state.schedules) {
     if (seenScheduleIDs.has(task.id)) {
@@ -270,13 +323,13 @@ export function writeNormalizedState(db: DatabaseSync, state: Readonly<State>): 
   }
 
   const expirations = state.variableExpirations ?? {};
-  db.prepare('INSERT OR REPLACE INTO yuzuha_meta (id, schema_version, has_expirations, has_history) VALUES (1, ?, ?, ?)')
-    .run(SQLITE_SCHEMA_VERSION, state.variableExpirations !== undefined ? 1 : 0, state.scheduleHistory !== undefined ? 1 : 0);
+  const upsertMeta = statements?.upsertMeta ?? db.prepare('INSERT OR REPLACE INTO yuzuha_meta (id, schema_version, has_expirations, has_history) VALUES (1, ?, ?, ?)');
+  upsertMeta.run(SQLITE_SCHEMA_VERSION, state.variableExpirations !== undefined ? 1 : 0, state.scheduleHistory !== undefined ? 1 : 0);
 
   db.exec('DELETE FROM yuzuha_variables; DELETE FROM yuzuha_raw_variables; DELETE FROM yuzuha_cases; DELETE FROM yuzuha_schedules; DELETE FROM yuzuha_schedule_history;');
 
-  const insertScopedVar = db.prepare('INSERT INTO yuzuha_variables (scope, subject, name_key, name_json, value_json, expires_at) VALUES (?, ?, ?, ?, ?, ?)');
-  const insertRawVar = db.prepare('INSERT INTO yuzuha_raw_variables (key, value_json, expires_at) VALUES (?, ?, ?)');
+  const insertScopedVar = statements?.insertVariable ?? db.prepare('INSERT INTO yuzuha_variables (scope, subject, name_key, name_json, value_json, expires_at) VALUES (?, ?, ?, ?, ?, ?)');
+  const insertRawVar = statements?.insertRawVariable ?? db.prepare('INSERT INTO yuzuha_raw_variables (key, value_json, expires_at) VALUES (?, ?, ?)');
   for (const [key, value] of Object.entries(state.variables)) {
     const expiry = Object.hasOwn(expirations, key) ? expirations[key]! : null;
     const parts = variableIdentity(key);
@@ -290,7 +343,7 @@ export function writeNormalizedState(db: DatabaseSync, state: Readonly<State>): 
     if (!Object.hasOwn(state.variables, key)) insertRawVar.run(key, null, expiry);
   }
 
-  const insertCase = db.prepare('INSERT INTO yuzuha_cases (guild_id, id, action, target_id, moderator_id, reason, created_at, channel_id, channel_id_present, duration, enabled) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+  const insertCase = statements?.insertCase ?? db.prepare('INSERT INTO yuzuha_cases (guild_id, id, action, target_id, moderator_id, reason, created_at, channel_id, channel_id_present, duration, enabled) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
   for (const list of Object.values(state.cases)) {
     for (const item of list) {
       insertCase.run(
@@ -309,7 +362,7 @@ export function writeNormalizedState(db: DatabaseSync, state: Readonly<State>): 
     }
   }
 
-  const insertSchedule = db.prepare(`INSERT INTO yuzuha_schedules (
+  const insertSchedule = statements?.insertSchedule ?? db.prepare(`INSERT INTO yuzuha_schedules (
     id, guild_id, channel_id, author_id, command, input, due, interval_ms, attempts,
     running_at, paused, claim_id, max_attempts, retry_delay_ms, retry_backoff,
     priority, retry_jitter, cron, timezone, missed_run, present_fields
@@ -340,7 +393,7 @@ export function writeNormalizedState(db: DatabaseSync, state: Readonly<State>): 
     );
   }
 
-  const insertHistory = db.prepare('INSERT INTO yuzuha_schedule_history (id, task_json, started_at, finished_at, status, retryable, error_code) VALUES (?, ?, ?, ?, ?, ?, ?)');
+  const insertHistory = statements?.insertHistory ?? db.prepare('INSERT INTO yuzuha_schedule_history (id, task_json, started_at, finished_at, status, retryable, error_code) VALUES (?, ?, ?, ?, ?, ?, ?)');
   for (const item of state.scheduleHistory ?? []) {
     insertHistory.run(
       item.id,
