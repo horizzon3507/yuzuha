@@ -1,10 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { CommandContext, MemoryStore, Yuzuha } from '../src/index.js';
+import { Client, Events } from '@fluxerjs/core';
+import { arg, CommandContext, MemoryStore, Yuzuha } from '../src/index.js';
 import { Runtime, registerBuiltins, parse } from '../src/functions.js';
 import { MockTransport, mockMessage } from '../src/testing.js';
 import { RateLimits } from '../src/framework/rate-limits.js';
-import { tokenize } from '../src/commands/arguments.js';
+import { compileFlagLookup, parseFlags, tokenize } from '../src/commands/arguments.js';
+import { CommandRegistry } from '../src/framework/command-registry.js';
+import { route } from '../src/framework/routing.js';
 
 test('dedup FIFO stays bounded, isolates arbitrary channel IDs and preserves refreshed entries', () => {
   let now = 0; const limits = new RateLimits(() => now);
@@ -103,4 +106,131 @@ test('mock replies retain their own metadata across interleaved sends and messag
   for (let i = 0; i < 20; i++) assert.equal(transport.messages[i]?.replyTo, `source-${i}`);
   await transport.delete('200', '1'); const id = await transport.send('200', { content: 'new' });
   assert.equal(id, '21'); assert.equal(new Set(transport.messages.map(item => item.id)).size, transport.messages.length);
+});
+
+test('gateway listener pre-filters bot, self and non-prefix messages without reading mentions', async () => {
+  const prefixes = ['!', '!!'];
+  const client = new Client();
+  Reflect.set(client, 'login', async () => client);
+  Reflect.set(client, 'destroy', async () => {});
+  const transport = new MockTransport();
+  const bot = new Yuzuha({ client, prefix: prefixes, transport, store: new MemoryStore(), scheduler: false });
+  const received: string[] = [];
+  bot.command({ name: 'ping', run: async ctx => { received.push(ctx.input); await ctx.reply('pong'); } });
+  await bot.login('offline-token');
+
+  let mentionReads = 0;
+  const gatewayMessage = (id: string, content: string, author: { id: string; username: string; bot: boolean }) => ({
+    id, content, channelId: '200', guildId: '100', author,
+    get mentions() { mentionReads++; return []; },
+  });
+
+  client.emit(Events.MessageCreate, gatewayMessage('1', '!ping', { id: '2', username: 'other-bot', bot: true }) as never);
+  client.emit(Events.MessageCreate, gatewayMessage('2', '!ping', { id: transport.botID, username: 'self', bot: false }) as never);
+  client.emit(Events.MessageCreate, gatewayMessage('3', 'just chatting', { id: '1', username: 'Hory', bot: false }) as never);
+  await new Promise<void>(resolve => setImmediate(resolve));
+  assert.equal(mentionReads, 0);
+  assert.equal(transport.messages.length, 0);
+
+  client.emit(Events.MessageCreate, gatewayMessage('4', '!!ping hello', { id: '1', username: 'Hory', bot: false }) as never);
+  await new Promise<void>(resolve => setImmediate(resolve));
+  assert.equal(mentionReads, 1);
+  assert.deepEqual(received, ['hello']);
+  assert.equal(transport.messages.at(-1)?.payload.content, 'pong');
+
+  prefixes[0] = '?';
+  client.emit(Events.MessageCreate, gatewayMessage('5', '!ping ignored', { id: '1', username: 'Hory', bot: false }) as never);
+  assert.equal(mentionReads, 1);
+  client.emit(Events.MessageCreate, gatewayMessage('6', '?ping updated', { id: '1', username: 'Hory', bot: false }) as never);
+  await new Promise<void>(resolve => setImmediate(resolve));
+  assert.equal(mentionReads, 2);
+  assert.deepEqual(received, ['hello', 'updated']);
+  await bot.destroy();
+});
+
+test('precompiled flag lookup matches on-the-fly parsing across aliases, defaults and errors', async () => {
+  const defs = [
+    { name: 'count', type: 'integer' as const, aliases: ['n', 'c'], defaultValue: 1 },
+    { name: 'verbose', type: 'boolean' as const, aliases: ['v'], defaultValue: false },
+    { name: 'reason', type: 'string' as const, aliases: ['r'], required: true },
+  ];
+  const lookup = compileFlagLookup(defs);
+  assert.ok(lookup);
+  assert.equal(compileFlagLookup(undefined), undefined);
+
+  for (const tokens of [
+    ['--reason', 'ok'],
+    ['-r=fast', '-n', '5', '-v', 'pos1'],
+    ['-c', '-2', '--verbose=false', '--reason', 'done', '--', '--not-a-flag'],
+  ]) {
+    const direct = parseFlags(defs, tokens);
+    const compiled = parseFlags(defs, tokens, lookup);
+    assert.deepEqual(compiled.tokens, direct.tokens);
+    assert.deepEqual([...compiled.flags], [...direct.flags]);
+  }
+  for (const bad of [['--missing', '1'], ['-r', 'ok', '-c', 'nope'], ['--reason=a', '-r', 'b']]) {
+    assert.throws(() => parseFlags(defs, bad, lookup), { name: 'YuzuhaError' });
+  }
+
+  const transport = new MockTransport();
+  const bot = new Yuzuha({ transport, store: new MemoryStore(), scheduler: false });
+  bot.command({
+    name: 'opt',
+    args: { target: arg.text().required() },
+    flags: { count: arg.integer().alias('n').default(2), verbose: arg.boolean().alias('v').default(false) },
+    run: ctx => ctx.reply(`${ctx.args.get('target')}:${ctx.flags.get('count')}:${ctx.flags.get('verbose')}`),
+  });
+  try {
+    assert.equal(await bot.handle(mockMessage('!opt user -n 7 -v', { id: 'f1' })), 'success');
+    assert.equal(transport.messages.at(-1)?.payload.content, 'user:7:true');
+    assert.equal(await bot.handle(mockMessage('!opt user', { id: 'f2' })), 'success');
+    assert.equal(transport.messages.at(-1)?.payload.content, 'user:2:false');
+    assert.equal(await bot.handle(mockMessage('!opt user -n 1 --count 2', { id: 'f3' })), 'guarded');
+  } finally {
+    await bot.destroy();
+  }
+});
+
+test('index-scanned routing and subcommand resolution preserve Unicode whitespace and large tails', async () => {
+  assert.equal(route('!   \t\u2003\u3000', ['!']), undefined);
+  assert.deepEqual(route('!\u2003PING\t\u00a0hello  world\u3000\ufeff', ['!']), {
+    name: 'ping', input: 'hello  world', prefix: '!',
+  });
+
+  const payload = 'x'.repeat(4096);
+  assert.deepEqual(route(`!!Group\u2003Sub\t${payload}\u00a0`, ['!!', '!']), {
+    name: 'group', input: `Sub\t${payload}`, prefix: '!!',
+  });
+
+  const registry = new CommandRegistry(() => undefined);
+  registry.add({
+    name: 'admin',
+    subcommands: [
+      {
+        name: 'user',
+        aliases: ['u'],
+        subcommands: [{ name: 'ban', aliases: ['b'], run() {} }],
+      },
+    ],
+  });
+
+  const matched = registry.resolve('admin', `\t\u2003U\u3000BAN\n\u00a0${payload}  \ufeff`);
+  assert.ok(matched);
+  assert.equal(matched.compiled.command.name, 'admin user ban');
+  assert.equal(matched.input, payload);
+
+  const missingChild = registry.resolve('admin', '  unknown  arg  ');
+  assert.ok(missingChild);
+  assert.equal(missingChild.compiled.command.name, 'admin');
+  assert.equal(missingChild.input, '  unknown  arg  ');
+
+  const emptyAfterGroup = registry.resolve('admin', '   \u2003  ');
+  assert.ok(emptyAfterGroup);
+  assert.equal(emptyAfterGroup.compiled.command.name, 'admin');
+  assert.equal(emptyAfterGroup.input, '   \u2003  ');
+
+  const partialMatch = registry.resolve('admin', '  user   unknown   tail  ');
+  assert.ok(partialMatch);
+  assert.equal(partialMatch.compiled.command.name, 'admin user');
+  assert.equal(partialMatch.input, 'unknown   tail');
 });
