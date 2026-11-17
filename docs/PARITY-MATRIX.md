@@ -16,10 +16,10 @@ A cobertura é por nome: um método `send` de uma classe conta como coberto se q
 
 | Status | Exports de runtime | Membros |
 |---|---:|---:|
-| coberto-recurso | 51 | 431 |
-| coberto-nativo | 10 | 128 |
+| coberto-recurso | 51 | 432 |
+| coberto-nativo | 10 | 129 |
 | coberto-equivalente | 0 | 55 |
-| só-SDK | 51 | 108 |
+| só-SDK | 51 | 106 |
 | lacuna | 5 | 0 |
 
 Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são listados, mas não contam como lacuna.
@@ -244,7 +244,7 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são
 | `ChannelManager` | `fetchMessage` | método | coberto-recurso |
 | `ChannelManager` | `resolve` | método | coberto-recurso |
 | `ChannelManager` | `send` | método | coberto-recurso |
-| `Client` | `_addMessageToCache` | método | só-SDK |
+| `Client` | `_addMessageToCache` | método | coberto-recurso |
 | `Client` | `_clearMessageCache` | método | só-SDK |
 | `Client` | `_deferredGatewayDispatches` | propriedade | só-SDK |
 | `Client` | `_finalizeReady` | método | só-SDK |
@@ -254,7 +254,7 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são
 | `Client` | `_onGuildReceived` | método | só-SDK |
 | `Client` | `_pendingGuildIds` | propriedade | só-SDK |
 | `Client` | `_readyStubGuildIds` | propriedade | só-SDK |
-| `Client` | `_removeMessageFromCache` | método | só-SDK |
+| `Client` | `_removeMessageFromCache` | método | coberto-recurso |
 | `Client` | `_sendToAllShards` | método | só-SDK |
 | `Client` | `_ws` | propriedade | só-SDK |
 | `Client` | `assertReady` | método | coberto-nativo |
@@ -627,7 +627,7 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são
 | `Message` | `startThread` | método | coberto-recurso |
 | `Message` | `stickers` | propriedade | coberto-nativo |
 | `Message` | `thread` | propriedade | coberto-recurso |
-| `Message` | `tts` | propriedade | coberto-recurso |
+| `Message` | `tts` | propriedade | coberto-nativo |
 | `Message` | `type` | propriedade | coberto-recurso |
 | `Message` | `unpin` | método | coberto-recurso |
 | `Message` | `webhookId` | propriedade | só-SDK |

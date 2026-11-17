@@ -1,10 +1,10 @@
-import { Client, Events, Message } from '@fluxerjs/core';
+import { Client, Events, Message, Routes } from '@fluxerjs/core';
 import type { ClientEventListener } from '@fluxerjs/core';
 import type { IncomingMessage, ModerationAction, ModerationMember, Payload, Transport } from '../../contracts.js';
 import { GuardError, YuzuhaError } from '../../errors.js';
 import { isNotFound, isTransientError, isUndeliveredSend, resolvePolicy, withRetry } from '../../services/retry.js';
 import type { Reliability } from '../../services/retry.js';
-import { replyTarget, safePayload as safe } from './payload.js';
+import { editBody, replyTarget, safePayload as safe } from './payload.js';
 import { compareSnowflake } from '../../domain/moderation.js';
 import type { VoiceModerationOptions } from '../../domain/moderation.js';
 import type { MemberCache } from './member-cache.js';
@@ -40,19 +40,37 @@ export class FluxerTransport implements Transport {
       isUndeliveredSend);
   }
   async edit(channelID: string, messageID: string, payload: Payload): Promise<void> {
-    // Edição não aceita resposta, TTS nem stickers: esses campos são descartados aqui.
-    const { tts: _tts, stickerIds: _stickers, ...options } = safe(payload);
-    await this.reliably(async () => { await (await this.client.channels.fetchMessage(channelID, messageID)).edit(options); });
+    // Edição não aceita resposta, TTS nem stickers: esses campos são descartados por editBody.
+    const body = editBody(payload);
+    const cache = this.client as unknown as { _addMessageToCache?(channelID: string, data: unknown): void };
+    await this.reliably(async () => {
+      const data = await this.client.rest.patch(Routes.channelMessage(channelID, messageID), { body, auth: true });
+      if (data && typeof data === 'object') cache._addMessageToCache?.(channelID, data);
+    });
   }
   async delete(channelID: string, messageID: string): Promise<void> {
+    const cache = this.client as unknown as { _removeMessageFromCache?(channelID: string, messageID: string): void };
     await this.reliably(async attempt => {
-      await this.client.channels.fetchMessage(channelID, messageID)
-        .then(message => message.delete())
-        .catch(error => { if (attempt > 0 && isNotFound(error)) return; throw error; });
+      try {
+        await this.client.rest.delete(Routes.channelMessage(channelID, messageID), { auth: true });
+      } catch (error) {
+        if (attempt > 0 && isNotFound(error)) {
+          cache._removeMessageFromCache?.(channelID, messageID);
+          return;
+        }
+        throw error;
+      }
+      cache._removeMessageFromCache?.(channelID, messageID);
     });
   }
   async react(channelID: string, messageID: string, emoji: string): Promise<void> {
-    await this.reliably(async () => { await (await this.client.channels.fetchMessage(channelID, messageID)).react(emoji); });
+    const channel = this.client.channels.get(channelID);
+    const guildId = channel && typeof channel.isGuild === 'function' && channel.isGuild() ? channel.guildId : undefined;
+    let wire: string | undefined;
+    await this.reliably(async () => {
+      wire ??= await this.client.resolveEmoji(emoji, guildId);
+      await this.client.rest.put(Routes.channelMessageReactionMe(channelID, messageID, wire), { auth: true });
+    });
   }
   async member(guildID: string, userID: string, channelID?: string): Promise<ModerationMember> {
     const cached = this.memberCache?.get(guildID, userID, channelID);
