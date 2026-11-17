@@ -14,3 +14,4 @@ export type {
   Middleware,
   DispatchResult,
 } from './framework/options.js';
+export type { TransportRetryPolicy } from './services/retry.js';

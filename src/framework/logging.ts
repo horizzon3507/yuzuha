@@ -12,6 +12,7 @@ type LogEvent = SchedulerEvent | {
   source?: ErrorSource;
   trigger?: string;
   attempt?: number;
+  delayMs?: number;
   messageID?: string;
   channelID?: string;
   guildID?: string;

@@ -32,6 +32,7 @@ import { HttpService } from '../services/http.js';
 import { createCdn } from '../domain/cdn.js';
 import { emitLog } from './logging.js';
 import { cancellationError } from '../services/cancellation.js';
+import { resolvePolicy } from '../services/retry.js';
 import { EventContext } from '../commands/event-context.js';
 import { adaptScriptEvent, scriptEventNames, validateScriptEvent } from './script-events.js';
 import type { ScriptEventDefinition } from './script-events.js';
@@ -189,9 +190,10 @@ export class Yuzuha {
         }
       },
     });
+    const retryPolicy = resolvePolicy(options.retry);
     this.client = options.client ?? new Client(options.clientOptions);
-    this.reliability = { retry: options.retry, signal: this.shutdown.signal,
-      onRetry: attempt => { if (options.onLog) void emitLog(this.options, { event: 'transport.retry', attempt }); } };
+    this.reliability = { retry: retryPolicy, signal: this.shutdown.signal,
+      onRetry: (attempt, _error, delayMs) => { if (options.onLog) void emitLog(this.options, { event: 'transport.retry', attempt, delayMs }); } };
     if (options.memberCache !== undefined && options.memberCache !== false) {
       const cacheOptions = options.memberCache && typeof options.memberCache === 'object' && !Array.isArray(options.memberCache)
         ? { ...options.memberCache, now: options.memberCache.now ?? options.now }

@@ -91,6 +91,7 @@ export type { StreamAttachmentOptions } from './services/attachments.js';
 export { GuardError, isGuardReason } from './shared/errors.js';
 export type { GuardReason } from './shared/errors.js';
 export { isTransientError } from './services/retry.js';
+export type { TransportRetryPolicy } from './services/retry.js';
 export type { SendOptions } from './commands/context.js';
 export { cleanReason } from './domain/resolvers.js';
 export type { ResolvedMember, ResolvedBan, ResolvedUser, ResolvedLabel } from './domain/resolvers.js';

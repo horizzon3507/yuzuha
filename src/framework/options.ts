@@ -16,6 +16,7 @@ import type { CanvasConfig } from '../domain/canvas.js';
 import type { MemberCacheOptions } from '../infrastructure/fluxer/member-cache.js';
 import type { ConcurrencyOptions } from './concurrency.js';
 import type { PrefixCacheOptions } from './prefix-cache.js';
+import type { TransportRetryPolicy } from '../services/retry.js';
 
 export type { ConcurrencyOptions, PrefixCacheOptions };
 
@@ -79,7 +80,7 @@ export interface YuzuhaOptions {
   hooks?: YuzuhaHooks;
   onCommand?: (ctx: CommandContext, outcome: DispatchResult) => void | Promise<void>;
   onLog?: (record: LogRecord) => void | Promise<void>;
-  retry?: false | { requests?: number; delayMs?: number };
+  retry?: false | TransportRetryPolicy;
   timers?: { setTimeout(fn: () => void, ms: number): unknown; clearTimeout(handle: unknown): void };
   cdn?: { mediaBase?: string };
   /** Mapa nome → emoji copiado para um registro sem protótipo, exposto como `bot.emoji` e `ctx.emoji` (mapa vivo). */
