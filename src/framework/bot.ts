@@ -142,6 +142,7 @@ export class Yuzuha {
     this.scheduler = options.scheduler === false ? undefined : options.scheduler ?? new Scheduler(this.store,
       (task, signal) => this.runScheduled(task, signal), {
         now: options.now,
+        timers: this.timers,
         onEvent: event => this.execution.run(true, () => emitLog(this.options, event)),
         onError: error => this.execution.run(true, () => reportError(this.options, error)),
       });
