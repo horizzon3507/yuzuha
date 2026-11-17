@@ -307,40 +307,69 @@ export class Scheduler {
     return work;
   }
   private async runTick(now: number, generation: number): Promise<void> {
-    const { due, nextDue } = await this.store.read(state => {
+    const globalCap = this.options.globalConcurrency;
+    const { due, nextDue, runningCount } = await this.store.read(state => {
       const eligible: ScheduleRecord[] = [];
       let earliest: number | null = null;
+      let active = 0;
       for (const item of state.schedules) {
-        if (item.paused || item.runningAt != null) continue;
+        if (item.runningAt != null) {
+          active++;
+          continue;
+        }
+        if (item.paused) continue;
         if (item.due <= now) eligible.push(item);
         else if (earliest === null || item.due < earliest) earliest = item.due;
       }
-      eligible.sort((a, b) => (b.priority ?? 0) - (a.priority ?? 0) || a.due - b.due);
-      return { due: eligible.map(item => item.id), nextDue: earliest };
+      if (globalCap !== undefined && active >= globalCap) {
+        return { due: [] as string[], nextDue: earliest, runningCount: active };
+      }
+      if (eligible.length > 1) {
+        eligible.sort((a, b) => (b.priority ?? 0) - (a.priority ?? 0) || a.due - b.due);
+      }
+      return { due: eligible.map(item => item.id), nextDue: earliest, runningCount: active };
     });
     this.lastNextDue = nextDue;
-    if (due.length === 0) {
+    if (due.length === 0 || (globalCap !== undefined && runningCount >= globalCap)) {
       if (this.running && this.activeCycles === 0) this.armTimer();
       return;
     }
     let cursor = 0;
+    let saturated = false;
     const workers = Array.from({ length: Math.min(this.concurrency, due.length) }, async () => {
-      while (cursor < due.length && generation === this.generation) {
+      while (cursor < due.length && generation === this.generation && !saturated) {
         const id = due[cursor++]!;
         let skippedDue: number | null = null;
+        let atCapacity = false;
         const task = await this.store.update(state => {
-          const item = state.schedules.find(task => task.id === id);
-          if (generation !== this.generation || !item || item.paused || item.due > now || item.runningAt != null) return null;
+          if (generation !== this.generation) return null;
+          let item: ScheduleRecord | undefined;
+          let active = 0;
+          for (const candidate of state.schedules) {
+            if (candidate.id === id) {
+              item = candidate;
+              if (globalCap === undefined) break;
+            }
+            if (globalCap !== undefined && candidate.runningAt != null) active++;
+          }
+          if (!item || item.paused || item.due > now || item.runningAt != null) return null;
           if (item.cron !== undefined && item.attempts === 0 && item.missedRun === 'skip' && item.due + 60_000 <= now) {
             item.due = nextCron(item.cron, item.timezone!, Math.floor(now / 60_000) * 60_000 - 1);
             if (item.due > now) { skippedDue = item.due; return null; }
           }
-          if (this.options.globalConcurrency !== undefined && state.schedules.filter(task => task.runningAt != null).length >= this.options.globalConcurrency) return null;
+          if (globalCap !== undefined && active >= globalCap) {
+            atCapacity = true;
+            return null;
+          }
           item.runningAt = now; item.claimID = randomUUID();
           return item;
         });
         if (skippedDue !== null && (this.lastNextDue == null || skippedDue < this.lastNextDue)) {
           this.lastNextDue = skippedDue;
+        }
+        if (atCapacity) {
+          saturated = true;
+          break;
         }
         if (task) await this.runTask(task, now, generation);
       }
