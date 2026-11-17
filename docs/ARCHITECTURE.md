@@ -12,7 +12,7 @@ a essa raiz; os guias ficam em `docs/` e a saída compilada em `dist/`.
 ```text
 src/
   domain/                  Tipos e regras de valores, mensagens, moderação e estado
-  ports/                   Contratos Store, Transport, recursos nativos e acesso ao SDK
+  ports/                   Contratos Store, Transport, RateLimiter, recursos nativos e acesso ao SDK
     resources/             Contratos por área: usuários, cargos, canais, mensagens...
   services/                Autorização, moderação, casos, variáveis, scheduler, HTTP e música
   commands/                Definição, builders, argumentos tipados e contexto
@@ -115,8 +115,8 @@ flowchart LR
 ```
 
 As setas representam dependências de código. Em execução, os serviços chamam
-objetos fornecidos pelas interfaces `Store` e `Transport`. Por isso, testes usam
-`MockTransport` e `MemoryStore` sem substituir regras do núcleo.
+objetos fornecidos pelas interfaces `Store`, `Transport` e `RateLimiter`. Por isso, testes usam
+`MockTransport`, `MemoryStore` e `MemoryRateLimiter` (ou limitadores assíncronos injetados via `rateLimiter`) sem substituir regras do núcleo.
 
 `npm run check:architecture` acompanha imports e reexports locais, inclusive
 caminhos que passam pelos arquivos de compatibilidade. Ele restringe domínio,
@@ -191,8 +191,8 @@ por instância e substituição de arquivo; SQLite usa transações entre conex�
 
 `destroy` retira os listeners próprios, impede novos despachos, aborta os sinais
 cooperativos de comandos/eventos e espera os handlers ativos,
-encerra o client e fecha o store criado pelo próprio bot. Stores injetados
-continuam pertencendo ao chamador. A CLI encerra também o store da config.
+encerra o client e fecha o store e o `MemoryRateLimiter` criados pelo próprio bot.
+Stores e `rateLimiter` injetados continuam pertencendo ao chamador. A CLI encerra também o store da config.
 Chamadas externas repetidas aguardam a mesma operação. Uma chamada de dentro
 do próprio comando, middleware ou hook apenas solicita a parada e retorna,
 permitindo que o handler termine sem esperar por si mesmo. O login pendente

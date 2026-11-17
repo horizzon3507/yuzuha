@@ -239,9 +239,11 @@ resultado remoto desconhecido; confirme no servidor antes de executar novamente.
 Um crash entre a ação e o registro também pode deixar a ação sem caso. Não existe
 garantia de exactly-once entre o serviço remoto e armazenamento local.
 
-Cooldown e deduplicação são por processo, em memória. IDs de mensagens são
-deduplicados por 60s, com limite de 10000 entradas. Cooldowns suportam até 100000
-entradas ativas. Não use isso como coordenação entre processos.
+Por padrão, cooldown e deduplicação usam `MemoryRateLimiter` por processo, em
+memória: IDs de mensagens são deduplicados por 60s (até 100000 entradas) e
+cooldowns suportam até 100000 entradas ativas. Para coordenar múltiplas
+instâncias, injete um `RateLimiter` distribuído em `YuzuhaOptions.rateLimiter`
+(veja [FRAMEWORK.md](FRAMEWORK.md)).
 
 ## Agendamentos
 
