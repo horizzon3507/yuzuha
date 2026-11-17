@@ -1,13 +1,13 @@
 import type { ArgumentDefinition } from './definition.js';
-import type { ArgumentValue } from './arguments.js';
+import { assertCustomArgumentTypeName } from './arguments.js';
 import { YuzuhaError } from '../shared/errors.js';
 
-export type ArgumentSchema = Readonly<Record<string, ArgumentBuilder<ArgumentValue, boolean>>>;
+export type ArgumentSchema = Readonly<Record<string, ArgumentBuilder<any, boolean>>>;
 export type InferArgument<B> = B extends ArgumentBuilder<infer T, infer Required>
   ? Required extends true ? T : T | undefined : never;
 
 /** Immutable argument definition; a builder may safely be reused in multiple commands. */
-export class ArgumentBuilder<T extends ArgumentValue, Required extends boolean = false> {
+export class ArgumentBuilder<T = unknown, Required extends boolean = false> {
   declare readonly valueType: T;
   declare readonly isRequired: Required;
   readonly definition: Readonly<Omit<ArgumentDefinition, 'name'>>;
@@ -21,7 +21,7 @@ export class ArgumentBuilder<T extends ArgumentValue, Required extends boolean =
     Object.freeze(this);
   }
 
-  private copy<V extends ArgumentValue = T, R extends boolean = Required>(changes: Partial<ArgumentDefinition>): ArgumentBuilder<V, R> {
+  private copy<V = T, R extends boolean = Required>(changes: Partial<ArgumentDefinition>): ArgumentBuilder<V, R> {
     return new ArgumentBuilder<V, R>({ ...this.definition, ...changes });
   }
 
@@ -55,6 +55,8 @@ export const arg = Object.freeze({
   user: (): ArgumentBuilder<string> => new ArgumentBuilder({ type: 'user' }),
   duration: (): ArgumentBuilder<number> => new ArgumentBuilder({ type: 'duration' }),
   boolean: (): ArgumentBuilder<boolean> => new ArgumentBuilder({ type: 'boolean' }),
+  custom: <T = unknown>(typeName: string): ArgumentBuilder<T> =>
+    new ArgumentBuilder({ type: 'custom', customType: assertCustomArgumentTypeName(typeName) }),
 });
 
 export function argumentDefinitions(schema: ArgumentSchema): ArgumentDefinition[] {

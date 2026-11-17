@@ -4,6 +4,7 @@ export const YUZUHA_ERROR_CODES = [
   'API_ERROR',
   'ARGUMENT',
   'ARGUMENT_SCHEMA',
+  'ARGUMENT_TYPE',
   'ARITY',
   'ARRAY',
   'ARRAY_CHUNK',

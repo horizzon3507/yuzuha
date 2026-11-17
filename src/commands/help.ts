@@ -14,7 +14,8 @@ export function commandUsage(
 ): string {
   const args = (command.args ?? []).map(placeholder);
   const flags = (command.flags ?? []).map(flag => {
-    const value = `--${flag.name}${flag.type === 'boolean' ? '' : ` <${flag.type ?? 'string'}>`}`;
+    const label = flag.type === 'custom' ? (flag.customType ?? 'custom') : (flag.type ?? 'string');
+    const value = `--${flag.name}${flag.type === 'boolean' ? '' : ` <${label}>`}`;
     return flag.required && flag.defaultValue === undefined ? value : `[${value}]`;
   });
   if (command.subcommands?.length) args.push(t('usageSubcommand'));
@@ -31,8 +32,13 @@ export function commandHelp(
   if (command.aliases?.length) lines.push(t('helpAliases', command.aliases));
   const describe = (argument: ArgumentDefinition, flag: boolean): string => {
     const name = flag ? `--${argument.name}${argument.aliases?.length ? ` (${argument.aliases.map(alias => `${alias.length === 1 ? '-' : '--'}${alias}`).join(', ')})` : ''}` : argument.name;
-    const details = [argument.type ?? 'string', argument.required && argument.defaultValue === undefined ? t('helpRequired') : t('helpOptional')];
-    if (argument.choices) details.push(t('helpChoices', argument.choices));
+    const typeLabel = argument.type === 'custom' ? (argument.customType ?? 'custom') : (argument.type ?? 'string');
+    const details = [typeLabel, argument.required && argument.defaultValue === undefined ? t('helpRequired') : t('helpOptional')];
+    if (argument.choices) {
+      details.push(t('helpChoices', argument.choices.map(choice =>
+        typeof choice === 'number' || typeof choice === 'boolean' ? choice : String(choice),
+      )));
+    }
     if (argument.defaultValue !== undefined) details.push(t('helpDefault', String(argument.defaultValue)));
     if (argument.min !== undefined) details.push(t('helpMin', argument.min));
     if (argument.max !== undefined) details.push(t('helpMax', argument.max));
