@@ -18,6 +18,7 @@ import type { CompiledCommand } from './command-registry.js';
 import { runMiddleware } from './middleware.js';
 import type { DispatchResult, Middleware, YuzuhaOptions, YuzuhaPlugin } from './options.js';
 import { RateLimits } from './rate-limits.js';
+import { ConcurrencyLimiter } from './concurrency.js';
 import { reportError, userError } from './reporting.js';
 import { route, validatePrefixes } from './routing.js';
 import { defineEvent, NativeEvents } from './events.js';
@@ -112,6 +113,7 @@ export class Yuzuha {
   private readonly emojiMap: Record<string, string>;
   private readonly memberCache?: MemberCache;
   private detachMemberCache?: () => void;
+  private readonly concurrencyLimiter?: ConcurrencyLimiter;
   private readonly maintenance: StateMaintenance;
   private readonly sweepIntervalMs: number | false;
   private readonly sweepBatch: number;
@@ -169,6 +171,9 @@ export class Yuzuha {
     this.resources = options.resources ?? new FluxerResources(this.client, this.cdnService, this.reliability);
     this.cdnService = createCdn(options.cdn?.mediaBase);
     this.emojiMap = emojiRegistry(options.emoji);
+    if (options.concurrency !== undefined) {
+      this.concurrencyLimiter = new ConcurrencyLimiter(options.concurrency);
+    }
     const sweepOptions = resolveVariableSweepOptions(options.variables);
     this.sweepIntervalMs = sweepOptions.intervalMs;
     this.sweepBatch = sweepOptions.batch;
@@ -485,6 +490,7 @@ export class Yuzuha {
     this.loginAbort?.abort();
     this.scheduler?.stop();
     this.clearVariableSweepTimer();
+    this.concurrencyLimiter?.close();
     this.events.close();
     if (this.listening) this.client.off(Events.MessageCreate, this.listener);
     this.listening = false;
@@ -562,53 +568,74 @@ export class Yuzuha {
       resolved = this.resolveCommand(message, configured);
     }
     if (!resolved) return 'ignored';
-    const { compiled, prefix } = resolved;
-    let ctx: CommandContext | undefined;
-    let outcome: DispatchResult = 'success';
-    const started = this.options.onLog ? performance.now() : 0;
+    let releaseSlot: (() => void) | undefined;
     try {
-      ctx = new CommandContext({ message, transport: this.transport, store: this.store, command: compiled.command,
-        input: resolved.input, prefix, lineage: compiled.lineage,
-        help: this.contextHelp, cooldown: this.contextCooldown,
-        native: { client: this.client, message: message.raw instanceof Message ? message.raw : undefined },
-        resources: this.resources, scheduler: this.scheduler, http: this.http, music: this.music, voice: this.voice,
-        canvas: { renderer: canvasRenderer, config: this.options.canvas }, now: this.options.now, signal, executionID,
-        cdn: this.cdnService, disableResourceAuthorization: this.options.unsafeDisableResourceAuthorization === true, emoji: this.emojiMap,
-        deleteLater: (channelID, messageID, ttlMs) => this.deleteLater(channelID, messageID, ttlMs) });
-      if (this.options.onLog) await emitLog(this.options, { event: 'command.start', executionID: ctx.executionID, command: ctx.command.name });
-      if (signal.aborted) throw cancellationError();
-      await ctx.prepare();
-      const current = ctx;
-      for (const check of compiled.command.checks ?? []) {
-        const result = await check(current);
-        if (result === false || typeof result === 'string') throw new GuardError(typeof result === 'string' ? result : 'Você não pode executar este comando.', 'GENERIC');
+      if (this.concurrencyLimiter) {
+        const acquired = await this.concurrencyLimiter.acquire(message.guildID, signal);
+        if (!acquired) {
+          if (!this.closing && !signal.aborted && this.options.onLog) {
+            await emitLog(this.options, {
+              event: 'dispatch.dropped',
+              reason: 'concurrency',
+              guildID: message.guildID,
+              channelID: message.channelID,
+            });
+          }
+          return 'ignored';
+        }
+        releaseSlot = acquired;
+        if (this.closing || signal.aborted) return 'ignored';
       }
-      const execute = async () => {
-        if (compiled.program) {
-          const programEngine = (compiled as { programEngine?: ScriptEngine }).programEngine ?? this.scriptEngine!;
-          const output = programEngine.text(await programEngine.execute(compiled.program, current)).trim();
-          if (output) await current.reply(output);
-        } else if (compiled.command.run) await compiled.command.run(current);
-        else throw new GuardError(`${resolved.input ? 'Subcomando desconhecido.\n' : ''}${this.help(compiled.command.name, prefix)}`, 'INVALID_ARGUMENT');
-      };
-      const local = compiled.command.middleware ?? [];
-      if (this.middleware.length) await runMiddleware(local.length ? [...this.middleware, ...local] : this.middleware, current, execute);
-      else if (local.length) await runMiddleware(local, current, execute);
-      else await execute();
-    } catch (error) {
-      onFailure?.(error, ctx);
-      outcome = error instanceof GuardError ? 'guarded' : 'error';
-      try { if (!signal.aborted) await (ctx ? ctx.reply(userError(error, ctx)) : this.transport.reply(message, { content: userError(error, ctx) })); }
-      catch (replyError) { await reportError(this.options, replyError, ctx); }
-      if (!(error instanceof GuardError)) await reportError(this.options, error, ctx);
+      const { compiled, prefix } = resolved;
+      let ctx: CommandContext | undefined;
+      let outcome: DispatchResult = 'success';
+      const started = this.options.onLog ? performance.now() : 0;
+      try {
+        ctx = new CommandContext({ message, transport: this.transport, store: this.store, command: compiled.command,
+          input: resolved.input, prefix, lineage: compiled.lineage,
+          help: this.contextHelp, cooldown: this.contextCooldown,
+          native: { client: this.client, message: message.raw instanceof Message ? message.raw : undefined },
+          resources: this.resources, scheduler: this.scheduler, http: this.http, music: this.music, voice: this.voice,
+          canvas: { renderer: canvasRenderer, config: this.options.canvas }, now: this.options.now, signal, executionID,
+          cdn: this.cdnService, disableResourceAuthorization: this.options.unsafeDisableResourceAuthorization === true, emoji: this.emojiMap,
+          deleteLater: (channelID, messageID, ttlMs) => this.deleteLater(channelID, messageID, ttlMs) });
+        if (this.options.onLog) await emitLog(this.options, { event: 'command.start', executionID: ctx.executionID, command: ctx.command.name });
+        if (signal.aborted) throw cancellationError();
+        await ctx.prepare();
+        const current = ctx;
+        for (const check of compiled.command.checks ?? []) {
+          const result = await check(current);
+          if (result === false || typeof result === 'string') throw new GuardError(typeof result === 'string' ? result : 'Você não pode executar este comando.', 'GENERIC');
+        }
+        const execute = async () => {
+          if (compiled.program) {
+            const programEngine = (compiled as { programEngine?: ScriptEngine }).programEngine ?? this.scriptEngine!;
+            const output = programEngine.text(await programEngine.execute(compiled.program, current)).trim();
+            if (output) await current.reply(output);
+          } else if (compiled.command.run) await compiled.command.run(current);
+          else throw new GuardError(`${resolved.input ? 'Subcomando desconhecido.\n' : ''}${this.help(compiled.command.name, prefix)}`, 'INVALID_ARGUMENT');
+        };
+        const local = compiled.command.middleware ?? [];
+        if (this.middleware.length) await runMiddleware(local.length ? [...this.middleware, ...local] : this.middleware, current, execute);
+        else if (local.length) await runMiddleware(local, current, execute);
+        else await execute();
+      } catch (error) {
+        onFailure?.(error, ctx);
+        outcome = error instanceof GuardError ? 'guarded' : 'error';
+        try { if (!signal.aborted) await (ctx ? ctx.reply(userError(error, ctx)) : this.transport.reply(message, { content: userError(error, ctx) })); }
+        catch (replyError) { await reportError(this.options, replyError, ctx); }
+        if (!(error instanceof GuardError)) await reportError(this.options, error, ctx);
+      }
+      if (ctx && this.options.onCommand) {
+        try { await this.options.onCommand(ctx, outcome); }
+        catch (error) { await reportError(this.options, error, ctx); }
+      }
+      if (ctx && this.options.onLog) await emitLog(this.options, { event: 'command.finish', executionID: ctx.executionID,
+        command: ctx.command.name, outcome, durationMs: performance.now() - started });
+      return outcome;
+    } finally {
+      releaseSlot?.();
     }
-    if (ctx && this.options.onCommand) {
-      try { await this.options.onCommand(ctx, outcome); }
-      catch (error) { await reportError(this.options, error, ctx); }
-    }
-    if (ctx && this.options.onLog) await emitLog(this.options, { event: 'command.finish', executionID: ctx.executionID,
-      command: ctx.command.name, outcome, durationMs: performance.now() - started });
-    return outcome;
   }
 }
 

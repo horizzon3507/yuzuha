@@ -13,6 +13,9 @@ import type { MusicManager } from '../services/music.js';
 import type { NativeVoice } from '../ports/voice.js';
 import type { CanvasConfig } from '../domain/canvas.js';
 import type { MemberCacheOptions } from '../infrastructure/fluxer/member-cache.js';
+import type { ConcurrencyOptions } from './concurrency.js';
+
+export type { ConcurrencyOptions };
 
 export type DispatchResult = 'ignored' | 'success' | 'guarded' | 'error';
 export type Middleware = (ctx: CommandContext, next: () => Promise<void>) => Promise<void>;
@@ -54,5 +57,6 @@ export interface YuzuhaOptions {
   emoji?: Record<string, string>;
   memberCache?: false | MemberCacheOptions;
   variables?: false | VariableSweepOptions;
+  concurrency?: ConcurrencyOptions;
   unsafeDisableResourceAuthorization?: boolean;
 }

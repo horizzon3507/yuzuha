@@ -3,7 +3,7 @@ import type { SchedulerEvent } from '../services/scheduler.js';
 
 type LogEvent = SchedulerEvent | {
   event: 'command.start' | 'command.finish' | 'event.start' | 'event.finish' | 'error'
-    | 'transport.retry' | 'message.ttl_failed' | 'authorization.disabled';
+    | 'transport.retry' | 'message.ttl_failed' | 'authorization.disabled' | 'dispatch.dropped';
   executionID?: string;
   command?: string;
   outcome?: DispatchResult;
@@ -12,6 +12,8 @@ type LogEvent = SchedulerEvent | {
   attempt?: number;
   messageID?: string;
   channelID?: string;
+  guildID?: string;
+  reason?: 'concurrency';
 };
 export type LogRecord = Readonly<{ timestamp: string } & LogEvent>;
 
