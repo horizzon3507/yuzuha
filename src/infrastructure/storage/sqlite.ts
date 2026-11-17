@@ -1,4 +1,4 @@
-import { variableNameKey, variablePage } from '../../domain/variable-query.js';
+import { variableIdentity, variableNameKey, variablePage } from '../../domain/variable-query.js';
 import type { VariableQuery, VariablePage } from '../../domain/variable-query.js';
 import type { JsonValue } from '../../domain/state.js';
 import { cloneValue } from '../../shared/clone.js';
@@ -75,6 +75,19 @@ export class SQLiteStore implements Store {
         db.exec('COMMIT');
         return result;
       } catch (error) { db.exec('ROLLBACK'); throw error; }
+    });
+  }
+
+  readVariable(key: string, clock: () => number): Promise<JsonValue | undefined> {
+    return this.queue.run(async () => {
+      await this.open();
+      const now = clock();
+      const parts = variableIdentity(key);
+      const row = parts
+        ? this.statements!.selectScopedVariable.get(parts[0], parts[1], variableNameKey(parts[2]), now)
+        : this.statements!.selectRawVariable.get(key, now);
+      if (!row) return undefined;
+      return parseStoredJson(String(row['value_json'])) as JsonValue;
     });
   }
 
