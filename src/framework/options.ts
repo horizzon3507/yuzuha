@@ -24,6 +24,10 @@ export interface YuzuhaPlugin {
   events?: NativeEvent[];
   scriptEvents?: ScriptEventDefinition[];
 }
+export interface VariableSweepOptions {
+  sweepIntervalMs?: number | false;
+  sweepBatch?: number;
+}
 export interface YuzuhaOptions {
   prefix?: string | string[] | ((message: IncomingMessage) => string | string[] | Promise<string | string[]>);
   client?: Client;
@@ -49,5 +53,6 @@ export interface YuzuhaOptions {
   /** Mapa nome → emoji copiado para um registro sem protótipo, exposto como `bot.emoji` e `ctx.emoji` (mapa vivo). */
   emoji?: Record<string, string>;
   memberCache?: false | MemberCacheOptions;
+  variables?: false | VariableSweepOptions;
   unsafeDisableResourceAuthorization?: boolean;
 }
