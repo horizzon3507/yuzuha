@@ -6,6 +6,7 @@ import { join } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 import { MemoryStore, JsonStore, SQLiteStore, CommandContext, GuardError } from '../src/index.js';
 import { variableKey } from '../src/domain/state.js';
+import { variableNameKey } from '../src/domain/variable-query.js';
 import type { Store } from '../src/index.js';
 import { VariableService } from '../src/services/variables.js';
 import { MockTransport, mockMessage } from '../src/testing.js';
@@ -71,11 +72,10 @@ test('SQLite query index refreshes after another connection, rollback, raw write
   assert.deepEqual((await first.query('guild', { prefix: 'rolled' })).entries, []);
   const raw = new DatabaseSync(path);
   try {
-    const plan = raw.prepare('EXPLAIN QUERY PLAN SELECT value_json FROM yuzuha_variable_index WHERE scope=? AND subject=? AND name_key>=? AND name_key<? ORDER BY name_key LIMIT 10').all('guild', '100', '', 'g');
+    const plan = raw.prepare('EXPLAIN QUERY PLAN SELECT value_json FROM yuzuha_variables WHERE scope=? AND subject=? AND name_key>=? AND name_key<? ORDER BY name_key LIMIT 10').all('guild', '100', '', 'g');
     assert.match(String(plan[0]!['detail']), /SEARCH.*PRIMARY KEY/);
-    const state = await a.read(s => s);
-    state.variables[variableKey('guild', '100', 'external')] = true;
-    raw.prepare('UPDATE yuzuha_state SET value=? WHERE id=1').run(JSON.stringify(state));
+    raw.prepare('INSERT INTO yuzuha_variables (scope, subject, name_key, name_json, value_json, expires_at) VALUES (?, ?, ?, ?, ?, ?)')
+      .run('guild', '100', variableNameKey('external'), JSON.stringify('external'), JSON.stringify(true), null);
     assert.equal((await second.query('guild', { prefix: 'external' })).entries[0]?.value, true);
   } finally { raw.close(); }
   await a.update(s => { s.variables = { [variableKey('guild', '100', 'replacement')]: null }; });
