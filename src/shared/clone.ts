@@ -1,5 +1,11 @@
-/** Avoids the structured-clone machinery for immutable primitive values. */
+export const CLONE_TARGET = Symbol('yuzuha.cloneTarget');
+
+/** Avoids the structured-clone machinery for immutable primitive values and supports COW snapshots. */
 export function cloneValue<T>(value: T): T {
-  return value === null || (typeof value !== 'object' && typeof value !== 'function' && typeof value !== 'symbol')
-    ? value : structuredClone(value);
+  if (value === null || (typeof value !== 'object' && typeof value !== 'function' && typeof value !== 'symbol')) {
+    return value;
+  }
+  const cloneTarget = (value as { [CLONE_TARGET]?: () => T })[CLONE_TARGET];
+  if (typeof cloneTarget === 'function') return cloneTarget();
+  return structuredClone(value);
 }
