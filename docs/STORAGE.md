@@ -17,7 +17,7 @@ ser escolhido com `new JsonStore('/caminho/state.json')`.
 |---|---|---|
 | `MemoryStore` | Somente memória | Fila de transações por instância |
 | `JsonStore` | JSON, schema 2, arquivo temporário + fsync + rename | Uma instância escritora por arquivo |
-| `SQLiteStore` | SQLite nativo do Node, WAL | Transações `BEGIN IMMEDIATE` entre conexões/processos |
+| `SQLiteStore` | SQLite nativo do Node, schema v3 normalizado e WAL | Transações `BEGIN IMMEDIATE` e claims atômicas entre conexões/processos |
 
 Os stores são abertos apenas no primeiro acesso. Criar um bot ou executar `check`
 não cria estado. Novas pastas de dados usam modo `0700`; arquivos de estado usam
@@ -53,14 +53,15 @@ grava as alterações pendentes e recusa operações futuras (`read`, `readVaria
 o chamador continua responsável por chamar `await store.close()` após
 `await bot.destroy()` para garantir a gravação final.
 
-Na 0.1.6, memória e JSON atendem `ctx.data.*.get` por leitura pontual: a fila
-aguarda operações anteriores, avalia o relógio de TTL e copia somente o valor
-selecionado. O contrato `Store.readVariable(key, now)` é opcional; `now` é uma
-função de relógio, chamada dentro da operação serializada. `undefined` significa
-ausente ou expirado; `null` é um valor persistente válido. `Store.read` continua
-fornecendo snapshots completos e stores próprios podem manter apenas esse método.
-SQLite reutiliza statements, mantendo a leitura/validação do estado completo,
-WAL e os mesmos limites de escala descritos abaixo.
+Memória, JSON e SQLite atendem `ctx.data.*.get` por leitura pontual (`Store.readVariable(key, now)`):
+a fila aguarda operações anteriores, avalia o relógio de TTL dentro da operação
+serializada e copia somente o valor selecionado. `undefined` significa ausente ou
+expirado; `null` é um valor persistente válido. `Store.read` continua fornecendo
+snapshots completos do contrato `State` (schema 2), e stores próprios podem manter
+apenas `read` e `update`. No `SQLiteStore`, o `open()` prepara e armazena em cache
+todos os `StatementSync` (limpos em `close()`), permitindo que `readVariable` e
+`queryVariables` consultem diretamente `yuzuha_variables` e `yuzuha_raw_variables`
+com filtragem de TTL em SQL, sem hidratar o estado completo.
 
 ```ts
 import { defineCommand, SQLiteStore, Yuzuha } from 'yuzuha';
@@ -78,11 +79,20 @@ process.once('SIGINT', async () => {
 
 O SQLite usa `node:sqlite`, disponível na versão mínima do Node. Essa API pode
 emitir aviso experimental nas versões do Node em que ainda é experimental.
-A importação é lazy: quem usa JSON não carrega SQLite. `busy_timeout` é de 5s.
-O estado fica em um registro JSON dentro de uma transação SQLite. Isso preserva
-o contrato do store e a numeração atômica; não é uma modelagem SQL por entidade.
-É apropriado para bots pequenos/médios; bases muito grandes exigirão um adaptador
-específico. `:memory:` é aceito para testes.
+A importação é lazy: quem usa JSON não carrega SQLite. `busy_timeout` é de 5s e
+`:memory:` é aceito para testes.
+
+O armazenamento SQLite usa o **schema normalizado v3** com seis tabelas:
+`yuzuha_meta`, `yuzuha_variables`, `yuzuha_raw_variables`, `yuzuha_cases`,
+`yuzuha_schedules` (com índice `yuzuha_schedules_due_idx`) e
+`yuzuha_schedule_history`. Bancos legados v2 (`yuzuha_state`,
+`yuzuha_variable_index`, `yuzuha_variable_index_meta` e trigger
+`yuzuha_variables_dirty`) são migrados atomicamente para v3 na primeira abertura
+gravável (`SQLiteStore`), mantendo os comandos CLI somente leitura
+(`yuzuha data stats/backup/restore` sem `--apply`) compatíveis com bancos v2 e v3
+sem modificar bytes em disco. Operações `update()` aplicam sincronização por delta
+entre o baseline lido e o estado validado, evitando reescrever tabelas não
+alteradas. O contrato externo `State` permanece em `schema: 2`.
 
 ## Propriedade e encerramento
 
@@ -241,10 +251,17 @@ e recusam tarefas reivindicadas. Uma claim identifica a execução: uma conclus�
 atrasada não pode finalizar uma claim nova. Recuperação local não libera tarefas
 que ainda estão em execução naquele scheduler.
 
-Tarefas de `$schedule` e `ctx.scheduler` ficam em `state.schedules`. O scheduler
-reivindica cada tarefa com `runningAt` dentro de um `store.update` antes de
-executar, impedindo que dois ticks concorrentes rodem a mesma tarefa. Uma tarefa
-repetível avança `due` pelo intervalo e não acumula execuções perdidas.
+Tarefas de `$schedule` e `ctx.scheduler` ficam em `state.schedules` (tabela
+`yuzuha_schedules` no SQLite). O `Store` expõe os hooks opcionais
+`claimDueSchedules` e `recoverSchedules`: quando presentes (como no `SQLiteStore`),
+o scheduler reivindica até `concurrency` tarefas elegíveis diretamente via
+`UPDATE` SQL atômico — ordenadas por `(b.priority ?? 0) - (a.priority ?? 0)`,
+`due` crescente e ordem de inserção, respeitando `globalConcurrency`, políticas
+`missedRun: 'skip'` e cálculo de `nextDue` — e libera leases órfãs sem hidratar
+variáveis, casos ou histórico; ticks ociosos ou saturados fazem apenas pré-checagem
+de leitura sem lock de escrita. Stores sem esses hooks usam automaticamente o
+caminho padrão via `store.read` e `store.update`. Uma tarefa repetível avança
+`due` pelo intervalo e não acumula execuções perdidas.
 
 Falhas operacionais são tentadas novamente por padrão após 30 segundos, até cinco tentativas. Uma tarefa
 que estava em execução e cujo processo morreu fica com `runningAt` antigo; após
@@ -431,15 +448,17 @@ de acesso de `userFor`. Resultados são cópias isoladas. Cada página represent
 um snapshot separado: exclusões ou inserções entre consultas podem alterar as
 páginas seguintes; não há cursor que congele o banco inteiro.
 
-SQLite usa uma tabela derivada com chave primária de escopo, sujeito e nome
-codificado em UTF-16 hexadecimal. A primeira consulta após uma escrita reconstrói
-o índice na mesma transação; consultas seguintes leem o intervalo indexado sem
-decodificar o snapshot inteiro. Um trigger invalida o índice mesmo se outra
-conexão, inclusive uma versão anterior do pacote, atualizar `yuzuha_state`.
-Rollback não publica um índice parcial; restauração invalida os dados derivados.
-Isso melhora leituras paginadas repetidas, mas a escrita continua serializando
-o estado integral. Não é um banco de coleções com índices por campos de valores.
+No SQLite (schema v3), `yuzuha_variables` é a fonte primária com chave primária
+`(scope, subject, name_key)` em hexadecimal UTF-16 (`WITHOUT ROWID`), enquanto
+chaves não escopadas e expirações órfãs ficam em `yuzuha_raw_variables`. Tanto
+`readVariable` quanto `queryVariables` consultam diretamente essas tabelas com
+filtragem de TTL (`expires_at IS NULL OR expires_at > ?`) em SQL, usando os
+`StatementSync` em cache sem hidratar o estado completo nem manter tabela ou
+trigger de índice derivado. Escritas em `update()` e rollbacks transacionais
+atualizam a tabela normalizada atomicamente na mesma transação.
 
 Memória, JSON e stores customizados sem `queryVariables` usam uma varredura e
-ordenação do snapshot. O port novo é opcional; implementar `queryVariables`
-exige preservar TTL, ordem, escopos, limite e isolamento dos retornos.
+ordenação do snapshot. Os métodos `readVariable`, `queryVariables`,
+`claimDueSchedules` e `recoverSchedules` em `Store` são opcionais; implementá-los
+exige preservar TTL, ordem, escopos, limite, isolamento dos retornos e garantias
+de concorrência.
