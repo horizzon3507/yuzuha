@@ -42,6 +42,10 @@
       "types": "./dist/tooling.d.ts",
       "import": "./dist/tooling.js"
     },
+    "./metrics": {
+      "types": "./dist/metrics.d.ts",
+      "import": "./dist/metrics.js"
+    },
     "./music": {
       "types": "./dist/music.d.ts",
       "import": "./dist/music.js"
