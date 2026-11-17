@@ -59,6 +59,15 @@ function present(state: Readonly<State>, key: string, now: number): boolean {
   return Object.hasOwn(state.variables, key) && (expiry === undefined || expiry > now);
 }
 
+function presentOrPurge(state: State, key: string, now: number): boolean {
+  const expiry = state.variableExpirations?.[key];
+  if (expiry !== undefined && expiry <= now) {
+    remove(state, key);
+    return false;
+  }
+  return Object.hasOwn(state.variables, key);
+}
+
 function remove(state: State, key: string): void {
   delete state.variables[key];
   if (state.variableExpirations) delete state.variableExpirations[key];
@@ -141,14 +150,14 @@ export class VariableService {
       const scope = (name: VariableScope, targetUserID?: string): TransactionScope => Object.freeze({
         get: (property: string, fallback: JsonValue = null) => {
           const id = key(name, property, targetUserID);
-          return cloneValue(present(state, id, now) ? state.variables[id]! : fallback);
+          return cloneValue(presentOrPurge(state, id, now) ? state.variables[id]! : fallback);
         },
         set: (property: string, value: JsonValue, options: VariableOptions = {}) => {
           write(state, key(name, property, targetUserID), value, expiresAt(options.ttlMs, now));
         },
         delete: (property: string) => { remove(state, key(name, property, targetUserID)); },
         update: <V extends JsonValue>(property: string, updater: (current: JsonValue) => V, fallback: JsonValue = null): V => {
-          const id = key(name, property, targetUserID), exists = present(state, id, now);
+          const id = key(name, property, targetUserID), exists = presentOrPurge(state, id, now);
           const value = updater(cloneValue(exists ? state.variables[id]! : fallback));
           assertSynchronous(value);
           write(state, id, value, exists ? state.variableExpirations?.[id] ?? null : null);
@@ -156,7 +165,7 @@ export class VariableService {
         },
         expire: (property: string, ttlMs: number | null) => {
           const expiry = expiresAt(ttlMs, now), id = key(name, property, targetUserID);
-          if (!present(state, id, now)) { remove(state, id); return false; }
+          if (!presentOrPurge(state, id, now)) { remove(state, id); return false; }
           if (expiry === null) {
             if (state.variableExpirations) delete state.variableExpirations[id];
           } else {
@@ -167,7 +176,7 @@ export class VariableService {
         },
         ttl: (property: string) => {
           const id = key(name, property, targetUserID);
-          if (!present(state, id, now)) return -2;
+          if (!presentOrPurge(state, id, now)) return -2;
           const expiry = state.variableExpirations?.[id];
           return expiry === undefined ? -1 : expiry - now;
         },
