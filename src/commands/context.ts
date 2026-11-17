@@ -13,7 +13,7 @@ import { sendStreamAttachment } from '../services/attachments.js';
 import type { StreamAttachmentOptions } from '../services/attachments.js';
 import { bindHttp } from '../services/http.js';
 import type { HttpService } from '../services/http.js';
-import { AuthorizationService, requireGuild } from '../services/authorization.js';
+import { AuthorizationService, MemberMemo, requireGuild } from '../services/authorization.js';
 import { CaseService } from '../services/cases.js';
 import { ModerationService } from '../services/moderation.js';
 import { VariableService } from '../services/variables.js';
@@ -98,6 +98,7 @@ export class CommandContext {
   private readonly prefix: string;
   private authorizationService?: AuthorizationService;
   private moderationService?: ModerationService;
+  private memberMemo?: MemberMemo;
   private caseService?: CaseService;
   private variableService?: VariableService;
   private readonly scope: { guildID: string; authorID: string };
@@ -149,8 +150,9 @@ export class CommandContext {
     this.nativeResources = options.resources;
   }
 
-  private get authorization(): AuthorizationService { return this.authorizationService ??= new AuthorizationService(this.transport, this.scope); }
-  private get moderation(): ModerationService { return this.moderationService ??= new ModerationService(this.transport, this.store, this.scope); }
+  private get memo(): MemberMemo { return this.memberMemo ??= new MemberMemo(this.transport); }
+  private get authorization(): AuthorizationService { return this.authorizationService ??= new AuthorizationService(this.transport, this.scope, this.memo); }
+  private get moderation(): ModerationService { return this.moderationService ??= new ModerationService(this.transport, this.store, this.scope, this.memo); }
   private get cases(): CaseService { return this.caseService ??= new CaseService(this.store); }
   private get variables(): VariableService { return this.variableService ??= new VariableService(this.store, this.scope, this.now); }
   get members(): MemberService { return this.memberService ??= new MemberService(this.transport, this.scope, () => this.resources.users); }
@@ -206,7 +208,7 @@ export class CommandContext {
     if (!this.nativeResources) throw new YuzuhaError('NATIVE_UNAVAILABLE', 'Os recursos nativos não foram fornecidos a este contexto.');
     if (this.scopedResources) return this.scopedResources;
     const source = this.disableResourceAuthorization ? this.nativeResources
-      : bindAuthorizedResources(this.nativeResources, this.transport, { guildID: this.guildID, authorID: this.authorID });
+      : bindAuthorizedResources(this.nativeResources, this.transport, this.scope, this.memo);
     const collectors = source.collectors;
     return this.scopedResources = { users: source.users, roles: source.roles, channels: source.channels,
       messages: source.messages, webhooks: source.webhooks, expressions: source.expressions,
@@ -328,8 +330,21 @@ export class CommandContext {
 
   async prepare(): Promise<void> {
     if (this.command.guildOnly) this.requireGuild();
-    for (const permission of this.command.permissions ?? []) await this.requirePermission(permission);
-    for (const permission of this.command.botPermissions ?? []) await this.requirePermission(permission, true);
+    const authorPerms = this.command.permissions ?? [];
+    const botPerms = this.command.botPermissions ?? [];
+    if (authorPerms.length && botPerms.length && this.guildID && this.authorID) {
+      const [authorResult, botResult] = await Promise.allSettled([
+        this.memo.get(this.guildID, this.authorID),
+        this.memo.get(this.guildID, this.transport.botID),
+      ]);
+      if (authorResult.status === 'rejected') throw authorResult.reason;
+      for (const permission of authorPerms) await this.requirePermission(permission);
+      if (botResult.status === 'rejected') throw botResult.reason;
+      for (const permission of botPerms) await this.requirePermission(permission, true);
+    } else {
+      for (const permission of authorPerms) await this.requirePermission(permission);
+      for (const permission of botPerms) await this.requirePermission(permission, true);
+    }
     try {
       if (this.command.flags !== undefined) {
         const parsed = parseFlags(this.command.flags, this.tokens);
