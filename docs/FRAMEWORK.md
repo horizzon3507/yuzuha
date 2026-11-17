@@ -58,6 +58,29 @@ mensagens ou dados pessoais em produção. O logger padrão do Yuzuha registra s
 o código do erro. `onCommand(ctx, outcome)` recebe `success`, `guarded` ou `error`.
 `handle` retorna também `ignored` para mensagens que não executam comandos.
 
+### Respostas de erro (`errorReply`)
+
+Para personalizar a resposta enviada ao usuário quando um comando é recusado por
+guard ou falha na execução, configure `errorReply(error, ctx?)` (tipo de retorno
+`ErrorReplyResult`):
+
+```ts
+import { GuardError, Yuzuha, embed } from 'yuzuha';
+
+const bot = new Yuzuha({
+  prefix: '!',
+  errorReply(error, ctx) {
+    if (error instanceof GuardError) return `Aviso em ${ctx?.command.name ?? 'entrada'}: ${error.message}`;
+    return { embeds: [embed({ title: 'Falha inesperada', description: 'Tente novamente em instantes.' })] };
+  },
+});
+```
+
+- `string` ou `Payload` substitui a resposta padrão via `ctx.reply` (ou pelo transporte quando `ctx` ainda não existe, como em erro de aspas abertas).
+- `null` silencia a resposta ao usuário (sem afetar `onError` em falhas reais).
+- `undefined` mantém a resposta padrão (`GuardError.message`, `PartialModerationError.message` ou mensagem genérica).
+- Se `errorReply` lançar erro, o framework reporta a falha em `onError` e envia a resposta padrão.
+
 `bot.load(dir)` substitui todos os comandos após validar o diretório inteiro.
 `bot.load(dir, false)` adiciona comandos, recusando colisões. `bot.reload(dir)`
 atualiza somente a pasta indicada e preserva comandos manuais e de outras pastas.
