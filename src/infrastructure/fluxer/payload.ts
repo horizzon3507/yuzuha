@@ -59,3 +59,24 @@ export function safePayload(payload: Payload): MessageSendOptions {
     ...(payload.flags === undefined ? {} : { flags: payload.flags }),
   };
 }
+
+/** Converts a message payload into the wire JSON body expected by PATCH /channels/{id}/messages/{id}. */
+export function editBody(payload: Payload): Record<string, unknown> {
+  const options = safePayload(payload);
+  const body: Record<string, unknown> = {};
+  if (options.content !== undefined) body['content'] = options.content;
+  if (options.embeds !== undefined) {
+    body['embeds'] = options.embeds.map(item => (item instanceof EmbedBuilder ? item.toJSON() : item));
+  }
+  if (options.allowedMentions) {
+    const mentions = options.allowedMentions;
+    body['allowed_mentions'] = {
+      ...(mentions.parse === undefined ? {} : { parse: mentions.parse }),
+      ...(mentions.users?.length ? { users: mentions.users } : {}),
+      ...(mentions.roles?.length ? { roles: mentions.roles } : {}),
+      ...(mentions.repliedUser === undefined ? {} : { replied_user: mentions.repliedUser }),
+    };
+  }
+  if (options.flags !== undefined) body['flags'] = options.flags;
+  return body;
+}
