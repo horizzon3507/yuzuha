@@ -1,15 +1,49 @@
 # Logs e correlação
 
-`onLog` é opcional. O Yuzuha entrega objetos ao callback escolhido pelo bot;
-não envia esses eventos para um serviço externo nem instala um logger global.
+`onLog` e `logger` são opcionais. O Yuzuha entrega eventos estruturados ao callback
+ou logger escolhido pelo bot; não envia esses eventos para um serviço externo nem
+instala um logger global.
 
 ```ts
-import { Yuzuha } from 'yuzuha';
+import { createConsoleLogger, Yuzuha } from 'yuzuha';
 
 const bot = new Yuzuha({
+  logger: createConsoleLogger({ level: 'info' }),
   onLog(record) { console.log(JSON.stringify(record)); },
 });
 ```
+
+## Logger estruturado (`logger`)
+
+`YuzuhaOptions.logger` aceita um `YuzuhaLogger` (compatível com Pino: `info`,
+`warn`, `error` obrigatórios, além de `debug` e `child` opcionais) ou `false`.
+Opções inválidas lançam `YuzuhaError` com código `LOGGER_OPTIONS`.
+
+`createConsoleLogger({ level? })` cria uma implementação padrão sobre `console`
+(`'debug' | 'info' | 'warn' | 'error'`, padrão `'info'`), respeitando o nível
+mínimo e propagando bindings em `child(bindings)`.
+
+O framework encaminha os eventos de log para `logger` usando `(campos, evento)`
+nos seguintes níveis:
+
+| Nível | Eventos |
+|---|---|
+| `debug` | `command.start`, `command.finish`, `event.start`, `event.finish` |
+| `info` | `schedule.start`, `schedule.finish` |
+| `warn` | `transport.retry`, `message.ttl_failed`, `authorization.disabled`, `dispatch.dropped`, `rate_limit.evicted` |
+| `error` | `error`, `schedule.error` |
+
+Se `logger.debug` for omitido, eventos `debug` são ignorados sem erro. Falhas
+lançadas por métodos do `logger` são contidas e não alteram o resultado do
+comando.
+
+Quando `onError` não está configurado, falhas reportadas passam a chamar
+`logger.error({ code, source, trigger?, executionID?, command?, err }, '[yuzuha]')`. Com
+`logger: false`, o fallback padrão em `console.error` e as mensagens de ciclo de
+vida/recarga da CLI ficam silenciosos; com `logger: undefined`, o comportamento
+anterior via `console` é preservado.
+
+## Eventos e campos
 
 Os registros têm `timestamp` ISO e um `event`:
 
@@ -20,6 +54,11 @@ Os registros têm `timestamp` ISO e um `event`:
 | `event.start` | `executionID`, `command` no formato `event:nome` |
 | `event.finish` | Mesmos campos, `outcome`, `durationMs` |
 | `error` | `errorCode`, `source`, `trigger?`, contexto de execução quando houver |
+| `transport.retry` | `attempt`, `delayMs?` |
+| `message.ttl_failed` | `messageID`, `channelID`, `errorCode?` |
+| `authorization.disabled` | Sem campos extras |
+| `dispatch.dropped` | `reason`, `guildID?`, `channelID?` |
+| `rate_limit.evicted` | Sem campos extras |
 | `schedule.start` | `scheduleID`, `executionID` da claim |
 | `schedule.finish` | Mesmos campos, `status`, `durationMs`, `retryable`, `errorCode?` |
 | `schedule.error` | `errorCode` da falha de manutenção |
