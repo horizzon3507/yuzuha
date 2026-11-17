@@ -27,6 +27,7 @@ A fonte das assinaturas completas são as declarações TypeScript distribuídas
 | `now` | Função que retorna epoch em ms para cooldown, dados e scheduler; padrão `Date.now` |
 | `emoji` | Mapa nome → emoji exposto em `bot.emoji`/`ctx.emoji`; referência viva |
 | `memberCache` | `false` (padrão) ou `{ ttlMs, max?, now? }` para cache LRU+TTL em `FluxerTransport` com invalidação via gateway |
+| `variables` | `false` ou `{ sweepIntervalMs?, sweepBatch? }` para varredura periódica de variáveis expiradas após `login()` |
 | `onError(error, ctx?)` | Observação de falhas internas e operacionais |
 | `onCommand(ctx, outcome)` | Observação do resultado de comandos encontrados |
 | `onLog(record)` | Eventos estruturados opcionais, sem conteúdo/segredos automáticos |
@@ -51,6 +52,7 @@ erro, o resultado continua sendo `success`.
 | `listCommands()` | Snapshot das definições, sem duplicar aliases |
 | `help(path?, prefix?)` | Catálogo visível ou ajuda detalhada de um comando/subcomando |
 | `handle(message)` | Despacho manual; retorna `Promise<DispatchResult>` |
+| `sweepVariables()` | Executa um lote incremental de limpeza de variáveis expiradas |
 | `login(token?)` | Usa o argumento ou `FLUXER_BOT_TOKEN`; só aqui conecta |
 | `destroy()` | Aguarda handlers, encerra client e store próprio; idempotente |
 
