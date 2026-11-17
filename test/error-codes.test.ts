@@ -58,6 +58,7 @@ test('YUZUHA_ERROR_CODES está ordenado alfabeticamente e sem duplicatas', () =>
     'CONCURRENCY_OPTIONS',
     'PREFIX_CACHE_OPTIONS',
     'RATE_LIMIT_OPTIONS',
+    'LOCK_OPTIONS',
     'RETRY_OPTIONS',
     'LOGGER_OPTIONS',
     'SHUTDOWN_OPTIONS',
