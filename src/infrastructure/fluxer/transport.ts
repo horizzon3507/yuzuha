@@ -1,4 +1,5 @@
-import { Client, Message } from '@fluxerjs/core';
+import { Client, Events, Message } from '@fluxerjs/core';
+import type { ClientEventListener } from '@fluxerjs/core';
 import type { IncomingMessage, ModerationAction, ModerationMember, Payload, Transport } from '../../contracts.js';
 import { GuardError, YuzuhaError } from '../../errors.js';
 import { isNotFound, isTransientError, isUndeliveredSend, resolvePolicy, withRetry } from '../../services/retry.js';
@@ -6,9 +7,14 @@ import type { Reliability } from '../../services/retry.js';
 import { replyTarget, safePayload as safe } from './payload.js';
 import { compareSnowflake } from '../../domain/moderation.js';
 import type { VoiceModerationOptions } from '../../domain/moderation.js';
+import type { MemberCache } from './member-cache.js';
 
 export class FluxerTransport implements Transport {
-  constructor(public readonly client: Client, private readonly reliability: Reliability = {}) {}
+  constructor(
+    public readonly client: Client,
+    private readonly reliability: Reliability = {},
+    private readonly memberCache?: MemberCache,
+  ) {}
 
   private reliably<T>(fn: (attempt: number) => Promise<T>, safe = isTransientError): Promise<T> {
     return withRetry(fn, this.reliability, safe);
@@ -49,6 +55,8 @@ export class FluxerTransport implements Transport {
     await this.reliably(async () => { await (await this.client.channels.fetchMessage(channelID, messageID)).react(emoji); });
   }
   async member(guildID: string, userID: string, channelID?: string): Promise<ModerationMember> {
+    const cached = this.memberCache?.get(guildID, userID, channelID);
+    if (cached) return cached;
     const fetchMember = async () => {
       const guild = await this.client.guilds.fetch(guildID, { force: true });
       await guild.fetchRoles();
@@ -68,8 +76,64 @@ export class FluxerTransport implements Transport {
       }
       permissions = member.permissionsIn(channel).bitfield;
     }
-    return { id: userID, owner: guild.ownerId === userID, permissions,
-      rank: topRole.position, topRoleID: topRole.id };
+    const result: ModerationMember = {
+      id: userID, owner: guild.ownerId === userID, permissions,
+      rank: topRole.position, topRoleID: topRole.id,
+    };
+    this.memberCache?.set(guildID, userID, result, channelID);
+    return result;
+  }
+
+  attachCacheInvalidation(client: Client): () => void {
+    const cache = this.memberCache;
+    if (!cache) return () => {};
+    const memberGuildID = (member: { guild?: { id?: string }; guildId?: string }): string | undefined =>
+      member.guild?.id ?? member.guildId;
+    const onMemberUpdate: ClientEventListener<typeof Events.GuildMemberUpdate> = (_oldMember, newMember) => {
+      const guildID = memberGuildID(newMember);
+      if (guildID) cache.invalidateMember(guildID, newMember.id);
+    };
+    const onMemberRemove: ClientEventListener<typeof Events.GuildMemberRemove> = member => {
+      const guildID = memberGuildID(member);
+      if (guildID) cache.invalidateMember(guildID, member.id);
+    };
+    const onRoleCreate: ClientEventListener<typeof Events.GuildRoleCreate> = role => {
+      cache.invalidateGuild(role.guildId);
+    };
+    const onRoleUpdate: ClientEventListener<typeof Events.GuildRoleUpdate> = (_oldRole, role) => {
+      cache.invalidateGuild(role.guildId);
+    };
+    const onRoleDelete: ClientEventListener<typeof Events.GuildRoleDelete> = (role, guildId) => {
+      const id = guildId ?? role?.guildId;
+      if (id) cache.invalidateGuild(id);
+    };
+    const onGuildDelete: ClientEventListener<typeof Events.GuildDelete> = guild => {
+      cache.invalidateGuild(guild.id);
+    };
+    const onChannelUpdate: ClientEventListener<typeof Events.ChannelUpdate> = (_oldChannel, newChannel) => {
+      cache.invalidateChannel(newChannel.id);
+    };
+    const onChannelDelete: ClientEventListener<typeof Events.ChannelDelete> = channel => {
+      cache.invalidateChannel(channel.id);
+    };
+    client.on(Events.GuildMemberUpdate, onMemberUpdate);
+    client.on(Events.GuildMemberRemove, onMemberRemove);
+    client.on(Events.GuildRoleCreate, onRoleCreate);
+    client.on(Events.GuildRoleUpdate, onRoleUpdate);
+    client.on(Events.GuildRoleDelete, onRoleDelete);
+    client.on(Events.GuildDelete, onGuildDelete);
+    client.on(Events.ChannelUpdate, onChannelUpdate);
+    client.on(Events.ChannelDelete, onChannelDelete);
+    return () => {
+      client.off(Events.GuildMemberUpdate, onMemberUpdate);
+      client.off(Events.GuildMemberRemove, onMemberRemove);
+      client.off(Events.GuildRoleCreate, onRoleCreate);
+      client.off(Events.GuildRoleUpdate, onRoleUpdate);
+      client.off(Events.GuildRoleDelete, onRoleDelete);
+      client.off(Events.GuildDelete, onGuildDelete);
+      client.off(Events.ChannelUpdate, onChannelUpdate);
+      client.off(Events.ChannelDelete, onChannelDelete);
+    };
   }
   async moderate(guildID: string, action: ModerationAction, targetID: string, reason: string, duration?: number, voice?: VoiceModerationOptions): Promise<void> {
     if (action === 'move' && voice?.channelID) {
