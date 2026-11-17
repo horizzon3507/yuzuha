@@ -20,7 +20,8 @@ import type { DispatchResult, Middleware, YuzuhaOptions, YuzuhaPlugin } from './
 import { RateLimits } from './rate-limits.js';
 import { ConcurrencyLimiter } from './concurrency.js';
 import { reportError, userError } from './reporting.js';
-import { route, validatePrefixes } from './routing.js';
+import { route } from './routing.js';
+import { DynamicPrefixCache, ValidatedPrefixCache, prefixCacheKey, validatePrefixCacheOptions } from './prefix-cache.js';
 import { defineEvent, NativeEvents } from './events.js';
 import type { ContextEventDefinition, NativeEvent, NativeListener } from './events.js';
 import { ScheduleExecutionError, Scheduler } from '../services/scheduler.js';
@@ -147,8 +148,8 @@ export class Yuzuha {
     this.gatewayReports.add(task);
     void task.then(() => this.gatewayReports.delete(task), () => this.gatewayReports.delete(task));
   }
-  private prefixSource?: string | string[];
-  private prefixes: string[] = [];
+  private readonly validatedPrefixes = new ValidatedPrefixCache();
+  private readonly dynamicPrefixCache?: DynamicPrefixCache;
   private readonly contextCooldown = (key: string, duration: number) => this.limits.cooldown(key, duration);
   private readonly contextHelp = () => this.help();
 
@@ -173,6 +174,10 @@ export class Yuzuha {
     this.emojiMap = emojiRegistry(options.emoji);
     if (options.concurrency !== undefined) {
       this.concurrencyLimiter = new ConcurrencyLimiter(options.concurrency);
+    }
+    const prefixCacheOptions = validatePrefixCacheOptions(options.prefixCache);
+    if (prefixCacheOptions && typeof options.prefix === 'function') {
+      this.dynamicPrefixCache = new DynamicPrefixCache(prefixCacheOptions, options.now);
     }
     const sweepOptions = resolveVariableSweepOptions(options.variables);
     this.sweepIntervalMs = sweepOptions.intervalMs;
@@ -427,11 +432,11 @@ export class Yuzuha {
 
   private async runScheduled(task: ScheduleRecord, signal: AbortSignal): Promise<void> {
     if (this.closing || signal.aborted) throw cancellationError();
-    const configured = typeof this.options.prefix === 'function'
-      ? await this.options.prefix({ channelID: task.channelID, guildID: task.guildID } as IncomingMessage)
-      : this.options.prefix ?? '!';
-    const prefixes = this.resolvePrefixes(configured);
-    const prefix = (Array.isArray(prefixes) ? prefixes[0] : prefixes) ?? '!';
+    const prefixes = typeof this.options.prefix === 'function'
+      ? await this.resolveDynamicPrefixes({ channelID: task.channelID, guildID: task.guildID } as IncomingMessage, this.options.prefix, signal)
+      : this.resolvePrefixes(this.options.prefix ?? '!');
+    if (!prefixes) throw cancellationError();
+    const prefix = prefixes[0] ?? '!';
     const suffix = task.input ? ` ${task.input}` : '';
     let retryable = true, cause: unknown;
     const outcome = await this.handleMessage({ id: `schedule-${task.id}-${task.claimID ?? Date.now()}`, content: `${prefix}${task.command}${suffix}`,
@@ -491,6 +496,7 @@ export class Yuzuha {
     this.scheduler?.stop();
     this.clearVariableSweepTimer();
     this.concurrencyLimiter?.close();
+    this.dynamicPrefixCache?.close();
     this.events.close();
     if (this.listening) this.client.off(Events.MessageCreate, this.listener);
     this.listening = false;
@@ -521,21 +527,42 @@ export class Yuzuha {
     return this.execution.getStore() ? Promise.resolve() : this.closeTask;
   }
 
+  /** Limpa o cache de prefixos dinâmicos para um servidor ou para todo o bot. */
+  invalidatePrefix(guildID?: string): void {
+    this.dynamicPrefixCache?.invalidate(guildID);
+  }
+
   handle(message: IncomingMessage): Promise<DispatchResult> {
     return this.handleMessage(message);
   }
 
   private resolvePrefixes(source: string | string[]): string[] {
-    const previous = this.prefixSource;
-    if (typeof source === 'string' && source === previous) return this.prefixes;
-    if (Array.isArray(source) && Array.isArray(previous) && source.length === previous.length) {
-      let same = true;
-      for (let index = 0; index < source.length; index++) if (source[index] !== previous[index]) { same = false; break; }
-      if (same) return this.prefixes;
+    return this.validatedPrefixes.resolve(source);
+  }
+
+  private async resolveDynamicPrefixes(
+    message: IncomingMessage,
+    resolver: (message: IncomingMessage) => string | string[] | Promise<string | string[]>,
+    signal: AbortSignal,
+  ): Promise<string[] | undefined> {
+    if (!this.dynamicPrefixCache) {
+      const configured = await resolver(message);
+      if (this.closing || signal.aborted) return undefined;
+      return this.resolvePrefixes(configured);
     }
-    const prefixes = validatePrefixes(source);
-    this.prefixSource = Array.isArray(source) ? [...source] : source;
-    return this.prefixes = prefixes;
+    const cacheKey = prefixCacheKey(message);
+    const cached = this.dynamicPrefixCache.get(cacheKey);
+    if (cached) return cached;
+    const token = this.dynamicPrefixCache.captureToken(cacheKey);
+    try {
+      const configured = await resolver(message);
+      if (this.closing || signal.aborted) return undefined;
+      const validated = this.resolvePrefixes(configured);
+      this.dynamicPrefixCache.setIfCurrent(token, validated);
+      return validated;
+    } finally {
+      this.dynamicPrefixCache.releaseToken(token);
+    }
   }
 
   private resolveCommand(message: IncomingMessage, configured: string | string[]): RoutedCommand | undefined {
@@ -553,6 +580,12 @@ export class Yuzuha {
       try { routed = this.resolveCommand(message, this.options.prefix ?? '!'); }
       catch (error) { return Promise.reject(error); }
       if (!routed) return ignored;
+    } else if (this.dynamicPrefixCache) {
+      const cached = this.dynamicPrefixCache.get(prefixCacheKey(message));
+      if (cached) {
+        routed = this.resolveCommand(message, cached);
+        if (!routed) return ignored;
+      }
     }
     const signal = parentSignal ? AbortSignal.any([this.shutdown.signal, parentSignal]) : this.shutdown.signal;
     const task = this.execution.run(true, () => this.dispatch(message, signal, onFailure, executionID, routed));
@@ -563,9 +596,11 @@ export class Yuzuha {
 
   private async dispatch(message: IncomingMessage, signal: AbortSignal, onFailure?: (error: unknown, ctx?: CommandContext) => void, executionID?: string, resolved?: RoutedCommand): Promise<DispatchResult> {
     if (!resolved) {
-      const configured = typeof this.options.prefix === 'function' ? await this.options.prefix(message) : this.options.prefix ?? '!';
-      if (this.closing || signal.aborted) return 'ignored';
-      resolved = this.resolveCommand(message, configured);
+      const prefixes = typeof this.options.prefix === 'function'
+        ? await this.resolveDynamicPrefixes(message, this.options.prefix, signal)
+        : this.resolvePrefixes(this.options.prefix ?? '!');
+      if (!prefixes || this.closing || signal.aborted) return 'ignored';
+      resolved = this.resolveCommand(message, prefixes);
     }
     if (!resolved) return 'ignored';
     let releaseSlot: (() => void) | undefined;
