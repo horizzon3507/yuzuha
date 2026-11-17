@@ -17,7 +17,7 @@ import { CommandRegistry, functionsRequired } from './command-registry.js';
 import type { CompiledCommand } from './command-registry.js';
 import { runMiddleware } from './middleware.js';
 import type { DispatchResult, Middleware, YuzuhaOptions, YuzuhaPlugin } from './options.js';
-import { RateLimits } from './rate-limits.js';
+import { RateLimits, resolveRateLimitOptions } from './rate-limits.js';
 import { ConcurrencyLimiter } from './concurrency.js';
 import { reportError, userError } from './reporting.js';
 import { route } from './routing.js';
@@ -105,6 +105,7 @@ export class Yuzuha {
   private readonly middleware: Middleware[] = [];
   private readonly plugins = new Set<string>();
   private readonly limits: RateLimits;
+  private lastRateLimitEvictLog?: number;
   private readonly active = new Set<Promise<unknown>>();
   private readonly shutdown = new AbortController();
   private reliability: import('../services/retry.js').Reliability = {};
@@ -155,7 +156,19 @@ export class Yuzuha {
 
   constructor(public readonly options: YuzuhaOptions = {}) {
     setMaxListeners(0, this.shutdown.signal);
-    this.limits = new RateLimits(options.now);
+    const rateLimitOptions = resolveRateLimitOptions(options.rateLimits);
+    this.limits = new RateLimits({
+      ...rateLimitOptions,
+      now: options.now,
+      onEvict: () => {
+        if (!this.options.onLog) return;
+        const time = (this.options.now ?? Date.now)();
+        if (this.lastRateLimitEvictLog === undefined || time - this.lastRateLimitEvictLog >= 10_000) {
+          this.lastRateLimitEvictLog = time;
+          void emitLog(this.options, { event: 'rate_limit.evicted' });
+        }
+      },
+    });
     this.client = options.client ?? new Client(options.clientOptions);
     this.reliability = { retry: options.retry, signal: this.shutdown.signal,
       onRetry: attempt => { if (options.onLog) void emitLog(this.options, { event: 'transport.retry', attempt }); } };
