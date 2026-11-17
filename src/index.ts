@@ -28,6 +28,8 @@ export { defineEvent } from './framework/events.js';
 export type { ContextEventDefinition, EventDefinition, NativeEvent, NativeListener } from './framework/events.js';
 export { createConsoleLogger } from './framework/logging.js';
 export type { LogMethod, LogRecord, YuzuhaLogger } from './framework/logging.js';
+export { currentExecution } from './framework/execution.js';
+export type { ExecutionStore } from './framework/execution.js';
 export { EventContext } from './commands/event-context.js';
 export type { EventContextOptions } from './commands/event-context.js';
 export type { ScriptEventDefinition } from './framework/script-events.js';
