@@ -652,7 +652,7 @@ export class Yuzuha {
       const started = this.options.onLog ? performance.now() : 0;
       try {
         ctx = new CommandContext({ message, transport: this.transport, store: this.store, command: compiled.command,
-          input: resolved.input, prefix, lineage: compiled.lineage,
+          flagLookup: compiled.flagLookup, input: resolved.input, prefix, lineage: compiled.lineage,
           help: this.contextHelp, cooldown: this.contextCooldown,
           native: { client: this.client, message: message.raw instanceof Message ? message.raw : undefined },
           resources: this.resources, scheduler: this.scheduler, http: this.http, music: this.music, voice: this.voice,

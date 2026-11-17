@@ -163,12 +163,24 @@ export function validateFlagDefinitions(definitions: readonly ArgumentDefinition
   }
 }
 
-export function parseFlags(definitions: readonly ArgumentDefinition[] | undefined, tokens: readonly string[]): {
+export function compileFlagLookup(definitions: readonly ArgumentDefinition[] | undefined): ReadonlyMap<string, ArgumentDefinition> | undefined {
+  if (definitions === undefined) return undefined;
+  const lookup = new Map<string, ArgumentDefinition>();
+  for (const definition of definitions) {
+    for (const name of [definition.name, ...definition.aliases ?? []]) lookup.set(name, definition);
+  }
+  return lookup;
+}
+
+export function parseFlags(
+  definitions: readonly ArgumentDefinition[] | undefined,
+  tokens: readonly string[],
+  lookup?: ReadonlyMap<string, ArgumentDefinition>,
+): {
   tokens: string[]; flags: Map<string, ArgumentValue>;
 } {
   if (definitions === undefined) return { tokens: [...tokens], flags: new Map() };
-  const lookup = new Map<string, ArgumentDefinition>();
-  for (const definition of definitions) for (const name of [definition.name, ...definition.aliases ?? []]) lookup.set(name, definition);
+  const resolvedLookup = lookup ?? compileFlagLookup(definitions)!;
   const values = new Map<string, ArgumentValue>(), positional: string[] = [];
   let terminated = false;
   for (let index = 0; index < tokens.length; index++) {
@@ -177,7 +189,7 @@ export function parseFlags(definitions: readonly ArgumentDefinition[] | undefine
     if (token === '--') { terminated = true; continue; }
     if (!(token.startsWith('--') || /^-[^\d.]/u.test(token)) || token === '-') { positional.push(token); continue; }
     const match = /^--?([^=]+)(?:=([\s\S]*))?$/.exec(token);
-    const definition = match && lookup.get(match[1]!);
+    const definition = match && resolvedLookup.get(match[1]!);
     if (!match || !definition) throw new GuardError(`Flag desconhecida: ${token.split('=')[0]}.`, 'INVALID_ARGUMENT');
     if (values.has(definition.name)) throw new GuardError(`Flag repetida: --${definition.name}.`, 'INVALID_ARGUMENT');
     let input = match[2];

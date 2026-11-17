@@ -1,7 +1,7 @@
 import { resolve } from 'node:path';
-import { validateArgumentDefinitions, validateFlagDefinitions } from '../commands/arguments.js';
+import { compileFlagLookup, validateArgumentDefinitions, validateFlagDefinitions } from '../commands/arguments.js';
 import { commandHelp, commandUsage } from '../commands/help.js';
-import type { Command } from '../context.js';
+import type { ArgumentDefinition, Command } from '../context.js';
 import { parseDuration } from '../context.js';
 import { YuzuhaError } from '../errors.js';
 import { loadCommands } from '../loader.js';
@@ -12,6 +12,7 @@ import type { HttpPolicy } from '../services/http.js';
 export interface CompiledCommand {
   command: Command;
   definition: Command;
+  flagLookup?: ReadonlyMap<string, ArgumentDefinition>;
   program?: unknown;
   programEngine?: ScriptEngine;
   directory?: string;
@@ -95,7 +96,8 @@ export class CommandRegistry {
       http: inheritedHttp(parent?.http, definition.http) };
     this.validate(command);
     const ownGuard = { ...definition, name: command.name };
-    const entry: CompiledCommand = { command, definition, directory, children: new Map(), lineage: [...ancestors.at(-1)?.lineage ?? [], ownGuard] };
+    const flagLookup = compileFlagLookup(command.flags);
+    const entry: CompiledCommand = { command, definition, flagLookup, directory, children: new Map(), lineage: [...ancestors.at(-1)?.lineage ?? [], ownGuard] };
     const visiting = new Set(seen).add(input);
     for (const child of input.subcommands ?? []) this.insert(entry.children, this.compile(child, directory, engine, [...ancestors, entry], visiting));
     definition.subcommands = [...new Set(entry.children.values())].map(child => child.definition);
