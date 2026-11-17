@@ -73,6 +73,24 @@ recursos. O runtime de scripts só é registrado quando o function mode é usado
 
 ## Entregas e dependências
 
+A atualização 0.4.0 foca em eficiência do despacho em bots grandes e
+observabilidade/erros tipados: deduplica consultas em `FluxerTransport.member`
+com ordenação numérica de snowflakes sem `BigInt`, adiciona `MemberMemo` em
+autorização/moderação e `MemberCache` opcional invalidado pelo gateway, roteia
+`edit`/`delete`/`react` por rotas REST diretas, troca o polling de 1s do
+scheduler por timer no próximo vencimento e recuperação espaçada, remove chaves
+TTL expiradas sob demanda e em varredura incremental, introduz limites de
+concorrência por servidor (`concurrency`), cache de prefixos dinâmicos
+(`prefixCache`), despejo configurável em `rateLimits`, coletores com buffer
+circular limitado (`maxBuffer`), pré-filtragem no gateway e lookup pré-compilado
+de flags. Em erros e ciclo de vida, entrega `YUZUHA_ERROR_CODES`,
+`isYuzuhaError`, subclasses tipadas (`ConfigError`, `StoreError`,
+`TransportError`), `errorReply`, hooks (`onCooldown`, `onDenied`,
+`onUnknownCommand`), `ErrorReportInfo` no terceiro argumento de `onError`,
+política de retry com backoff/jitter/`retryOn`, `logger` estruturado compatível
+com Pino, `currentExecution()` via `AsyncLocalStorage` e `destroy({ timeoutMs })`
+com `handleSignals()` e handlers de falha fatal na CLI.
+
 A atualização 0.3.0 isola o function mode da raiz e abre o canvas em processo:
 `yuzuha/canvas` passa a espelhar `@napi-rs/canvas` com `createCanvas`,
 `loadImage` via `HttpService` e `registerFonts`, enquanto o builder de cartões

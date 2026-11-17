@@ -1,16 +1,16 @@
 # Versionamento
 
 O Yuzuha aplica o formato Hory ao histórico e usa **SemVer simples** no pacote.
-A versão desta atualização é **0.3.2**.
+A versão desta atualização é **0.4.0**.
 
 ## Pacote e histórico
 
 | Lugar | Formato nesta versão |
 |---|---|
-| `package.json` e entrada raiz de `package-lock.json` | `0.3.2` |
-| Pacote npm e saída de `yuzuha --version` | `0.3.2` |
-| Título do changelog | `## v0.3.2 · 09/11/2026` |
-| Tag Git | `v0.3.2` |
+| `package.json` e entrada raiz de `package-lock.json` | `0.4.0` |
+| Pacote npm e saída de `yuzuha --version` | `0.4.0` |
+| Título do changelog | `## v0.4.0 · 17/11/2026` |
+| Tag Git | `v0.4.0` |
 
 O SDK e a CLI pertencem ao mesmo pacote. Para bibliotecas, a convenção Hory mantém
 SemVer sem `m`, sem seções por superfície e sem sufixos de canal.
@@ -41,6 +41,36 @@ A versão do SDK é fixada separadamente. Atualizá-la exige revisar
 gerado por `init` pertence ao consumidor e não precisa acompanhar a biblioteca.
 
 ## Preparar uma atualização
+
+### Migrar para 0.4.0
+
+A 0.4.0 é uma release minor compatível na família `0.x`: imports públicos,
+gramática do function mode, SDK (`3.3.0`) e schema persistido (`2`) permanecem
+inalterados. Considere quatro notas de comportamento e extensão:
+
+- **Classes e catálogo de erros tipados:** falhas de configuração, store e
+  transporte agora instanciam `ConfigError`, `StoreError` e `TransportError` —
+  todas subclasses de `YuzuhaError`, preservando `instanceof YuzuhaError` e os
+  mesmos `code`s listados em `YUZUHA_ERROR_CODES`.
+- **Assinatura de `onError`:** `onError(error, ctx, info)` agora recebe um
+  terceiro argumento congelado `ErrorReportInfo` (`source`, `event?`, `ctx?`,
+  `executionID?`). Callbacks existentes de um ou dois parâmetros continuam
+  válidos sem ajustes.
+- **Saturação de cooldown (`rateLimits`):** ao atingir `maxCooldowns` (padrão
+  `100_000`), `onCooldownCapacity` agora adota `'evict'` por padrão (remove a
+  entrada mais próxima do vencimento e registra `rate_limit.evicted`), evitando
+  derrubar comandos com `COOLDOWN_CAPACITY`. Para restaurar o lançamento de erro,
+  passe `rateLimits: { onCooldownCapacity: 'throw' }`.
+- **Rotas REST diretas em mensagens e limites:** `FluxerTransport.edit`,
+  `delete` e `react` passam a chamar diretamente os endpoints REST sem
+  `fetchMessage` prévio, e `FluxerResources` coletores aceitam `maxBuffer`
+  opcional (`CollectMessagesInput`/`CollectReactionsInput`, padrão `1_000`).
+  Adaptações customizadas continuam compatíveis. Chamadores de `bot.destroy()`
+  podem passar `{ timeoutMs }` opcional para limitar a espera de drenagem.
+
+```sh
+npm install yuzuha@0.4.0
+```
 
 ### Migrar para 0.3.2
 
