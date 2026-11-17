@@ -245,6 +245,31 @@ Opções inválidas lançam `CONCURRENCY_OPTIONS`. Em `destroy()`, os itens em
 espera são liberados imediatamente como `'ignored'`, sem emitir
 `dispatch.dropped`.
 
+### Cache de prefixos dinâmicos
+
+Quando `prefix` é uma função que consulta banco ou configuração externa,
+habilite `prefixCache: { ttlMs, max? }` nas opções de `Yuzuha` (desligado por
+padrão):
+
+```ts
+const bot = new Yuzuha({
+  name: 'meu-bot',
+  prefix: async message => carregarPrefixos(message.guildID),
+  prefixCache: { ttlMs: 60_000, max: 5_000 },
+});
+```
+
+- `ttlMs`: inteiro seguro entre `1` e `3_600_000` (usa `now`, ou `Date.now`).
+- `max`: inteiro seguro entre `1` e `100_000` (padrão `5_000`) com remoção LRU.
+- Opções inválidas lançam `PREFIX_CACHE_OPTIONS`.
+
+Com a entrada quente no cache por servidor (`guildID`) ou DM (`channelID`),
+mensagens que não acionam comandos retornam `'ignored'` sincronamente sem chamar
+`prefix`. Chame `bot.invalidatePrefix(guildID)` ao alterar o prefixo de um
+servidor ou `bot.invalidatePrefix()` para limpar todo o cache; resoluções em
+andamento antes da invalidação ou de `destroy()` não populam o cache. Arrays de
+prefixos validados também reutilizam um cache LRU interno de até 256 entradas.
+
 ## Testes sem rede
 
 ```ts
