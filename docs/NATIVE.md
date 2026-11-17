@@ -585,9 +585,12 @@ export default defineCommand({
 ```
 
 Um check pode ser assíncrono. `false` recusa a execução; uma string recusa com
-aquela mensagem; `true` ou `undefined` continuam. Os checks rodam após a preparação
-(permissões, argumentos e cooldown) e antes dos middlewares globais e locais. `ctx.assert(condição, mensagem)`
-lança `GuardError` para recusar dentro de um handler. Para estreitar tipos no
+aquela mensagem — ambos geram `GuardError` com motivo `CHECK_FAILED`. `true` ou
+`undefined` continuam. Os checks rodam após a preparação (permissões, argumentos e
+cooldown) e antes dos middlewares globais e locais. Cooldowns declarativos e
+`ctx.cooldown(...)` preenchem `GuardError.remainingMs` em milissegundos,
+permitindo tratamento específico em `hooks.onCooldown` e `hooks.onDenied`.
+`ctx.assert(condição, mensagem)` lança `GuardError` para recusar dentro de um handler. Para estreitar tipos no
 TypeScript, importe `assert` de `yuzuha`, como no exemplo de dados acima;
 `ctx.assert` oferece a mesma recusa em runtime sem estreitamento estático.
 
