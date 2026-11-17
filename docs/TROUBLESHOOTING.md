@@ -3,7 +3,9 @@
 Comece com `node --version`, `yuzuha --version` e `yuzuha check`. Para erros
 de execução, configure `onError` para integrar seus logs; sem esse callback,
 o framework escreve os erros em `console.error`. A mensagem enviada ao usuário
-omite detalhes internos.
+omite detalhes internos. Para filtrar códigos conhecidos em handlers, use
+`isYuzuhaError(error, ...)` (com o catálogo `YUZUHA_ERROR_CODES`) ou verifique
+as subclasses `ConfigError`, `StoreError` e `TransportError`.
 
 ## Instalação e runtime
 
@@ -21,9 +23,16 @@ internos não são parte do contrato distribuído.
 
 ## Config e token
 
+Erros de configuração, validação de opções do bot e token ausente são lançados
+como `ConfigError` (subclasse de `YuzuhaError`).
+
 `CONFIG_MISSING` significa que a CLI não achou config no diretório atual.
 Passe o caminho explicitamente ou rode na pasta do bot. `commands` é relativo
 à pasta da config, não necessariamente ao diretório de onde o comando foi chamado.
+`CONFIG_INVALID` aponta exportação ou tipos inválidos na config; códigos como
+`PREFIX`, `EMOJI_OPTIONS`, `ENGINE_INVALID`, `MEMBER_CACHE_OPTIONS`,
+`VARIABLE_SWEEP_OPTIONS` e `OPTIONS` indicam opções inválidas na construção do
+bot.
 
 `TOKEN_MISSING` exige `FLUXER_BOT_TOKEN`. `run` e `dev` leem `.env` junto da
 config; `bot.login()` usado diretamente só consulta o ambiente do processo.
@@ -79,17 +88,25 @@ antes de tentar novamente. Os detalhes estão em [STORAGE.md](STORAGE.md).
 
 ## Dados não aparecem ou store falha
 
+Falhas de persistência e validação de estado lançam `StoreError` (subclasse de
+`YuzuhaError`). Da mesma forma, falhas estruturais do adaptador de transporte
+lançam `TransportError` (`ROLES_UNAVAILABLE`, `CHANNEL_GUILD`, `VOICE_CHANNEL`,
+`MODERATION_ACTION`, além de `NOT_FOUND` e `API_ERROR` em `MockTransport`).
+
 O padrão é `~/.local/share/yuzuha/<nome>/state.json`. Um `XDG_DATA_HOME`
 absoluto substitui `~/.local/share`; um caminho relativo é ignorado.
-Sem nome, a pasta é `default`. Trocar `name` muda o local padrão.
+Sem nome, a pasta é `default`. Trocar `name` muda o local padrão; um nome
+inválido falha com `STORE_NAME`.
 
 `STORE_CORRUPT` preserva o arquivo em vez de reiniciar vazio. Pare os escritores,
 faça backup e inspecione schema/conteúdo. Não apague o arquivo como primeira
 tentativa. JSON exige uma única instância escritora por arquivo.
 
 `STORE_INVALID` indica que a transação produziu dados fora do schema/JSON;
-`STORE_ASYNC` indica callback assíncrono. Nesses casos, a atualização não é
-confirmada. Faça chamadas de rede fora de `update`.
+`STORE_ASYNC` indica callback assíncrono; `STORE_CLOSED` indica uso após
+`close()` no SQLite; `STORE_READONLY` indica escrita em leitura somente
+leitura na CLI. Nesses casos, a atualização não é confirmada. Faça chamadas de
+rede fora de `update`.
 
 SQLite pode aguardar até 5 segundos por um lock. Transações devem ser curtas
 e síncronas. Para backup por cópia, feche todos os escritores primeiro e
