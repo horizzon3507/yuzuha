@@ -1,16 +1,16 @@
 # Versionamento
 
 O Yuzuha aplica o formato Hory ao histórico e usa **SemVer simples** no pacote.
-A versão desta atualização é **0.4.0**.
+A versão desta atualização é **0.5.0**.
 
 ## Pacote e histórico
 
 | Lugar | Formato nesta versão |
 |---|---|
-| `package.json` e entrada raiz de `package-lock.json` | `0.4.0` |
-| Pacote npm e saída de `yuzuha --version` | `0.4.0` |
-| Título do changelog | `## v0.4.0 · 17/11/2026` |
-| Tag Git | `v0.4.0` |
+| `package.json` e entrada raiz de `package-lock.json` | `0.5.0` |
+| Pacote npm e saída de `yuzuha --version` | `0.5.0` |
+| Título do changelog | `## v0.5.0 · 17/11/2026` |
+| Tag Git | `v0.5.0` |
 
 O SDK e a CLI pertencem ao mesmo pacote. Para bibliotecas, a convenção Hory mantém
 SemVer sem `m`, sem seções por superfície e sem sufixos de canal.
@@ -41,6 +41,34 @@ A versão do SDK é fixada separadamente. Atualizá-la exige revisar
 gerado por `init` pertence ao consumidor e não precisa acompanhar a biblioteca.
 
 ## Preparar uma atualização
+
+### Migrar para 0.5.0
+
+A 0.5.0 migra a modelagem interna do `SQLiteStore` para o **schema 3**
+normalizado e adiciona os ports distribuídos `RateLimiter` e `Lock`. Antes de
+atualizar, faça um backup do banco SQLite (`yuzuha data backup`):
+
+- **Migração automática do SQLite para schema 3:** ao abrir um arquivo SQLite do
+  schema 2 (`yuzuha_state`) em modo de escrita, o `SQLiteStore` converte os dados
+  transacionalmente para tabelas normalizadas (`yuzuha_variables`,
+  `yuzuha_cases`, `yuzuha_schedules`, `yuzuha_schedule_history`) e remove o blob
+  antigo; versões anteriores da biblioteca não leem bancos já migrados para v3.
+  O formato lógico de `State` e `StateBackup` permanece compatível, e a CLI em
+  modo somente leitura (`stats`, `backup`, `restore` sem `--apply`) lê tanto v2
+  quanto v3 sem modificar o arquivo.
+- **`JsonStore` compacto e encerramento:** `JsonStore` agora grava JSON compacto
+  por padrão (`pretty: false`; passe `{ pretty: true }` em `JsonStoreOptions` se
+  precisar de indentação) e recusa operações após `close()` com `STORE_CLOSED`.
+  Se configurar `flushMs > 0` em um `JsonStore` injetado manualmente, chame
+  `await store.close()` após `await bot.destroy()` para drenar o último lote.
+- **`ctx.cooldown` com `RateLimiter` assíncrono:** com o limitador padrão em
+  memória ou qualquer `RateLimiter` síncrono, `ctx.cooldown(...)` permanece
+  síncrono; ao injetar um `RateLimiter` assíncrono (ex.: Redis), comandos nativos
+  que chamam `ctx.cooldown` diretamente devem usar `await ctx.cooldown(...)`.
+
+```sh
+npm install yuzuha@0.5.0
+```
 
 ### Migrar para 0.4.0
 

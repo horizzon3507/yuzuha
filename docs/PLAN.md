@@ -73,6 +73,21 @@ recursos. O runtime de scripts só é registrado quando o function mode é usado
 
 ## Entregas e dependências
 
+A atualização 0.5.0 reformula a camada de persistência e introduz os ports
+distribuídos: `MemoryStore` passa a usar snapshots estruturais copy-on-write e
+validação incremental restrita às fatias/chaves sujas; `JsonStore` aceita
+`JsonStoreOptions` (`flushMs`, `pretty`, `onError`, `timers`) com saída JSON
+compacta por padrão, coalescência de gravações concorrentes e métodos `flush()`
+/ `close()`; `SQLiteStore` evolui para o schema 3 normalizado em tabelas
+(`yuzuha_meta`, `yuzuha_variables`, `yuzuha_raw_variables`, `yuzuha_cases`,
+`yuzuha_schedules`, `yuzuha_schedule_history`) com migração transacional
+automática a partir do schema 2, statements preparados em cache, `readVariable`
+e `queryVariables` diretos em SQL e claims atômicas (`claimDueSchedules` /
+`recoverSchedules`) integradas ao `Scheduler` e inspecionáveis em modo somente
+leitura na CLI. Para clusters e Redis, entrega os ports injetáveis `RateLimiter`
+(`MemoryRateLimiter`) e `Lock` / `LockLease` (`MemoryLock`), além do benchmark
+`benchmarks/store-throughput.mjs` (10k–100k variáveis).
+
 A atualização 0.4.0 foca em eficiência do despacho em bots grandes e
 observabilidade/erros tipados: deduplica consultas em `FluxerTransport.member`
 com ordenação numérica de snowflakes sem `BigInt`, adiciona `MemberMemo` em
