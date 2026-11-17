@@ -5,7 +5,7 @@ import { YuzuhaError } from '../src/shared/errors.js';
 
 const capacity = 100_000;
 const atCapacity = (now: () => number): RateLimits => {
-  const limits = new RateLimits(now);
+  const limits = new RateLimits({ now, onCooldownCapacity: 'throw' });
   for (let index = 0; index < capacity; index++) limits.cooldown(String(index), index === 0 ? 10 : 60_000);
   return limits;
 };
@@ -34,7 +34,7 @@ test('cooldowns at capacity renew expired keys and reclaim space between schedul
 
 test('capacity checks collect expired cooldowns even during the sweep interval', () => {
   let now = 0;
-  const limits = new RateLimits(() => now);
+  const limits = new RateLimits({ now: () => now, onCooldownCapacity: 'throw' });
   limits.cooldown('first', 1);
   now = 1;
   for (let index = 0; index < capacity; index++) limits.cooldown(String(index), index === 0 ? 1 : 60_000);

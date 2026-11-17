@@ -32,6 +32,12 @@ export interface VariableSweepOptions {
   sweepIntervalMs?: number | false;
   sweepBatch?: number;
 }
+export interface RateLimitOptions {
+  maxCooldowns?: number;
+  onCooldownCapacity?: 'evict' | 'throw';
+  maxDedupe?: number;
+  dedupeWindowMs?: number;
+}
 export interface YuzuhaOptions {
   prefix?: string | string[] | ((message: IncomingMessage) => string | string[] | Promise<string | string[]>);
   client?: Client;
@@ -60,5 +66,6 @@ export interface YuzuhaOptions {
   prefixCache?: false | PrefixCacheOptions;
   variables?: false | VariableSweepOptions;
   concurrency?: ConcurrencyOptions;
+  rateLimits?: RateLimitOptions;
   unsafeDisableResourceAuthorization?: boolean;
 }

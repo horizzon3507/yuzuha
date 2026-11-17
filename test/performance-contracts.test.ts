@@ -10,7 +10,7 @@ test('dedup FIFO stays bounded, isolates arbitrary channel IDs and preserves ref
   let now = 0; const limits = new RateLimits(() => now);
   assert.equal(limits.duplicate('ab', 'c'), false); assert.equal(limits.duplicate('a', 'bc'), false);
   assert.equal(limits.duplicate('ab', 'c'), true);
-  const other = new RateLimits(() => now);
+  const other = new RateLimits({ now: () => now, maxDedupe: 10_000 });
   assert.equal(other.duplicate('channel', 'a'), false); now = 60_000;
   assert.equal(other.duplicate('channel', 'a'), false);
   for (let i = 0; i < 9999; i++) assert.equal(other.duplicate('channel', String(i)), false);
