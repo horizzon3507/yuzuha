@@ -2,7 +2,7 @@ import type { DatabaseSync } from 'node:sqlite';
 import type { CaseRecord, ModerationAction } from '../../domain/moderation.js';
 import type { JsonValue, ScheduleExecutionRecord, ScheduleRecord, State } from '../../domain/state.js';
 import { variableKey } from '../../domain/state.js';
-import { isState } from '../../domain/state-validation.js';
+import { isState, decodeState } from '../../domain/state-validation.js';
 import { variableIdentity, variableNameKey } from '../../domain/variable-query.js';
 import { StoreError } from '../../shared/errors.js';
 
@@ -351,5 +351,44 @@ export function writeNormalizedState(db: DatabaseSync, state: Readonly<State>): 
       item.retryable ? 1 : 0,
       item.errorCode ?? null,
     );
+  }
+}
+
+function verifySchemaV3(db: DatabaseSync, tables: ReadonlySet<string>): void {
+  for (const required of SCHEMA_V3_TABLES) {
+    if (!tables.has(required)) throw corruptStoreError();
+  }
+  readSQLiteMeta(db);
+}
+
+export function ensureSchemaV3(db: DatabaseSync): void {
+  const initialTables = listYuzuhaTables(db);
+  if (initialTables.has('yuzuha_meta')) {
+    verifySchemaV3(db, initialTables);
+    return;
+  }
+  db.exec('BEGIN IMMEDIATE');
+  try {
+    const tables = listYuzuhaTables(db);
+    if (tables.has('yuzuha_meta')) {
+      verifySchemaV3(db, tables);
+    } else if (tables.has('yuzuha_state')) {
+      const row = db.prepare('SELECT value FROM yuzuha_state WHERE id=1').get();
+      if (!row) throw corruptStoreError();
+      const state = decodeState(String(row['value']));
+      db.exec(SCHEMA_V3_DDL);
+      writeNormalizedState(db, state);
+      db.exec(LEGACY_V2_CLEANUP_SQL);
+    } else if (tables.size > 0) {
+      throw corruptStoreError();
+    } else {
+      db.exec(SCHEMA_V3_DDL);
+      db.prepare('INSERT INTO yuzuha_meta (id, schema_version, has_expirations, has_history) VALUES (1, ?, 0, 0)')
+        .run(SQLITE_SCHEMA_VERSION);
+    }
+    db.exec('COMMIT');
+  } catch (error) {
+    db.exec('ROLLBACK');
+    throw error;
   }
 }
