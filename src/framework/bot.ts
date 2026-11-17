@@ -1,4 +1,4 @@
-import { AsyncLocalStorage } from 'node:async_hooks';
+import { randomUUID } from 'node:crypto';
 import { setMaxListeners } from 'node:events';
 import { Client, Events, Message } from '@fluxerjs/core';
 import type { ClientEventName, ClientEvents } from '@fluxerjs/core';
@@ -31,6 +31,7 @@ import type { ScheduleRecord } from '../domain/state.js';
 import { HttpService } from '../services/http.js';
 import { createCdn } from '../domain/cdn.js';
 import { emitLog } from './logging.js';
+import { currentExecution, isExecutionOwner, runInExecution } from './execution.js';
 import { cancellationError } from '../services/cancellation.js';
 import { resolvePolicy } from '../services/retry.js';
 import { EventContext } from '../commands/event-context.js';
@@ -158,7 +159,6 @@ export class Yuzuha {
   private sweepGeneration = 0;
   private sweepTask?: Promise<void>;
   private readonly events: NativeEvents;
-  private readonly execution = new AsyncLocalStorage<boolean>();
   private listening = false;
   private closing = false;
   private closeTask?: Promise<void>;
@@ -178,7 +178,11 @@ export class Yuzuha {
     this.reportGatewayError(error, 'shardError');
   };
   private reportGatewayError(error: Error, event: 'error' | 'shardError'): void {
-    const task = this.execution.run(true, () => reportError(this.options, error, undefined, { source: 'gateway', event }));
+    const task = runInExecution(
+      this,
+      { executionID: randomUUID(), source: 'gateway' },
+      () => reportError(this.options, error, undefined, { source: 'gateway', event }),
+    );
     this.gatewayReports.add(task);
     void task.then(() => this.gatewayReports.delete(task), () => this.gatewayReports.delete(task));
   }
@@ -214,7 +218,16 @@ export class Yuzuha {
     const retryPolicy = resolvePolicy(options.retry);
     this.client = options.client ?? new Client(options.clientOptions);
     this.reliability = { retry: retryPolicy, signal: this.shutdown.signal,
-      onRetry: (attempt, _error, delayMs) => { if (this.hasLogSink) void emitLog(this.options, { event: 'transport.retry', attempt, delayMs }); } };
+      onRetry: (attempt, _error, delayMs) => {
+        if (!this.hasLogSink) return;
+        const executionID = currentExecution()?.executionID;
+        void emitLog(this.options, {
+          event: 'transport.retry',
+          attempt,
+          delayMs,
+          ...(executionID !== undefined ? { executionID } : {}),
+        });
+      } };
     if (options.memberCache !== undefined && options.memberCache !== false) {
       const cacheOptions = options.memberCache && typeof options.memberCache === 'object' && !Array.isArray(options.memberCache)
         ? { ...options.memberCache, now: options.memberCache.now ?? options.now }
@@ -248,8 +261,17 @@ export class Yuzuha {
       (task, signal) => this.runScheduled(task, signal), {
         now: options.now,
         timers: this.timers,
-        onEvent: event => { if (this.hasLogSink) return this.execution.run(true, () => emitLog(this.options, event)); },
-        onError: error => this.execution.run(true, () => reportError(this.options, error, undefined, { source: 'scheduler' })),
+        onEvent: event => {
+          if (!this.hasLogSink) return;
+          return runInExecution(this, {
+            executionID: event.executionID ?? randomUUID(),
+            source: 'scheduler',
+          }, () => emitLog(this.options, event));
+        },
+        onError: error => runInExecution(this, {
+          executionID: currentExecution()?.executionID ?? randomUUID(),
+          source: 'scheduler',
+        }, () => reportError(this.options, error, undefined, { source: 'scheduler' })),
       });
     this.http = options.http === false ? undefined : options.http ?? new HttpService();
     this.music = options.music;
@@ -334,11 +356,19 @@ export class Yuzuha {
   help(command?: string, prefix = ''): string { return this.registry.help(command, prefix); }
   get signal(): AbortSignal { return this.shutdown.signal; }
   deleteLater(channelID: string, messageID: string, ttlMs: number): void {
+    const capturedExecutionID = currentExecution()?.executionID;
     const handle = this.timers.setTimeout(() => {
       this.pendingTimers.delete(handle);
       void this.transport.delete(channelID, messageID).catch(error => {
-        if (this.hasLogSink) void emitLog(this.options, { event: 'message.ttl_failed', messageID, channelID,
-          errorCode: (error as { code?: string }).code });
+        if (!this.hasLogSink) return;
+        const executionID = capturedExecutionID ?? currentExecution()?.executionID;
+        void emitLog(this.options, {
+          event: 'message.ttl_failed',
+          messageID,
+          channelID,
+          ...(executionID !== undefined ? { executionID } : {}),
+          errorCode: (error as { code?: string }).code,
+        });
       });
     }, ttlMs);
     this.pendingTimers.add(handle);
@@ -381,9 +411,9 @@ export class Yuzuha {
           this.hasSweepTimer = false;
         }
         if (this.closing || generation !== this.sweepGeneration) return;
-        const work = this.execution.run(true, async () => {
+        const work = runInExecution(this, { executionID: randomUUID(), source: 'scheduler' }, async () => {
           try { await this.sweepVariables(); }
-          catch (error) { await reportError(this.options, error); }
+          catch (error) { await reportError(this.options, error, undefined, { source: 'scheduler' }); }
         }).finally(() => {
           if (this.sweepTask === work) this.sweepTask = undefined;
           if (!this.closing && generation === this.sweepGeneration) schedule();
@@ -439,8 +469,17 @@ export class Yuzuha {
         cdn: this.cdnService, disableResourceAuthorization: this.options.unsafeDisableResourceAuthorization === true,
         cooldown: this.contextCooldown, signal: this.shutdown.signal, emoji: this.emojiMap,
         deleteLater: this.contextDeleteLater });
-      try { await definition.run(ctx, ...args as ClientEvents[K]); }
-      catch (error) { await reportError(this.options, error, ctx, { source: 'event', event: definition.event, executionID: ctx.executionID }); }
+      await runInExecution(this, {
+        executionID: ctx.executionID,
+        source: 'event',
+        event: definition.event,
+        guildID: ctx.guildID || undefined,
+        channelID: ctx.channelID || undefined,
+        userID: ctx.authorID || undefined,
+      }, async () => {
+        try { await definition.run(ctx, ...args as ClientEvents[K]); }
+        catch (error) { await reportError(this.options, error, ctx, { source: 'event', event: definition.event, executionID: ctx.executionID }); }
+      });
     } });
     return this;
   }
@@ -469,27 +508,36 @@ export class Yuzuha {
       canvas: this.canvasContext, now: this.options.now, cooldown: this.contextCooldown, signal,
       cdn: this.cdnService, disableResourceAuthorization: this.options.unsafeDisableResourceAuthorization === true, emoji: this.emojiMap,
       deleteLater: this.contextDeleteLater });
-    const started = this.hasLogSink ? performance.now() : 0;
-    let outcome: DispatchResult = 'success';
-    try {
-      if (this.hasLogSink) await emitLog(this.options, { event: 'event.start', executionID: ctx.executionID, command: ctx.command.name });
-      const output = engine.text(await engine.execute(program, ctx)).trim();
-      if (output) {
-        if (!ctx.channelID) throw new GuardError('Defina um canal para a saída deste evento.', 'INVALID_ARGUMENT');
-        await ctx.send(output, ctx.channelID);
+    await runInExecution(this, {
+      executionID: ctx.executionID,
+      source: 'event',
+      event: definition.event,
+      guildID: ctx.guildID || undefined,
+      channelID: ctx.channelID || undefined,
+      userID: ctx.authorID || undefined,
+    }, async () => {
+      const started = this.hasLogSink ? performance.now() : 0;
+      let outcome: DispatchResult = 'success';
+      try {
+        if (this.hasLogSink) await emitLog(this.options, { event: 'event.start', executionID: ctx.executionID, command: ctx.command.name });
+        const output = engine.text(await engine.execute(program, ctx)).trim();
+        if (output) {
+          if (!ctx.channelID) throw new GuardError('Defina um canal para a saída deste evento.', 'INVALID_ARGUMENT');
+          await ctx.send(output, ctx.channelID);
+        }
+      } catch (error) {
+        outcome = error instanceof GuardError ? 'guarded' : 'error';
+        await reportError(this.options, error, ctx, { source: 'event', event: definition.event, executionID: ctx.executionID });
+      } finally {
+        if (this.hasLogSink) await emitLog(this.options, { event: 'event.finish', executionID: ctx.executionID,
+          command: ctx.command.name, outcome, durationMs: performance.now() - started });
       }
-    } catch (error) {
-      outcome = error instanceof GuardError ? 'guarded' : 'error';
-      await reportError(this.options, error, ctx, { source: 'event', event: definition.event, executionID: ctx.executionID });
-    } finally {
-      if (this.hasLogSink) await emitLog(this.options, { event: 'event.finish', executionID: ctx.executionID,
-        command: ctx.command.name, outcome, durationMs: performance.now() - started });
-    }
+    });
   }
 
   private scheduleEvent(work: () => unknown | Promise<unknown>, event: ClientEventName): void {
     if (this.closing) return;
-    const task = this.execution.run(true, async () => {
+    const task = runInExecution(this, { executionID: randomUUID(), source: 'event', event }, async () => {
       try { await Promise.resolve().then(work); }
       catch (error) { await reportError(this.options, error, undefined, { source: 'event', event }); }
     });
@@ -499,19 +547,29 @@ export class Yuzuha {
 
   private async runScheduled(task: ScheduleRecord, signal: AbortSignal): Promise<void> {
     if (this.closing || signal.aborted) throw cancellationError();
-    const prefixes = typeof this.options.prefix === 'function'
-      ? await this.resolveDynamicPrefixes({ channelID: task.channelID, guildID: task.guildID } as IncomingMessage, this.options.prefix, signal)
-      : this.resolvePrefixes(this.options.prefix ?? '!');
-    if (!prefixes) throw cancellationError();
-    const prefix = prefixes[0] ?? '!';
-    const suffix = task.input ? ` ${task.input}` : '';
-    let retryable = true, cause: unknown;
-    const outcome = await this.handleMessage({ id: `schedule-${task.id}-${task.claimID ?? Date.now()}`, content: `${prefix}${task.command}${suffix}`,
-      authorID: task.authorID, authorName: 'Scheduler', authorBot: false,
-      channelID: task.channelID, guildID: task.guildID, mentions: [] }, (error, ctx) => {
-      cause = error; retryable = !(error instanceof GuardError || error instanceof PartialModerationError) && !ctx?.hasModerationEffect;
-    }, signal, task.claimID ?? undefined);
-    if (outcome !== 'success') throw new ScheduleExecutionError(outcome === 'error' && retryable, cause);
+    const executionID = task.claimID ?? randomUUID();
+    return runInExecution(this, {
+      executionID,
+      source: 'scheduler',
+      command: task.command,
+      guildID: task.guildID,
+      channelID: task.channelID,
+      userID: task.authorID,
+    }, async () => {
+      const prefixes = typeof this.options.prefix === 'function'
+        ? await this.resolveDynamicPrefixes({ channelID: task.channelID, guildID: task.guildID } as IncomingMessage, this.options.prefix, signal)
+        : this.resolvePrefixes(this.options.prefix ?? '!');
+      if (!prefixes) throw cancellationError();
+      const prefix = prefixes[0] ?? '!';
+      const suffix = task.input ? ` ${task.input}` : '';
+      let retryable = true, cause: unknown;
+      const outcome = await this.handleMessage({ id: `schedule-${task.id}-${task.claimID ?? Date.now()}`, content: `${prefix}${task.command}${suffix}`,
+        authorID: task.authorID, authorName: 'Scheduler', authorBot: false,
+        channelID: task.channelID, guildID: task.guildID, mentions: [] }, (error, ctx) => {
+        cause = error; retryable = !(error instanceof GuardError || error instanceof PartialModerationError) && !ctx?.hasModerationEffect;
+      }, signal, executionID, true);
+      if (outcome !== 'success') throw new ScheduleExecutionError(outcome === 'error' && retryable, cause);
+    });
   }
 
   login(token = process.env.FLUXER_BOT_TOKEN): Promise<void> {
@@ -556,7 +614,7 @@ export class Yuzuha {
   }
 
   destroy(): Promise<void> {
-    if (this.closeTask) return this.execution.getStore() ? Promise.resolve() : this.closeTask;
+    if (this.closeTask) return isExecutionOwner(this) ? Promise.resolve() : this.closeTask;
     this.closing = true;
     this.shutdown.abort();
     this.loginAbort?.abort();
@@ -591,7 +649,7 @@ export class Yuzuha {
         }
       }
     })();
-    return this.execution.getStore() ? Promise.resolve() : this.closeTask;
+    return isExecutionOwner(this) ? Promise.resolve() : this.closeTask;
   }
 
   /** Limpa o cache de prefixos dinâmicos para um servidor ou para todo o bot. */
@@ -644,7 +702,7 @@ export class Yuzuha {
     return { kind: 'command', ...resolved, prefix: routed.prefix };
   }
 
-  private handleMessage(message: IncomingMessage, onFailure?: (error: unknown, ctx?: CommandContext) => void, parentSignal?: AbortSignal, executionID?: string): Promise<DispatchResult> {
+  private handleMessage(message: IncomingMessage, onFailure?: (error: unknown, ctx?: CommandContext) => void, parentSignal?: AbortSignal, executionID?: string, taskExecution = false): Promise<DispatchResult> {
     if (this.closing || message.authorBot || message.authorID === this.transport.botID) return ignored;
     let routed: RoutedCommand | undefined;
     if (typeof this.options.prefix !== 'function') {
@@ -659,7 +717,18 @@ export class Yuzuha {
       }
     }
     const signal = parentSignal ? AbortSignal.any([this.shutdown.signal, parentSignal]) : this.shutdown.signal;
-    const task = this.execution.run(true, () => this.dispatch(message, signal, onFailure, executionID, routed));
+    const resolvedExecutionID = executionID ?? randomUUID();
+    const source = taskExecution ? 'scheduler' : 'command';
+    const run = () => this.dispatch(message, signal, onFailure, resolvedExecutionID, source, routed);
+    const task = routed
+      ? run()
+      : runInExecution(this, {
+        executionID: resolvedExecutionID,
+        source,
+        guildID: message.guildID,
+        channelID: message.channelID,
+        userID: message.authorID,
+      }, run);
     this.active.add(task);
     void task.then(() => this.active.delete(task), () => this.active.delete(task));
     return task;
@@ -676,7 +745,14 @@ export class Yuzuha {
     catch (replyError) { await reportError(this.options, replyError, undefined, { source: 'hook', event: 'onUnknownCommand' }); }
   }
 
-  private async dispatch(message: IncomingMessage, signal: AbortSignal, onFailure?: (error: unknown, ctx?: CommandContext) => void, executionID?: string, resolved?: RoutedCommand): Promise<DispatchResult> {
+  private async dispatch(
+    message: IncomingMessage,
+    signal: AbortSignal,
+    onFailure: ((error: unknown, ctx?: CommandContext) => void) | undefined,
+    executionID: string,
+    source: 'command' | 'scheduler',
+    resolved?: RoutedCommand,
+  ): Promise<DispatchResult> {
     if (!resolved) {
       const prefixes = typeof this.options.prefix === 'function'
         ? await this.resolveDynamicPrefixes(message, this.options.prefix, signal)
@@ -686,85 +762,102 @@ export class Yuzuha {
     }
     if (!resolved) return 'ignored';
     if (resolved.kind === 'unknown') {
-      await this.runUnknownCommand(resolved.unknown, message, signal);
+      const unknown = resolved.unknown;
+      await runInExecution(this, {
+        executionID,
+        source,
+        command: unknown.name,
+        guildID: message.guildID,
+        channelID: message.channelID,
+        userID: message.authorID,
+      }, () => this.runUnknownCommand(unknown, message, signal));
       return 'ignored';
     }
-    let releaseSlot: (() => void) | undefined;
-    try {
-      if (this.concurrencyLimiter) {
-        const acquired = await this.concurrencyLimiter.acquire(message.guildID, signal);
-        if (!acquired) {
-          if (!this.closing && !signal.aborted && this.hasLogSink) {
-            await emitLog(this.options, {
-              event: 'dispatch.dropped',
-              reason: 'concurrency',
-              guildID: message.guildID,
-              channelID: message.channelID,
-            });
-          }
-          return 'ignored';
-        }
-        releaseSlot = acquired;
-        if (this.closing || signal.aborted) return 'ignored';
-      }
-      const { compiled, prefix } = resolved;
-      let ctx: CommandContext | undefined;
-      let outcome: DispatchResult = 'success';
-      const started = this.hasLogSink ? performance.now() : 0;
+    const { compiled, prefix } = resolved;
+    return runInExecution(this, {
+      executionID,
+      source,
+      command: compiled.command.name,
+      guildID: message.guildID,
+      channelID: message.channelID,
+      userID: message.authorID,
+    }, async () => {
+      let releaseSlot: (() => void) | undefined;
       try {
-        ctx = new CommandContext({ message, transport: this.transport, store: this.store, command: compiled.command,
-          flagLookup: compiled.flagLookup, input: resolved.input, prefix, lineage: compiled.lineage,
-          help: this.contextHelp, cooldown: this.contextCooldown,
-          native: { client: this.client, message: message.raw instanceof Message ? message.raw : undefined },
-          resources: this.resources, scheduler: this.scheduler, http: this.http, music: this.music, voice: this.voice,
-          canvas: this.canvasContext, now: this.options.now, signal, executionID,
-          cdn: this.cdnService, disableResourceAuthorization: this.options.unsafeDisableResourceAuthorization === true, emoji: this.emojiMap,
-          deleteLater: this.contextDeleteLater });
-        if (this.hasLogSink) await emitLog(this.options, { event: 'command.start', executionID: ctx.executionID, command: ctx.command.name });
-        if (signal.aborted) throw cancellationError();
-        await ctx.prepare();
-        const current = ctx;
-        for (const check of compiled.command.checks ?? []) {
-          const result = await check(current);
-          if (result === false || typeof result === 'string') throw new GuardError(typeof result === 'string' ? result : 'Você não pode executar este comando.', 'CHECK_FAILED');
+        if (this.concurrencyLimiter) {
+          const acquired = await this.concurrencyLimiter.acquire(message.guildID, signal);
+          if (!acquired) {
+            if (!this.closing && !signal.aborted && this.hasLogSink) {
+              await emitLog(this.options, {
+                event: 'dispatch.dropped',
+                reason: 'concurrency',
+                guildID: message.guildID,
+                channelID: message.channelID,
+              });
+            }
+            return 'ignored';
+          }
+          releaseSlot = acquired;
+          if (this.closing || signal.aborted) return 'ignored';
         }
-        const execute = async () => {
-          if (compiled.program) {
-            const programEngine = (compiled as { programEngine?: ScriptEngine }).programEngine ?? this.scriptEngine!;
-            const output = programEngine.text(await programEngine.execute(compiled.program, current)).trim();
-            if (output) await current.reply(output);
-          } else if (compiled.command.run) await compiled.command.run(current);
-          else throw new GuardError(`${resolved.input ? 'Subcomando desconhecido.\n' : ''}${this.help(compiled.command.name, prefix)}`, 'INVALID_ARGUMENT');
-        };
-        const local = compiled.command.middleware ?? [];
-        if (this.middleware.length) await runMiddleware(local.length ? [...this.middleware, ...local] : this.middleware, current, execute);
-        else if (local.length) await runMiddleware(local, current, execute);
-        else await execute();
-      } catch (error) {
-        onFailure?.(error, ctx);
-        outcome = error instanceof GuardError ? 'guarded' : 'error';
-        if (!signal.aborted) {
-          const reply = await resolveErrorReply(this.options, error, ctx);
-          if (reply !== null && !signal.aborted) {
-            try {
-              await (ctx ? ctx.reply(reply) : this.transport.reply(message, typeof reply === 'string' ? { content: reply } : reply));
-            } catch (replyError) {
-              await reportError(this.options, replyError, ctx, { source: 'command' });
+        let ctx: CommandContext | undefined;
+        let outcome: DispatchResult = 'success';
+        const started = this.hasLogSink ? performance.now() : 0;
+        try {
+          ctx = new CommandContext({ message, transport: this.transport, store: this.store, command: compiled.command,
+            flagLookup: compiled.flagLookup, input: resolved.input, prefix, lineage: compiled.lineage,
+            help: this.contextHelp, cooldown: this.contextCooldown,
+            native: { client: this.client, message: message.raw instanceof Message ? message.raw : undefined },
+            resources: this.resources, scheduler: this.scheduler, http: this.http, music: this.music, voice: this.voice,
+            canvas: this.canvasContext, now: this.options.now, signal, executionID,
+            cdn: this.cdnService, disableResourceAuthorization: this.options.unsafeDisableResourceAuthorization === true, emoji: this.emojiMap,
+            deleteLater: this.contextDeleteLater });
+          if (this.hasLogSink) await emitLog(this.options, { event: 'command.start', executionID: ctx.executionID, command: ctx.command.name });
+          if (signal.aborted) throw cancellationError();
+          await ctx.prepare();
+          const current = ctx;
+          for (const check of compiled.command.checks ?? []) {
+            const result = await check(current);
+            if (result === false || typeof result === 'string') throw new GuardError(typeof result === 'string' ? result : 'Você não pode executar este comando.', 'CHECK_FAILED');
+          }
+          const execute = async () => {
+            if (compiled.program) {
+              const programEngine = (compiled as { programEngine?: ScriptEngine }).programEngine ?? this.scriptEngine!;
+              const output = programEngine.text(await programEngine.execute(compiled.program, current)).trim();
+              if (output) await current.reply(output);
+            } else if (compiled.command.run) await compiled.command.run(current);
+            else throw new GuardError(`${resolved.input ? 'Subcomando desconhecido.\n' : ''}${this.help(compiled.command.name, prefix)}`, 'INVALID_ARGUMENT');
+          };
+          const local = compiled.command.middleware ?? [];
+          if (this.middleware.length) await runMiddleware(local.length ? [...this.middleware, ...local] : this.middleware, current, execute);
+          else if (local.length) await runMiddleware(local, current, execute);
+          else await execute();
+        } catch (error) {
+          onFailure?.(error, ctx);
+          outcome = error instanceof GuardError ? 'guarded' : 'error';
+          if (!signal.aborted) {
+            const reply = await resolveErrorReply(this.options, error, ctx);
+            if (reply !== null && !signal.aborted) {
+              try {
+                await (ctx ? ctx.reply(reply) : this.transport.reply(message, typeof reply === 'string' ? { content: reply } : reply));
+              } catch (replyError) {
+                await reportError(this.options, replyError, ctx, { source: 'command' });
+              }
             }
           }
+          if (!(error instanceof GuardError)) await reportError(this.options, error, ctx, { source: 'command' });
         }
-        if (!(error instanceof GuardError)) await reportError(this.options, error, ctx, { source: 'command' });
+        if (ctx && this.options.onCommand) {
+          try { await this.options.onCommand(ctx, outcome); }
+          catch (error) { await reportError(this.options, error, ctx, { source: 'command' }); }
+        }
+        if (ctx && this.hasLogSink) await emitLog(this.options, { event: 'command.finish', executionID: ctx.executionID,
+          command: ctx.command.name, outcome, durationMs: performance.now() - started });
+        return outcome;
+      } finally {
+        releaseSlot?.();
       }
-      if (ctx && this.options.onCommand) {
-        try { await this.options.onCommand(ctx, outcome); }
-        catch (error) { await reportError(this.options, error, ctx, { source: 'command' }); }
-      }
-      if (ctx && this.hasLogSink) await emitLog(this.options, { event: 'command.finish', executionID: ctx.executionID,
-        command: ctx.command.name, outcome, durationMs: performance.now() - started });
-      return outcome;
-    } finally {
-      releaseSlot?.();
-    }
+    });
   }
 }
 

@@ -3,6 +3,7 @@ import type { Payload } from '../contracts.js';
 import { GuardError, PartialModerationError, YuzuhaError } from '../errors.js';
 import type { ErrorReportInfo, YuzuhaOptions } from './options.js';
 import { emitLog } from './logging.js';
+import { currentExecution } from './execution.js';
 import { errorCode } from '../services/scheduler.js';
 
 export function userError(error: unknown, ctx?: CommandContext): string {
@@ -18,19 +19,19 @@ export async function reportError(
   info?: Partial<Omit<ErrorReportInfo, 'ctx'>>,
 ): Promise<void> {
   const code = errorCode(error);
-  const executionID = info?.executionID ?? ctx?.executionID;
+  const executionID = info?.executionID ?? ctx?.executionID ?? currentExecution()?.executionID;
   const reportInfo: ErrorReportInfo = Object.freeze({
     source: info?.source ?? (ctx ? 'command' : 'event'),
     ...(info?.event ? { event: info.event } : {}),
     ...(ctx ? { ctx } : {}),
-    ...(executionID ? { executionID } : {}),
+    ...(executionID !== undefined ? { executionID } : {}),
   });
   await emitLog(options, {
     event: 'error',
     errorCode: code,
     source: reportInfo.source,
     ...(reportInfo.event ? { trigger: reportInfo.event } : {}),
-    ...(executionID ? { executionID } : {}),
+    ...(executionID !== undefined ? { executionID } : {}),
     ...(ctx ? { command: ctx.command.name } : {}),
   });
   try {
@@ -42,7 +43,7 @@ export async function reportError(
           code,
           source: reportInfo.source,
           ...(reportInfo.event ? { trigger: reportInfo.event } : {}),
-          ...(executionID ? { executionID } : {}),
+          ...(executionID !== undefined ? { executionID } : {}),
           ...(ctx ? { command: ctx.command.name } : {}),
           err: error,
         }, '[yuzuha]');
