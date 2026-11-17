@@ -106,6 +106,24 @@ function assertEngine(engine: unknown): ScriptEngine {
   return engine as ScriptEngine;
 }
 
+function assertLogger(logger: YuzuhaOptions['logger']): void {
+  if (logger === undefined || logger === false) return;
+  if (!logger || typeof logger !== 'object' || Array.isArray(logger)) {
+    throw new ConfigError('LOGGER_OPTIONS', 'logger deve ser false ou um objeto com métodos info, warn e error.');
+  }
+  const candidate = logger as unknown as Record<string, unknown>;
+  for (const method of ['info', 'warn', 'error'] as const) {
+    if (typeof candidate[method] !== 'function') {
+      throw new ConfigError('LOGGER_OPTIONS', `logger precisa do método ${method} como função.`);
+    }
+  }
+  for (const optional of ['debug', 'child'] as const) {
+    if (candidate[optional] !== undefined && typeof candidate[optional] !== 'function') {
+      throw new ConfigError('LOGGER_OPTIONS', `logger.${optional} deve ser uma função quando informado.`);
+    }
+  }
+}
+
 export class Yuzuha {
   readonly client: Client;
   readonly transport: Transport;
@@ -171,8 +189,11 @@ export class Yuzuha {
   private readonly contextDeleteLater = (channelID: string, messageID: string, ttlMs: number) => this.deleteLater(channelID, messageID, ttlMs);
   private readonly canvasContext: ContextOptions['canvas'];
 
+  private get hasLogSink(): boolean { return Boolean(this.options.onLog || this.options.logger); }
+
   constructor(public readonly options: YuzuhaOptions = {}) {
     setMaxListeners(0, this.shutdown.signal);
+    assertLogger(options.logger);
     if (options.errorReply !== undefined && typeof options.errorReply !== 'function') {
       throw new ConfigError('OPTIONS', 'errorReply deve ser uma função.');
     }
@@ -182,7 +203,7 @@ export class Yuzuha {
       ...rateLimitOptions,
       now: options.now,
       onEvict: () => {
-        if (!this.options.onLog) return;
+        if (!this.hasLogSink) return;
         const time = (this.options.now ?? Date.now)();
         if (this.lastRateLimitEvictLog === undefined || time - this.lastRateLimitEvictLog >= 10_000) {
           this.lastRateLimitEvictLog = time;
@@ -193,7 +214,7 @@ export class Yuzuha {
     const retryPolicy = resolvePolicy(options.retry);
     this.client = options.client ?? new Client(options.clientOptions);
     this.reliability = { retry: retryPolicy, signal: this.shutdown.signal,
-      onRetry: (attempt, _error, delayMs) => { if (options.onLog) void emitLog(this.options, { event: 'transport.retry', attempt, delayMs }); } };
+      onRetry: (attempt, _error, delayMs) => { if (this.hasLogSink) void emitLog(this.options, { event: 'transport.retry', attempt, delayMs }); } };
     if (options.memberCache !== undefined && options.memberCache !== false) {
       const cacheOptions = options.memberCache && typeof options.memberCache === 'object' && !Array.isArray(options.memberCache)
         ? { ...options.memberCache, now: options.memberCache.now ?? options.now }
@@ -218,7 +239,7 @@ export class Yuzuha {
     const sweepOptions = resolveVariableSweepOptions(options.variables);
     this.sweepIntervalMs = sweepOptions.intervalMs;
     this.sweepBatch = sweepOptions.batch;
-    if (options.unsafeDisableResourceAuthorization && options.onLog)
+    if (options.unsafeDisableResourceAuthorization && this.hasLogSink)
       void emitLog(this.options, { event: 'authorization.disabled' });
     this.timers = options.timers ?? { setTimeout: (fn: () => void, ms: number) => setTimeout(fn, ms).unref(), clearTimeout: (handle: unknown) => clearTimeout(handle as never) };
     this.store = options.store ?? new JsonStore(defaultDataPath(options.name));
@@ -227,7 +248,7 @@ export class Yuzuha {
       (task, signal) => this.runScheduled(task, signal), {
         now: options.now,
         timers: this.timers,
-        onEvent: event => this.execution.run(true, () => emitLog(this.options, event)),
+        onEvent: event => { if (this.hasLogSink) return this.execution.run(true, () => emitLog(this.options, event)); },
         onError: error => this.execution.run(true, () => reportError(this.options, error, undefined, { source: 'scheduler' })),
       });
     this.http = options.http === false ? undefined : options.http ?? new HttpService();
@@ -316,7 +337,7 @@ export class Yuzuha {
     const handle = this.timers.setTimeout(() => {
       this.pendingTimers.delete(handle);
       void this.transport.delete(channelID, messageID).catch(error => {
-        if (this.options.onLog) void emitLog(this.options, { event: 'message.ttl_failed', messageID, channelID,
+        if (this.hasLogSink) void emitLog(this.options, { event: 'message.ttl_failed', messageID, channelID,
           errorCode: (error as { code?: string }).code });
       });
     }, ttlMs);
@@ -448,10 +469,10 @@ export class Yuzuha {
       canvas: this.canvasContext, now: this.options.now, cooldown: this.contextCooldown, signal,
       cdn: this.cdnService, disableResourceAuthorization: this.options.unsafeDisableResourceAuthorization === true, emoji: this.emojiMap,
       deleteLater: this.contextDeleteLater });
-    const started = this.options.onLog ? performance.now() : 0;
+    const started = this.hasLogSink ? performance.now() : 0;
     let outcome: DispatchResult = 'success';
     try {
-      if (this.options.onLog) await emitLog(this.options, { event: 'event.start', executionID: ctx.executionID, command: ctx.command.name });
+      if (this.hasLogSink) await emitLog(this.options, { event: 'event.start', executionID: ctx.executionID, command: ctx.command.name });
       const output = engine.text(await engine.execute(program, ctx)).trim();
       if (output) {
         if (!ctx.channelID) throw new GuardError('Defina um canal para a saída deste evento.', 'INVALID_ARGUMENT');
@@ -461,7 +482,7 @@ export class Yuzuha {
       outcome = error instanceof GuardError ? 'guarded' : 'error';
       await reportError(this.options, error, ctx, { source: 'event', event: definition.event, executionID: ctx.executionID });
     } finally {
-      if (this.options.onLog) await emitLog(this.options, { event: 'event.finish', executionID: ctx.executionID,
+      if (this.hasLogSink) await emitLog(this.options, { event: 'event.finish', executionID: ctx.executionID,
         command: ctx.command.name, outcome, durationMs: performance.now() - started });
     }
   }
@@ -673,7 +694,7 @@ export class Yuzuha {
       if (this.concurrencyLimiter) {
         const acquired = await this.concurrencyLimiter.acquire(message.guildID, signal);
         if (!acquired) {
-          if (!this.closing && !signal.aborted && this.options.onLog) {
+          if (!this.closing && !signal.aborted && this.hasLogSink) {
             await emitLog(this.options, {
               event: 'dispatch.dropped',
               reason: 'concurrency',
@@ -689,7 +710,7 @@ export class Yuzuha {
       const { compiled, prefix } = resolved;
       let ctx: CommandContext | undefined;
       let outcome: DispatchResult = 'success';
-      const started = this.options.onLog ? performance.now() : 0;
+      const started = this.hasLogSink ? performance.now() : 0;
       try {
         ctx = new CommandContext({ message, transport: this.transport, store: this.store, command: compiled.command,
           flagLookup: compiled.flagLookup, input: resolved.input, prefix, lineage: compiled.lineage,
@@ -699,7 +720,7 @@ export class Yuzuha {
           canvas: this.canvasContext, now: this.options.now, signal, executionID,
           cdn: this.cdnService, disableResourceAuthorization: this.options.unsafeDisableResourceAuthorization === true, emoji: this.emojiMap,
           deleteLater: this.contextDeleteLater });
-        if (this.options.onLog) await emitLog(this.options, { event: 'command.start', executionID: ctx.executionID, command: ctx.command.name });
+        if (this.hasLogSink) await emitLog(this.options, { event: 'command.start', executionID: ctx.executionID, command: ctx.command.name });
         if (signal.aborted) throw cancellationError();
         await ctx.prepare();
         const current = ctx;
@@ -738,7 +759,7 @@ export class Yuzuha {
         try { await this.options.onCommand(ctx, outcome); }
         catch (error) { await reportError(this.options, error, ctx, { source: 'command' }); }
       }
-      if (ctx && this.options.onLog) await emitLog(this.options, { event: 'command.finish', executionID: ctx.executionID,
+      if (ctx && this.hasLogSink) await emitLog(this.options, { event: 'command.finish', executionID: ctx.executionID,
         command: ctx.command.name, outcome, durationMs: performance.now() - started });
       return outcome;
     } finally {
