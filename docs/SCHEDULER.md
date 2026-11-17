@@ -72,6 +72,7 @@ const scheduler = new Scheduler(store, execute, {
   globalConcurrency: 8,
   leaseMs: 300_000,
   heartbeatMs: 100_000,
+  pollMs: 30_000,
 });
 ```
 
@@ -112,10 +113,19 @@ manual das falhas operacionais elegíveis. O limite padrão é 1000 registros.
 
 ## Encerramento e recuperação
 
-Heartbeat renova a claim enquanto o handler executa. `stop()` cancela os sinais
-dos handlers ativos e interrompe novas claims; `drain()` aguarda os handlers e a
-finalização persistida. Os handlers precisam respeitar cancelamento cooperativo.
-O ciclo de vida do bot coordena essas operações durante `destroy()`.
+`start(intervalMs?)` executa um ciclo inicial e agenda um único timer para o
+próximo vencimento conhecido, limitado por `pollMs` (1–3600000 ms, padrão
+30000 ms) ou pelo `intervalMs` informado em `start`. Mutações locais (`add`,
+`addCron`, `retry`, `edit`, `pause`, `resume`, `cancel` e conclusão de tarefa)
+rearmam o timer sem varredura fixa de 1 s; `timers` (`setTimeout`/`clearTimeout`)
+aceita relógios determinísticos como `FakeTimers`, e o bot injeta os próprios
+`timers` no scheduler padrão.
+
+Heartbeat renova a claim enquanto o handler executa. `stop()` limpa o timer
+pendente, cancela os sinais dos handlers ativos e interrompe novas claims;
+`drain()` aguarda os ciclos, handlers e finalização persistida. Os handlers
+precisam respeitar cancelamento cooperativo. O ciclo de vida do bot coordena
+essas operações durante `destroy()`.
 
 Uma claim expirada pode ser recuperada por outra instância. Isso não garante
 execução exatamente uma vez após queda entre uma chamada remota e a confirmação
