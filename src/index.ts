@@ -85,6 +85,7 @@ export { FluxerTransport, MemberCache, incoming } from './adapter.js';
 export type { MemberCacheOptions } from './adapter.js';
 export { FluxerResources } from './infrastructure/fluxer/resources.js';
 export { JsonStore, MemoryStore, defaultDataPath } from './store.js';
+export type { JsonStoreOptions, JsonStoreTimers } from './store.js';
 export { SQLiteStore } from './sqlite.js';
 export { loadCommands, commandFiles } from './loader.js';
 export * from './errors.js';

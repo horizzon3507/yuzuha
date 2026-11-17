@@ -23,11 +23,12 @@ export class MemoryStore implements Store {
   protected readonly queue = new TransactionQueue();
 
   protected async load(): Promise<void> {}
+  protected async prepareAccess(): Promise<void> { await this.load(); }
   protected async commit(_state: State): Promise<void> {}
 
   read<T>(reader: (state: Readonly<State>) => T): Promise<T> {
     return this.queue.run(async () => {
-      await this.load();
+      await this.prepareAccess();
       const { draft } = createStateDraft(this.state);
       const value = reader(draft);
       if (value && (typeof value === 'object' || typeof value === 'function')
@@ -40,7 +41,7 @@ export class MemoryStore implements Store {
 
   readVariable(key: string, now: () => number): Promise<JsonValue | undefined> {
     return this.queue.run(async () => {
-      await this.load();
+      await this.prepareAccess();
       const expiry = this.state.variableExpirations?.[key];
       return Object.hasOwn(this.state.variables, key) && (expiry === undefined || expiry > now())
         ? cloneValue(this.state.variables[key]!) : undefined;
