@@ -53,9 +53,9 @@ Os registros têm `timestamp` ISO e um `event`:
 | `command.finish` | Mesmos campos, `outcome`, `durationMs` |
 | `event.start` | `executionID`, `command` no formato `event:nome` |
 | `event.finish` | Mesmos campos, `outcome`, `durationMs` |
-| `error` | `errorCode`, `source`, `trigger?`, contexto de execução quando houver |
-| `transport.retry` | `attempt`, `delayMs?` |
-| `message.ttl_failed` | `messageID`, `channelID`, `errorCode?` |
+| `error` | `errorCode`, `source`, `trigger?`, `executionID?`, `command?` |
+| `transport.retry` | `attempt`, `delayMs?`, `executionID?` |
+| `message.ttl_failed` | `messageID`, `channelID`, `executionID?`, `errorCode?` |
 | `authorization.disabled` | Sem campos extras |
 | `dispatch.dropped` | `reason`, `guildID?`, `channelID?` |
 | `rate_limit.evicted` | Sem campos extras |
@@ -63,7 +63,38 @@ Os registros têm `timestamp` ISO e um `event`:
 | `schedule.finish` | Mesmos campos, `status`, `durationMs`, `retryable`, `errorCode?` |
 | `schedule.error` | `errorCode` da falha de manutenção |
 
-`ctx.executionID` permite correlacionar logs próprios ao comando. Uma execução
+## Correlação implícita (`currentExecution`)
+
+O framework propaga um `ExecutionStore` congelado via `AsyncLocalStorage` através
+de chamadas assíncronas (`await`). Serviços auxiliares podem ler o contexto sem
+receber `ctx`:
+
+```ts
+import { currentExecution } from 'yuzuha';
+
+function registrarOperacao() {
+  const exec = currentExecution();
+  // { executionID, source: 'command' | 'event' | 'gateway' | 'scheduler', ... }
+  return exec?.executionID;
+}
+```
+
+| Campo | Descrição |
+|---|---|
+| `executionID` | Mesmo valor de `ctx.executionID` (ou da claim no scheduler) |
+| `source` | `'command'`, `'event'`, `'gateway'` ou `'scheduler'` |
+| `command` | Nome resolvido do comando ou subcomando, quando aplicável |
+| `event` | Nome do evento em `contextEvent` e `scriptEvent` |
+| `guildID`, `channelID`, `userID` | Identificadores da execução, quando presentes |
+
+Fora de uma execução do bot, `currentExecution()` retorna `undefined`. Falhas
+reportadas sem `ctx` e eventos `transport.retry` herdam automaticamente o
+`executionID` da execução corrente. O escopo também registra o bot dono da
+execução: chamar `botA.destroy()` dentro de um handler de `botA` retorna
+imediatamente para evitar deadlock, enquanto chamar `botB.destroy()` a partir do
+mesmo handler aguarda a drenagem de `botB`.
+
+`ctx.executionID` continua disponível diretamente no contexto. Uma execução
 agendada compartilha o ID da claim com seu despacho, ligando os eventos de tarefa
 e comando. O resultado de comando pode ser `success`, `guarded` ou
 `error`; mensagens ignoradas não criam contexto ou eventos de comando.
