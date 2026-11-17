@@ -65,11 +65,12 @@ pausa ou retomada.
 ## Concorrência e retry
 
 ```ts
-import { Scheduler } from 'yuzuha';
+import { MemoryLock, Scheduler } from 'yuzuha';
 
 const scheduler = new Scheduler(store, execute, {
   concurrency: 4,
   globalConcurrency: 8,
+  lock: new MemoryLock(),
   leaseMs: 300_000,
   heartbeatMs: 100_000,
   pollMs: 30_000,
@@ -82,6 +83,27 @@ posterior consulta as tarefas novamente. Cada worker reivindica sua tarefa em
 uma transação imediatamente antes de executar. Instâncias que compartilham um
 store transacional não reivindicam a mesma tarefa simultaneamente. SQLite é a
 opção para processos concorrentes; stores JSON exigem um único processo escritor.
+
+Para coordenar reivindicações entre múltiplos processos com um lock distribuído
+(por exemplo, Redis ou outro backend externo), injete `lock` (`Lock`) em
+`SchedulerOptions` ou `YuzuhaOptions`:
+
+- Antes de reivindicar no store, o worker chama
+  ``lock.acquire(`schedule:${task.id}`, leaseMs)``. Se retornar `null`, a tarefa
+  já está bloqueada por outra instância e o worker a ignora sem gravar no store.
+- Durante a execução, o heartbeat chama `lease.renew?.(leaseMs)` antes de
+  atualizar `runningAt`; se `renew` retornar `false`, o sinal da execução é
+  abortado imediatamente.
+- Após persistir conclusão ou retry (e também se a reivindicação for recusada,
+  interrompida por `stop()` ou falhar), `lease.release()` é executado em
+  `finally`.
+- `recover()` também adquire `schedule:<taskID>` antes de limpar uma claim
+  órfã e libera o lock ao terminar, evitando roubar tarefas com lease ainda ativa
+  em outro processo.
+- `MemoryLock` implementa `Lock` em memória (com TTL via `now`, exclusão mútua
+  por chave e validação de token em `release`/`renew`) para desenvolvimento e
+  testes; opções ou objetos de lock inválidos lançam `ConfigError` com código
+  `LOCK_OPTIONS`. Veja também [FRAMEWORK.md](FRAMEWORK.md).
 
 `globalConcurrency` limita de 1 a 128 as claims ativas no store compartilhado.
 O padrão é omitido, preservando apenas o limite local. Todos os processos que

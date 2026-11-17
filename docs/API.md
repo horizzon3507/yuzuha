@@ -20,6 +20,7 @@ A fonte das assinaturas completas são as declarações TypeScript distribuídas
 | `resources` | Implementação de `Resources`; padrão `FluxerResources` sobre o client |
 | `store` | Implementação de `Store`; padrão `JsonStore` |
 | `scheduler` | `Scheduler` próprio, `false` para desligar; padrão sobre o mesmo store |
+| `lock` | Implementação síncrona ou assíncrona de `Lock` (`LockLease`) para coordenação de claims do scheduler |
 | `http` | `HttpService` próprio, `false` para desligar; padrão seguro |
 | `music` | `MusicManager` injetado, exposto em `ctx.music`; bot encerra seus players |
 | `voice` | `NativeVoice` injetado, exposto em `ctx.voice`; bot encerra suas conexões |
@@ -341,7 +342,7 @@ exceto a comparação, que retorna -1, 0 ou 1. Veja [operações de dados](funct
 | `YuzuhaError` | Erro base com `code` tipado (`YuzuhaErrorCode \| (string & {})`) para diagnóstico |
 | `TransportError` | Subclasse de `YuzuhaError` para falhas do transporte (`ROLES_UNAVAILABLE`, `CHANNEL_GUILD`, `VOICE_CHANNEL`, `MODERATION_ACTION`, `NOT_FOUND`, `API_ERROR`) |
 | `StoreError` | Subclasse de `YuzuhaError` para falhas de persistência (`STORE_NAME`, `STORE_CLOSED`, `STORE_ASYNC`, `STORE_CORRUPT`, `STORE_INVALID`, `STORE_READONLY`) |
-| `ConfigError` | Subclasse de `YuzuhaError` para configuração, opções inválidas e token ausente (`CONFIG_MISSING`, `CONFIG_INVALID`, `MEMBER_CACHE_OPTIONS`, `RATE_LIMIT_OPTIONS`, `PREFIX`, `EMOJI_OPTIONS`, `ENGINE_INVALID`, `VARIABLE_SWEEP_OPTIONS`, `OPTIONS`, `TOKEN_MISSING`) |
+| `ConfigError` | Subclasse de `YuzuhaError` para configuração, opções inválidas e token ausente (`CONFIG_MISSING`, `CONFIG_INVALID`, `MEMBER_CACHE_OPTIONS`, `RATE_LIMIT_OPTIONS`, `LOCK_OPTIONS`, `PREFIX`, `EMOJI_OPTIONS`, `ENGINE_INVALID`, `VARIABLE_SWEEP_OPTIONS`, `OPTIONS`, `TOKEN_MISSING`) |
 | `ScriptError` | Erro com fonte, offset, arquivo, linha, coluna e `format()` |
 | `GuardError` / `GUARD` | Condição de uso recusada; mensagem apropriada ao usuário |
 | `PartialModerationError` / `MODERATION_PARTIAL` | API confirmou ação, mas o caso não foi salvo |

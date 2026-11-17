@@ -436,6 +436,48 @@ const bot = new Yuzuha({ prefix: '!', rateLimiter });
   `close?.()` apenas quando o limitador foi criado pelo próprio bot; um
   `rateLimiter` injetado continua sob responsabilidade do chamador.
 
+### Lock distribuído do scheduler (`lock`)
+
+Para coordenar claims de tarefas agendadas entre várias instâncias (sem
+recorrer a disputa de escrita no store), injete uma implementação do port `Lock`
+em `YuzuhaOptions.lock` (ou diretamente em `SchedulerOptions.lock`):
+
+```ts
+import { Yuzuha } from 'yuzuha';
+import type { Lock } from 'yuzuha';
+
+const lock: Lock = {
+  async acquire(key, ttlMs) {
+    // Adquira a chave com TTL e token exclusivo, ou retorne null se já ocupada.
+    return {
+      key,
+      token: 'lease-token',
+      async renew(nextTtlMs) { return true; },
+      async release() {},
+    };
+  },
+  async close() {
+    // Opcional: encerramento gerenciado pelo chamador.
+  },
+};
+
+const bot = new Yuzuha({ prefix: '!', lock });
+```
+
+- **Chave, renovação e recuperação**: o scheduler adquire `schedule:<taskID>`
+  com `ttlMs: leaseMs`, renova via `lease.renew?.(leaseMs)` no heartbeat (abortando
+  a tarefa se `renew` retornar `false`), libera em `finally` após persistir o
+  resultado e protege `recover()` com a mesma chave para não liberar tarefas
+  ainda bloqueadas em outro processo.
+- **Implementação em memória**: `MemoryLock` fornece um `Lock` síncrono em
+  memória com expiração por TTL (`now`) e proteção por token para testes e
+  ambientes de processo único.
+- **Validação e propriedade**: um `lock` sem função `acquire` (ou `close`
+  não-função) lança `ConfigError` com código `LOCK_OPTIONS`. Como ocorre com
+  `store` e `rateLimiter` injetados, `bot.destroy()` drena o scheduler (liberando
+  leases ativas) mas não chama `lock.close?.()`, mantendo a posse no chamador.
+  Veja também [SCHEDULER.md](SCHEDULER.md).
+
 ## Testes sem rede
 
 ```ts
