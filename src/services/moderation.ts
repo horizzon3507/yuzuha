@@ -3,7 +3,7 @@ import { MAX_TIMEOUT_MS, userID } from '../domain/values.js';
 import type { Store } from '../ports/store.js';
 import type { Transport } from '../ports/transport.js';
 import { GuardError, PartialModerationError, YuzuhaError } from '../shared/errors.js';
-import { AuthorizationService, requireGuild } from './authorization.js';
+import { AuthorizationService, MemberMemo, requireGuild } from './authorization.js';
 import type { ActorScope } from './authorization.js';
 import { CaseService } from './cases.js';
 
@@ -11,8 +11,8 @@ export class ModerationService {
   private readonly authorization: AuthorizationService;
   private readonly cases: CaseService;
 
-  constructor(private readonly transport: Transport, store: Store, private readonly scope: ActorScope) {
-    this.authorization = new AuthorizationService(transport, scope);
+  constructor(private readonly transport: Transport, store: Store, private readonly scope: ActorScope, memo?: MemberMemo) {
+    this.authorization = new AuthorizationService(transport, scope, memo);
     this.cases = new CaseService(store);
   }
 
