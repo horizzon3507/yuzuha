@@ -220,6 +220,31 @@ removidas automaticamente, e eventos do gateway (`GuildMemberUpdate`,
 `GuildDelete`, `ChannelUpdate` e `ChannelDelete`) invalidam o escopo afetado.
 `destroy()` remove os listeners anexados e limpa o cache.
 
+### Limites de concorrência
+
+Para limitar execuções simultâneas de comandos, configure `concurrency` nas
+opções de `Yuzuha`:
+
+```ts
+const bot = new Yuzuha({
+  name: 'meu-bot',
+  concurrency: { max: 32, perGuild: 4, maxPending: 128 },
+});
+```
+
+- `max`: inteiro seguro `>= 1` com o teto global de comandos em execução.
+- `perGuild`: inteiro seguro `>= 1` por `guildID`. Mensagens diretas (sem
+  `guildID`) ignoram o limite por servidor e obedecem apenas a `max`.
+- `maxPending`: inteiro seguro `>= 0` para a fila de espera. Quando a fila está
+  cheia, despachos excedentes retornam `'ignored'` e registram em `onLog` o
+  evento `dispatch.dropped` (`reason: 'concurrency'`, `guildID`, `channelID`).
+
+Ao liberar uma vaga, o limitador acorda o item mais antigo da fila cujo servidor
+tenha cota disponível, evitando que picos em um servidor bloqueiem os demais.
+Opções inválidas lançam `CONCURRENCY_OPTIONS`. Em `destroy()`, os itens em
+espera são liberados imediatamente como `'ignored'`, sem emitir
+`dispatch.dropped`.
+
 ## Testes sem rede
 
 ```ts
