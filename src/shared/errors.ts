@@ -383,10 +383,19 @@ export class ScriptError extends YuzuhaError {
 export type GuardReason = 'GENERIC' | 'NOT_IN_GUILD' | 'NO_AUTHOR' | 'PERMISSION_MISSING_AUTHOR'
   | 'PERMISSION_MISSING_BOT' | 'HIERARCHY' | 'ADMIN_IMMUNE' | 'SELF_TARGET' | 'BOT_TARGET'
   | 'OWNER_TARGET' | 'MEMBER_NOT_FOUND' | 'NOT_BANNED' | 'INVALID_ARGUMENT' | 'INVALID_REASON'
-  | 'INVALID_DURATION' | 'COOLDOWN';
+  | 'INVALID_DURATION' | 'COOLDOWN' | 'CHECK_FAILED';
 
 export class GuardError extends YuzuhaError {
-  constructor(message: string, public readonly reason: GuardReason = 'GENERIC') { super('GUARD', message); }
+  readonly remainingMs?: number;
+
+  constructor(
+    message: string,
+    public readonly reason: GuardReason = 'GENERIC',
+    options?: ErrorOptions & { remainingMs?: number },
+  ) {
+    super('GUARD', message, options);
+    if (options?.remainingMs !== undefined) this.remainingMs = options.remainingMs;
+  }
 }
 
 export function isGuardReason(error: unknown, ...reasons: GuardReason[]): error is GuardError {

@@ -668,7 +668,7 @@ export class Yuzuha {
         const current = ctx;
         for (const check of compiled.command.checks ?? []) {
           const result = await check(current);
-          if (result === false || typeof result === 'string') throw new GuardError(typeof result === 'string' ? result : 'Você não pode executar este comando.', 'GENERIC');
+          if (result === false || typeof result === 'string') throw new GuardError(typeof result === 'string' ? result : 'Você não pode executar este comando.', 'CHECK_FAILED');
         }
         const execute = async () => {
           if (compiled.program) {
