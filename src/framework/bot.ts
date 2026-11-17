@@ -27,7 +27,7 @@ import { route } from './routing.js';
 import { DynamicPrefixCache, ValidatedPrefixCache, prefixCacheKey, validatePrefixCacheOptions } from './prefix-cache.js';
 import { defineEvent, NativeEvents } from './events.js';
 import type { ContextEventDefinition, NativeEvent, NativeListener } from './events.js';
-import { ScheduleExecutionError, Scheduler } from '../services/scheduler.js';
+import { ScheduleExecutionError, Scheduler, validateLock } from '../services/scheduler.js';
 import { StateMaintenance } from '../services/state-maintenance.js';
 import type { CleanupResult } from '../services/state-maintenance.js';
 import type { ScheduleRecord } from '../domain/state.js';
@@ -248,6 +248,7 @@ export class Yuzuha {
     validateHooks(options.hooks);
     const rateLimitOptions = resolveRateLimitOptions(options.rateLimits);
     const customRateLimiter = assertRateLimiter(options.rateLimiter);
+    const lock = validateLock(options.lock);
     this.ownsRateLimiter = customRateLimiter === undefined;
     this.limits = customRateLimiter ?? new MemoryRateLimiter({
       ...rateLimitOptions,
@@ -307,6 +308,7 @@ export class Yuzuha {
       (task, signal) => this.runScheduled(task, signal), {
         now: options.now,
         timers: this.timers,
+        lock,
         onEvent: event => {
           if (!this.hasLogSink) return;
           return runInExecution(this, {

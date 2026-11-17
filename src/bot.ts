@@ -2,6 +2,9 @@ export { Yuzuha, Bot } from './framework/bot.js';
 export { MemoryRateLimiter } from './framework/rate-limits.js';
 export type { MemoryRateLimiterOptions, RateLimitsOptions } from './framework/rate-limits.js';
 export type { RateLimiter } from './ports/rate-limiter.js';
+export { MemoryLock } from './framework/locks.js';
+export type { MemoryLockOptions } from './framework/locks.js';
+export type { Lock, LockLease } from './ports/lock.js';
 export type {
   YuzuhaOptions,
   ErrorReplyResult,

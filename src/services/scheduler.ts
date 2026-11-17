@@ -2,9 +2,10 @@ import { randomUUID } from 'node:crypto';
 import type { ScheduleExecutionRecord, ScheduleRecord } from '../domain/state.js';
 import { assertTimezone, nextCron, parseCron } from '../domain/cron.js';
 import type { MissedRunPolicy } from '../domain/cron.js';
+import type { Lock, LockLease } from '../ports/lock.js';
 import type { Store } from '../ports/store.js';
 import { cloneValue } from '../shared/clone.js';
-import { GuardError, PartialModerationError, YuzuhaError } from '../shared/errors.js';
+import { ConfigError, GuardError, PartialModerationError, YuzuhaError } from '../shared/errors.js';
 
 export interface RetryPolicy { maxAttempts?: number; retryDelayMs?: number; retryBackoff?: number; retryJitter?: number }
 export interface ScheduleInput extends RetryPolicy {
@@ -66,9 +67,30 @@ export interface SchedulerOptions {
   concurrency?: number;
   /** Shared-store claim ceiling; every scheduler using that store must use the same value. */
   globalConcurrency?: number;
+  lock?: Lock;
   random?: () => number;
   onEvent?: (event: SchedulerEvent) => void | Promise<void>;
   onError?: (error: unknown) => void | Promise<void>;
+}
+
+/** Validates an optional distributed {@link Lock} implementation with `ConfigError('LOCK_OPTIONS', ...)`. */
+export function validateLock(lock: unknown): Lock | undefined {
+  if (lock === undefined) return undefined;
+  if (!lock || typeof lock !== 'object' || Array.isArray(lock)) {
+    throw new ConfigError('LOCK_OPTIONS', 'lock deve ser um objeto com o método acquire.');
+  }
+  const candidate = lock as Record<string, unknown>;
+  if (typeof candidate.acquire !== 'function') {
+    throw new ConfigError('LOCK_OPTIONS', 'lock precisa do método acquire como função.');
+  }
+  if (candidate.close !== undefined && typeof candidate.close !== 'function') {
+    throw new ConfigError('LOCK_OPTIONS', 'lock.close deve ser uma função quando informado.');
+  }
+  return lock as Lock;
+}
+
+function taskLockKey(id: string): string {
+  return `schedule:${id}`;
 }
 const DEFAULT_TIMERS: NonNullable<SchedulerOptions['timers']> = {
   setTimeout: (fn, ms) => setTimeout(fn, ms).unref(),
@@ -131,10 +153,12 @@ export class Scheduler {
   private readonly timers: NonNullable<SchedulerOptions['timers']>;
   private readonly now: () => number;
   private readonly concurrency: number;
+  private readonly lock?: Lock;
   private ticking?: Promise<void>;
   constructor(private readonly store: Store,
     private readonly execute: (task: ScheduleRecord, signal: AbortSignal) => Promise<void>,
     private readonly options: SchedulerOptions = {}) {
+    this.lock = validateLock(options.lock);
     this.leaseMs = options.leaseMs ?? ORPHAN_MS;
     this.heartbeatMs = options.heartbeatMs ?? Math.max(1, Math.floor(this.leaseMs / 3));
     this.historyLimit = options.historyLimit ?? 1000;
@@ -359,7 +383,7 @@ export class Scheduler {
   }
 
   private async runTick(now: number, generation: number): Promise<void> {
-    if (this.store.claimDueSchedules) {
+    if (!this.lock && this.store.claimDueSchedules) {
       await this.runClaimedTick(this.store.claimDueSchedules.bind(this.store), now, generation);
       return;
     }
@@ -397,37 +421,52 @@ export class Scheduler {
         const id = due[cursor++]!;
         let skippedDue: number | null = null;
         let atCapacity = false;
-        const task = await this.store.update(state => {
-          if (generation !== this.generation) return null;
-          let item: ScheduleRecord | undefined;
-          let active = 0;
-          for (const candidate of state.schedules) {
-            if (candidate.id === id) {
-              item = candidate;
-              if (globalCap === undefined) break;
+        let lease: LockLease | undefined;
+        let handoff = false;
+        try {
+          if (this.lock) {
+            const acquired = await this.lock.acquire(taskLockKey(id), this.leaseMs);
+            if (!acquired) continue;
+            lease = acquired;
+            if (generation !== this.generation) continue;
+          }
+          const task = await this.store.update(state => {
+            if (generation !== this.generation) return null;
+            let item: ScheduleRecord | undefined;
+            let active = 0;
+            for (const candidate of state.schedules) {
+              if (candidate.id === id) {
+                item = candidate;
+                if (globalCap === undefined) break;
+              }
+              if (globalCap !== undefined && candidate.runningAt != null) active++;
             }
-            if (globalCap !== undefined && candidate.runningAt != null) active++;
+            if (!item || item.paused || item.due > now || item.runningAt != null) return null;
+            if (item.cron !== undefined && item.attempts === 0 && item.missedRun === 'skip' && item.due + 60_000 <= now) {
+              item.due = nextCron(item.cron, item.timezone!, Math.floor(now / 60_000) * 60_000 - 1);
+              if (item.due > now) { skippedDue = item.due; return null; }
+            }
+            if (globalCap !== undefined && active >= globalCap) {
+              atCapacity = true;
+              return null;
+            }
+            item.runningAt = now; item.claimID = randomUUID();
+            return item;
+          });
+          if (skippedDue !== null && (this.lastNextDue == null || skippedDue < this.lastNextDue)) {
+            this.lastNextDue = skippedDue;
           }
-          if (!item || item.paused || item.due > now || item.runningAt != null) return null;
-          if (item.cron !== undefined && item.attempts === 0 && item.missedRun === 'skip' && item.due + 60_000 <= now) {
-            item.due = nextCron(item.cron, item.timezone!, Math.floor(now / 60_000) * 60_000 - 1);
-            if (item.due > now) { skippedDue = item.due; return null; }
+          if (atCapacity) {
+            saturated = true;
+            break;
           }
-          if (globalCap !== undefined && active >= globalCap) {
-            atCapacity = true;
-            return null;
+          if (task) {
+            handoff = true;
+            await this.runTask(task, now, generation, lease);
           }
-          item.runningAt = now; item.claimID = randomUUID();
-          return item;
-        });
-        if (skippedDue !== null && (this.lastNextDue == null || skippedDue < this.lastNextDue)) {
-          this.lastNextDue = skippedDue;
+        } finally {
+          if (!handoff && lease) await this.releaseLease(lease);
         }
-        if (atCapacity) {
-          saturated = true;
-          break;
-        }
-        if (task) await this.runTask(task, now, generation);
       }
     });
     const results = await Promise.allSettled(workers);
@@ -435,7 +474,14 @@ export class Scheduler {
     const failure = results.find(result => result.status === 'rejected');
     if (failure?.status === 'rejected') throw failure.reason;
   }
-  private async runTask(task: ScheduleRecord, now: number, generation: number): Promise<void> {
+  private async releaseLease(lease: LockLease): Promise<void> {
+    try {
+      await lease.release();
+    } catch (error) {
+      await this.report(error);
+    }
+  }
+  private async runTask(task: ScheduleRecord, now: number, generation: number, lease?: LockLease): Promise<void> {
     const id = task.id, claimID = task.claimID!;
     const snapshot = structuredClone(task);
     this.activeClaims.add(claimID);
@@ -444,35 +490,51 @@ export class Scheduler {
     if (generation !== this.generation) controller.abort();
     const started = this.now();
     let heartbeat = Promise.resolve();
-    const timer = setInterval(() => {
-      heartbeat = heartbeat.then(async () => {
-        const held = await this.store.update(state => {
-          const current = state.schedules.find(item => item.id === id && item.claimID === claimID);
-          if (!current) return false;
-          current.runningAt = now + Math.max(0, this.now() - started);
-          return true;
-        });
-        if (!held) controller.abort();
-      }).catch(async error => { controller.abort(); await this.report(error); });
-    }, this.heartbeatMs);
-    timer.unref();
-    let ok = false, retryable = true, code: string | undefined;
-    await this.notify({ event: 'schedule.start', scheduleID: id, executionID: claimID });
+    let timer: ReturnType<typeof setInterval> | undefined;
+    let leaseReleased = false;
+    const release = async (): Promise<void> => {
+      if (leaseReleased || !lease) return;
+      leaseReleased = true;
+      await this.releaseLease(lease);
+    };
     try {
-      if (controller.signal.aborted) throw new YuzuhaError('SCHEDULE_ABORTED', 'Execução cancelada.');
-      await this.execute(task, controller.signal); ok = true;
-    }
-    catch (error) {
-      code = errorCode(error);
-      retryable = !(error instanceof GuardError || error instanceof PartialModerationError
-        || (error instanceof ScheduleExecutionError && !error.retryable));
-    }
-    clearInterval(timer);
-    await heartbeat;
-    const finishedAt = now + Math.max(0, this.now() - started);
-    let status: ScheduleExecutionRecord['status'] = ok ? 'success' : 'failed';
-    let nextDue: number | null = null;
-    try {
+      timer = setInterval(() => {
+        heartbeat = heartbeat.then(async () => {
+          if (controller.signal.aborted) return;
+          if (lease?.renew) {
+            const renewed = await lease.renew(this.leaseMs);
+            if (!renewed) {
+              controller.abort();
+              return;
+            }
+          }
+          const held = await this.store.update(state => {
+            const current = state.schedules.find(item => item.id === id && item.claimID === claimID);
+            if (!current) return false;
+            current.runningAt = now + Math.max(0, this.now() - started);
+            return true;
+          });
+          if (!held) controller.abort();
+        }).catch(async error => { controller.abort(); await this.report(error); });
+      }, this.heartbeatMs);
+      timer.unref();
+      let ok = false, retryable = true, code: string | undefined;
+      await this.notify({ event: 'schedule.start', scheduleID: id, executionID: claimID });
+      try {
+        if (controller.signal.aborted) throw new YuzuhaError('SCHEDULE_ABORTED', 'Execução cancelada.');
+        await this.execute(task, controller.signal); ok = true;
+      }
+      catch (error) {
+        code = errorCode(error);
+        retryable = !(error instanceof GuardError || error instanceof PartialModerationError
+          || (error instanceof ScheduleExecutionError && !error.retryable));
+      }
+      clearInterval(timer);
+      timer = undefined;
+      await heartbeat;
+      const finishedAt = now + Math.max(0, this.now() - started);
+      let status: ScheduleExecutionRecord['status'] = ok ? 'success' : 'failed';
+      let nextDue: number | null = null;
       await this.store.update(state => {
         const index = state.schedules.findIndex(item => item.id === id && item.claimID === claimID);
         if (index < 0) {
@@ -513,14 +575,21 @@ export class Scheduler {
         if (history.length > this.historyLimit) history.splice(0, history.length - this.historyLimit);
         nextDue = nextDueFrom(state.schedules);
       });
+      await release();
       this.lastNextDue = nextDue;
       if (this.running && this.activeCycles === 0) this.armTimer();
       await this.notify({ event: 'schedule.finish', scheduleID: id, executionID: claimID,
         status, durationMs: finishedAt - now, retryable, ...(code ? { errorCode: code } : {}) });
-    } finally { this.activeClaims.delete(claimID); this.controllers.delete(controller); }
+    } finally {
+      if (timer !== undefined) clearInterval(timer);
+      await heartbeat.catch(() => {});
+      await release();
+      this.activeClaims.delete(claimID);
+      this.controllers.delete(controller);
+    }
   }
   async recover(now = this.now()): Promise<number> {
-    if (this.store.recoverSchedules) {
+    if (!this.lock && this.store.recoverSchedules) {
       const { freed, nextDue } = await this.store.recoverSchedules(now - this.leaseMs, this.activeClaims);
       if (freed > 0) {
         this.lastNextDue = nextDue;
@@ -530,18 +599,46 @@ export class Scheduler {
     }
     const stale = (item: ScheduleRecord): boolean => item.runningAt != null && now - item.runningAt > this.leaseMs
       && !this.activeClaims.has(item.claimID ?? '');
-    if (!await this.store.read(state => state.schedules.some(stale))) return 0;
-    let nextDue: number | null = null;
-    const freed = await this.store.update(state => {
-      let count = 0;
-      for (const item of state.schedules) {
-        if (stale(item)) {
-          item.runningAt = null; item.claimID = null; count++;
+    if (!this.lock) {
+      if (!await this.store.read(state => state.schedules.some(stale))) return 0;
+      let nextDue: number | null = null;
+      const freed = await this.store.update(state => {
+        let count = 0;
+        for (const item of state.schedules) {
+          if (stale(item)) {
+            item.runningAt = null; item.claimID = null; count++;
+          }
         }
+        if (count > 0) nextDue = nextDueFrom(state.schedules);
+        return count;
+      });
+      if (freed > 0) {
+        this.lastNextDue = nextDue;
+        if (this.running && this.activeCycles === 0) this.armTimer();
       }
-      if (count > 0) nextDue = nextDueFrom(state.schedules);
-      return count;
-    });
+      return freed;
+    }
+    const staleIDs = await this.store.read(state => state.schedules.filter(stale).map(item => item.id));
+    if (staleIDs.length === 0) return 0;
+    let freed = 0;
+    let nextDue: number | null = null;
+    for (const id of staleIDs) {
+      const lease = await this.lock.acquire(taskLockKey(id), this.leaseMs);
+      if (!lease) continue;
+      try {
+        const recovered = await this.store.update(state => {
+          const item = state.schedules.find(candidate => candidate.id === id);
+          if (!item || !stale(item)) return false;
+          item.runningAt = null;
+          item.claimID = null;
+          nextDue = nextDueFrom(state.schedules);
+          return true;
+        });
+        if (recovered) freed++;
+      } finally {
+        await this.releaseLease(lease);
+      }
+    }
     if (freed > 0) {
       this.lastNextDue = nextDue;
       if (this.running && this.activeCycles === 0) this.armTimer();

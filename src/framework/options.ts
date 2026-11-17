@@ -3,6 +3,7 @@ import type { CommandContext } from '../context.js';
 import type { IncomingMessage, Payload, Store, Transport } from '../contracts.js';
 import type { GuardError } from '../errors.js';
 import type { ScriptEngine, ScriptFunctionDefinition } from '../ports/script-engine.js';
+import type { Lock } from '../ports/lock.js';
 import type { RateLimiter } from '../ports/rate-limiter.js';
 import type { Command } from '../context.js';
 import type { Resources } from '../ports/resources.js';
@@ -85,6 +86,7 @@ export interface YuzuhaOptions {
   now?: () => number;
   engine?: ScriptEngine;
   scheduler?: Scheduler | false;
+  lock?: Lock;
   http?: HttpService | false;
   music?: MusicManager;
   voice?: NativeVoice;
