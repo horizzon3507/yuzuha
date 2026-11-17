@@ -8,6 +8,7 @@ import { loadCommands } from '../loader.js';
 import { permission } from '../permissions.js';
 import type { ScriptEngine } from '../ports/script-engine.js';
 import type { HttpPolicy } from '../services/http.js';
+import { firstWord, trimEndIndex } from './routing.js';
 
 export interface CompiledCommand {
   command: Command;
@@ -144,13 +145,18 @@ export class CommandRegistry {
     const root = this.find(name);
     if (!root) return;
     let compiled: CompiledCommand = root;
+    let cursor = 0;
+    const end = input.length;
     while (compiled.children.size) {
-      const match = /^(\S+)(?:\s+([\s\S]*))?$/.exec(input.trim());
-      const child: CompiledCommand | undefined = match ? compiled.children.get(match[1]!.toLowerCase()) : undefined;
+      const head = firstWord(input, cursor, end);
+      const child = head ? compiled.children.get(head.word) : undefined;
       if (!child) break;
-      compiled = child; input = match![2] ?? '';
+      compiled = child;
+      cursor = head!.tailStart;
     }
-    return { compiled, input };
+    if (cursor === 0) return { compiled, input };
+    const tailEnd = cursor < end ? trimEndIndex(input, cursor, end) : cursor;
+    return { compiled, input: cursor < tailEnd ? input.slice(cursor, tailEnd) : '' };
   }
   list(): Command[] { return [...new Set(this.entries.values())].map(item => snapshot(item.definition)); }
   help(path?: string, prefix = ''): string {
