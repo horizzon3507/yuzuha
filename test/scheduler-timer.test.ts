@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { setImmediate } from 'node:timers/promises';
 import { Client } from '@fluxerjs/core';
 import { MemoryStore, Scheduler, Yuzuha } from '../src/index.js';
 import type { ScheduleRecord, State, Store } from '../src/index.js';
@@ -313,4 +314,105 @@ test('bot wires timers into default scheduler and clears them on destroy and fai
   await assert.rejects(failBot.login('bad-token'), /bad token/);
   assert.equal(failTimers.activeCount, 0);
   await failBot.destroy();
+});
+
+test('background recovery obeys leaseMs / 3 cadence while explicit recover runs immediately', async () => {
+  const clock = new TestClock(0);
+  const timers = trackedTimers();
+  const baseStore = new MemoryStore();
+  const { store, counts } = countingStore(baseStore);
+  const ran: string[] = [];
+  const scheduler = new Scheduler(store, async task => { ran.push(task.id); }, {
+    now: clock.now,
+    timers,
+    leaseMs: 9_000,
+    pollMs: 1_000,
+  });
+
+  scheduler.start();
+  await scheduler.drain();
+  assert.equal(counts.reads, 2);
+
+  await baseStore.update(state => {
+    state.schedules.push({
+      ...taskInput(0),
+      id: 'stale-1',
+      attempts: 0,
+      runningAt: -10_000,
+      claimID: 'dead-1',
+    });
+  });
+
+  for (const step of [1_000, 1_000]) {
+    clock.advance(step);
+    timers.advance(step);
+    await scheduler.drain();
+  }
+  assert.equal(counts.reads, 4);
+  assert.equal(counts.updates, 0);
+  assert.deepEqual(ran, []);
+
+  clock.advance(1_000);
+  timers.advance(1_000);
+  await scheduler.drain();
+  assert.deepEqual(ran, ['stale-1']);
+
+  await baseStore.update(state => {
+    state.schedules.push({
+      ...taskInput(0),
+      id: 'stale-2',
+      attempts: 0,
+      runningAt: -10_000,
+      claimID: 'dead-2',
+    });
+  });
+  assert.equal(await scheduler.recover(clock.now()), 1);
+  clock.advance(1_000);
+  timers.advance(1_000);
+  await scheduler.drain();
+  assert.deepEqual(ran, ['stale-1', 'stale-2']);
+
+  scheduler.stop();
+  assert.equal(timers.activeCount, 0);
+});
+
+test('globalConcurrency saturation skips worker store.update calls until a slot frees', async () => {
+  const baseStore = new MemoryStore();
+  const { store, counts } = countingStore(baseStore);
+  const ran: string[] = [];
+  let firstStarted!: () => void;
+  let releaseFirst!: () => void;
+  const startedPromise = new Promise<void>(resolve => { firstStarted = resolve; });
+  const gate = new Promise<void>(resolve => { releaseFirst = resolve; });
+
+  const scheduler = new Scheduler(store, async task => {
+    ran.push(task.id);
+    if (ran.length === 1) {
+      firstStarted();
+      await gate;
+    }
+  }, { concurrency: 2, globalConcurrency: 1, leaseMs: 30_000 });
+
+  for (let i = 0; i < 6; i++) await scheduler.add(taskInput(0));
+  counts.reads = 0;
+  counts.updates = 0;
+
+  const activeTick = scheduler.tick(0);
+  await startedPromise;
+  await setImmediate();
+
+  assert.equal(counts.updates, 2);
+
+  counts.updates = 0;
+  const second = new Scheduler(store, async task => { ran.push(task.id); }, { concurrency: 2, globalConcurrency: 1, leaseMs: 30_000 });
+  await second.tick(10);
+  await second.tick(20);
+  assert.equal(counts.updates, 0);
+
+  releaseFirst();
+  await activeTick;
+
+  for (let i = 0; i < 5; i++) await second.tick(30 + i);
+  assert.equal(ran.length, 6);
+  assert.equal(new Set(ran).size, 6);
 });
