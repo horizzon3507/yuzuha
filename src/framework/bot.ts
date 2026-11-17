@@ -11,7 +11,7 @@ import { defineCommand } from '../commands/definition.js';
 import type { NativeCommandDefinition } from '../commands/definition.js';
 import type { ArgumentSchema } from '../commands/builders.js';
 import type { IncomingMessage, Store, Transport } from '../contracts.js';
-import { GuardError, PartialModerationError, YuzuhaError } from '../errors.js';
+import { ConfigError, GuardError, PartialModerationError, YuzuhaError } from '../errors.js';
 import { JsonStore, defaultDataPath } from '../store.js';
 import { CommandRegistry, functionsRequired } from './command-registry.js';
 import type { CompiledCommand } from './command-registry.js';
@@ -48,11 +48,11 @@ function emojiRegistry(input: Record<string, string> | undefined): Record<string
   if (input === undefined) return registry;
   const prototype = input === null || typeof input !== 'object' ? undefined : Object.getPrototypeOf(input);
   if (prototype !== Object.prototype && prototype !== null) {
-    throw new YuzuhaError('EMOJI_OPTIONS', 'emoji deve ser um objeto nome → texto.');
+    throw new ConfigError('EMOJI_OPTIONS', 'emoji deve ser um objeto nome → texto.');
   }
   for (const [name, value] of Object.entries(input)) {
     if (!name || typeof value !== 'string' || !value) {
-      throw new YuzuhaError('EMOJI_OPTIONS', 'emoji deve mapear nomes não vazios para textos não vazios.');
+      throw new ConfigError('EMOJI_OPTIONS', 'emoji deve mapear nomes não vazios para textos não vazios.');
     }
     registry[name] = value;
   }
@@ -70,15 +70,15 @@ function resolveVariableSweepOptions(input: YuzuhaOptions['variables']): { inter
   if (input === undefined) return { intervalMs: DEFAULT_SWEEP_INTERVAL_MS, batch: DEFAULT_SWEEP_BATCH };
   const prototype = input === null || typeof input !== 'object' || Array.isArray(input) ? undefined : Object.getPrototypeOf(input);
   if (prototype !== Object.prototype && prototype !== null) {
-    throw new YuzuhaError('VARIABLE_SWEEP_OPTIONS', 'Opções de limpeza de variáveis inválidas.');
+    throw new ConfigError('VARIABLE_SWEEP_OPTIONS', 'Opções de limpeza de variáveis inválidas.');
   }
   const intervalMs = input.sweepIntervalMs === undefined ? DEFAULT_SWEEP_INTERVAL_MS : input.sweepIntervalMs;
   if (intervalMs !== false && (!Number.isSafeInteger(intervalMs) || intervalMs < MIN_SWEEP_INTERVAL_MS || intervalMs > MAX_SWEEP_INTERVAL_MS)) {
-    throw new YuzuhaError('VARIABLE_SWEEP_OPTIONS', `sweepIntervalMs deve ser false ou inteiro entre ${MIN_SWEEP_INTERVAL_MS} e ${MAX_SWEEP_INTERVAL_MS}.`);
+    throw new ConfigError('VARIABLE_SWEEP_OPTIONS', `sweepIntervalMs deve ser false ou inteiro entre ${MIN_SWEEP_INTERVAL_MS} e ${MAX_SWEEP_INTERVAL_MS}.`);
   }
   const batch = input.sweepBatch === undefined ? DEFAULT_SWEEP_BATCH : input.sweepBatch;
   if (!Number.isSafeInteger(batch) || batch < 1 || batch > MAX_SWEEP_BATCH) {
-    throw new YuzuhaError('VARIABLE_SWEEP_OPTIONS', `sweepBatch deve ser inteiro entre 1 e ${MAX_SWEEP_BATCH}.`);
+    throw new ConfigError('VARIABLE_SWEEP_OPTIONS', `sweepBatch deve ser inteiro entre 1 e ${MAX_SWEEP_BATCH}.`);
   }
   return { intervalMs, batch };
 }
@@ -86,7 +86,7 @@ function resolveVariableSweepOptions(input: YuzuhaOptions['variables']): { inter
 function assertEngine(engine: unknown): ScriptEngine {
   const candidate = engine as Partial<Record<keyof ScriptEngine, unknown>> | null | undefined;
   if (!candidate || (['compile', 'execute', 'functions', 'registerAll', 'fork', 'text'] as const).some(key => typeof candidate[key] !== 'function')) {
-    throw new YuzuhaError('ENGINE_INVALID', 'Engine de function mode inválido: precisa de compile, execute, functions, registerAll, fork e text.');
+    throw new ConfigError('ENGINE_INVALID', 'Engine de function mode inválido: precisa de compile, execute, functions, registerAll, fork e text.');
   }
   return engine as ScriptEngine;
 }
@@ -474,7 +474,7 @@ export class Yuzuha {
 
   login(token = process.env.FLUXER_BOT_TOKEN): Promise<void> {
     if (this.closing) return Promise.reject(new YuzuhaError('BOT_CLOSED', 'O bot está encerrado.'));
-    if (!token?.trim()) return Promise.reject(new YuzuhaError('TOKEN_MISSING', 'Defina FLUXER_BOT_TOKEN.'));
+    if (!token?.trim()) return Promise.reject(new ConfigError('TOKEN_MISSING', 'Defina FLUXER_BOT_TOKEN.'));
     if (this.loginTask) return this.loginTask;
     if (this.memberCache && !this.detachMemberCache && !this.options.transport && this.transport instanceof FluxerTransport) {
       this.detachMemberCache = this.transport.attachCacheInvalidation(this.client);

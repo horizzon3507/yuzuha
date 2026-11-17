@@ -1,4 +1,4 @@
-import { YuzuhaError } from '../errors.js';
+import { ConfigError } from '../errors.js';
 
 export interface ConcurrencyOptions {
   max?: number;
@@ -31,16 +31,16 @@ export class ConcurrencyLimiter {
 
   constructor(options: ConcurrencyOptions = {}) {
     if (!isPlainObject(options)) {
-      throw new YuzuhaError('CONCURRENCY_OPTIONS', 'Opções de concorrência inválidas.');
+      throw new ConfigError('CONCURRENCY_OPTIONS', 'Opções de concorrência inválidas.');
     }
     if (options.max !== undefined && (!Number.isSafeInteger(options.max) || options.max < 1)) {
-      throw new YuzuhaError('CONCURRENCY_OPTIONS', 'max de concorrência deve ser um inteiro seguro maior ou igual a 1.');
+      throw new ConfigError('CONCURRENCY_OPTIONS', 'max de concorrência deve ser um inteiro seguro maior ou igual a 1.');
     }
     if (options.perGuild !== undefined && (!Number.isSafeInteger(options.perGuild) || options.perGuild < 1)) {
-      throw new YuzuhaError('CONCURRENCY_OPTIONS', 'perGuild de concorrência deve ser um inteiro seguro maior ou igual a 1.');
+      throw new ConfigError('CONCURRENCY_OPTIONS', 'perGuild de concorrência deve ser um inteiro seguro maior ou igual a 1.');
     }
     if (options.maxPending !== undefined && (!Number.isSafeInteger(options.maxPending) || options.maxPending < 0)) {
-      throw new YuzuhaError('CONCURRENCY_OPTIONS', 'maxPending de concorrência deve ser um inteiro seguro maior ou igual a 0.');
+      throw new ConfigError('CONCURRENCY_OPTIONS', 'maxPending de concorrência deve ser um inteiro seguro maior ou igual a 0.');
     }
     this.max = options.max;
     this.perGuild = options.perGuild;

@@ -1,5 +1,5 @@
 import type { ModerationMember } from '../../domain/moderation.js';
-import { YuzuhaError } from '../../shared/errors.js';
+import { ConfigError } from '../../shared/errors.js';
 
 export interface MemberCacheOptions {
   ttlMs: number;
@@ -29,17 +29,17 @@ export class MemberCache {
 
   constructor(options: MemberCacheOptions) {
     if (!options || typeof options !== 'object' || Array.isArray(options)) {
-      throw new YuzuhaError('MEMBER_CACHE_OPTIONS', 'Opções do cache de membros inválidas.');
+      throw new ConfigError('MEMBER_CACHE_OPTIONS', 'Opções do cache de membros inválidas.');
     }
     if (!Number.isInteger(options.ttlMs) || options.ttlMs < 1 || options.ttlMs > MAX_TTL_MS) {
-      throw new YuzuhaError('MEMBER_CACHE_OPTIONS', `ttlMs do cache de membros deve ser um inteiro entre 1 e ${MAX_TTL_MS}.`);
+      throw new ConfigError('MEMBER_CACHE_OPTIONS', `ttlMs do cache de membros deve ser um inteiro entre 1 e ${MAX_TTL_MS}.`);
     }
     const max = options.max ?? DEFAULT_MAX_ENTRIES;
     if (!Number.isInteger(max) || max < 1 || max > MAX_ENTRIES_LIMIT) {
-      throw new YuzuhaError('MEMBER_CACHE_OPTIONS', `max do cache de membros deve ser um inteiro entre 1 e ${MAX_ENTRIES_LIMIT}.`);
+      throw new ConfigError('MEMBER_CACHE_OPTIONS', `max do cache de membros deve ser um inteiro entre 1 e ${MAX_ENTRIES_LIMIT}.`);
     }
     if (options.now !== undefined && typeof options.now !== 'function') {
-      throw new YuzuhaError('MEMBER_CACHE_OPTIONS', 'now do cache de membros deve ser uma função.');
+      throw new ConfigError('MEMBER_CACHE_OPTIONS', 'now do cache de membros deve ser uma função.');
     }
     this.ttlMs = options.ttlMs;
     this.max = max;

@@ -1,5 +1,5 @@
 import type { IncomingMessage } from '../contracts.js';
-import { YuzuhaError } from '../errors.js';
+import { ConfigError } from '../errors.js';
 import { validatePrefixes } from './routing.js';
 
 export interface PrefixCacheOptions {
@@ -26,14 +26,14 @@ function isPlainObject(value: unknown): boolean {
 export function validatePrefixCacheOptions(options: false | PrefixCacheOptions | undefined): NormalizedPrefixCacheOptions | undefined {
   if (options === undefined || options === false) return undefined;
   if (!isPlainObject(options)) {
-    throw new YuzuhaError('PREFIX_CACHE_OPTIONS', 'Opções de cache de prefixo inválidas.');
+    throw new ConfigError('PREFIX_CACHE_OPTIONS', 'Opções de cache de prefixo inválidas.');
   }
   if (!Number.isSafeInteger(options.ttlMs) || options.ttlMs < 1 || options.ttlMs > MAX_TTL_MS) {
-    throw new YuzuhaError('PREFIX_CACHE_OPTIONS', `ttlMs do cache de prefixo deve ser um inteiro seguro entre 1 e ${MAX_TTL_MS}.`);
+    throw new ConfigError('PREFIX_CACHE_OPTIONS', `ttlMs do cache de prefixo deve ser um inteiro seguro entre 1 e ${MAX_TTL_MS}.`);
   }
   const max = options.max === undefined ? DEFAULT_MAX_ENTRIES : options.max;
   if (!Number.isSafeInteger(max) || max < 1 || max > MAX_ENTRIES_LIMIT) {
-    throw new YuzuhaError('PREFIX_CACHE_OPTIONS', `max do cache de prefixo deve ser um inteiro seguro entre 1 e ${MAX_ENTRIES_LIMIT}.`);
+    throw new ConfigError('PREFIX_CACHE_OPTIONS', `max do cache de prefixo deve ser um inteiro seguro entre 1 e ${MAX_ENTRIES_LIMIT}.`);
   }
   return { ttlMs: options.ttlMs, max };
 }

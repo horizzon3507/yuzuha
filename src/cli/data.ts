@@ -5,7 +5,7 @@ import { extname, resolve } from 'node:path';
 import { JsonStore } from '../infrastructure/storage/json.js';
 import { SQLiteStore } from '../infrastructure/storage/sqlite.js';
 import { StateMaintenance } from '../services/state-maintenance.js';
-import { YuzuhaError } from '../errors.js';
+import { StoreError, YuzuhaError } from '../errors.js';
 import type { CLIArguments } from './arguments.js';
 
 async function readonlySQLite(path: string): Promise<Store> {
@@ -15,7 +15,7 @@ async function readonlySQLite(path: string): Promise<Store> {
     const row = db.prepare('SELECT value FROM yuzuha_state WHERE id=1').get();
     const state = decodeState(String(row?.['value']));
     return { read: async reader => reader(structuredClone(state)),
-      update: async () => { throw new YuzuhaError('STORE_READONLY', 'Operação exige um store gravável.'); } };
+      update: async () => { throw new StoreError('STORE_READONLY', 'Operação exige um store gravável.'); } };
   } finally { db.close(); }
 }
 
