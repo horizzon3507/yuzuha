@@ -5,6 +5,7 @@ import type { IncomingMessage, Payload, Store, Transport } from '../contracts.js
 import type { GuardError } from '../errors.js';
 import type { ScriptEngine, ScriptFunctionDefinition } from '../ports/script-engine.js';
 import type { Lock } from '../ports/lock.js';
+import type { MetricsSink } from '../ports/metrics.js';
 import type { RateLimiter } from '../ports/rate-limiter.js';
 import type { Resources } from '../ports/resources.js';
 import type { HttpService } from '../services/http.js';
@@ -132,6 +133,7 @@ export interface YuzuhaOptions {
   onCommand?: (ctx: CommandContext, outcome: DispatchResult) => void | Promise<void>;
   onLog?: (record: LogRecord) => void | Promise<void>;
   logger?: YuzuhaLogger | false;
+  metrics?: MetricsSink;
   retry?: false | TransportRetryPolicy;
   timers?: { setTimeout(fn: () => void, ms: number): unknown; clearTimeout(handle: unknown): void };
   cdn?: { mediaBase?: string };

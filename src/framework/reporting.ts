@@ -5,6 +5,7 @@ import type { MessageTranslator } from '../domain/i18n.js';
 import { GuardError, PartialModerationError, YuzuhaError } from '../errors.js';
 import type { ErrorReportInfo, YuzuhaOptions } from './options.js';
 import { emitLog } from './logging.js';
+import { emitMetric } from './metrics.js';
 import { currentExecution } from './execution.js';
 import { errorCode } from '../services/scheduler.js';
 
@@ -35,6 +36,7 @@ export async function reportError(
     ...(ctx ? { ctx } : {}),
     ...(executionID !== undefined ? { executionID } : {}),
   });
+  emitMetric(options.metrics, m => m.onError?.({ source: reportInfo.source, code }));
   await emitLog(options, {
     event: 'error',
     errorCode: code,

@@ -9,6 +9,18 @@ export { MemoryLock } from './framework/locks.js';
 export type { MemoryLockOptions } from './framework/locks.js';
 export type { Lock, LockLease } from './ports/lock.js';
 export type {
+  MetricsSink,
+  CommandMetricEvent,
+  CommandMetricOutcome,
+  DispatchDropMetricEvent,
+  DispatchDropReason,
+  ErrorMetricEvent,
+  ErrorMetricSource,
+  RetryMetricEvent,
+  ScheduleMetricEvent,
+  ScheduleMetricOutcome,
+} from './ports/metrics.js';
+export type {
   YuzuhaOptions,
   HelpRenderContext,
   HelpRenderer,
