@@ -6,7 +6,7 @@ import { FluxerTransport, MemberCache, incoming } from '../adapter.js';
 import { FluxerResources } from '../infrastructure/fluxer/resources.js';
 import type { Resources } from '../ports/resources.js';
 import { CommandContext } from '../context.js';
-import type { Command } from '../context.js';
+import type { Command, ContextOptions } from '../context.js';
 import { defineCommand } from '../commands/definition.js';
 import type { NativeCommandDefinition } from '../commands/definition.js';
 import type { ArgumentSchema } from '../commands/builders.js';
@@ -17,7 +17,7 @@ import { CommandRegistry, functionsRequired } from './command-registry.js';
 import type { CompiledCommand } from './command-registry.js';
 import { runMiddleware } from './middleware.js';
 import type { DispatchResult, Middleware, YuzuhaOptions, YuzuhaPlugin } from './options.js';
-import { RateLimits } from './rate-limits.js';
+import { RateLimits, resolveRateLimitOptions } from './rate-limits.js';
 import { ConcurrencyLimiter } from './concurrency.js';
 import { reportError, userError } from './reporting.js';
 import { route } from './routing.js';
@@ -105,6 +105,7 @@ export class Yuzuha {
   private readonly middleware: Middleware[] = [];
   private readonly plugins = new Set<string>();
   private readonly limits: RateLimits;
+  private lastRateLimitEvictLog?: number;
   private readonly active = new Set<Promise<unknown>>();
   private readonly shutdown = new AbortController();
   private reliability: import('../services/retry.js').Reliability = {};
@@ -152,10 +153,24 @@ export class Yuzuha {
   private readonly dynamicPrefixCache?: DynamicPrefixCache;
   private readonly contextCooldown = (key: string, duration: number) => this.limits.cooldown(key, duration);
   private readonly contextHelp = () => this.help();
+  private readonly contextDeleteLater = (channelID: string, messageID: string, ttlMs: number) => this.deleteLater(channelID, messageID, ttlMs);
+  private readonly canvasContext: ContextOptions['canvas'];
 
   constructor(public readonly options: YuzuhaOptions = {}) {
     setMaxListeners(0, this.shutdown.signal);
-    this.limits = new RateLimits(options.now);
+    const rateLimitOptions = resolveRateLimitOptions(options.rateLimits);
+    this.limits = new RateLimits({
+      ...rateLimitOptions,
+      now: options.now,
+      onEvict: () => {
+        if (!this.options.onLog) return;
+        const time = (this.options.now ?? Date.now)();
+        if (this.lastRateLimitEvictLog === undefined || time - this.lastRateLimitEvictLog >= 10_000) {
+          this.lastRateLimitEvictLog = time;
+          void emitLog(this.options, { event: 'rate_limit.evicted' });
+        }
+      },
+    });
     this.client = options.client ?? new Client(options.clientOptions);
     this.reliability = { retry: options.retry, signal: this.shutdown.signal,
       onRetry: attempt => { if (options.onLog) void emitLog(this.options, { event: 'transport.retry', attempt }); } };
@@ -171,6 +186,7 @@ export class Yuzuha {
     }
     this.resources = options.resources ?? new FluxerResources(this.client, this.cdnService, this.reliability);
     this.cdnService = createCdn(options.cdn?.mediaBase);
+    this.canvasContext = { renderer: canvasRenderer, config: options.canvas };
     this.emojiMap = emojiRegistry(options.emoji);
     if (options.concurrency !== undefined) {
       this.concurrencyLimiter = new ConcurrencyLimiter(options.concurrency);
@@ -203,7 +219,16 @@ export class Yuzuha {
     });
     this.events = new NativeEvents(this.client, work => this.scheduleEvent(work));
     if (typeof options.prefix !== 'function') this.resolvePrefixes(options.prefix ?? '!');
-    this.listener = message => { void this.handle(incoming(message)).catch(error => reportError(this.options, error)); };
+    this.listener = message => {
+      if (this.closing || message.author.bot || message.author.id === this.transport.botID) return;
+      if (typeof this.options.prefix !== 'function') {
+        let prefixes: string[];
+        try { prefixes = this.resolvePrefixes(this.options.prefix ?? '!'); }
+        catch (error) { void reportError(this.options, error); return; }
+        if (!prefixes.some(prefix => message.content.startsWith(prefix))) return;
+      }
+      void this.handle(incoming(message)).catch(error => reportError(this.options, error));
+    };
     this.client.on(Events.Error, this.errorListener);
     this.client.on(Events.ShardError, this.shardErrorListener);
   }
@@ -369,10 +394,10 @@ export class Yuzuha {
       const ctx = new EventContext({ ...source, channelID: definition.channelID, actorID: definition.actorID,
         policy: definition.http, transport: this.transport, store: this.store, resources: this.resources,
         scheduler: this.scheduler, http: this.http, music: this.music, voice: this.voice,
-        canvas: { renderer: canvasRenderer, config: this.options.canvas }, now: this.options.now,
+        canvas: this.canvasContext, now: this.options.now,
         cdn: this.cdnService, disableResourceAuthorization: this.options.unsafeDisableResourceAuthorization === true,
         cooldown: this.contextCooldown, signal: this.shutdown.signal, emoji: this.emojiMap,
-        deleteLater: (channelID, messageID, ttlMs) => this.deleteLater(channelID, messageID, ttlMs) });
+        deleteLater: this.contextDeleteLater });
       try { await definition.run(ctx, ...args as ClientEvents[K]); }
       catch (error) { await reportError(this.options, error, ctx); }
     } });
@@ -400,9 +425,9 @@ export class Yuzuha {
     const ctx = new EventContext({ ...source, channelID: definition.channelID, actorID: definition.actorID,
       policy: definition.http, transport: this.transport, store: this.store, resources: this.resources,
       scheduler: this.scheduler, http: this.http, music: this.music, voice: this.voice,
-      canvas: { renderer: canvasRenderer, config: this.options.canvas }, now: this.options.now, cooldown: this.contextCooldown, signal,
+      canvas: this.canvasContext, now: this.options.now, cooldown: this.contextCooldown, signal,
       cdn: this.cdnService, disableResourceAuthorization: this.options.unsafeDisableResourceAuthorization === true, emoji: this.emojiMap,
-      deleteLater: (channelID, messageID, ttlMs) => this.deleteLater(channelID, messageID, ttlMs) });
+      deleteLater: this.contextDeleteLater });
     const started = this.options.onLog ? performance.now() : 0;
     let outcome: DispatchResult = 'success';
     try {
@@ -627,13 +652,13 @@ export class Yuzuha {
       const started = this.options.onLog ? performance.now() : 0;
       try {
         ctx = new CommandContext({ message, transport: this.transport, store: this.store, command: compiled.command,
-          input: resolved.input, prefix, lineage: compiled.lineage,
+          flagLookup: compiled.flagLookup, input: resolved.input, prefix, lineage: compiled.lineage,
           help: this.contextHelp, cooldown: this.contextCooldown,
           native: { client: this.client, message: message.raw instanceof Message ? message.raw : undefined },
           resources: this.resources, scheduler: this.scheduler, http: this.http, music: this.music, voice: this.voice,
-          canvas: { renderer: canvasRenderer, config: this.options.canvas }, now: this.options.now, signal, executionID,
+          canvas: this.canvasContext, now: this.options.now, signal, executionID,
           cdn: this.cdnService, disableResourceAuthorization: this.options.unsafeDisableResourceAuthorization === true, emoji: this.emojiMap,
-          deleteLater: (channelID, messageID, ttlMs) => this.deleteLater(channelID, messageID, ttlMs) });
+          deleteLater: this.contextDeleteLater });
         if (this.options.onLog) await emitLog(this.options, { event: 'command.start', executionID: ctx.executionID, command: ctx.command.name });
         if (signal.aborted) throw cancellationError();
         await ctx.prepare();

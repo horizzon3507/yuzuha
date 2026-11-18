@@ -33,7 +33,7 @@ import { GuardError, PartialModerationError, YuzuhaError } from '../shared/error
 import { parseArguments, parseFlags, tokenize } from './arguments.js';
 import { commandUsage } from './help.js';
 import { ArgumentBag } from './typed-arguments.js';
-import type { Command } from './definition.js';
+import type { ArgumentDefinition, Command } from './definition.js';
 
 export interface SendOptions { ttlMs?: number }
 
@@ -42,6 +42,7 @@ export interface ContextOptions {
   transport: Transport;
   store: Store;
   command: Command;
+  flagLookup?: ReadonlyMap<string, ArgumentDefinition>;
   lineage?: readonly Command[];
   prefix?: string;
   input?: string;
@@ -91,6 +92,7 @@ export class CommandContext {
   readonly transport: Transport;
   readonly store: Store;
   readonly command: Command;
+  private readonly flagLookup?: ReadonlyMap<string, ArgumentDefinition>;
   readonly input: string;
   readonly help: () => string;
   private readonly claimCooldown: ContextOptions['cooldown'];
@@ -125,6 +127,7 @@ export class CommandContext {
     this.store = options.store;
     this.deleteLaterFn = options.deleteLater;
     this.command = options.command;
+    this.flagLookup = options.flagLookup;
     this.lineage = options.lineage ?? [options.command];
     this.prefix = options.prefix ?? '';
     this.input = options.input ?? '';
@@ -347,7 +350,7 @@ export class CommandContext {
     }
     try {
       if (this.command.flags !== undefined) {
-        const parsed = parseFlags(this.command.flags, this.tokens);
+        const parsed = parseFlags(this.command.flags, this.tokens, this.flagLookup);
         for (const [name, value] of parsed.flags) this.flags.set(name, value);
         this.tokens.splice(0, this.tokens.length, ...parsed.tokens);
       }

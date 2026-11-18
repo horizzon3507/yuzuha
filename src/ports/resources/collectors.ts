@@ -10,6 +10,7 @@ export interface CollectMessagesInput {
   contains?: string;
   timeMs?: number;
   max?: number;
+  maxBuffer?: number;
   signal?: AbortSignal;
 }
 
@@ -19,6 +20,7 @@ export interface CollectReactionsInput {
   userID?: string;
   timeMs?: number;
   max?: number;
+  maxBuffer?: number;
   signal?: AbortSignal;
 }
 
