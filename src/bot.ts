@@ -71,6 +71,7 @@ export type {
   MessageCacheSweeperOptions,
   MemberCacheSweeperOptions,
   UserCacheSweeperOptions,
+  ClientOptions,
   DiscoveryOrigin,
   ConcurrencyOptions,
   PrefixCacheOptions,

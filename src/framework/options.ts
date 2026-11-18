@@ -36,6 +36,7 @@ import type {
 } from './cache-sweepers.js';
 
 export type {
+  ClientOptions,
   ConcurrencyOptions,
   HelpRenderContext,
   HelpRenderer,

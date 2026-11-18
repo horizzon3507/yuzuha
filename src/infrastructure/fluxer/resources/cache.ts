@@ -9,7 +9,7 @@ function bounded(value: number): number | null {
   return Number.isFinite(value) ? value : null;
 }
 
-export function createCacheResources(client: Client): CacheResources {
+export function createCacheResources(client: Client, now: () => number = Date.now): CacheResources {
   return {
     async stats() {
       const sizes = client.cache.stats();
@@ -37,7 +37,7 @@ export function createCacheResources(client: Client): CacheResources {
       if (maxAgeMs !== undefined && (!Number.isSafeInteger(maxAgeMs) || maxAgeMs < 0)) {
         throw new YuzuhaError('SWEEP_AGE', 'maxAgeMs deve ser um inteiro não negativo.');
       }
-      const cutoff = maxAgeMs === undefined ? null : Date.now() - maxAgeMs;
+      const cutoff = maxAgeMs === undefined ? null : now() - maxAgeMs;
       return client.sweepMessages((message, channelId) => {
         if (cutoff !== null && message.createdAt.getTime() >= cutoff) return false;
         return keep ? !keep(toMessageInfo(message), channelId) : true;

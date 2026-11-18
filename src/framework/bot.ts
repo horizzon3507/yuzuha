@@ -481,7 +481,13 @@ export class Yuzuha {
     const retryPolicy = resolvePolicy(options.retry);
     const clientOptions = assertClientOptions(options.clientOptions);
     this.discoveryOrigin = validateDiscoveryOptions(options.discovery, options.client, clientOptions);
-    this.client = options.client ?? new Client(clientOptions);
+    try {
+      this.client = options.client ?? new Client(clientOptions);
+    } catch (error) {
+      throw error instanceof ConfigError
+        ? error
+        : new ConfigError('OPTIONS', error instanceof Error ? error.message : 'clientOptions inválido.', { cause: error });
+    }
     this.shardState = resolveBotShard(this.client, options.sharding, clientOptions);
     this.shardSchedulerMode = resolveShardSchedulerMode(options.sharding, lock !== undefined);
     if (options.sharding && typeof options.sharding === 'object') {
@@ -511,7 +517,7 @@ export class Yuzuha {
     if (this.memberCache && !options.transport && this.transport instanceof FluxerTransport) {
       this.detachMemberCache = this.transport.attachCacheInvalidation(this.client);
     }
-    this.resources = options.resources ?? new FluxerResources(this.client, this.cdnService, this.reliability);
+    this.resources = options.resources ?? new FluxerResources(this.client, this.cdnService, this.reliability, options.now);
     this.resourcesInjected = options.resources !== undefined || options.transport === undefined;
     this.canvasContext = { renderer: canvasRenderer, config: options.canvas };
     this.emojiMap = emojiRegistry(options.emoji);
@@ -605,6 +611,7 @@ export class Yuzuha {
     const rawOptions = options as YuzuhaOptions;
     const clientOptions = assertClientOptions(rawOptions.clientOptions);
     const validatedOrigin = validateDiscoveryOptions(origin, rawOptions.client, clientOptions)!;
+    validateCacheSweeperOptions(rawOptions.cacheSweepers);
     const { instance: _omit, ...sdkOptions } = clientOptions ?? {};
     const client = await Client.fromDiscovery(
       validatedOrigin,
@@ -652,7 +659,7 @@ export class Yuzuha {
       }
     }
     if (!this.options.resources) {
-      (this as { resources: Resources }).resources = new FluxerResources(nextClient, this.cdnService, this.reliability);
+      (this as { resources: Resources }).resources = new FluxerResources(nextClient, this.cdnService, this.reliability, this.options.now);
     }
     this.detachVoiceStates = attachVoiceStates(nextClient, this.voiceStates);
     this.discoveryResolved = true;

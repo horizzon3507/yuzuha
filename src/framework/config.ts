@@ -1,5 +1,22 @@
 import type { Yuzuha } from './bot.js';
-import type { YuzuhaOptions } from './options.js';
+import type {
+  CacheSweeperOptions,
+  ClientOptions,
+  DiscoveryOrigin,
+  MemberCacheSweeperOptions,
+  MessageCacheSweeperOptions,
+  UserCacheSweeperOptions,
+  YuzuhaOptions,
+} from './options.js';
+
+export type {
+  ClientOptions,
+  CacheSweeperOptions,
+  MessageCacheSweeperOptions,
+  MemberCacheSweeperOptions,
+  UserCacheSweeperOptions,
+  DiscoveryOrigin,
+};
 
 export interface YuzuhaConfig extends YuzuhaOptions {
   commands?: string;

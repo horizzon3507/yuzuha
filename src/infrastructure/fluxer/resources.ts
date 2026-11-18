@@ -31,7 +31,12 @@ export class FluxerResources implements Resources {
   readonly self;
   readonly cache;
 
-  constructor(client: Client, private readonly cdn: import('../../domain/cdn.js').Cdn = createCdn(), private readonly reliability: import('../../services/retry.js').Reliability = {}) {
+  constructor(
+    client: Client,
+    private readonly cdn: import('../../domain/cdn.js').Cdn = createCdn(),
+    private readonly reliability: import('../../services/retry.js').Reliability = {},
+    now: () => number = Date.now,
+  ) {
     this.users = createUsersResources(client, this.cdn);
     this.roles = createRolesResources(client);
     this.channels = createChannelsResources(client);
@@ -44,6 +49,6 @@ export class FluxerResources implements Resources {
     this.gateway = createGatewayResources(client);
     this.instance = createInstanceResources(client);
     this.self = createSelfResources(client);
-    this.cache = createCacheResources(client);
+    this.cache = createCacheResources(client, now);
   }
 }
