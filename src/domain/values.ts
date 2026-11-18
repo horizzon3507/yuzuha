@@ -8,6 +8,75 @@ export function userID(value: string, t: MessageTranslator = defaultTranslator):
   return (id[1] ?? id[2])!;
 }
 
+export function channelID(value: string, t: MessageTranslator = defaultTranslator): string {
+  const id = /^(?:<#(\d+)>|(\d+))$/.exec(value.trim());
+  if (!id) throw new GuardError(t('argChannel'), 'INVALID_ARGUMENT');
+  return (id[1] ?? id[2])!;
+}
+
+export function roleID(value: string, t: MessageTranslator = defaultTranslator): string {
+  const id = /^(?:<@&(\d+)>|(\d+))$/.exec(value.trim());
+  if (!id) throw new GuardError(t('argRole'), 'INVALID_ARGUMENT');
+  return (id[1] ?? id[2])!;
+}
+
+export interface UrlArgumentOptions {
+  protocols?: readonly string[];
+}
+
+export const DEFAULT_URL_PROTOCOLS: readonly string[] = Object.freeze(['http:', 'https:']);
+const FORBIDDEN_URL_PROTOCOLS: ReadonlySet<string> = new Set(['javascript:', 'data:', 'vbscript:']);
+
+export function normalizeUrlProtocols(
+  protocols: readonly string[],
+  errorCode: 'ARGUMENT_SCHEMA' | 'COMMAND_ARGS' = 'ARGUMENT_SCHEMA',
+): readonly string[] {
+  if (!Array.isArray(protocols) || protocols.length === 0) {
+    throw new YuzuhaError(errorCode, 'protocols deve ser uma lista não vazia de protocolos.');
+  }
+  const normalized: string[] = [];
+  for (const entry of protocols) {
+    if (typeof entry !== 'string') {
+      throw new YuzuhaError(errorCode, 'protocols deve conter apenas textos.');
+    }
+    const trimmed = entry.trim().toLowerCase();
+    const scheme = trimmed.endsWith(':') ? trimmed : `${trimmed}:`;
+    if (!/^[a-z][a-z0-9+.-]*:$/.test(scheme) || FORBIDDEN_URL_PROTOCOLS.has(scheme)) {
+      throw new YuzuhaError(errorCode, `Protocolo de URL inválido ou proibido: ${entry}.`);
+    }
+    if (!normalized.includes(scheme)) normalized.push(scheme);
+  }
+  return Object.freeze(normalized);
+}
+
+export function parseArgumentUrl(
+  value: string,
+  protocols: readonly string[] = DEFAULT_URL_PROTOCOLS,
+  label?: string,
+  t: MessageTranslator = defaultTranslator,
+): URL {
+  const raw = value.trim();
+  if (!raw || /\s/u.test(raw)) {
+    throw new GuardError(t('argUrl', label), 'INVALID_ARGUMENT');
+  }
+  let parsed: URL;
+  try {
+    parsed = new URL(raw);
+  } catch {
+    throw new GuardError(t('argUrl', label), 'INVALID_ARGUMENT');
+  }
+  if (FORBIDDEN_URL_PROTOCOLS.has(parsed.protocol) || !protocols.includes(parsed.protocol)) {
+    throw new GuardError(
+      t('argUrlProtocol', protocols.map(protocol => protocol.slice(0, -1)), label),
+      'INVALID_ARGUMENT',
+    );
+  }
+  if (parsed.username || parsed.password) {
+    throw new GuardError(t('argUrlCredentials', label), 'INVALID_ARGUMENT');
+  }
+  return parsed;
+}
+
 export function parseDuration(value: string | number): number {
   if (typeof value === 'number') {
     if (Number.isSafeInteger(value) && value > 0) return value;
@@ -20,7 +89,6 @@ export function parseDuration(value: string | number): number {
   }
   throw new YuzuhaError('DURATION', 'Duração inválida. Use 500ms, 5s, 10m, 2h ou 1d.');
 }
-
 
 export const MAX_TIMEOUT_MS = 28 * 24 * 60 * 60 * 1000;
 
