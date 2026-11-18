@@ -18,9 +18,18 @@ export interface WebhookFileBinaryInput {
 
 export type WebhookFileInput = WebhookFileUrlInput | WebhookFileBinaryInput;
 
+export interface WebhookEditInput {
+  name?: string;
+  avatar?: Uint8Array | string | null;
+  channelID?: string;
+}
+
 const SNOWFLAKE = /^\d{1,20}$/;
 const SEND_KEYS = new Set(['content', 'username', 'avatarURL', 'embeds', 'files', 'allowedMentions', 'threadID']);
 const EDIT_MESSAGE_KEYS = new Set(['content', 'embeds', 'files', 'allowedMentions', 'threadID']);
+const EDIT_WEBHOOK_KEYS = new Set(['name', 'avatar', 'channelID']);
+const DATA_IMAGE_URI = /^data:image\/[a-z0-9.+-]+;base64,[A-Za-z0-9+/]+={0,2}$/i;
+const RAW_BASE64 = /^[A-Za-z0-9+/]+={0,2}$/;
 const MENTION_PARSE: readonly MentionParse[] = ['users', 'roles', 'everyone'];
 const MAX_FILES = 10;
 const MAX_FILE_BYTES = 10_000_000;
@@ -284,5 +293,92 @@ export function normalizeWebhookMessageEditInput(raw: unknown): NormalizedWebhoo
     ...(files === undefined ? {} : { files }),
     ...(allowedMentions === undefined ? {} : { allowedMentions }),
     ...(threadID === undefined ? {} : { threadID }),
+  };
+}
+
+function detectImageMime(bytes: Uint8Array): string {
+  if (bytes.byteLength >= 4 && bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4E && bytes[3] === 0x47) {
+    return 'image/png';
+  }
+  if (bytes.byteLength >= 3 && bytes[0] === 0xFF && bytes[1] === 0xD8 && bytes[2] === 0xFF) {
+    return 'image/jpeg';
+  }
+  if (bytes.byteLength >= 4 && bytes[0] === 0x47 && bytes[1] === 0x49 && bytes[2] === 0x46 && bytes[3] === 0x38) {
+    return 'image/gif';
+  }
+  if (bytes.byteLength >= 12
+    && bytes[0] === 0x52 && bytes[1] === 0x49 && bytes[2] === 0x46 && bytes[3] === 0x46
+    && bytes[8] === 0x57 && bytes[9] === 0x45 && bytes[10] === 0x42 && bytes[11] === 0x50) {
+    return 'image/webp';
+  }
+  return 'image/png';
+}
+
+export function encodeWebhookAvatar(raw: unknown): string | null {
+  if (raw === null) return null;
+  if (raw instanceof Uint8Array) {
+    if (raw.byteLength === 0 || raw.byteLength > MAX_FILE_BYTES) {
+      throw new YuzuhaError('WEBHOOK_AVATAR', 'Avatar de webhook deve conter de 1 byte a 10 MB.');
+    }
+    const mime = detectImageMime(raw);
+    return `data:${mime};base64,${Buffer.from(raw).toString('base64')}`;
+  }
+  if (typeof raw === 'string') {
+    if (!raw.trim() || raw.length > 13_500_000) {
+      throw new YuzuhaError('WEBHOOK_AVATAR', 'Avatar de webhook inválido.');
+    }
+    if (DATA_IMAGE_URI.test(raw) || (raw.length % 4 === 0 && RAW_BASE64.test(raw))) {
+      return raw;
+    }
+    throw new YuzuhaError('WEBHOOK_AVATAR', 'Avatar deve ser Uint8Array, data URI de imagem, base64 válido ou null.');
+  }
+  throw new YuzuhaError('WEBHOOK_AVATAR', 'Avatar deve ser Uint8Array, data URI de imagem, base64 válido ou null.');
+}
+
+export interface NormalizedWebhookEdit {
+  name?: string;
+  avatar?: string | null;
+  channelID?: string;
+}
+
+export function normalizeWebhookEditInput(raw: unknown): NormalizedWebhookEdit {
+  if (typeof raw === 'string') {
+    if (!raw.trim()) throw new YuzuhaError('WEBHOOK_NAME', 'Informe o novo nome do webhook.');
+    return { name: raw };
+  }
+  const input = assertPlainObject(raw, 'Entrada de edição de webhook deve ser texto ou objeto simples.');
+  assertKnownKeys(input, EDIT_WEBHOOK_KEYS, 'WebhookEditInput');
+
+  let name: string | undefined;
+  if (input['name'] !== undefined) {
+    if (typeof input['name'] !== 'string' || !input['name'].trim()) {
+      throw new YuzuhaError('WEBHOOK_NAME', 'Informe o novo nome do webhook.');
+    }
+    name = input['name'];
+  }
+
+  let hasAvatar = false;
+  let avatar: string | null | undefined;
+  if (input['avatar'] !== undefined) {
+    hasAvatar = true;
+    avatar = encodeWebhookAvatar(input['avatar']);
+  }
+
+  let channelID: string | undefined;
+  if (input['channelID'] !== undefined) {
+    if (typeof input['channelID'] !== 'string' || !SNOWFLAKE.test(input['channelID'])) {
+      throw new YuzuhaError('WEBHOOK_CHANNEL', 'Informe um ID de canal válido para o webhook.');
+    }
+    channelID = input['channelID'];
+  }
+
+  if (name === undefined && !hasAvatar && channelID === undefined) {
+    throw new YuzuhaError('WEBHOOK_OPTIONS', 'Informe ao menos um campo para editar o webhook.');
+  }
+
+  return {
+    ...(name === undefined ? {} : { name }),
+    ...(hasAvatar ? { avatar } : {}),
+    ...(channelID === undefined ? {} : { channelID }),
   };
 }

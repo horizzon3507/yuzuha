@@ -1,5 +1,6 @@
 import { AttachmentBuilder, Message, MessageAttachmentFlags, Routes, Webhook, type Client } from '@fluxerjs/core';
 import {
+  normalizeWebhookEditInput,
   normalizeWebhookMessageEditInput,
   normalizeWebhookSendInput,
   validateWebhookID,
@@ -16,6 +17,11 @@ const MAX_TOTAL_BYTES = 10_000_000;
 
 function toWebhookInfo(webhook: Webhook): WebhookInfo {
   return { id: webhook.id, name: webhook.name, channelID: webhook.channelId, guildID: webhook.guildId, token: webhook.token };
+}
+
+function reasonHeaders(reason: string | undefined): { headers?: Record<string, string> } {
+  if (reason === undefined || reason === '') return {};
+  return { headers: { 'X-Audit-Log-Reason': encodeURIComponent(reason) } };
 }
 
 async function webhookChannel(client: Client, channelID: string, message: string) {
@@ -86,10 +92,16 @@ async function resolveUploadFiles(builders: readonly AttachmentBuilder[]): Promi
 export function createWebhooksResources(client: Client): WebhooksResources {
   return {
     fetch: async webhookID => toWebhookInfo(await Webhook.fetch(client, validateWebhookID(webhookID))),
-    create: async (channelID, name) => {
+    create: async (channelID, name, reason) => {
       if (!name.trim()) throw new YuzuhaError('WEBHOOK_NAME', 'Informe o nome do webhook.');
       const channel = await webhookChannel(client, channelID, 'Webhook só pode ser criado em canal de servidor.');
-      return toWebhookInfo(await channel.createWebhook({ name }));
+      if (!reason) return toWebhookInfo(await channel.createWebhook({ name }));
+      const data = await client.rest.post(Routes.channelWebhooks(channel.id), {
+        body: { name },
+        auth: true,
+        ...reasonHeaders(reason),
+      });
+      return toWebhookInfo(new Webhook(client, data as never));
     },
     list: async channelID => {
       const channel = await webhookChannel(client, channelID, 'Webhooks só existem em canais de servidor.');
@@ -132,11 +144,39 @@ export function createWebhooksResources(client: Client): WebhooksResources {
       });
       return data ? new Message(client, data as never).id : null;
     },
-    edit: async (webhookID, token, name) => {
+    edit: async (webhookID, token, rawInput, reason) => {
       const id = validateWebhookID(webhookID);
-      if (!name.trim()) throw new YuzuhaError('WEBHOOK_NAME', 'Informe o novo nome do webhook.');
-      const webhook = token ? Webhook.fromToken(client, id, token) : await Webhook.fetch(client, id);
-      await webhook.edit({ name });
+      if (token !== null) validateWebhookToken(token);
+      const patch = normalizeWebhookEditInput(rawInput);
+
+      if (!reason && patch.channelID === undefined) {
+        const webhook = token ? Webhook.fromToken(client, id, token) : await Webhook.fetch(client, id);
+        await webhook.edit({
+          ...(patch.name === undefined ? {} : { name: patch.name }),
+          ...(patch.avatar === undefined ? {} : { avatar: patch.avatar }),
+        });
+        return;
+      }
+
+      const body: Record<string, unknown> = {};
+      if (patch.name !== undefined) body['name'] = patch.name;
+      if (patch.avatar !== undefined) body['avatar'] = patch.avatar;
+      if (patch.channelID !== undefined) body['channel_id'] = patch.channelID;
+
+      if (token && patch.channelID === undefined) {
+        await client.rest.patch(Routes.webhookExecute(id, token), {
+          body,
+          auth: false,
+          ...reasonHeaders(reason),
+        });
+        return;
+      }
+
+      await client.rest.patch(Routes.webhook(id), {
+        body,
+        auth: true,
+        ...reasonHeaders(reason),
+      });
     },
     delete: async (webhookID, token) => {
       const id = validateWebhookID(webhookID);

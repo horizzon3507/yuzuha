@@ -2,6 +2,7 @@ import type { ModerationMember } from '../domain/moderation.js';
 import { isAbove } from '../domain/moderation.js';
 import { auditLogQueryInput } from '../domain/audit-log.js';
 import type { AuditLogQueryInput } from '../domain/audit-log.js';
+import { normalizeWebhookEditInput } from '../domain/webhooks.js';
 import { hasPermission, permission } from '../domain/permissions.js';
 import { emojiBatch } from '../domain/resource-batches.js';
 import type { Resources } from '../ports/resources.js';
@@ -92,6 +93,7 @@ export function bindAuthorizedResources(
       const target = await source.webhooks.fetch(id);
       guild(target.guildID);
       await channel(target.channelID, 'ManageWebhooks');
+      return target;
     };
     const expressions = async (guildID: string) => {
       guild(guildID);
@@ -381,7 +383,15 @@ export function bindAuthorizedResources(
     async send(id, token, input) { const g = guards(); await g.webhook(id); return source.webhooks.send(id, token, input); },
     async editMessage(id, token, messageID, input) { const g = guards(); await g.webhook(id); return source.webhooks.editMessage(id, token, messageID, input); },
     async deleteMessage(id, token, messageID) { const g = guards(); await g.webhook(id); return source.webhooks.deleteMessage(id, token, messageID); },
-    async edit(id, token, name) { const g = guards(); await g.webhook(id); return source.webhooks.edit(id, token, name); },
+    async edit(id, token, input, reason) {
+      const g = guards();
+      const target = await g.webhook(id);
+      const patch = normalizeWebhookEditInput(input);
+      if (patch.channelID !== undefined && patch.channelID !== target.channelID) {
+        await g.channel(patch.channelID, 'ManageWebhooks');
+      }
+      return reason === undefined ? source.webhooks.edit(id, token, input) : source.webhooks.edit(id, token, input, reason);
+    },
     async delete(id, token) { const g = guards(); await g.webhook(id); return source.webhooks.delete(id, token); },
   } };
 }
