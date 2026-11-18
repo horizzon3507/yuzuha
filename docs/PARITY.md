@@ -43,7 +43,7 @@ precisam de `overrides` para o core fixado, como no manifesto do Yuzuha.
 | Ban, kick, timeout, unban e moderação de voz | SDK + `ctx.mod` e `ctx.moderate` | Versões simples e mod* com casos, incluindo move/mute/deafen |
 | Servidor, convites, webhooks e expressões | API do SDK e auxiliares autorizados | guildFeatures, leaveGuild, editGuild, convites/vanity, clonagem e mutações de emojis/stickers, createEmojisBulk; CRUD e envio de webhooks |
 | Threads e fóruns | API do SDK | Criação, edição, busca, posts, membros, threadMember e listagens ativas/arquivadas com paginação |
-| Presença | `client.user.setPresence` | setPresence, setStatus e setActivity |
+| Presença | `bot.setPresence`, `bot.rotatePresence`, `users.setPresence` (`PresenceInput` com `activities[]`, `customStatus` e `afk`) e `client.user.setPresence` | setPresence, setStatus e setActivity |
 | Cache e presença | `ctx.resources.cache` (estatísticas, limites e limpezas) e opções do SDK | Acesso nativo |
 | Usuário autenticado | `ctx.resources.self` (fetch, guilds, saída e limpeza com verificação sudo) | setPresence, setStatus, setActivity e leaveGuild |
 | Instância e aplicação | `ctx.resources.instance` (describe, gatewayInfo, application, oauthApplications, metadados de emoji/sticker, resolveEmoji); `Client.fromDiscovery`, client injetado | Mesmo adaptador do client |

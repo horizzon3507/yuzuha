@@ -53,6 +53,15 @@ await bot.load('./commands');
 await bot.login();
 ```
 
+`bot.setPresence(input)` e `users.setPresence(input)` aceitam `PresenceInput`
+completo (`status`, `activities[]`, `activity`, `customStatus` como texto ou
+`{ text, emoji? }` e `afk`), mantendo `users.setPresence(status, activity?)`
+retrocompatível. Para alternar presenças periodicamente com `this.timers`, use
+`bot.rotatePresence({ entries, intervalMs, random? })` (`intervalMs >= 5_000`),
+que aceita objetos `PresenceInput` ou callbacks `(bot) => PresenceInput |
+Promise<PresenceInput>`, retorna um removedor idempotente e encerra
+automaticamente em `bot.destroy()`.
+
 O callback `onError` é para diagnóstico de confiança. Evite registrar tokens,
 mensagens ou dados pessoais em produção. O logger padrão do Yuzuha registra só
 o código do erro. `onCommand(ctx, outcome)` recebe `success`, `guarded` ou `error`.
