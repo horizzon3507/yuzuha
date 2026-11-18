@@ -97,6 +97,8 @@ export interface SignalHandlerOptions {
 }
 export interface YuzuhaOptions {
   prefix?: string | string[] | ((message: IncomingMessage) => string | string[] | Promise<string | string[]>);
+  mentionPrefix?: boolean;
+  allowBots?: boolean;
   owners?: readonly string[];
   devGuilds?: readonly string[];
   gate?: MessageGate;

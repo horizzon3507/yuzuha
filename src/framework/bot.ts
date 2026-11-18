@@ -249,6 +249,11 @@ export class Yuzuha {
   }
   private readonly validatedPrefixes = new ValidatedPrefixCache();
   private readonly dynamicPrefixCache?: DynamicPrefixCache;
+  private readonly allowBots: boolean;
+  private readonly mentionPrefix: boolean;
+  private lastMentionBase?: string[];
+  private lastMentionBotID?: string;
+  private lastMentionCombined?: string[];
   private readonly ownerIDs: ReadonlySet<string>;
   private readonly devGuildIDs: ReadonlySet<string>;
   private readonly contextCooldown = (key: string, duration: number, maxUses?: number) =>
@@ -273,6 +278,14 @@ export class Yuzuha {
     if (options.helpRenderer !== undefined && typeof options.helpRenderer !== 'function') {
       throw new ConfigError('OPTIONS', 'helpRenderer deve ser uma função.');
     }
+    if (options.allowBots !== undefined && typeof options.allowBots !== 'boolean') {
+      throw new ConfigError('OPTIONS', 'allowBots deve ser um booleano.');
+    }
+    if (options.mentionPrefix !== undefined && typeof options.mentionPrefix !== 'boolean') {
+      throw new ConfigError('OPTIONS', 'mentionPrefix deve ser um booleano.');
+    }
+    this.allowBots = options.allowBots === true;
+    this.mentionPrefix = options.mentionPrefix === true;
     validateHooks(options.hooks);
     if (options.locale !== undefined && typeof options.locale !== 'string' && typeof options.locale !== 'function') {
       throw new ConfigError('MESSAGES_OPTIONS', 'locale deve ser texto ou função.');
@@ -369,10 +382,10 @@ export class Yuzuha {
     this.events = new NativeEvents(this.client, (work, event) => this.scheduleEvent(work, event));
     if (typeof options.prefix !== 'function') this.resolvePrefixes(options.prefix ?? '!');
     this.listener = message => {
-      if (this.closing || message.author.bot || message.author.id === this.transport.botID) return;
+      if (this.closing || (!this.allowBots && message.author.bot) || message.author.id === this.transport.botID) return;
       if (typeof this.options.prefix !== 'function') {
         let prefixes: string[];
-        try { prefixes = this.resolvePrefixes(this.options.prefix ?? '!'); }
+        try { prefixes = this.effectivePrefixes(this.options.prefix ?? '!'); }
         catch (error) { void reportError(this.options, error, undefined, { source: 'event', event: 'messageCreate' }); return; }
         if (!prefixes.some(prefix => message.content.startsWith(prefix))) return;
       }
@@ -921,6 +934,25 @@ export class Yuzuha {
     return this.validatedPrefixes.resolve(source);
   }
 
+  private effectivePrefixes(source: string | string[]): string[] {
+    const base = this.resolvePrefixes(source);
+    if (!this.mentionPrefix) return base;
+    const botID = this.transport.botID;
+    if (!botID || /\s/.test(botID)) return base;
+    if (this.lastMentionBase === base && this.lastMentionBotID === botID && this.lastMentionCombined) {
+      return this.lastMentionCombined;
+    }
+    const combined = [...base];
+    for (const mention of [`<@!${botID}>`, `<@${botID}>`]) {
+      if (!combined.includes(mention)) combined.push(mention);
+    }
+    combined.sort((a, b) => b.length - a.length);
+    this.lastMentionBase = base;
+    this.lastMentionBotID = botID;
+    this.lastMentionCombined = combined;
+    return combined;
+  }
+
   private async resolveDynamicPrefixes(
     message: IncomingMessage,
     resolver: (message: IncomingMessage) => string | string[] | Promise<string | string[]>,
@@ -973,7 +1005,7 @@ export class Yuzuha {
     message: IncomingMessage,
     configured: string | string[],
   ): RoutedCommand | undefined | Promise<RoutedCommand | undefined> {
-    const routed = route(message.content, this.resolvePrefixes(configured));
+    const routed = route(message.content, this.effectivePrefixes(configured));
     if (!routed) return undefined;
     const resolved = this.registry.resolve(routed.name, routed.input);
     if (!resolved && !this.options.hooks?.onUnknownCommand) return undefined;
@@ -986,7 +1018,7 @@ export class Yuzuha {
   }
 
   private handleMessage(message: IncomingMessage, onFailure?: (error: unknown, ctx?: CommandContext) => void, parentSignal?: AbortSignal, executionID?: string, taskExecution = false): Promise<DispatchResult> {
-    if (this.closing || message.authorBot || message.authorID === this.transport.botID) return ignored;
+    if (this.closing || (!this.allowBots && message.authorBot) || message.authorID === this.transport.botID) return ignored;
     let pendingGate: Promise<boolean> | undefined;
     if (!taskExecution && this.options.gate) {
       try {
