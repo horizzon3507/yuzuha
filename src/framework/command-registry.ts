@@ -1,10 +1,10 @@
 import { resolve } from 'node:path';
 import { compileFlagLookup, validateArgumentDefinitions, validateFlagDefinitions } from '../commands/arguments.js';
+import { resolveCooldown } from '../commands/definition.js';
 import { commandHelp, commandUsage } from '../commands/help.js';
 import { defaultTranslator } from '../domain/i18n.js';
 import type { MessageTranslator } from '../domain/i18n.js';
 import type { ArgumentDefinition, Command } from '../context.js';
-import { parseDuration } from '../context.js';
 import { YuzuhaError } from '../errors.js';
 import { loadCommands } from '../loader.js';
 import { permission } from '../permissions.js';
@@ -52,7 +52,9 @@ function snapshot(command: Command): Command {
     validators: arg.validators?.map(validator => ({ ...validator })),
   }));
   return { ...command, aliases: command.aliases && [...command.aliases], permissions: command.permissions && [...command.permissions],
-    botPermissions: command.botPermissions && [...command.botPermissions], args: definitions(command.args), flags: definitions(command.flags),
+    botPermissions: command.botPermissions && [...command.botPermissions],
+    cooldown: typeof command.cooldown === 'object' && command.cooldown !== null ? { ...command.cooldown } : command.cooldown,
+    args: definitions(command.args), flags: definitions(command.flags),
     examples: command.examples && [...command.examples], subcommands: command.subcommands?.map(snapshot),
     checks: command.checks && [...command.checks], middleware: command.middleware && [...command.middleware], http: command.http && structuredClone(command.http) };
 }
@@ -95,7 +97,7 @@ export class CommandRegistry {
     if (handlers > 1 || (!handlers && !input.subcommands?.length)) throw new YuzuhaError('COMMAND_BODY', `Comando ${input.name} precisa de code ou run, exclusivamente, ou subcomandos.`);
     if (input.subcommands?.length && (input.args?.length || input.flags?.length)) throw new YuzuhaError('COMMAND_GROUP_ARGS', 'Grupos não aceitam argumentos ou flags; declare-os nos subcomandos.');
     for (const p of [...(input.permissions ?? []), ...(input.botPermissions ?? [])]) permission(p);
-    if (input.cooldown !== undefined) parseDuration(input.cooldown);
+    if (input.cooldown !== undefined) resolveCooldown(input.cooldown);
     const definition = snapshot({ ...input, subcommands: undefined });
     const parent = ancestors.at(-1)?.command;
     const command: Command = { ...definition, name: parent ? `${parent.name} ${definition.name}` : definition.name,

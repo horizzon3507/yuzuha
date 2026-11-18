@@ -3,7 +3,64 @@ import { argumentDefinitions } from './builders.js';
 import type { ArgumentSchema } from './builders.js';
 import type { ArgumentValue } from './arguments.js';
 import type { TypedArguments } from './typed-arguments.js';
+import { parseDuration } from '../domain/values.js';
 import type { HttpPolicy } from '../services/http.js';
+import { YuzuhaError } from '../shared/errors.js';
+
+export type CooldownScope = 'user' | 'channel' | 'guild' | 'global';
+
+export interface CooldownOptions {
+  duration: string | number;
+  scope?: CooldownScope;
+  uses?: number;
+  bypass?: (ctx: CommandContext) => boolean | Promise<boolean>;
+}
+
+export interface ResolvedCooldown {
+  readonly durationMs: number;
+  readonly scope?: CooldownScope;
+  readonly uses?: number;
+  readonly bypass?: (ctx: CommandContext) => boolean | Promise<boolean>;
+}
+
+export function resolveCooldown(input: unknown): ResolvedCooldown {
+  if (typeof input === 'string' || typeof input === 'number') {
+    return { durationMs: parseDuration(input) };
+  }
+  const prototype = input === null || typeof input !== 'object' || Array.isArray(input)
+    ? undefined : Object.getPrototypeOf(input);
+  if (prototype !== Object.prototype && prototype !== null) {
+    throw new YuzuhaError('COMMAND_METADATA', 'cooldown deve ser uma duração ou objeto de opções.');
+  }
+  const raw = input as Record<string, unknown>;
+  if (typeof raw['duration'] !== 'string' && typeof raw['duration'] !== 'number') {
+    throw new YuzuhaError('COMMAND_METADATA', 'cooldown.duration deve ser uma duração válida.');
+  }
+  let durationMs: number;
+  try {
+    durationMs = parseDuration(raw['duration']);
+  } catch (error) {
+    throw new YuzuhaError('COMMAND_METADATA', 'cooldown.duration deve ser uma duração válida.', { cause: error });
+  }
+  const scope = raw['scope'];
+  if (scope !== undefined && scope !== 'user' && scope !== 'channel' && scope !== 'guild' && scope !== 'global') {
+    throw new YuzuhaError('COMMAND_METADATA', "cooldown.scope deve ser 'user', 'channel', 'guild' ou 'global'.");
+  }
+  const uses = raw['uses'];
+  if (uses !== undefined && (!Number.isSafeInteger(uses) || (uses as number) < 1)) {
+    throw new YuzuhaError('COMMAND_METADATA', 'cooldown.uses deve ser um inteiro positivo.');
+  }
+  const bypass = raw['bypass'];
+  if (bypass !== undefined && typeof bypass !== 'function') {
+    throw new YuzuhaError('COMMAND_METADATA', 'cooldown.bypass deve ser uma função.');
+  }
+  return {
+    durationMs,
+    ...(scope !== undefined ? { scope } : {}),
+    ...(uses !== undefined ? { uses: uses as number } : {}),
+    ...(bypass !== undefined ? { bypass: bypass as (ctx: CommandContext) => boolean | Promise<boolean> } : {}),
+  };
+}
 
 export interface ArgumentDefinition {
   name: string;
@@ -35,7 +92,7 @@ export interface Command {
   guildOnly?: boolean;
   permissions?: string[];
   botPermissions?: string[];
-  cooldown?: string | number;
+  cooldown?: string | number | CooldownOptions;
   args?: ArgumentDefinition[];
   flags?: ArgumentDefinition[];
   subcommands?: Command[];

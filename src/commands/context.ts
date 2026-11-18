@@ -3,7 +3,6 @@ import type { IncomingMessage, Payload } from '../domain/messages.js';
 import type { ScriptEventData } from '../domain/events.js';
 import type { CaseRecord, ModerationAction, ModerationOptions } from '../domain/moderation.js';
 import type { JsonValue, VariableScope } from '../domain/state.js';
-import { parseDuration } from '../domain/values.js';
 import { DEFAULT_LOCALE, defaultTranslator, validateLocale } from '../domain/i18n.js';
 import type { MessageTranslator } from '../domain/i18n.js';
 import type { Store } from '../ports/store.js';
@@ -36,7 +35,8 @@ import { hasAsyncArguments, parseArguments, parseArgumentsAsync, parseFlags, par
 import type { ArgumentTypeRegistry } from './arguments.js';
 import { commandUsage } from './help.js';
 import { ArgumentBag } from './typed-arguments.js';
-import type { ArgumentDefinition, Command } from './definition.js';
+import { resolveCooldown } from './definition.js';
+import type { ArgumentDefinition, Command, CooldownOptions, CooldownScope } from './definition.js';
 
 export interface SendOptions { ttlMs?: number }
 
@@ -56,7 +56,7 @@ export interface ContextOptions {
   lineage?: readonly Command[];
   prefix?: string;
   input?: string;
-  cooldown: (key: string, duration: number) => number | Promise<number>;
+  cooldown: (key: string, duration: number, maxUses?: number) => number | Promise<number>;
   now?: () => number;
   help?: (command?: string, prefix?: string) => string;
   locale?: string;
@@ -354,9 +354,23 @@ export class CommandContext {
     return this.authorization.requirePermission(name, bot, message);
   }
 
-  cooldown(duration: string | number, message?: string): void | Promise<void> {
-    const key = JSON.stringify([this.guildID, this.message.channelID, this.authorID, this.command.name]);
-    const remaining = this.claimCooldown(key, parseDuration(duration));
+  private cooldownKey(commandName: string, scope?: CooldownScope): string {
+    switch (scope) {
+      case 'user':
+        return JSON.stringify(['user', this.authorID, commandName]);
+      case 'channel':
+        return JSON.stringify(['channel', this.channelID, commandName]);
+      case 'guild':
+        return JSON.stringify(['guild', this.guildID || this.channelID, commandName]);
+      case 'global':
+        return JSON.stringify(['global', commandName]);
+      default:
+        return JSON.stringify([this.guildID, this.channelID, this.authorID, commandName]);
+    }
+  }
+
+  cooldown(duration: string | number | CooldownOptions, message?: string): void | Promise<void> {
+    const resolved = resolveCooldown(duration);
     const enforce = (ms: number): void => {
       if (ms > 0) {
         const formatted = `${Math.ceil(ms / 1000)}s`;
@@ -366,11 +380,25 @@ export class CommandContext {
         throw new GuardError(text, 'COOLDOWN', { remainingMs: ms });
       }
     };
-    if (typeof remaining === 'number') {
-      enforce(remaining);
-      return;
+    const claim = (): void | Promise<void> => {
+      const key = this.cooldownKey(this.command.name, resolved.scope);
+      const remaining = resolved.uses === undefined
+        ? this.claimCooldown(key, resolved.durationMs)
+        : this.claimCooldown(key, resolved.durationMs, resolved.uses);
+      if (typeof remaining === 'number') {
+        enforce(remaining);
+        return;
+      }
+      return Promise.resolve(remaining).then(enforce);
+    };
+    if (resolved.bypass) {
+      const bypassed = resolved.bypass(this);
+      if (isPromiseLike(bypassed)) {
+        return Promise.resolve(bypassed).then(skip => skip ? undefined : claim());
+      }
+      if (bypassed) return;
     }
-    return Promise.resolve(remaining).then(enforce);
+    return claim();
   }
 
   async prepare(): Promise<void> {
@@ -416,8 +444,15 @@ export class CommandContext {
     }
     for (const command of this.lineage) {
       if (command.cooldown === undefined) continue;
-      const key = JSON.stringify([this.guildID, this.message.channelID, this.authorID, command.name]);
-      const raw = this.claimCooldown(key, parseDuration(command.cooldown));
+      const resolved = resolveCooldown(command.cooldown);
+      if (resolved.bypass) {
+        const bypassed = resolved.bypass(this);
+        if (isPromiseLike(bypassed) ? await bypassed : bypassed) continue;
+      }
+      const key = this.cooldownKey(command.name, resolved.scope);
+      const raw = resolved.uses === undefined
+        ? this.claimCooldown(key, resolved.durationMs)
+        : this.claimCooldown(key, resolved.durationMs, resolved.uses);
       const remaining = typeof raw === 'number' ? raw : await raw;
       if (remaining > 0) {
         throw new GuardError(
@@ -454,6 +489,12 @@ export class CommandContext {
   deleteVariable(scope: VariableScope, name: string): Promise<void> {
     return this.variables.delete(scope, name);
   }
+}
+
+function isPromiseLike<T>(value: T | PromiseLike<T>): value is PromiseLike<T> {
+  return (typeof value === 'object' || typeof value === 'function')
+    && value !== null
+    && typeof (value as PromiseLike<T>).then === 'function';
 }
 
 let skipNextTokenize = false;

@@ -35,7 +35,7 @@ export type {
   MessageTranslator,
 } from './domain/i18n.js';
 export { CommandContext, defineCommand, parseDuration } from './context.js';
-export type { Command, ArgumentDefinition } from './context.js';
+export type { Command, ArgumentDefinition, CooldownScope, CooldownOptions } from './context.js';
 export { commandUsage, commandHelp } from './commands/help.js';
 export { channelID, formatDuration, MAX_TIMEOUT_MS, roleID, userID } from './domain/values.js';
 export type { UrlArgumentOptions } from './domain/values.js';

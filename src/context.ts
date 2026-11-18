@@ -1,7 +1,7 @@
 export { CommandContext } from './commands/context.js';
 export type { ContextOptions, YuzuhaLocals } from './commands/context.js';
 export { defineCommand } from './commands/definition.js';
-export type { Command, ArgumentDefinition } from './commands/definition.js';
+export type { Command, ArgumentDefinition, CooldownScope, CooldownOptions } from './commands/definition.js';
 export { commandUsage, commandHelp } from './commands/help.js';
 export { parseArguments, parseArgumentsAsync, parseFlags, parseFlagsAsync, tokenize, validateArgumentDefinitions, validateFlagDefinitions } from './commands/arguments.js';
 export type { ArgumentTypeRegistry, ArgumentValue, CustomArgumentType, ParseArgumentsOptions, ParseFlagsOptions } from './commands/arguments.js';

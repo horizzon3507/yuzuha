@@ -241,7 +241,8 @@ export class Yuzuha {
   }
   private readonly validatedPrefixes = new ValidatedPrefixCache();
   private readonly dynamicPrefixCache?: DynamicPrefixCache;
-  private readonly contextCooldown = (key: string, duration: number) => this.limits.cooldown(key, duration);
+  private readonly contextCooldown = (key: string, duration: number, maxUses?: number) =>
+    maxUses === undefined ? this.limits.cooldown(key, duration) : this.limits.cooldown(key, duration, maxUses);
   private readonly contextHelp = (command?: string, prefix = '') => this.help(command, prefix);
   private readonly contextDeleteLater = (channelID: string, messageID: string, ttlMs: number) => this.deleteLater(channelID, messageID, ttlMs);
   private readonly canvasContext: ContextOptions['canvas'];
