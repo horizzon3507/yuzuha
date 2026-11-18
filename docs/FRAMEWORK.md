@@ -219,7 +219,7 @@ folha. As regras de herança, parsing e exemplos completos estão em
 | `ctx.reply(textoOuPayload)` | Resposta sem pings pelo adaptador |
 | `ctx.requireGuild()` | Exige servidor e retorna seu ID |
 | `ctx.requirePermission(nome, bot?, mensagem?)` | Exige permissão de servidor |
-| `ctx.cooldown(duração, mensagem?)` | Cooldown da execução (`void \| Promise<void>`; use `await` com `rateLimiter` assíncrono) |
+| `ctx.cooldown(duraçãoOuOpções, mensagem?)` | Cooldown da execução com escopo, múltiplos usos e `bypass` opcionais (`void \| Promise<void>`) |
 | `ctx.moderate(ação, alvo, motivo, opções)` | Moderação compartilhada com scripts |
 | `ctx.store`, `ctx.transport` | Persistência e operações de transporte |
 | `ctx.variable`, `ctx.setVariable` | Variáveis JSON por escopo |
@@ -495,8 +495,8 @@ import { Yuzuha } from 'yuzuha';
 import type { RateLimiter } from 'yuzuha';
 
 const rateLimiter: RateLimiter = {
-  async cooldown(key, durationMs) {
-    // Retorne 0 se concedido ou os milissegundos restantes (> 0) se bloqueado.
+  async cooldown(key, durationMs, maxUses = 1) {
+    // Retorne 0 se concedido (até maxUses dentro da janela) ou os ms restantes (> 0) se bloqueado.
     return 0;
   },
   async duplicate(channelID, messageID) {
@@ -511,12 +511,19 @@ const rateLimiter: RateLimiter = {
 const bot = new Yuzuha({ prefix: '!', rateLimiter });
 ```
 
+- **Múltiplos usos por janela (`maxUses`)**: o 3º argumento `maxUses?: number`
+  (padrão `1`) preserva compatibilidade total com implementações externas de 2
+  argumentos. Em `MemoryRateLimiter`, `maxUses === 1` mantém o caminho enxuto;
+  `maxUses > 1` permite até `maxUses` usos em `[start, start + durationMs)` e
+  retorna `until - time` a partir da `(maxUses + 1)`-ésima chamada até a janela
+  expirar, respeitando `sweep` e a política de capacidade (`evict` ou `throw`).
 - **Modo síncrono e assíncrono**: `cooldown` retorna `number | Promise<number>`
   e `duplicate` retorna `boolean | Promise<boolean>`. Limitadores síncronos
   (como `MemoryRateLimiter`) preservam o caminho rápido síncrono e o lançamento
-  síncrono de `GuardError` em `ctx.cooldown(...)`. Quando `rateLimiter.cooldown`
-  retorna uma `Promise`, `ctx.cooldown(...)` também retorna `Promise<void>` —
-  prefira `await ctx.cooldown(...)` ao escrever comandos portáveis; `cooldown`
+  síncrono de `GuardError` em `ctx.cooldown(...)` (inclusive com `CooldownOptions`
+  sem `bypass` assíncrono). Quando `rateLimiter.cooldown` ou `bypass` retorna
+  uma `Promise`, `ctx.cooldown(...)` também retorna `Promise<void>` — prefira
+  `await ctx.cooldown(...)` ao escrever comandos portáveis; `cooldown`
   declarativo e `$cooldown` aguardam automaticamente.
 - **Deduplicação assíncrona**: se `duplicate` retornar `Promise<boolean>`, o
   bot aguarda a resolução dentro do despacho rastreado (inclusive sob

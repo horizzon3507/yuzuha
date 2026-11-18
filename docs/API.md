@@ -102,7 +102,10 @@ export default defineCommand({
 ```
 
 Esse exemplo valida a duração e responde; ele não agenda um lembrete.
-`duration` retorna milissegundos. Números usados como cooldown também são ms.
+`duration` retorna milissegundos. Em `cooldown`, durações (`string | number`) ou
+`CooldownOptions` (`{ duration, scope?, uses?, bypass? }`, onde `scope` é
+`'user' | 'channel' | 'guild' | 'global'`) definem a janela de uso; metadados
+inválidos lançam `YuzuhaError` (`COMMAND_METADATA`).
 
 Campos: `name`, `aliases`, `description`, `code` ou `run`, `guildOnly`,
 `permissions`, `botPermissions`, `cooldown`, `args`, `flags`, `subcommands`, `examples`,
@@ -172,7 +175,7 @@ Nomes/aliases são únicos sem distinção entre maiúsculas e minúsculas.
 | `executionID` | Identificador de correlação, compartilhado com a claim em agendamentos |
 | `requireGuild()` | Retorna o ID do servidor ou lança `GuardError` |
 | `requirePermission(name, bot?, message?)` | Verifica permissão de servidor do autor ou bot |
-| `cooldown(duration, message?)` | Reivindica cooldown por autor/canal/servidor/comando (`void \| Promise<void>`) |
+| `cooldown(durationOrOptions, message?)` | Reivindica cooldown (`string \| number \| CooldownOptions`, retorno `void \| Promise<void>`) |
 | `moderate(action, target, reason, options?)` | Executa moderação; retorna caso se `record` |
 | `case(id)` | Consulta caso do servidor, ou `undefined` |
 | `variable(scope, name, fallback?)` | Lê valor JSON |
