@@ -32,9 +32,19 @@ export interface CaseRecord {
   enabled?: boolean;
 }
 
+const SNOWFLAKE_DIGITS = /^\d+$/;
+
+/** Compares snowflake strings numerically without BigInt allocations. */
+export function compareSnowflake(left: string, right: string): number {
+  if (SNOWFLAKE_DIGITS.test(left) && SNOWFLAKE_DIGITS.test(right)) {
+    return left.length - right.length || (left < right ? -1 : left > right ? 1 : 0);
+  }
+  return left < right ? -1 : left > right ? 1 : 0;
+}
+
 export function isAbove(member: ModerationMember, target: ModerationMember): boolean {
   if (member.rank !== target.rank) return member.rank > target.rank;
   if (!member.topRoleID || !target.topRoleID
-    || !/^\d+$/.test(member.topRoleID) || !/^\d+$/.test(target.topRoleID)) return false;
-  return BigInt(member.topRoleID) < BigInt(target.topRoleID);
+    || !SNOWFLAKE_DIGITS.test(member.topRoleID) || !SNOWFLAKE_DIGITS.test(target.topRoleID)) return false;
+  return compareSnowflake(member.topRoleID, target.topRoleID) < 0;
 }
