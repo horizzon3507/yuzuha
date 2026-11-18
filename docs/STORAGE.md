@@ -28,6 +28,31 @@ O `JsonStore` mantém um snapshot em memória. Compartilhe a mesma instância en
 bots que deliberadamente compartilham um arquivo; não abra duas instâncias ou
 processos escritores para o mesmo JSON. Use SQLite nesses casos.
 
+`new JsonStore(caminho?, options?)` aceita `JsonStoreOptions` (validado com
+`ConfigError` de código `JSON_STORE_OPTIONS`):
+
+- `flushMs` (inteiro de `0` a `2147483647`, padrão `0`): controla a coalescência
+  de escritas em disco. Com `flushMs: 0`, rajadas de `update` enfileiradas no
+  mesmo lote compartilham um único commit atômico (arquivo temporário +
+  `fsync` + `rename`) e só resolvem após a gravação em disco — com rollback do
+  lote inteiro se o commit falhar. Com `flushMs > 0`, as atualizações confirmam
+  imediatamente em memória e agendam um único flush em disco ao final da janela;
+  se houver erro no flush assíncrono do timer, o estado permanece marcado como
+  pendente para nova tentativa e `onError` é notificado.
+- `pretty` (booleano, padrão `false`): por padrão o JSON é gravado em formato
+  compacto (`JSON.stringify(state)`); passe `pretty: true` para identar com dois
+  espaços e quebra final (`JSON.stringify(state, null, 2) + '\n'`).
+- `onError` e `timers`: hook opcional para falhas de flush disparadas por timer
+  e timers customizáveis para testes determinísticos.
+
+Chame `await store.flush()` para gravar imediatamente qualquer estado pendente
+em disco. `await store.close()` é idempotente, cancela timers pendentes, drena e
+grava as alterações pendentes e recusa operações futuras (`read`, `readVariable`,
+`update` e `flush`) com `StoreError('STORE_CLOSED', ...)`. Note que quando um
+`JsonStore` configurado com `flushMs > 0` é injetado em `new Yuzuha({ store })`,
+o chamador continua responsável por chamar `await store.close()` após
+`await bot.destroy()` para garantir a gravação final.
+
 Na 0.1.6, memória e JSON atendem `ctx.data.*.get` por leitura pontual: a fila
 aguarda operações anteriores, avalia o relógio de TTL e copia somente o valor
 selecionado. O contrato `Store.readVariable(key, now)` é opcional; `now` é uma
