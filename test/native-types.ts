@@ -1,7 +1,7 @@
 import { arg, assert, defineCommand, defineEvent, Yuzuha } from '../src/index.js';
 import { Events } from '@fluxerjs/core';
 import type { Command } from '../src/commands/definition.js';
-import type { HttpResponse, StickerCreateInput, ThreadMemberInfo } from '../src/index.js';
+import type { HttpResponse, MemberInfo, StickerCreateInput, ThreadMemberInfo } from '../src/index.js';
 import { createCard } from '../src/canvas/card.js';
 import type { CanvasBuilder, CanvasResult } from '../src/canvas/card.js';
 
@@ -18,6 +18,11 @@ const native: Command = defineCommand({
     mode: arg.string().choices(['fast', 'slow']).required(),
     confirmed: arg.boolean().default(false),
     delay: arg.duration().required(),
+    targetChannel: arg.channel(),
+    targetRole: arg.role(),
+    targetMember: arg.member(),
+    endpoint: arg.url({ protocols: ['https'] }),
+    level: arg.enum(['low', 'high']).default('low'),
   },
   async run(ctx) {
     const amount: number = ctx.args.get('amount');
@@ -26,6 +31,11 @@ const native: Command = defineCommand({
     const mode: 'fast' | 'slow' = ctx.args.get('mode');
     const confirmed: boolean = ctx.args.get('confirmed');
     const delay: number = ctx.args.get('delay');
+    const targetChannel: string | undefined = ctx.args.get('targetChannel');
+    const targetRole: string | undefined = ctx.args.get('targetRole');
+    const targetMember: MemberInfo | undefined = ctx.args.get('targetMember');
+    const endpoint: URL | undefined = ctx.args.get('endpoint');
+    const level: 'low' | 'high' = ctx.args.get('level');
     const requiredReason: string = ctx.args.require('reason');
     ctx.assert(amount > 0, 'Valor inválido.');
     const count: number = await ctx.data.user.update('count', current => {
@@ -60,6 +70,7 @@ const native: Command = defineCommand({
     void count; void caseID; void noRecord; void signal; void username;
     void reactionUsers; void members; void bytes; void sticker;
     void nickname; void total; void indexing;
+    void targetChannel; void targetRole; void targetMember; void endpoint; void level;
   },
 });
 void native;

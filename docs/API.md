@@ -123,6 +123,11 @@ Tipos de argumento:
 | `number` | Número finito |
 | `integer` | Inteiro seguro |
 | `user` | ID textual validado a partir de menção ou ID, sem buscar membro |
+| `channel` | ID textual de canal validado a partir de `<#id>` ou ID |
+| `role` | ID textual de cargo validado a partir de `<@&id>` ou ID |
+| `member` | `MemberInfo` resolvido no servidor via `resources.users.member` (ou `transport.member`) |
+| `url` | Instância `URL` validada contra `protocols` (`http:`/`https:` por padrão), sem credenciais/`javascript:`/`data:` |
+| `enum` | Texto validado de forma case-sensitive contra `choices` não vazio |
 | `duration` | Milissegundos inteiros positivos |
 | `boolean` | Booleano convertido de true/false, yes/no, sim/não/nao ou 1/0 |
 | `custom` (`customType`) | Valor convertido por `CustomArgumentType.parse(raw, ctx)` registrado em `bot.argumentType` |

@@ -57,6 +57,7 @@ export interface ContextOptions {
   translator?: MessageTranslator;
   native?: NativeAccess;
   resources?: Resources;
+  resourcesInjected?: boolean;
   scheduler?: Scheduler;
   http?: HttpService;
   music?: MusicManager;
@@ -115,6 +116,7 @@ export class CommandContext {
   private readonly scope: { guildID: string; authorID: string };
   private readonly native?: NativeAccess;
   private readonly nativeResources?: Resources;
+  readonly hasInjectedResources: boolean;
   private readonly schedulerService?: Scheduler;
   private readonly httpService?: HttpService;
   private readonly musicService?: MusicManager;
@@ -171,6 +173,7 @@ export class CommandContext {
     this.canvasRenderer = options.canvas?.renderer;
     this.canvasConfig = options.canvas?.config;
     this.nativeResources = options.resources;
+    this.hasInjectedResources = options.resourcesInjected ?? (options.resources !== undefined);
   }
 
   private get memo(): MemberMemo { return this.memberMemo ??= new MemberMemo(this.transport); }

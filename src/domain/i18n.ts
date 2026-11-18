@@ -10,6 +10,12 @@ export interface MessageCatalog {
   argInteger(name: string): string;
   argBoolean(name: string): string;
   argUser(): string;
+  argChannel(): string;
+  argRole(): string;
+  argMemberNotFound(): string;
+  argUrl(name?: string): string;
+  argUrlProtocol(protocols: readonly string[], name?: string): string;
+  argUrlCredentials(name?: string): string;
   argDuration(name: string): string;
   argChoices(name: string, choices: readonly (string | number | boolean)[]): string;
   argMin(name: string, min: number): string;
@@ -25,6 +31,7 @@ export interface MessageCatalog {
   helpRequired(): string;
   helpOptional(): string;
   helpChoices(choices: readonly (string | number | boolean)[]): string;
+  helpProtocols(protocols: readonly string[]): string;
   helpDefault(value: string): string;
   helpMin(min: number): string;
   helpMax(max: number): string;
@@ -89,6 +96,13 @@ const DEFAULT_CATALOG: MessageCatalog = {
   argInteger: name => `${name} deve ser um número inteiro.`,
   argBoolean: name => `${name} deve ser true ou false.`,
   argUser: () => 'Mencione um usuário ou informe um ID válido.',
+  argChannel: () => 'Mencione um canal ou informe um ID válido.',
+  argRole: () => 'Mencione um cargo ou informe um ID válido.',
+  argMemberNotFound: () => 'Membro não encontrado neste servidor.',
+  argUrl: name => `${name ? `${name}: ` : ''}informe uma URL válida.`,
+  argUrlProtocol: (protocols, name) =>
+    `${name ? `${name}: ` : ''}protocolo de URL não permitido (use ${protocols.join(', ')}).`,
+  argUrlCredentials: name => `${name ? `${name}: ` : ''}URLs com credenciais não são permitidas.`,
   argDuration: name => `${name}: Duração inválida. Use 500ms, 5s, 10m, 2h ou 1d.`,
   argChoices: (name, choices) => `${name}: escolha ${choices.join(', ')}.`,
   argMin: (name, min) => `${name}: mínimo ${min}.`,
@@ -104,6 +118,7 @@ const DEFAULT_CATALOG: MessageCatalog = {
   helpRequired: () => 'obrigatório',
   helpOptional: () => 'opcional',
   helpChoices: choices => `escolhas: ${choices.join(', ')}`,
+  helpProtocols: protocols => `protocolos: ${protocols.join(', ')}`,
   helpDefault: value => `padrão: ${value}`,
   helpMin: min => `mínimo: ${min}`,
   helpMax: max => `máximo: ${max}`,
@@ -152,6 +167,12 @@ const PARAMETER_NAMES: Readonly<Record<MessageKey, readonly string[]>> = {
   argInteger: ['name'],
   argBoolean: ['name'],
   argUser: [],
+  argChannel: [],
+  argRole: [],
+  argMemberNotFound: [],
+  argUrl: ['name'],
+  argUrlProtocol: ['protocols', 'name'],
+  argUrlCredentials: ['name'],
   argDuration: ['name'],
   argChoices: ['name', 'choices'],
   argMin: ['name', 'min'],
@@ -167,6 +188,7 @@ const PARAMETER_NAMES: Readonly<Record<MessageKey, readonly string[]>> = {
   helpRequired: [],
   helpOptional: [],
   helpChoices: ['choices'],
+  helpProtocols: ['protocols'],
   helpDefault: ['value'],
   helpMin: ['min'],
   helpMax: ['max'],

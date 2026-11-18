@@ -7,8 +7,10 @@ import type { HttpPolicy } from '../services/http.js';
 
 export interface ArgumentDefinition {
   name: string;
-  type?: 'string' | 'number' | 'integer' | 'user' | 'duration' | 'boolean' | 'custom';
+  type?: 'string' | 'number' | 'integer' | 'user' | 'duration' | 'boolean'
+    | 'channel' | 'role' | 'member' | 'url' | 'enum' | 'custom';
   customType?: string;
+  protocols?: readonly string[];
   required?: boolean;
   rest?: boolean;
   anywhere?: boolean;

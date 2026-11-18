@@ -2,7 +2,17 @@ import type { CommandContext } from './context.js';
 import type { ArgumentDefinition } from './definition.js';
 import { defaultTranslator } from '../domain/i18n.js';
 import type { MessageTranslator } from '../domain/i18n.js';
-import { parseDuration, userID } from '../domain/values.js';
+import {
+  DEFAULT_URL_PROTOCOLS,
+  channelID,
+  normalizeUrlProtocols,
+  parseArgumentUrl,
+  parseDuration,
+  roleID,
+  userID,
+} from '../domain/values.js';
+import type { ModerationMember } from '../domain/moderation.js';
+import type { MemberInfo } from '../ports/resources/users.js';
 import { GuardError, YuzuhaError } from '../shared/errors.js';
 
 export type ArgumentValue = unknown;
@@ -38,15 +48,6 @@ export const BUILTIN_ARGUMENT_TYPES: ReadonlySet<string> = new Set([
   'enum',
 ]);
 
-const IMPLEMENTED_BUILTIN_TYPES: ReadonlySet<string> = new Set([
-  'string',
-  'number',
-  'integer',
-  'user',
-  'duration',
-  'boolean',
-]);
-
 export function assertCustomArgumentTypeName(name: string): string {
   if (typeof name !== 'string' || !name.trim() || /\s/u.test(name)) {
     throw new YuzuhaError('ARGUMENT_TYPE', 'Informe um nome válido para o tipo de argumento.');
@@ -58,7 +59,7 @@ export function assertCustomArgumentTypeName(name: string): string {
 }
 
 export function hasAsyncArguments(definitions: readonly ArgumentDefinition[] | undefined): boolean {
-  return Boolean(definitions?.some(definition => definition.type === 'custom'));
+  return Boolean(definitions?.some(definition => definition.type === 'custom' || definition.type === 'member'));
 }
 
 function isPromiseLike<T>(value: T | PromiseLike<T>): value is PromiseLike<T> {
@@ -73,14 +74,21 @@ function formatChoices(choices: readonly ArgumentValue[]): (string | number | bo
   );
 }
 
+function matchesChoice(type: ArgumentDefinition['type'], choice: ArgumentValue, value: ArgumentValue): boolean {
+  if (type === 'enum') return typeof choice === 'string' && typeof value === 'string' && choice === value;
+  if (choice instanceof URL && value instanceof URL) return choice.href === value.href;
+  if (type === 'custom' || type === 'member' || type === 'url') {
+    return Object.is(choice, value)
+      || (['string', 'number', 'boolean'].includes(typeof choice)
+        && ['string', 'number', 'boolean'].includes(typeof value)
+        && String(choice) === String(value));
+  }
+  return String(choice) === String(value);
+}
+
 function validateValue(definition: ArgumentDefinition, value: ArgumentValue, t: MessageTranslator = defaultTranslator): void {
   if (definition.choices) {
-    const matched = definition.type === 'custom'
-      ? definition.choices.some(choice => Object.is(choice, value)
-        || (['string', 'number', 'boolean'].includes(typeof choice)
-          && ['string', 'number', 'boolean'].includes(typeof value)
-          && String(choice) === String(value)))
-      : definition.choices.some(choice => String(choice) === String(value));
+    const matched = definition.choices.some(choice => matchesChoice(definition.type, choice, value));
     if (!matched) {
       throw new GuardError(t('argChoices', definition.name, formatChoices(definition.choices)), 'INVALID_ARGUMENT');
     }
@@ -114,6 +122,14 @@ function validateValue(definition: ArgumentDefinition, value: ArgumentValue, t: 
   }
 }
 
+function isValidChoicesForType(type: ArgumentDefinition['type'], choices: readonly ArgumentValue[]): boolean {
+  if (type === 'custom') return true;
+  if (type === 'enum') return choices.every(choice => typeof choice === 'string' && choice.length > 0);
+  if (type === 'url') return choices.every(choice => choice instanceof URL);
+  if (type === 'member') return choices.every(choice => Boolean(choice) && typeof choice === 'object' && !Array.isArray(choice));
+  return choices.every(choice => ['string', 'number', 'boolean'].includes(typeof choice));
+}
+
 export function validateArgumentDefinitions(definitions: readonly ArgumentDefinition[], commandName = 'comando'): void {
   const names = new Set<string>();
   if (definitions.filter(definition => definition.anywhere).length > 1) {
@@ -122,7 +138,7 @@ export function validateArgumentDefinitions(definitions: readonly ArgumentDefini
   for (const [index, definition] of definitions.entries()) {
     const isCustom = definition.type === 'custom';
     const validType = definition.type === undefined
-      || IMPLEMENTED_BUILTIN_TYPES.has(definition.type)
+      || BUILTIN_ARGUMENT_TYPES.has(definition.type)
       || (isCustom
         && typeof definition.customType === 'string'
         && Boolean(definition.customType.trim())
@@ -136,10 +152,12 @@ export function validateArgumentDefinitions(definitions: readonly ArgumentDefini
       || (definition.aliases !== undefined && (!Array.isArray(definition.aliases) || definition.aliases.some(alias => typeof alias !== 'string')))
       || (definition.rest && index !== definitions.length - 1)
       || (!isCustom && definition.customType !== undefined)
+      || (definition.protocols !== undefined && definition.type !== 'url')
       || !validType
+      || (definition.type === 'enum' && (!Array.isArray(definition.choices) || !definition.choices.length))
       || (definition.choices !== undefined && (!Array.isArray(definition.choices)
         || !definition.choices.length
-        || (!isCustom && definition.choices.some(choice => !['string', 'number', 'boolean'].includes(typeof choice)))))
+        || !isValidChoicesForType(definition.type, definition.choices)))
       || (definition.min !== undefined && !Number.isFinite(definition.min))
       || (definition.max !== undefined && !Number.isFinite(definition.max))
       || (definition.min !== undefined && definition.max !== undefined && definition.min > definition.max)
@@ -148,6 +166,9 @@ export function validateArgumentDefinitions(definitions: readonly ArgumentDefini
         || definition.validators.some(validator => !validator || typeof validator.check !== 'function' || typeof validator.message !== 'string')))) {
       throw new YuzuhaError('COMMAND_ARGS', `Argumentos inválidos em ${commandName}.`);
     }
+    const urlProtocols = definition.protocols !== undefined
+      ? normalizeUrlProtocols(definition.protocols, 'COMMAND_ARGS')
+      : DEFAULT_URL_PROTOCOLS;
     if (definition.defaultValue !== undefined) {
       const value = definition.defaultValue;
       const type = definition.type ?? 'string';
@@ -156,10 +177,17 @@ export function validateArgumentDefinitions(definitions: readonly ArgumentDefini
         : ['number', 'integer', 'duration'].includes(type) ? typeof value !== 'number' || !Number.isFinite(value)
           || (type === 'integer' && !Number.isSafeInteger(value))
           || (type === 'duration' && (!Number.isSafeInteger(value) || value <= 0))
+        : type === 'url' ? !(value instanceof URL || typeof value === 'string')
+        : type === 'member' ? !value || typeof value !== 'object' || Array.isArray(value) || typeof (value as { id?: unknown }).id !== 'string'
         : typeof value !== 'string';
       if (invalidType) throw new YuzuhaError('COMMAND_ARGS', `Valor padrão inválido para ${definition.name} em ${commandName}.`);
       try {
-        validateValue(definition, type === 'user' ? userID(String(value)) : value);
+        const normalizedDefault = type === 'user' ? userID(String(value))
+          : type === 'channel' ? channelID(String(value))
+          : type === 'role' ? roleID(String(value))
+          : type === 'url' ? parseArgumentUrl(value instanceof URL ? value.href : String(value), urlProtocols, definition.name)
+          : value;
+        validateValue(definition, normalizedDefault);
       }
       catch (error) {
         if (!(error instanceof GuardError)) throw error;
@@ -191,6 +219,67 @@ function ensureCustomTypesRegistered(
   }
 }
 
+function isAbsentMemberError(error: unknown): boolean {
+  const candidate = error as { code?: number | string; status?: number; reason?: string } | null | undefined;
+  if (candidate instanceof GuardError && candidate.reason === 'MEMBER_NOT_FOUND') return true;
+  if (candidate?.status === 404 || candidate?.code === 10007 || candidate?.code === 10013
+    || candidate?.code === 'NOT_FOUND' || candidate?.code === 'MEMBER_NOT_FOUND') {
+    return true;
+  }
+  return false;
+}
+
+function adaptTransportMember(member: ModerationMember, ctx: CommandContext): MemberInfo {
+  const fallbackName = member.id === ctx.authorID && ctx.authorName ? ctx.authorName : member.id;
+  return {
+    id: member.id,
+    username: fallbackName,
+    displayName: fallbackName,
+    bot: member.id === ctx.transport.botID,
+    avatarURL: null,
+    bannerURL: null,
+    createdTimestamp: 0,
+    nickname: null,
+    joinedTimestamp: 0,
+    roles: member.topRoleID ? [member.topRoleID] : [],
+    permissions: member.permissions.toString(),
+    timedOutUntil: null,
+  };
+}
+
+async function resolveMemberArgument(
+  input: string,
+  ctx: CommandContext,
+  t: MessageTranslator = ctx.t,
+): Promise<MemberInfo> {
+  const guildID = ctx.requireGuild();
+  const targetID = userID(input, t);
+  if (ctx.hasInjectedResources) {
+    try {
+      const resolved = await ctx.resources.users.member(guildID, targetID);
+      if (!resolved) throw new GuardError(t('argMemberNotFound'), 'INVALID_ARGUMENT');
+      return resolved;
+    } catch (error) {
+      if (error instanceof GuardError && error.reason === 'INVALID_ARGUMENT') throw error;
+      if (isAbsentMemberError(error)) {
+        throw new GuardError(t('argMemberNotFound'), 'INVALID_ARGUMENT');
+      }
+      if (!(error instanceof YuzuhaError && error.code === 'NATIVE_UNAVAILABLE')) {
+        throw error;
+      }
+    }
+  }
+  try {
+    const member = await ctx.transport.member(guildID, targetID);
+    return adaptTransportMember(member, ctx);
+  } catch (error) {
+    if (isAbsentMemberError(error)) {
+      throw new GuardError(t('argMemberNotFound'), 'INVALID_ARGUMENT');
+    }
+    throw error;
+  }
+}
+
 function parseBuiltinValue(
   definition: ArgumentDefinition,
   input: string,
@@ -212,7 +301,14 @@ function parseBuiltinValue(
     }
     value = ['true', 'yes', 'sim', '1'].includes(normalized);
   } else if (definition.type === 'user') value = userID(input, t);
-  else if (definition.type === 'duration') {
+  else if (definition.type === 'channel') value = channelID(input, t);
+  else if (definition.type === 'role') value = roleID(input, t);
+  else if (definition.type === 'url') {
+    const protocols = definition.protocols
+      ? normalizeUrlProtocols(definition.protocols, 'COMMAND_ARGS')
+      : DEFAULT_URL_PROTOCOLS;
+    value = parseArgumentUrl(input, protocols, definition.name, t);
+  } else if (definition.type === 'duration') {
     try { value = parseDuration(input); }
     catch (error) {
       if (!(error instanceof YuzuhaError) || error.code !== 'DURATION') throw error;
@@ -228,7 +324,15 @@ function resolveMissingValue(
   t: MessageTranslator = defaultTranslator,
 ): ArgumentValue | undefined {
   if (definition.defaultValue !== undefined) {
-    const value = definition.type === 'user' ? userID(String(definition.defaultValue), t) : definition.defaultValue;
+    const raw = definition.defaultValue;
+    const type = definition.type ?? 'string';
+    const value = type === 'user' ? userID(String(raw), t)
+      : type === 'channel' ? channelID(String(raw), t)
+      : type === 'role' ? roleID(String(raw), t)
+      : type === 'url' ? (raw instanceof URL
+        ? parseArgumentUrl(raw.href, definition.protocols ? normalizeUrlProtocols(definition.protocols, 'COMMAND_ARGS') : DEFAULT_URL_PROTOCOLS, definition.name, t)
+        : parseArgumentUrl(String(raw), definition.protocols ? normalizeUrlProtocols(definition.protocols, 'COMMAND_ARGS') : DEFAULT_URL_PROTOCOLS, definition.name, t))
+      : raw;
     validateValue(definition, value, t);
     return value;
   }
@@ -269,6 +373,8 @@ function parseValue(
       throw new YuzuhaError('ARGUMENT_TYPE', `O tipo de argumento ${definition.customType} é assíncrono; use parseArgumentsAsync ou parseFlagsAsync.`);
     }
     value = parsed;
+  } else if (definition.type === 'member') {
+    throw new YuzuhaError('ARGUMENT_TYPE', `O argumento ${definition.name} (member) é assíncrono; use parseArgumentsAsync ou parseFlagsAsync.`);
   } else {
     value = parseBuiltinValue(definition, input, t);
   }
@@ -291,6 +397,11 @@ async function parseValueAsync(
       throw new YuzuhaError('ARGUMENT_TYPE', `O tipo de argumento ${definition.customType} requer contexto de comando.`);
     }
     value = await custom.parse(input, options.ctx);
+  } else if (definition.type === 'member') {
+    if (!options?.ctx) {
+      throw new YuzuhaError('ARGUMENT_TYPE', `O argumento ${definition.name} (member) requer contexto de comando.`);
+    }
+    value = await resolveMemberArgument(input, options.ctx, t);
   } else {
     value = parseBuiltinValue(definition, input, t);
   }

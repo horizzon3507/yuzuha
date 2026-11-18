@@ -50,6 +50,11 @@ inferência. O formato anterior `args: [{ name, type, ... }]` permanece válido 
 | `arg.integer()` | `number` inteiro seguro |
 | `arg.boolean()` | `boolean` |
 | `arg.user()` | ID de usuário em `string`, normalizado de ID/menção |
+| `arg.channel()` | ID de canal em `string`, normalizado de `<#id>` ou ID |
+| `arg.role()` | ID de cargo em `string`, normalizado de `<@&id>` ou ID |
+| `arg.member()` | `MemberInfo` resolvido no servidor atual (`NOT_IN_GUILD` em DM) |
+| `arg.url(options?)` | Instância `URL` validada (`http:`/`https:` por padrão, sem credenciais/`javascript:`/`data:`) |
+| `arg.enum(valores)` | União literal `Values[number]` validada de forma case-sensitive |
 | `arg.duration()` | Duração em milissegundos, como `number` |
 | `arg.custom<T>(nome)` | Tipo customizado registrado em `bot.argumentType(nome, ...)` |
 
@@ -69,10 +74,18 @@ Argumentos seguem a ordem das propriedades do schema e são posicionais.
 permitem um argumento com espaços. `boolean()` aceita `true/false`, `yes/no`,
 `sim/não/nao` e `1/0`.
 
-`user()` não faz busca de rede nem retorna `GuildMember`. Para um objeto real,
-resolva o membro pelo SDK. Nos comandos legados ou em código que recebe apenas
-`CommandContext`, `ctx.args.require(nome)` exige a presença;
-`string/number/boolean(nome)` verificam o tipo e retornam `undefined` se ausente.
+`user()`, `channel()` e `role()` extraem apenas o snowflake sem chamadas de
+rede. Para resolver um membro já validado no servidor atual como `MemberInfo`,
+use `arg.member()`: ele exige servidor (`NOT_IN_GUILD` em DM), consulta
+`ctx.resources.users.member` (com fallback para `ctx.transport.member` quando
+`resources` não foi injetado) e converte ausência/404 em `GuardError` com
+`INVALID_ARGUMENT`. `arg.url({ protocols? })` exige `http:`/`https:` por padrão
+(ou a lista `protocols` normalizada) e recusa credenciais embutidas,
+`javascript:` e `data:`. `arg.enum(['asc', 'desc'])` infere a união literal com
+comparação case-sensitive e rejeita listas vazias com `ARGUMENT_SCHEMA`.
+Nos comandos legados ou em código que recebe apenas `CommandContext`,
+`ctx.args.require(nome)` exige a presença; `string/number/boolean(nome)`
+verificam o tipo e retornam `undefined` se ausente.
 
 ### Tipos de argumento customizados
 
