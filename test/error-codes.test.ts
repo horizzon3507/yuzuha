@@ -18,6 +18,7 @@ import {
   TransportError,
   YUZUHA_ERROR_CODES,
   Yuzuha,
+  YuzuhaCluster,
   YuzuhaError,
   defaultDataPath,
   isYuzuhaError,
@@ -57,6 +58,8 @@ test('YUZUHA_ERROR_CODES está ordenado alfabeticamente e sem duplicatas', () =>
     'MEMBER_CACHE_OPTIONS',
     'MESSAGES_OPTIONS',
     'VARIABLE_SWEEP_OPTIONS',
+    'CLUSTER_CLOSED',
+    'CLUSTER_OPTIONS',
     'CONCURRENCY_OPTIONS',
     'PREFIX_CACHE_OPTIONS',
     'RATE_LIMIT_OPTIONS',
@@ -261,6 +264,10 @@ test('origens de configuração lançam ConfigError preservando os códigos', as
   assert.throws(
     () => new Yuzuha({ cdn: { mediaBase: 'http://inseguro.example' }, transport: new MockTransport(), store: new MemoryStore() }),
     error => error instanceof ConfigError && isYuzuhaError(error, 'OPTIONS'),
+  );
+  assert.throws(
+    () => new YuzuhaCluster(null as never),
+    error => error instanceof ConfigError && isYuzuhaError(error, 'CLUSTER_OPTIONS'),
   );
 
   const bot = new Yuzuha({ transport: new MockTransport(), store: new MemoryStore() });

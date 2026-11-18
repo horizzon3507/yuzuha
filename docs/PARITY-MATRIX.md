@@ -17,9 +17,9 @@ A cobertura é por nome: um método `send` de uma classe conta como coberto se q
 | Status | Exports de runtime | Membros |
 |---|---:|---:|
 | coberto-recurso | 51 | 432 |
-| coberto-nativo | 10 | 130 |
+| coberto-nativo | 10 | 133 |
 | coberto-equivalente | 0 | 55 |
-| só-SDK | 51 | 105 |
+| só-SDK | 51 | 102 |
 | lacuna | 5 | 0 |
 
 Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são listados, mas não contam como lacuna.
@@ -54,7 +54,7 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são
 | @fluxerjs/core | `ChannelManager` | class | Canais | coberto-recurso | builtins |
 | @fluxerjs/core | `Client` | class | Cliente e eventos | coberto-recurso | builtins |
 | @fluxerjs/core | `ClientCluster` | class | só SDK | só-SDK | builtins |
-| @fluxerjs/core | `ClientClusterEvents` | variable | só SDK | só-SDK |  |
+| @fluxerjs/core | `ClientClusterEvents` | variable | só SDK | só-SDK | código nativo |
 | @fluxerjs/core | `ClientUser` | class | Cliente e eventos | coberto-recurso | builtins |
 | @fluxerjs/core | `createLogger` | function | Erros e logs | só-SDK |  |
 | @fluxerjs/core | `DEFAULT_CACHE_LIMITS` | variable | Cliente e eventos | só-SDK |  |
@@ -301,7 +301,7 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são
 | `Client` | `users` | propriedade | coberto-recurso |
 | `Client` | `ws` | acessor | coberto-nativo |
 | `ClientCluster` | `add` | método | coberto-recurso |
-| `ClientCluster` | `addAll` | método | só-SDK |
+| `ClientCluster` | `addAll` | método | coberto-nativo |
 | `ClientCluster` | `destroy` | método | coberto-nativo |
 | `ClientCluster` | `emit` | método | coberto-nativo |
 | `ClientCluster` | `get` | método | coberto-recurso |
@@ -310,8 +310,8 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são
 | `ClientCluster` | `on` | método | coberto-recurso |
 | `ClientCluster` | `once` | método | coberto-recurso |
 | `ClientCluster` | `remove` | método | coberto-recurso |
-| `ClientCluster` | `restart` | método | só-SDK |
-| `ClientCluster` | `runtimeValues` | método | só-SDK |
+| `ClientCluster` | `restart` | método | coberto-nativo |
+| `ClientCluster` | `runtimeValues` | método | coberto-nativo |
 | `ClientCluster` | `size` | acessor | coberto-recurso |
 | `ClientCluster` | `values` | método | coberto-recurso |
 | `ClientUser` | `bulkDeleteMyMessagesInGuild` | método | coberto-nativo |
