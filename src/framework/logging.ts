@@ -65,9 +65,17 @@ export function createConsoleLogger(options?: { level?: ConsoleLogLevel }): Yuzu
   return bindConsoleLogger(LEVEL_RANK[level]);
 }
 
+export type GatewayLogEvent =
+  | { event: 'gateway.ready' | 'gateway.resumed'; executionID?: string }
+  | { event: 'gateway.shard_ready' | 'gateway.shard_resumed' | 'gateway.shard_reconnecting'; shardID: number; executionID?: string }
+  | { event: 'gateway.shard_disconnect'; shardID: number; closeCode: number; executionID?: string }
+  | { event: 'gateway.sharding_required'; shardID: number; numShards: number; executionID?: string }
+  | { event: 'sdk.warn' | 'sdk.debug'; message: string; executionID?: string };
+
 export type LogEvent = SchedulerEvent | {
   event: 'command.start' | 'command.finish' | 'event.start' | 'event.finish' | 'error'
-    | 'transport.retry' | 'message.ttl_failed' | 'authorization.disabled' | 'dispatch.dropped' | 'rate_limit.evicted' | 'shutdown.timeout';
+    | 'transport.retry' | 'message.ttl_failed' | 'authorization.disabled' | 'dispatch.dropped' | 'rate_limit.evicted' | 'shutdown.timeout'
+    | GatewayLogEvent['event'];
   executionID?: string;
   command?: string;
   outcome?: DispatchResult;
@@ -82,6 +90,10 @@ export type LogEvent = SchedulerEvent | {
   guildID?: string;
   reason?: 'concurrency';
   pending?: number;
+  shardID?: number;
+  closeCode?: number;
+  numShards?: number;
+  message?: string;
 };
 export type LogRecord = Readonly<{ timestamp: string } & LogEvent>;
 
@@ -94,8 +106,17 @@ const EVENT_LEVEL: Record<LogEvent['event'], ConsoleLogLevel> = {
   'dispatch.dropped': 'warn',
   'rate_limit.evicted': 'warn',
   'shutdown.timeout': 'warn',
+  'gateway.shard_reconnecting': 'warn',
+  'gateway.shard_disconnect': 'warn',
+  'gateway.sharding_required': 'warn',
+  'sdk.warn': 'warn',
+  'gateway.ready': 'info',
+  'gateway.resumed': 'info',
+  'gateway.shard_ready': 'info',
+  'gateway.shard_resumed': 'info',
   'schedule.start': 'info',
   'schedule.finish': 'info',
+  'sdk.debug': 'debug',
   'command.start': 'debug',
   'command.finish': 'debug',
   'event.start': 'debug',

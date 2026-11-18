@@ -42,9 +42,11 @@ A fonte das assinaturas completas são as declarações TypeScript distribuídas
 | `sharding` | `boolean` ou `{ leaderShardID?, schedulerMode?: 'leader' \| 'all' \| 'disabled', ids?, count?, shardUtil? }` para expor `bot.shard`/`ctx.shard` e coordenar o scheduler entre shards |
 | `variables` | `false` ou `{ sweepIntervalMs?, sweepBatch? }` para varredura periódica de variáveis expiradas após `login()` |
 | `context(ctx)` | Fábrica sync/async chamada antes de `ctx.prepare()`, checks, middleware e eventos com contexto para popular `ctx.locals` |
-| `onError(error, ctx?)` | Observação de falhas internas e operacionais |
+| `onError(error, ctx?, info)` | Observação de falhas internas e operacionais com metadados congelados `ErrorReportInfo` |
 | `onCommand(ctx, outcome)` | Observação do resultado de comandos encontrados |
 | `onLog(record)` | Eventos estruturados opcionais, sem conteúdo/segredos automáticos |
+| `logger` | `YuzuhaLogger` compatível com Pino (`createConsoleLogger`) ou `false` para silenciar fallbacks |
+| `gatewayLogs` | `boolean` ou `{ debug?: boolean }` (`GatewayLogOptions`) para encaminhar eventos de gateway/shards a `onLog`/`logger` |
 | `metrics` | Porta `MetricsSink` opcional (como `createPrometheusMetrics()` de `yuzuha/metrics`) |
 
 `onCommand` recebe `success`, `guarded` ou `error` após o despacho; mensagens
