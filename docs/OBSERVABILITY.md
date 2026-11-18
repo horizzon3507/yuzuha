@@ -28,9 +28,9 @@ nos seguintes níveis:
 
 | Nível | Eventos |
 |---|---|
-| `debug` | `command.start`, `command.finish`, `event.start`, `event.finish` |
-| `info` | `schedule.start`, `schedule.finish` |
-| `warn` | `transport.retry`, `message.ttl_failed`, `authorization.disabled`, `dispatch.dropped`, `rate_limit.evicted`, `shutdown.timeout` |
+| `debug` | `command.start`, `command.finish`, `event.start`, `event.finish`, `sdk.debug` |
+| `info` | `schedule.start`, `schedule.finish`, `gateway.ready`, `gateway.resumed`, `gateway.shard_ready`, `gateway.shard_resumed` |
+| `warn` | `transport.retry`, `message.ttl_failed`, `authorization.disabled`, `dispatch.dropped`, `rate_limit.evicted`, `shutdown.timeout`, `gateway.shard_reconnecting`, `gateway.shard_disconnect`, `gateway.sharding_required`, `sdk.warn` |
 | `error` | `error`, `schedule.error` |
 
 Se `logger.debug` for omitido, eventos `debug` são ignorados sem erro. Falhas
@@ -63,6 +63,39 @@ Os registros têm `timestamp` ISO e um `event`:
 | `schedule.start` | `scheduleID`, `executionID` da claim |
 | `schedule.finish` | Mesmos campos, `status`, `durationMs`, `retryable`, `errorCode?` |
 | `schedule.error` | `errorCode` da falha de manutenção |
+| `gateway.ready` | `executionID` |
+| `gateway.resumed` | `executionID` |
+| `gateway.shard_ready` | `shardID`, `executionID` |
+| `gateway.shard_resumed` | `shardID`, `executionID` |
+| `gateway.shard_reconnecting` | `shardID`, `executionID` |
+| `gateway.shard_disconnect` | `shardID`, `closeCode`, `executionID` |
+| `gateway.sharding_required` | `shardID`, `numShards`, `executionID` |
+| `sdk.warn` | `message`, `executionID` |
+| `sdk.debug` | `message`, `executionID` (somente com `gatewayLogs: { debug: true }`) |
+
+## Ciclo de vida do gateway e shards (`gatewayLogs`)
+
+Por padrão, eventos informativos e de reconexão do gateway não geram registros em
+`onLog`/`logger`. Configure `gatewayLogs: true` ou `gatewayLogs: { debug?: boolean }`
+(`GatewayLogOptions`) em `YuzuhaOptions` para encaminhar `Ready`, `Resumed`,
+`ShardReady`, `ShardResumed`, `ShardReconnecting`, `ShardDisconnect`,
+`ShardingRequired` e `'warn'` do client. Opções inválidas lançam `ConfigError`
+com código `GATEWAY_LOG_OPTIONS`.
+
+```ts
+const bot = new Yuzuha({
+  logger: createConsoleLogger({ level: 'debug' }),
+  gatewayLogs: { debug: true },
+});
+```
+
+Eventos `Events.Debug` (`sdk.debug`) só recebem listener quando `debug: true` é
+habilitado explicitamente em `gatewayLogs`. Cada emissão cria um `executionID`
+próprio com `source: 'gateway'` e `event` igual ao nome do evento do SDK em
+`currentExecution()`. Tanto `destroy()` quanto falhas em `login()` drenam os
+registros em andamento e removem 100% dos listeners anexados pelo bot (preservando
+listeners do consumidor em um `Client` injetado); uma nova chamada a `login()`
+reconecta os listeners sem duplicação.
 
 ## Correlação implícita (`currentExecution`)
 
@@ -85,7 +118,7 @@ function registrarOperacao() {
 | `executionID` | Mesmo valor de `ctx.executionID` (ou da claim no scheduler) |
 | `source` | `'command'`, `'event'`, `'gateway'` ou `'scheduler'` |
 | `command` | Nome resolvido do comando ou subcomando, quando aplicável |
-| `event` | Nome do evento em `contextEvent` e `scriptEvent` |
+| `event` | Nome do evento em `bot.on`, `contextEvent`, `scriptEvent` e `gatewayLogs` |
 | `guildID`, `channelID`, `userID` | Identificadores da execução, quando presentes |
 
 Fora de uma execução do bot, `currentExecution()` retorna `undefined`. Falhas
@@ -100,10 +133,12 @@ agendada compartilha o ID da claim com seu despacho, ligando os eventos de taref
 e comando. O resultado de comando pode ser `success`, `guarded` ou
 `error`; mensagens ignoradas não criam contexto ou eventos de comando.
 
-Os campos automáticos não contêm o conteúdo da mensagem, argumentos, cabeçalhos,
-token, stack ou mensagem de erro. Erros conhecidos usam um código; os demais
-recebem `UNEXPECTED_ERROR`. O histórico persistente do scheduler contém a tarefa
-original, incluindo `input`, e deve receber a mesma proteção do store.
+Os campos automáticos de comandos, eventos e erros não contêm o conteúdo da
+mensagem, argumentos, cabeçalhos, token, stack ou mensagem de erro (`sdk.warn` e
+`sdk.debug`, quando `gatewayLogs` está ativo, repassam o texto `message` emitido
+pelo SDK). Erros conhecidos usam um código; os demais recebem `UNEXPECTED_ERROR`.
+O histórico persistente do scheduler contém a tarefa original, incluindo `input`,
+e deve receber a mesma proteção do store.
 
 `onError(error, ctx, info)` continua disponível para diagnóstico com a causa
 original; o código do bot decide o que registrar desse objeto. O terceiro
