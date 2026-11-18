@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { Client, EmbedBuilder } from '@fluxerjs/core';
+import { Client, EmbedBuilder, Routes } from '@fluxerjs/core';
 import type { MessageSendOptions } from '@fluxerjs/core';
 import { FluxerTransport, YuzuhaError } from '../src/index.js';
 import { mockMessage } from '../src/testing.js';
@@ -115,4 +115,112 @@ test('adapter fetches channel concurrently with member chain and enforces CHANNE
     new FluxerTransport(client).member('100', '2', '300'),
     (error: unknown) => error instanceof YuzuhaError && error.code === 'CHANNEL_GUILD',
   );
+});
+
+test('adapter routes edit, delete and react directly without calling fetchMessage', async t => {
+  const client = new Client();
+  t.after(() => client.destroy());
+  let fetchMessageCalls = 0;
+  Reflect.set(client.channels, 'fetchMessage', async () => {
+    fetchMessageCalls++;
+    throw new Error('fetchMessage não deve ser chamado');
+  });
+
+  const cachedAdded: unknown[] = [];
+  const cachedRemoved: unknown[] = [];
+  Reflect.set(client, '_addMessageToCache', (channelID: string, data: unknown) => {
+    cachedAdded.push({ channelID, data });
+  });
+  Reflect.set(client, '_removeMessageFromCache', (channelID: string, messageID: string) => {
+    cachedRemoved.push({ channelID, messageID });
+  });
+
+  const patches: { route: string; options: { body: Record<string, unknown>; auth?: boolean } }[] = [];
+  Reflect.set(client.rest, 'patch', async (route: string, options: { body: Record<string, unknown>; auth?: boolean }) => {
+    patches.push({ route, options });
+    return { id: '500', content: options.body['content'] };
+  });
+
+  const deletes: { route: string; options: { auth?: boolean } }[] = [];
+  let deleteMode: 'ok' | 'retry404' | 'first404' = 'ok';
+  Reflect.set(client.rest, 'delete', async (route: string, options: { auth?: boolean }) => {
+    deletes.push({ route, options });
+    if (deleteMode === 'retry404' && deletes.length === 2) {
+      throw Object.assign(new Error('net drop'), { code: 'ECONNRESET' });
+    }
+    if (deleteMode === 'retry404' && deletes.length === 3) {
+      throw Object.assign(new Error('gone'), { status: 404, code: 10008 });
+    }
+    if (deleteMode === 'first404') {
+      throw Object.assign(new Error('missing'), { status: 404, code: 10008 });
+    }
+  });
+
+  const puts: { route: string; options: { auth?: boolean } }[] = [];
+  let putAttempt = 0;
+  Reflect.set(client.rest, 'put', async (route: string, options: { auth?: boolean }) => {
+    putAttempt++;
+    if (putAttempt === 2) {
+      throw Object.assign(new Error('transient'), { code: 'ECONNRESET' });
+    }
+    puts.push({ route, options });
+  });
+
+  const resolvedEmojis: { emoji: string; guildId?: string | null }[] = [];
+  Reflect.set(client, 'resolveEmoji', async (emoji: string, guildId?: string | null) => {
+    resolvedEmojis.push({ emoji, guildId });
+    return emoji === ':party:' ? 'party:777' : emoji;
+  });
+
+  const transport = new FluxerTransport(client, { retry: { requests: 1, delayMs: 1 } });
+
+  // Direct 1-call edit with embeds + allowedMentions + flags
+  await transport.edit('200', '500', {
+    content: 'novo texto',
+    embeds: [{ title: 'T', description: 'D' }],
+    allowedMentions: { parse: ['users'], users: ['1'], roles: ['2'], repliedUser: true },
+    flags: 4,
+    tts: true,
+    stickerIds: ['9'],
+    reply: { channelID: '200', messageID: '1' },
+  });
+  assert.equal(patches.length, 1);
+  assert.equal(patches[0]?.route, Routes.channelMessage('200', '500'));
+  assert.equal(patches[0]?.options.auth, true);
+  assert.deepEqual(patches[0]?.options.body, {
+    content: 'novo texto',
+    embeds: [{ title: 'T', description: 'D' }],
+    allowed_mentions: { parse: ['users'], users: ['1'], roles: ['2'], replied_user: true },
+    flags: 4,
+  });
+  assert.deepEqual(cachedAdded, [{ channelID: '200', data: { id: '500', content: 'novo texto' } }]);
+
+  // Direct 1-call delete and retry-404 recovery
+  await transport.delete('200', '500');
+  assert.equal(deletes.length, 1);
+  assert.equal(deletes[0]?.route, Routes.channelMessage('200', '500'));
+  assert.equal(deletes[0]?.options.auth, true);
+  assert.deepEqual(cachedRemoved, [{ channelID: '200', messageID: '500' }]);
+
+  deleteMode = 'retry404';
+  await transport.delete('200', '500');
+  assert.equal(deletes.length, 3);
+  assert.equal(cachedRemoved.length, 2);
+
+  deleteMode = 'first404';
+  await assert.rejects(transport.delete('200', '500'), /missing/);
+
+  // Direct 1-call react with uncached vs cached guild channel and transient retry
+  await transport.react('200', '500', '👍');
+  assert.deepEqual(resolvedEmojis[0], { emoji: '👍', guildId: undefined });
+  assert.equal(puts[0]?.route, Routes.channelMessageReactionMe('200', '500', '👍'));
+  assert.equal(puts[0]?.options.auth, true);
+
+  Reflect.set(client.channels, 'get', (id: string) =>
+    id === '200' ? { isGuild: () => true, guildId: '100' } : undefined);
+  await transport.react('200', '500', ':party:');
+  assert.equal(resolvedEmojis.length, 2);
+  assert.deepEqual(resolvedEmojis[1], { emoji: ':party:', guildId: '100' });
+  assert.equal(puts[1]?.route, Routes.channelMessageReactionMe('200', '500', 'party:777'));
+  assert.equal(fetchMessageCalls, 0);
 });

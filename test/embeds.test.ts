@@ -239,12 +239,20 @@ test('limites exportados batem com os valores documentados', () => {
 test('transporte do SDK aplica resposta explícita, menções relaxadas e descarta campos que a edição não aceita', async t => {
   const client = new Client(); t.after(() => client.destroy());
   const sent: unknown[] = [];
-  const edits: unknown[] = [];
+  const edits: { route: string; init: { body: Record<string, unknown>; auth?: boolean } }[] = [];
+  let fetchCalls = 0;
   Reflect.set(client.channels, 'send', async (channelID: string, options: unknown) => {
     sent.push({ channelID, options });
     return { id: '9' };
   });
-  Reflect.set(client.channels, 'fetchMessage', async () => ({ edit: async (options: unknown) => { edits.push(options); } }));
+  Reflect.set(client.channels, 'fetchMessage', async () => {
+    fetchCalls++;
+    throw new Error('fetchMessage não deve ser chamado em transport.edit');
+  });
+  Reflect.set(client.rest, 'patch', async (route: string, init: { body: Record<string, unknown>; auth?: boolean }) => {
+    edits.push({ route, init });
+    return { id: '9', channel_id: '200' };
+  });
   const transport = new FluxerTransport(client);
   await transport.send('200', { content: 'oi', tts: true, stickerIds: ['111'], flags: 4,
     allowedMentions: { parse: ['users'], users: ['1'] }, reply: { channelID: '300', messageID: '400', guildID: '100' } });
@@ -258,12 +266,18 @@ test('transporte do SDK aplica resposta explícita, menções relaxadas e descar
   assert.deepEqual((sent[1] as { options: { allowedMentions: unknown } }).options.allowedMentions, { parse: [], repliedUser: false });
   await transport.edit('200', '9', { content: 'editado', tts: true, stickerIds: ['111'], flags: 4,
     reply: { channelID: '300', messageID: '400' } });
-  const [edit] = edits as Record<string, unknown>[];
-  assert.equal(edit?.['tts'], undefined);
-  assert.equal(edit?.['stickerIds'], undefined);
-  assert.equal(edit?.['replyTo'], undefined);
-  assert.equal(edit?.['flags'], 4);
-  assert.equal(edit?.['content'], 'editado');
+  assert.equal(fetchCalls, 0);
+  const [edit] = edits;
+  assert.equal(edit?.route, '/channels/200/messages/9');
+  assert.equal(edit?.init.auth, true);
+  assert.equal(edit?.init.body['tts'], undefined);
+  assert.equal(edit?.init.body['stickerIds'], undefined);
+  assert.equal(edit?.init.body['sticker_ids'], undefined);
+  assert.equal(edit?.init.body['replyTo'], undefined);
+  assert.equal(edit?.init.body['message_reference'], undefined);
+  assert.equal(edit?.init.body['flags'], 4);
+  assert.equal(edit?.init.body['content'], 'editado');
+  assert.deepEqual(edit?.init.body['allowed_mentions'], { parse: [], replied_user: false });
 });
 
 test('safePayload relaxa menções só com a política recebida e mantém o padrão sem ela', () => {
