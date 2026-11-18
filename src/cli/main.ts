@@ -10,6 +10,7 @@ import { functions, registerBuiltins, Runtime } from '../functions.js';
 import { parseArguments, usage } from './arguments.js';
 import { configuredBot, findConfig } from './config.js';
 import { runBot } from './runner.js';
+import { isShardingChildProcess, runShardedSupervisor } from './sharding.js';
 import { scaffold } from './scaffold.js';
 import { packageRoot, VERSION } from './version.js';
 import { doctor } from './doctor.js';
@@ -71,6 +72,14 @@ export async function main(args = process.argv.slice(2)): Promise<void> {
     }
     const metadata = entries.map(({ execute: _execute, ...value }) => value);
     console.log(options.catalog ? JSON.stringify({ version: 1, functions: metadata }, null, 2) : options.json ? JSON.stringify(metadata, null, 2) : options.search !== undefined && !entries.length ? 'Nenhuma função encontrada.' : entries.map(fn => `${fn.usage.padEnd(52)} ${fn.description}`).join('\n'));
+    return;
+  }
+  if (options.action === 'run' && options.shards !== undefined && !isShardingChildProcess()) {
+    await runShardedSupervisor({
+      input: options.input,
+      shards: options.shards,
+      shardsPerProcess: options.shardsPerProcess,
+    });
     return;
   }
   let bot: Yuzuha, commandsPath: string;
