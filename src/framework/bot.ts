@@ -178,6 +178,7 @@ export class Yuzuha {
   readonly transport: Transport;
   readonly store: Store;
   readonly resources: Resources;
+  private readonly resourcesInjected: boolean;
   readonly scheduler?: Scheduler;
   readonly http?: HttpService;
   readonly music?: MusicManager;
@@ -298,6 +299,7 @@ export class Yuzuha {
       this.detachMemberCache = this.transport.attachCacheInvalidation(this.client);
     }
     this.resources = options.resources ?? new FluxerResources(this.client, this.cdnService, this.reliability);
+    this.resourcesInjected = options.resources !== undefined || options.transport === undefined;
     this.cdnService = createCdn(options.cdn?.mediaBase);
     this.canvasContext = { renderer: canvasRenderer, config: options.canvas };
     this.emojiMap = emojiRegistry(options.emoji);
@@ -546,7 +548,7 @@ export class Yuzuha {
       if ((definition.ignoreBots ?? true) && source.event.userBot) return;
       const baseEventOptions: EventContextOptions = { ...source, channelID: definition.channelID, actorID: definition.actorID,
         policy: definition.http, transport: this.transport, store: this.store, resources: this.resources,
-        argumentTypes: this.customArgumentTypes,
+        resourcesInjected: this.resourcesInjected, argumentTypes: this.customArgumentTypes,
         scheduler: this.scheduler, http: this.http, music: this.music, voice: this.voice,
         canvas: this.canvasContext, now: this.options.now, help: this.contextHelp,
         cdn: this.cdnService, disableResourceAuthorization: this.options.unsafeDisableResourceAuthorization === true,
@@ -625,7 +627,7 @@ export class Yuzuha {
     const signal = this.shutdown.signal;
     const baseEventOptions: EventContextOptions = { ...source, channelID: definition.channelID, actorID: definition.actorID,
       policy: definition.http, transport: this.transport, store: this.store, resources: this.resources,
-      argumentTypes: this.customArgumentTypes,
+      resourcesInjected: this.resourcesInjected, argumentTypes: this.customArgumentTypes,
       scheduler: this.scheduler, http: this.http, music: this.music, voice: this.voice,
       canvas: this.canvasContext, now: this.options.now, help: this.contextHelp, cooldown: this.contextCooldown, signal,
       cdn: this.cdnService, disableResourceAuthorization: this.options.unsafeDisableResourceAuthorization === true, emoji: this.emojiMap,
@@ -1075,7 +1077,8 @@ export class Yuzuha {
             input: resolved.input, prefix, lineage: compiled.lineage,
             help: this.contextHelp, cooldown: this.contextCooldown,
             native: { client: this.client, message: message.raw instanceof Message ? message.raw : undefined },
-            resources: this.resources, scheduler: this.scheduler, http: this.http, music: this.music, voice: this.voice,
+            resources: this.resources, resourcesInjected: this.resourcesInjected,
+            scheduler: this.scheduler, http: this.http, music: this.music, voice: this.voice,
             canvas: this.canvasContext, now: this.options.now, signal, executionID,
             cdn: this.cdnService, disableResourceAuthorization: this.options.unsafeDisableResourceAuthorization === true, emoji: this.emojiMap,
             deleteLater: this.contextDeleteLater, locale: activeLocale, translator: activeTranslator };

@@ -44,7 +44,13 @@ function validateMetadata(command: Command): void {
 }
 
 function snapshot(command: Command): Command {
-  const definitions = (items: Command['args']) => items?.map(arg => ({ ...arg, aliases: arg.aliases && [...arg.aliases], choices: arg.choices && [...arg.choices], validators: arg.validators?.map(validator => ({ ...validator })) }));
+  const definitions = (items: Command['args']) => items?.map(arg => ({
+    ...arg,
+    aliases: arg.aliases && [...arg.aliases],
+    choices: arg.choices && [...arg.choices],
+    protocols: arg.protocols && [...arg.protocols],
+    validators: arg.validators?.map(validator => ({ ...validator })),
+  }));
   return { ...command, aliases: command.aliases && [...command.aliases], permissions: command.permissions && [...command.permissions],
     botPermissions: command.botPermissions && [...command.botPermissions], args: definitions(command.args), flags: definitions(command.flags),
     examples: command.examples && [...command.examples], subcommands: command.subcommands?.map(snapshot),

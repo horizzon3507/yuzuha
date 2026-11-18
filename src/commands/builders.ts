@@ -1,5 +1,8 @@
 import type { ArgumentDefinition } from './definition.js';
 import { assertCustomArgumentTypeName } from './arguments.js';
+import { normalizeUrlProtocols } from '../domain/values.js';
+import type { UrlArgumentOptions } from '../domain/values.js';
+import type { MemberInfo } from '../ports/resources/users.js';
 import { YuzuhaError } from '../shared/errors.js';
 
 export type ArgumentSchema = Readonly<Record<string, ArgumentBuilder<any, boolean>>>;
@@ -15,6 +18,7 @@ export class ArgumentBuilder<T = unknown, Required extends boolean = false> {
   constructor(definition: Omit<ArgumentDefinition, 'name'>) {
     this.definition = Object.freeze({ ...definition,
       ...(definition.choices ? { choices: Object.freeze([...definition.choices]) } : {}),
+      ...(definition.protocols ? { protocols: Object.freeze([...definition.protocols]) } : {}),
       ...(definition.validators ? { validators: Object.freeze(definition.validators.map(validator => Object.freeze({ ...validator }))) } : {}),
       ...(definition.aliases ? { aliases: Object.freeze([...definition.aliases]) } : {}),
     });
@@ -47,12 +51,42 @@ export class ArgumentBuilder<T = unknown, Required extends boolean = false> {
   }
 }
 
+function buildUrlArgument(options?: UrlArgumentOptions): ArgumentBuilder<URL> {
+  if (options === undefined) return new ArgumentBuilder({ type: 'url' });
+  const prototype = options === null || typeof options !== 'object' || Array.isArray(options)
+    ? undefined
+    : Object.getPrototypeOf(options);
+  if (prototype !== Object.prototype && prototype !== null) {
+    throw new YuzuhaError('ARGUMENT_SCHEMA', 'Opções de arg.url() inválidas.');
+  }
+  if (options.protocols === undefined) return new ArgumentBuilder({ type: 'url' });
+  return new ArgumentBuilder({
+    type: 'url',
+    protocols: normalizeUrlProtocols(options.protocols, 'ARGUMENT_SCHEMA'),
+  });
+}
+
+function buildEnumArgument<const Values extends readonly [string, ...string[]]>(
+  values: Values,
+): ArgumentBuilder<Values[number]> {
+  if (!Array.isArray(values) || values.length === 0 || values.some(item => typeof item !== 'string' || item.length === 0)) {
+    throw new YuzuhaError('ARGUMENT_SCHEMA', 'arg.enum exige pelo menos um valor textual não vazio.');
+  }
+  return new ArgumentBuilder<Values[number]>({ type: 'enum', choices: [...values] });
+}
+
 export const arg = Object.freeze({
   string: (): ArgumentBuilder<string> => new ArgumentBuilder({ type: 'string' }),
   text: (): ArgumentBuilder<string> => new ArgumentBuilder({ type: 'string' }),
   number: (): ArgumentBuilder<number> => new ArgumentBuilder({ type: 'number' }),
   integer: (): ArgumentBuilder<number> => new ArgumentBuilder({ type: 'integer' }),
   user: (): ArgumentBuilder<string> => new ArgumentBuilder({ type: 'user' }),
+  channel: (): ArgumentBuilder<string> => new ArgumentBuilder({ type: 'channel' }),
+  role: (): ArgumentBuilder<string> => new ArgumentBuilder({ type: 'role' }),
+  member: (): ArgumentBuilder<MemberInfo> => new ArgumentBuilder({ type: 'member' }),
+  url: (options?: UrlArgumentOptions): ArgumentBuilder<URL> => buildUrlArgument(options),
+  enum: <const Values extends readonly [string, ...string[]]>(values: Values): ArgumentBuilder<Values[number]> =>
+    buildEnumArgument(values),
   duration: (): ArgumentBuilder<number> => new ArgumentBuilder({ type: 'duration' }),
   boolean: (): ArgumentBuilder<boolean> => new ArgumentBuilder({ type: 'boolean' }),
   custom: <T = unknown>(typeName: string): ArgumentBuilder<T> =>

@@ -39,6 +39,9 @@ export function commandHelp(
         typeof choice === 'number' || typeof choice === 'boolean' ? choice : String(choice),
       )));
     }
+    if (argument.protocols?.length) {
+      details.push(t('helpProtocols', argument.protocols.map(protocol => protocol.slice(0, -1))));
+    }
     if (argument.defaultValue !== undefined) details.push(t('helpDefault', String(argument.defaultValue)));
     if (argument.min !== undefined) details.push(t('helpMin', argument.min));
     if (argument.max !== undefined) details.push(t('helpMax', argument.max));
