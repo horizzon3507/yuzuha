@@ -19,6 +19,7 @@ import type { CanvasConfig } from '../domain/canvas.js';
 import type { MemberCacheOptions } from '../infrastructure/fluxer/member-cache.js';
 import type { ConcurrencyOptions } from './concurrency.js';
 import type { PrefixCacheOptions } from './prefix-cache.js';
+import type { ShardingOptions } from './sharding.js';
 import type { TransportRetryPolicy } from '../services/retry.js';
 import type {
   LocaleMessagesConfig,
@@ -33,6 +34,7 @@ export type {
   HelpRenderContext,
   HelpRenderer,
   PrefixCacheOptions,
+  ShardingOptions,
   LocaleMessagesConfig,
   MessageCatalog,
   MessageOverrides,
@@ -147,5 +149,6 @@ export interface YuzuhaOptions {
   concurrency?: ConcurrencyOptions;
   rateLimits?: RateLimitOptions;
   rateLimiter?: RateLimiter;
+  sharding?: boolean | ShardingOptions;
   unsafeDisableResourceAuthorization?: boolean;
 }
