@@ -110,6 +110,7 @@ export interface YuzuhaOptions {
   music?: MusicManager;
   voice?: NativeVoice;
   canvas?: CanvasConfig;
+  context?: (ctx: CommandContext) => void | Promise<void>;
   onError?: (error: unknown, ctx: CommandContext | undefined, info: ErrorReportInfo) => void | Promise<void>;
   errorReply?: (error: unknown, ctx?: CommandContext) => ErrorReplyResult | Promise<ErrorReplyResult>;
   hooks?: YuzuhaHooks;

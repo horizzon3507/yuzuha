@@ -39,7 +39,7 @@ export type { Command, ArgumentDefinition } from './context.js';
 export { commandUsage, commandHelp } from './commands/help.js';
 export { channelID, formatDuration, MAX_TIMEOUT_MS, roleID, userID } from './domain/values.js';
 export type { UrlArgumentOptions } from './domain/values.js';
-export type { ContextOptions, ArgumentValue, CustomArgumentType, ArgumentTypeRegistry, ParseArgumentsOptions, ParseFlagsOptions } from './context.js';
+export type { ContextOptions, YuzuhaLocals, ArgumentValue, CustomArgumentType, ArgumentTypeRegistry, ParseArgumentsOptions, ParseFlagsOptions } from './context.js';
 export { parseArguments, parseArgumentsAsync, parseFlags, parseFlagsAsync, tokenize, validateArgumentDefinitions, validateFlagDefinitions } from './context.js';
 export { arg, ArgumentBuilder } from './commands/builders.js';
 export type { ArgumentSchema, InferArgument } from './commands/builders.js';
