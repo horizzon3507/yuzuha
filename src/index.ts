@@ -22,7 +22,18 @@ export type {
   DestroyOptions,
   SignalHandlerOptions,
   SignalHandlerTarget,
+  LocaleOption,
+  LocaleResolver,
 } from './bot.js';
+export { DEFAULT_LOCALE, DEFAULT_MESSAGES, defaultTranslator, createTranslator } from './domain/i18n.js';
+export type {
+  MessageCatalog,
+  MessageKey,
+  MessageOverrides,
+  LocaleMessagesConfig,
+  MessagesConfig,
+  MessageTranslator,
+} from './domain/i18n.js';
 export { CommandContext, defineCommand, parseDuration } from './context.js';
 export type { Command, ArgumentDefinition } from './context.js';
 export { commandUsage, commandHelp } from './commands/help.js';

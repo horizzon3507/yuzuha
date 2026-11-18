@@ -4,6 +4,8 @@ import type { ScriptEventData } from '../domain/events.js';
 import type { CaseRecord, ModerationAction, ModerationOptions } from '../domain/moderation.js';
 import type { JsonValue, VariableScope } from '../domain/state.js';
 import { parseDuration } from '../domain/values.js';
+import { DEFAULT_LOCALE, defaultTranslator, validateLocale } from '../domain/i18n.js';
+import type { MessageTranslator } from '../domain/i18n.js';
 import type { Store } from '../ports/store.js';
 import type { Transport } from '../ports/transport.js';
 import type { NativeAccess } from '../ports/native.js';
@@ -48,7 +50,9 @@ export interface ContextOptions {
   input?: string;
   cooldown: (key: string, duration: number) => number | Promise<number>;
   now?: () => number;
-  help?: () => string;
+  help?: (command?: string, prefix?: string) => string;
+  locale?: string;
+  translator?: MessageTranslator;
   native?: NativeAccess;
   resources?: Resources;
   scheduler?: Scheduler;
@@ -94,7 +98,9 @@ export class CommandContext {
   readonly command: Command;
   private readonly flagLookup?: ReadonlyMap<string, ArgumentDefinition>;
   readonly input: string;
-  readonly help: () => string;
+  readonly help: (command?: string, prefix?: string) => string;
+  readonly locale: string;
+  readonly t: MessageTranslator;
   private readonly claimCooldown: ContextOptions['cooldown'];
   private readonly lineage: readonly Command[];
   private readonly prefix: string;
@@ -117,6 +123,8 @@ export class CommandContext {
   private scopedResources?: Resources;
 
   constructor(options: ContextOptions) {
+    const skipTokenize = skipNextTokenize;
+    skipNextTokenize = false;
     this.executionKey = options.executionID;
     this.sourceMessage = options.message;
     this.event = options.event ? Object.freeze({ ...options.event }) : undefined;
@@ -131,10 +139,16 @@ export class CommandContext {
     this.lineage = options.lineage ?? [options.command];
     this.prefix = options.prefix ?? '';
     this.input = options.input ?? '';
-    try { this.tokens = tokenize(this.input); }
-    catch (error) {
-      if (error instanceof GuardError) throw new GuardError(`${error.message}\nUso: ${commandUsage(this.command, this.prefix)}`, error.reason);
-      throw error;
+    this.locale = options.locale !== undefined ? validateLocale(options.locale, 'locale') : DEFAULT_LOCALE;
+    this.t = options.translator ?? defaultTranslator;
+    if (skipTokenize) {
+      this.tokens = [];
+    } else {
+      try { this.tokens = tokenize(this.input); }
+      catch (error) {
+        if (error instanceof GuardError) throw new GuardError(`${error.message}\nUso: ${commandUsage(this.command, this.prefix)}`, error.reason);
+        throw error;
+      }
     }
     this.claimCooldown = options.cooldown;
     this.help = options.help ?? (() => '');
@@ -400,6 +414,14 @@ export class CommandContext {
   deleteVariable(scope: VariableScope, name: string): Promise<void> {
     return this.variables.delete(scope, name);
   }
+}
+
+let skipNextTokenize = false;
+
+export function createLocaleProbeContext(options: ContextOptions): CommandContext {
+  skipNextTokenize = true;
+  try { return new CommandContext(options); }
+  finally { skipNextTokenize = false; }
 }
 
 function assertTtl(ttlMs: number): void {

@@ -19,8 +19,23 @@ import type { MemberCacheOptions } from '../infrastructure/fluxer/member-cache.j
 import type { ConcurrencyOptions } from './concurrency.js';
 import type { PrefixCacheOptions } from './prefix-cache.js';
 import type { TransportRetryPolicy } from '../services/retry.js';
+import type {
+  LocaleMessagesConfig,
+  MessageCatalog,
+  MessageOverrides,
+  MessagesConfig,
+  MessageTranslator,
+} from '../domain/i18n.js';
 
-export type { ConcurrencyOptions, PrefixCacheOptions };
+export type {
+  ConcurrencyOptions,
+  PrefixCacheOptions,
+  LocaleMessagesConfig,
+  MessageCatalog,
+  MessageOverrides,
+  MessagesConfig,
+  MessageTranslator,
+};
 
 export type DispatchResult = 'ignored' | 'success' | 'guarded' | 'error';
 export type ErrorReplyResult = Payload | string | null | undefined;
@@ -29,7 +44,11 @@ export interface UnknownCommandContext {
   readonly input: string;
   readonly prefix: string;
   readonly message: IncomingMessage;
+  readonly locale: string;
+  readonly t: MessageTranslator;
 }
+export type LocaleResolver = (ctx: CommandContext | UnknownCommandContext) => string | Promise<string>;
+export type LocaleOption = string | LocaleResolver;
 export interface YuzuhaHooks {
   onCooldown?: (remainingMs: number, ctx: CommandContext, error: GuardError) => ErrorReplyResult | void | Promise<ErrorReplyResult | void>;
   onDenied?: (error: GuardError, ctx: CommandContext) => ErrorReplyResult | void | Promise<ErrorReplyResult | void>;
@@ -102,6 +121,8 @@ export interface YuzuhaOptions {
   cdn?: { mediaBase?: string };
   /** Mapa nome → emoji copiado para um registro sem protótipo, exposto como `bot.emoji` e `ctx.emoji` (mapa vivo). */
   emoji?: Record<string, string>;
+  messages?: Partial<MessageCatalog> | MessageOverrides | LocaleMessagesConfig;
+  locale?: LocaleOption;
   memberCache?: false | MemberCacheOptions;
   prefixCache?: false | PrefixCacheOptions;
   variables?: false | VariableSweepOptions;

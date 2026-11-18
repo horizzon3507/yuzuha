@@ -118,10 +118,60 @@ const bot = new Yuzuha({
   depois para a mensagem padrão. Se o hook lançar erro, a falha é enviada a
   `onError` e a resposta cai no padrão do framework.
 - `onUnknownCommand(info)`: recebe `UnknownCommandContext` (`{ name, input,
-  prefix, message }`) quando o prefixo (estático ou assíncrono) casa, o comando
+  prefix, message, locale, t }`) quando o prefixo (estático ou assíncrono) casa, o comando
   raiz não existe e a mensagem não é duplicada. Retornar `string` ou `Payload`
   responde à mensagem; `handle` continua retornando `'ignored'` sem acionar
   `onCommand`. A execução assíncrona é rastreada até `destroy()`.
+
+### Mensagens customizáveis e idiomas (`messages` e `locale`)
+
+Todas as mensagens voltadas ao usuário fazem parte de `MessageCatalog`, com
+padrão `DEFAULT_LOCALE` (`'pt-BR'`) e `DEFAULT_MESSAGES`. Você pode sobrescrever
+apenas chaves pontuais no idioma padrão ou registrar múltiplos idiomas:
+
+```ts
+import { Yuzuha } from 'yuzuha';
+
+const bot = new Yuzuha({
+  prefix: '!',
+  messages: {
+    defaultLocale: 'pt-BR',
+    locales: {
+      'pt-BR': {
+        notInGuild: () => 'Disponível apenas em servidores.',
+      },
+      en: {
+        notInGuild: () => 'This command only works in servers.',
+        argRequired: name => `Missing argument: ${name}.`,
+        cooldown: remaining => `Please wait ${remaining} before trying again.`,
+      },
+    },
+  },
+  async locale(ctx) {
+    if ('data' in ctx && ctx.guildID) {
+      const configured = await ctx.data.guild.get('locale');
+      if (typeof configured === 'string' && configured) return configured;
+    }
+    return 'pt-BR';
+  },
+});
+```
+
+- `messages` aceita um catálogo parcial direto (`Partial<MessageCatalog>` ou
+  templates com `{param}`, ex.: `argRequired: 'Missing {name}.'`) para o idioma
+  padrão, ou `{ defaultLocale?, locales? }` para múltiplos idiomas.
+- `locale` aceita um identificador fixo (ex.: `'en-US'`) ou uma função síncrona
+  ou assíncrona `(ctx: CommandContext | UnknownCommandContext) => string | Promise<string>`,
+  resolvida antes da tokenização e de `ctx.prepare()`.
+- Chaves ausentes no locale ativo caem em cascata para o prefixo base do idioma
+  (ex.: `'en-GB'` → `'en'`), depois para `defaultLocale` e por fim para
+  `DEFAULT_MESSAGES` (`'pt-BR'`).
+- Em comandos, eventos com contexto e `onUnknownCommand`, `ctx.locale` informa o
+  idioma resolvido e `ctx.t(chave, ...args)` formata qualquer entrada do catálogo.
+  Quando `new CommandContext(...)` é instanciado diretamente em testes sem
+  resolver externo, usa `'pt-BR'` e `DEFAULT_MESSAGES` sincronamente.
+- Opções inválidas em `messages` ou `locale` lançam `ConfigError` com código
+  `MESSAGES_OPTIONS`.
 
 `bot.load(dir)` substitui todos os comandos após validar o diretório inteiro.
 `bot.load(dir, false)` adiciona comandos, recusando colisões. `bot.reload(dir)`
@@ -161,6 +211,7 @@ folha. As regras de herança, parsing e exemplos completos estão em
 |---|---|
 | `ctx.message` | Mensagem normalizada; `raw` guarda a mensagem original do SDK |
 | `ctx.authorID`, `ctx.guildID`, `ctx.input`, `ctx.tokens` | Dados da execução |
+| `ctx.locale`, `ctx.t(chave, ...args)` | Idioma ativo e tradutor tipado sobre `MessageCatalog` |
 | `ctx.args` | Map de argumentos declarativos convertidos |
 | `ctx.flags` | Map de flags declaradas convertidas |
 | `ctx.vars` | Map de variáveis locais da execução |

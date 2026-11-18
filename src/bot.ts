@@ -22,5 +22,12 @@ export type {
   DestroyOptions,
   SignalHandlerOptions,
   SignalHandlerTarget,
+  LocaleOption,
+  LocaleResolver,
+  LocaleMessagesConfig,
+  MessageCatalog,
+  MessageOverrides,
+  MessagesConfig,
+  MessageTranslator,
 } from './framework/options.js';
 export type { TransportRetryPolicy } from './services/retry.js';
