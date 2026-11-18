@@ -1,6 +1,9 @@
+import type { ClientEventName } from '@fluxerjs/core';
+
 export type ScriptEventName = 'guildMemberAdd' | 'guildMemberRemove' | 'messageUpdate' | 'messageDelete' | 'messageReactionAdd' | 'messageReactionRemove';
-export interface ScriptEventData {
-  name: ScriptEventName;
+
+export interface EventData<K extends ClientEventName = ClientEventName> {
+  name: K;
   guildID: string | null;
   channelID: string | null;
   userID: string | null;
@@ -11,3 +14,5 @@ export interface ScriptEventData {
   oldContent: string | null;
   emoji: string | null;
 }
+
+export type ScriptEventData = EventData;

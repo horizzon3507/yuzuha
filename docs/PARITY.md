@@ -35,7 +35,7 @@ precisam de `overrides` para o core fixado, como no manifesto do Yuzuha.
 | Área | JS/TS pelo client/SDK | Function mode |
 |---|---|---|
 | Gateway, conexão, heartbeat e reconexão | Herdado do SDK; pedidos brutos por `ctx.resources.gateway` (membros, contagens, não lidos de fórum, assinatura de threads, envio por shard) | Via inicialização do bot |
-| Eventos | `bot.on/once/off`, `bot.event`, `bot.scriptEvent` e `bot.client.on` | Eventos de membros, edição/exclusão de mensagens e reações, com contexto próprio |
+| Eventos | `bot.on/once/off`, `bot.event`, `bot.contextEvent` (qualquer `ClientEventName` com `EventContext` e `adaptClientEvent`), `bot.scriptEvent` e `bot.client.on` | Eventos de membros, edição/exclusão de mensagens e reações, com contexto próprio |
 | Mensagens e replies | API completa do SDK | reply, sendMessage, editMessage, deleteMessage, fetchMessage, messages com cursores, pin/unpin, pinnedMessagesPage, dm, forward, searchMessages, searchMessagesAdvanced e preloadMessages |
 | Reações e collectors | API do SDK; streams `collectMessages`/`collectReactions` como `AsyncIterable` | react, removeReaction, clearReactions, reactionUsers e reactionUsersPage com metadados de paginação, awaitMessage, awaitReaction, confirm |
 | Embeds e anexos | Builders do SDK, sendBytes e sendAttachments | Embeds completos (autor, link, data, campos, alt text e rodapé com ícone), até 10 embeds, opções de envio com autorização, anexos URL/base64 e múltiplos anexos; leitura normalizada em `$fetchMessage` |

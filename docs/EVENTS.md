@@ -16,8 +16,8 @@ bot.scriptEvent({
 });
 ```
 
-Eventos disponíveis: `guildMemberAdd`, `guildMemberRemove`, `messageUpdate`,
-`messageDelete`, `messageReactionAdd` e `messageReactionRemove`.
+Eventos disponíveis no function mode (`bot.scriptEvent`): `guildMemberAdd`, `guildMemberRemove`, `messageUpdate`,
+`messageDelete`, `messageReactionAdd` e `messageReactionRemove`. Para receber um `EventContext` tipado sobre qualquer `ClientEventName` do SDK em JS/TS nativo (incluindo `messageCreate`, voz, cargos, canais, threads, convites, webhooks e digitação), use `bot.contextEvent` ou `defineContextEvent`; veja [NATIVE.md](NATIVE.md#eventos-tipados-e-erros-assíncronos).
 
 | Opção | Comportamento |
 |---|---|

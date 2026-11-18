@@ -700,8 +700,9 @@ Promise automaticamente. O bot aguarda trabalho rastreado antes de encerrar.
 
 ## Eventos tipados e erros assíncronos
 
-Para handlers que precisam de serviços do contexto — por exemplo, enviar um
-cartão de boas-vindas sem uma mensagem de entrada — use `bot.contextEvent`:
+Para handlers que precisam de serviços do contexto — estado, moderação, recursos
+autorizados, HTTP ou Canvas — sobre qualquer `ClientEventName` do SDK, use
+`bot.contextEvent` (ou `defineContextEvent` em plugins com `contextEvents`):
 
 ```ts
 bot.contextEvent({
@@ -717,9 +718,15 @@ bot.contextEvent({
 });
 ```
 
-O canal padrão vem de `channelID`; eventos sem canal devem passá-lo a
-`ctx.canvas.send`. `ctx.canvas` usa o sinal e a política HTTP do evento. Consulte
-[CANVAS.md](CANVAS.md) para instalação, formatos e exemplos.
+`adaptClientEvent` normaliza defensivamente `guildID`, `channelID`, `userID`,
+`userName`, `userBot`, `messageID`, `content`, `oldContent`, `emoji` e `message`
+(quando aplicável) em `ctx.event`, além de expor a tupla original congelada em
+`ctx.eventArgs` e os parâmetros tipados `...args` de `ClientEvents[K]`. `ignoreBots`
+(`true` por padrão) ignora eventos cujo ator foi identificado como bot; `channelID`
+e `actorID` substituem o canal de saída padrão e o principal usado em `ctx.data.user`
+e na autorização de `ctx.resources`. O canal padrão de `ctx.send` e `ctx.canvas`
+vem de `channelID` ou do canal normalizado do evento; eventos sem canal exigem
+passá-lo explicitamente. Consulte [CANVAS.md](CANVAS.md) para instalação, formatos e exemplos.
 
 Com o `bot` criado, registre listeners usando os nomes do SDK:
 

@@ -10,7 +10,7 @@ import type { RateLimiter } from '../ports/rate-limiter.js';
 import type { Resources } from '../ports/resources.js';
 import type { HttpService } from '../services/http.js';
 import type { Scheduler } from '../services/scheduler.js';
-import type { NativeEvent } from './events.js';
+import type { ContextEventDefinition, NativeEvent } from './events.js';
 import type { LogRecord, YuzuhaLogger } from './logging.js';
 import type { ScriptEventDefinition } from './script-events.js';
 import type { MusicManager } from '../services/music.js';
@@ -75,6 +75,7 @@ export interface YuzuhaPlugin {
   middleware?: Middleware[];
   commands?: Command[];
   events?: NativeEvent[];
+  contextEvents?: readonly ContextEventDefinition<any>[];
   scriptEvents?: ScriptEventDefinition[];
   setup?: (bot: Yuzuha) => void | Promise<void>;
   teardown?: (bot: Yuzuha) => void | Promise<void>;
