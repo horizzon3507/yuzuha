@@ -63,6 +63,8 @@ test('YUZUHA_ERROR_CODES está ordenado alfabeticamente e sem duplicatas', () =>
     'LOCK_OPTIONS',
     'RETRY_OPTIONS',
     'LOGGER_OPTIONS',
+    'SHARDING_OPTIONS',
+    'SHARDING_UNAVAILABLE',
     'SHUTDOWN_OPTIONS',
     'JSON_STORE_OPTIONS',
     'WEBHOOK_ID',
