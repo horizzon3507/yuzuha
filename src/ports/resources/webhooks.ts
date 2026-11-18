@@ -1,8 +1,9 @@
 import type { AllowedMentionsPolicy, Embed } from '../../domain/messages.js';
-import type { WebhookEditInput } from '../../domain/webhooks.js';
+import type { WebhookEditInput, WebhookMessageOptions } from '../../domain/webhooks.js';
 import type { AttachmentSpec, BinaryAttachmentSpec } from './common.js';
+import type { MessageInfo } from './messages.js';
 
-export type { WebhookEditInput } from '../../domain/webhooks.js';
+export type { WebhookEditInput, WebhookMessageOptions } from '../../domain/webhooks.js';
 
 export interface WebhookInfo {
   id: string;
@@ -37,6 +38,7 @@ export interface WebhooksResources {
   send(webhookID: string, token: string, input: WebhookSendInput): Promise<string | null>;
   edit(webhookID: string, token: string | null, input: string | WebhookEditInput, reason?: string): Promise<void>;
   delete(webhookID: string, token: string | null): Promise<void>;
+  fetchMessage(webhookID: string, token: string, messageID: string, options?: WebhookMessageOptions): Promise<MessageInfo>;
   editMessage(webhookID: string, token: string, messageID: string, input: WebhookMessageEditInput): Promise<string>;
-  deleteMessage(webhookID: string, token: string, messageID: string): Promise<void>;
+  deleteMessage(webhookID: string, token: string, messageID: string, options?: WebhookMessageOptions): Promise<void>;
 }

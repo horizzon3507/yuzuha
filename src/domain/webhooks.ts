@@ -24,10 +24,15 @@ export interface WebhookEditInput {
   channelID?: string;
 }
 
+export interface WebhookMessageOptions {
+  threadID?: string;
+}
+
 const SNOWFLAKE = /^\d{1,20}$/;
 const SEND_KEYS = new Set(['content', 'username', 'avatarURL', 'embeds', 'files', 'allowedMentions', 'threadID']);
 const EDIT_MESSAGE_KEYS = new Set(['content', 'embeds', 'files', 'allowedMentions', 'threadID']);
 const EDIT_WEBHOOK_KEYS = new Set(['name', 'avatar', 'channelID']);
+const MESSAGE_OPTIONS_KEYS = new Set(['threadID']);
 const DATA_IMAGE_URI = /^data:image\/[a-z0-9.+-]+;base64,[A-Za-z0-9+/]+={0,2}$/i;
 const RAW_BASE64 = /^[A-Za-z0-9+/]+={0,2}$/;
 const MENTION_PARSE: readonly MentionParse[] = ['users', 'roles', 'everyone'];
@@ -381,4 +386,14 @@ export function normalizeWebhookEditInput(raw: unknown): NormalizedWebhookEdit {
     ...(hasAvatar ? { avatar } : {}),
     ...(channelID === undefined ? {} : { channelID }),
   };
+}
+
+export function normalizeWebhookMessageOptions(raw?: unknown): WebhookMessageOptions {
+  if (raw === undefined) return {};
+  const input = assertPlainObject(raw, 'Opções de mensagem de webhook devem ser um objeto simples.');
+  assertKnownKeys(input, MESSAGE_OPTIONS_KEYS, 'WebhookMessageOptions');
+  const threadID = input['threadID'] === undefined
+    ? undefined
+    : validateWebhookThreadID(input['threadID']);
+  return threadID === undefined ? {} : { threadID };
 }

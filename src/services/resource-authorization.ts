@@ -2,7 +2,7 @@ import type { ModerationMember } from '../domain/moderation.js';
 import { isAbove } from '../domain/moderation.js';
 import { auditLogQueryInput } from '../domain/audit-log.js';
 import type { AuditLogQueryInput } from '../domain/audit-log.js';
-import { normalizeWebhookEditInput } from '../domain/webhooks.js';
+import { normalizeWebhookEditInput, normalizeWebhookMessageOptions } from '../domain/webhooks.js';
 import { hasPermission, permission } from '../domain/permissions.js';
 import { emojiBatch } from '../domain/resource-batches.js';
 import type { Resources } from '../ports/resources.js';
@@ -381,8 +381,23 @@ export function bindAuthorizedResources(
     async create(id, name, reason) { const g = guards(); await g.channel(id, 'ManageWebhooks'); return source.webhooks.create(id, name, reason); },
     async list(id) { const g = guards(); await g.channel(id, 'ManageWebhooks'); return source.webhooks.list(id); },
     async send(id, token, input) { const g = guards(); await g.webhook(id); return source.webhooks.send(id, token, input); },
+    async fetchMessage(id, token, messageID, options) {
+      const g = guards();
+      await g.webhook(id);
+      normalizeWebhookMessageOptions(options);
+      return options === undefined
+        ? source.webhooks.fetchMessage(id, token, messageID)
+        : source.webhooks.fetchMessage(id, token, messageID, options);
+    },
     async editMessage(id, token, messageID, input) { const g = guards(); await g.webhook(id); return source.webhooks.editMessage(id, token, messageID, input); },
-    async deleteMessage(id, token, messageID) { const g = guards(); await g.webhook(id); return source.webhooks.deleteMessage(id, token, messageID); },
+    async deleteMessage(id, token, messageID, options) {
+      const g = guards();
+      await g.webhook(id);
+      normalizeWebhookMessageOptions(options);
+      return options === undefined
+        ? source.webhooks.deleteMessage(id, token, messageID)
+        : source.webhooks.deleteMessage(id, token, messageID, options);
+    },
     async edit(id, token, input, reason) {
       const g = guards();
       const target = await g.webhook(id);

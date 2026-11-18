@@ -2,6 +2,7 @@ import { AttachmentBuilder, Message, MessageAttachmentFlags, Routes, Webhook, ty
 import {
   normalizeWebhookEditInput,
   normalizeWebhookMessageEditInput,
+  normalizeWebhookMessageOptions,
   normalizeWebhookSendInput,
   validateWebhookID,
   validateWebhookMessageID,
@@ -11,6 +12,7 @@ import type { WebhookFileInput } from '../../../domain/webhooks.js';
 import { YuzuhaError } from '../../../errors.js';
 import type { WebhookInfo, WebhooksResources } from '../../../ports/resources/webhooks.js';
 import { allowedMentions, embedBuilder, wireAllowedMentions } from '../payload.js';
+import { toMessageInfo } from './messages.js';
 
 const FILE_FETCH_TIMEOUT_MS = 30_000;
 const MAX_TOTAL_BYTES = 10_000_000;
@@ -183,6 +185,19 @@ export function createWebhooksResources(client: Client): WebhooksResources {
       const webhook = token ? Webhook.fromToken(client, id, token) : await Webhook.fetch(client, id);
       await webhook.delete();
     },
+    fetchMessage: async (webhookID, token, messageID, rawOptions) => {
+      const id = validateWebhookID(webhookID);
+      const tok = validateWebhookToken(token);
+      const msgID = validateWebhookMessageID(messageID);
+      const options = normalizeWebhookMessageOptions(rawOptions);
+      if (options.threadID === undefined) {
+        const message = await Webhook.fromToken(client, id, tok).fetchMessage(msgID);
+        return toMessageInfo(message);
+      }
+      const route = `${Routes.webhookMessage(id, tok, msgID)}?thread_id=${encodeURIComponent(options.threadID)}`;
+      const data = await client.rest.get(route, { auth: false });
+      return toMessageInfo(new Message(client, data as never));
+    },
     editMessage: async (webhookID, token, messageID, rawInput) => {
       const id = validateWebhookID(webhookID);
       const tok = validateWebhookToken(token);
@@ -229,12 +244,18 @@ export function createWebhooksResources(client: Client): WebhooksResources {
       });
       return new Message(client, data as never).id;
     },
-    deleteMessage: async (webhookID, token, messageID) => {
+    deleteMessage: async (webhookID, token, messageID, rawOptions) => {
       const id = validateWebhookID(webhookID);
       const tok = validateWebhookToken(token);
       const msgID = validateWebhookMessageID(messageID);
-      const webhook = Webhook.fromToken(client, id, tok);
-      await webhook.deleteMessage(msgID);
+      const options = normalizeWebhookMessageOptions(rawOptions);
+      if (options.threadID === undefined) {
+        const webhook = Webhook.fromToken(client, id, tok);
+        await webhook.deleteMessage(msgID);
+        return;
+      }
+      const route = `${Routes.webhookMessage(id, tok, msgID)}?thread_id=${encodeURIComponent(options.threadID)}`;
+      await client.rest.delete(route, { auth: false });
     },
   };
 }
