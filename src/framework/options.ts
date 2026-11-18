@@ -1,4 +1,4 @@
-import type { Client, ClientOptions } from '@fluxerjs/core';
+import type { Client, ClientOptions, DiscoveryOrigin } from '@fluxerjs/core';
 import type { Yuzuha } from './bot.js';
 import type { Command, CommandContext, HelpRenderContext, HelpRenderer } from '../context.js';
 import type { IncomingMessage, Payload, Store, Transport } from '../contracts.js';
@@ -28,13 +28,25 @@ import type {
   MessagesConfig,
   MessageTranslator,
 } from '../domain/i18n.js';
+import type {
+  CacheSweeperOptions,
+  MemberCacheSweeperOptions,
+  MessageCacheSweeperOptions,
+  UserCacheSweeperOptions,
+} from './cache-sweepers.js';
 
 export type {
+  ClientOptions,
   ConcurrencyOptions,
   HelpRenderContext,
   HelpRenderer,
   PrefixCacheOptions,
   ShardingOptions,
+  CacheSweeperOptions,
+  MessageCacheSweeperOptions,
+  MemberCacheSweeperOptions,
+  UserCacheSweeperOptions,
+  DiscoveryOrigin,
   LocaleMessagesConfig,
   MessageCatalog,
   MessageOverrides,
@@ -118,6 +130,7 @@ export interface YuzuhaOptions {
   gate?: MessageGate;
   client?: Client;
   clientOptions?: ClientOptions;
+  discovery?: DiscoveryOrigin;
   transport?: Transport;
   resources?: Resources;
   store?: Store;
@@ -149,6 +162,7 @@ export interface YuzuhaOptions {
   messages?: Partial<MessageCatalog> | MessageOverrides | LocaleMessagesConfig;
   locale?: LocaleOption;
   memberCache?: false | MemberCacheOptions;
+  cacheSweepers?: false | CacheSweeperOptions;
   prefixCache?: false | PrefixCacheOptions;
   variables?: false | VariableSweepOptions;
   concurrency?: ConcurrencyOptions;

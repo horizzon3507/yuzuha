@@ -529,7 +529,16 @@ export class NativeEvents {
   private readonly bindings = new Set<Binding>();
   private closed = false;
 
-  constructor(private readonly client: Client, private readonly schedule: (work: () => unknown | Promise<unknown>, event: ClientEventName) => void) {}
+  constructor(private client: Client, private readonly schedule: (work: () => unknown | Promise<unknown>, event: ClientEventName) => void) {}
+
+  rebind(nextClient: Client): void {
+    if (this.client === nextClient) return;
+    for (const binding of this.bindings) {
+      this.client.off(binding.event, binding.wrapper);
+      if (!this.closed) nextClient.on(binding.event, binding.wrapper);
+    }
+    this.client = nextClient;
+  }
 
   validate(event: NativeEvent): void {
     if (!knownEvents.has(event.event) || typeof event.invoke !== 'function' || typeof event.once !== 'boolean') {

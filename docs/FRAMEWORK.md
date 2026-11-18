@@ -53,6 +53,15 @@ await bot.load('./commands');
 await bot.login();
 ```
 
+`bot.setPresence(input)` e `users.setPresence(input)` aceitam `PresenceInput`
+completo (`status`, `activities[]`, `activity`, `customStatus` como texto ou
+`{ text, emoji? }` e `afk`), mantendo `users.setPresence(status, activity?)`
+retrocompatível. Para alternar presenças periodicamente com `this.timers`, use
+`bot.rotatePresence({ entries, intervalMs, random? })` (`intervalMs >= 5_000`),
+que aceita objetos `PresenceInput` ou callbacks `(bot) => PresenceInput |
+Promise<PresenceInput>`, retorna um removedor idempotente e encerra
+automaticamente em `bot.destroy()`.
+
 O callback `onError` é para diagnóstico de confiança. Evite registrar tokens,
 mensagens ou dados pessoais em produção. O logger padrão do Yuzuha registra só
 o código do erro. `onCommand(ctx, outcome)` recebe `success`, `guarded` ou `error`.
@@ -460,17 +469,35 @@ pelos middlewares do comando. `false` ou uma string em um check recusam a execu�
 ## Instâncias próprias do Fluxer
 
 ```ts
-import { Client } from 'yuzuha/sdk';
-import { defineCommand, Yuzuha } from 'yuzuha';
+import { defineCommand, defineConfig, Yuzuha } from 'yuzuha';
 
-const client = await Client.fromDiscovery('https://minha-instancia.example');
-const bot = new Yuzuha({ client, name: 'instancia-local', prefix: '!' });
+export default defineConfig({
+  name: 'instancia-local',
+  prefix: '!',
+  discovery: { api: 'https://minha-instancia.example', version: '1' },
+  clientOptions: { shardCount: 'auto' },
+});
+
+// Uso programático direto (resolução no login ou antecipada):
+const bot = await Yuzuha.fromDiscovery('https://minha-instancia.example', {
+  name: 'instancia-local',
+  prefix: '!',
+});
 bot.command(defineCommand({
   name: 'ping',
   async run(ctx) { await ctx.reply('Pong!'); },
 }));
 await bot.login(process.env.FLUXER_BOT_TOKEN);
 ```
+
+`discovery` aceita uma URL HTTP(S) ou `{ api, version? }` em `YuzuhaOptions` e
+`defineConfig` (mutuamente exclusivo com `client` e `clientOptions.instance`;
+entradas inválidas lançam `ConfigError` com código `DISCOVERY_OPTIONS`). Na
+construção via `new Yuzuha({ discovery })`, a descoberta (`Client.fromDiscovery`)
+só ocorre em `bot.login()`, repassando `AbortSignal`, religando eventos e
+`voiceStates`, recriando `FluxerTransport`/`FluxerResources` padrão e adotando
+`endpoints.media` no CDN quando `cdn.mediaBase` não foi fixado. Também é
+possível injetar manualmente um `client` criado por `Client.fromDiscovery`.
 
 Use um token emitido pela instância. Endpoints, REST, gateway e cache continuam
 sob responsabilidade do SDK. O Yuzuha conecta apenas quando `login` é chamado.
@@ -519,6 +546,32 @@ removidas automaticamente, e eventos do gateway (`GuildMemberUpdate`,
 `GuildMemberRemove`, `GuildRoleCreate`, `GuildRoleUpdate`, `GuildRoleDelete`,
 `GuildDelete`, `ChannelUpdate` e `ChannelDelete`) invalidam o escopo afetado.
 `destroy()` remove os listeners anexados e limpa o cache.
+
+### Sweepers periódicos de cache (`cacheSweepers`)
+
+Para limpar periodicamente os caches locais do SDK (`messages`, `members` e
+`users`) usando `this.timers`, configure `cacheSweepers` em `YuzuhaOptions` ou
+`defineConfig`:
+
+```ts
+const bot = new Yuzuha({
+  name: 'meu-bot',
+  cacheSweepers: {
+    messages: { intervalMs: 60_000, maxAgeMs: 300_000, keep: msg => msg.pinned },
+    members: { intervalMs: 300_000, keep: member => member.id === bot.transport.botID },
+    users: { intervalMs: 600_000, keep: user => !user.bot },
+  },
+});
+```
+
+- `intervalMs`: inteiro seguro entre `100` e `86_400_000` por bucket; `false`
+  desativa o bucket ou todos os sweepers. Opções inválidas lançam `ConfigError`
+  com código `CACHE_SWEEPER_OPTIONS`.
+- Os timers iniciam automaticamente em `bot.login()` (ou manualmente via
+  `bot.startCacheSweepers()`, que retorna um removedor idempotente) e são
+  cancelados e drenados em `bot.stopCacheSweepers()` e `bot.destroy()`.
+- Falhas operacionais durante uma varredura são encaminhadas a `onError` com
+  `source: 'scheduler'` sem interromper os próximos ciclos.
 
 ### Limites de concorrência
 

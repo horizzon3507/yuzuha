@@ -1,6 +1,8 @@
 export { Yuzuha, Bot, userError, MemoryRateLimiter, MemoryLock, VoiceStateTracker, createServiceKey, startHealthServer, shardIdForGuild, YuzuhaCluster, YuzuhaClusterEvents } from './bot.js';
 export type {
   VoiceStateInfo,
+  PresenceRotationEntry,
+  PresenceRotationOptions,
   YuzuhaOptions,
   ServiceKey,
   ServiceLookup,
@@ -15,6 +17,12 @@ export type {
   ErrorSource,
   ErrorReportInfo,
   VariableSweepOptions,
+  CacheSweeperOptions,
+  MessageCacheSweeperOptions,
+  MemberCacheSweeperOptions,
+  UserCacheSweeperOptions,
+  ClientOptions,
+  DiscoveryOrigin,
   ConcurrencyOptions,
   PrefixCacheOptions,
   RateLimitOptions,
@@ -140,8 +148,25 @@ export type {
 export type { InstanceEndpointsInfo, InstanceFeaturesInfo, InstanceServicesInfo, InstanceInfo, GatewayInfo, ApplicationInfo,
   EmojiMetadataInfo, StickerMetadataInfo, EmojiReference, InstanceResources } from './ports/resources/instance.js';
 export type { SudoVerification, SelfGuildInfo, SelfResources } from './ports/resources/self.js';
-export type { CacheLimitsInfo, CacheStatsInfo, MessageSweepInput, MemberSweepInput, CacheResources } from './ports/resources/cache.js';
-export type { AttachmentSpec, BinaryAttachmentSpec, PresenceStatus, ActivityType, ActivityInfo } from './ports/resources/common.js';
+export type {
+  CacheLimitsInfo,
+  CacheStatsInfo,
+  MessageSweepInput,
+  MemberSweepInput,
+  UserSweepInput,
+  ChannelSweepInput,
+  GuildSweepInput,
+  CacheResources,
+} from './ports/resources/cache.js';
+export type {
+  AttachmentSpec,
+  BinaryAttachmentSpec,
+  PresenceStatus,
+  ActivityType,
+  ActivityInfo,
+  CustomStatusInput,
+  PresenceInput,
+} from './ports/resources/common.js';
 export { NativeModeration } from './services/native-moderation.js';
 export type { NativeModerationOptions, NativeBanOptions, NativeTimeoutOptions, NativeMoveOptions, NativeVoiceOptions, ModerationTarget } from './services/native-moderation.js';
 export { ScopedData } from './services/native-data.js';

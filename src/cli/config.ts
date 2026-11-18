@@ -33,8 +33,17 @@ export async function configuredBot(path: string, environment: boolean, loadComm
   const module = await importModule(pathToFileURL(path).href);
   if (!module.default || typeof module.default !== 'object' || Array.isArray(module.default)) throw new ConfigError('CONFIG_INVALID', 'Config deve exportar um objeto default.');
   const config = module.default as YuzuhaConfig;
-  if ((config.commands !== undefined && typeof config.commands !== 'string') || (config.setup !== undefined && typeof config.setup !== 'function')) throw new ConfigError('CONFIG_INVALID', 'commands deve ser texto e setup deve ser uma função.');
-  const bot = new Yuzuha({ ...config, engine: config.engine ?? functions() });
+  if ((config.commands !== undefined && typeof config.commands !== 'string') || (config.setup !== undefined && typeof config.setup !== 'function')) {
+    await config.store?.close?.();
+    throw new ConfigError('CONFIG_INVALID', 'commands deve ser texto e setup deve ser uma função.');
+  }
+  let bot: Yuzuha;
+  try {
+    bot = new Yuzuha({ ...config, engine: config.engine ?? functions() });
+  } catch (error) {
+    await config.store?.close?.();
+    throw error;
+  }
   try {
     await config.setup?.(bot);
     const commandsPath = resolve(directory, config.commands ?? 'commands');

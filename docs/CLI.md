@@ -130,6 +130,28 @@ dependem de funções de plugin, valide a config que registra esse plugin.
 os comandos, não faz typecheck TS e não comprova token ou permissões remotas.
 Config e módulos importados são código confiável e podem executar efeitos.
 
+## Diagnóstico offline (`doctor`)
+
+```sh
+yuzuha doctor
+yuzuha doctor ./yuzuha.config.ts --json
+```
+
+`doctor` executa verificações locais (`offline: true`) sem conectar ao gateway
+nem expor segredos:
+
+- `node` e `sdk`: conferem Node `>= 22.13.0` e `@fluxerjs/core` fixado em `3.3.0`.
+- `token`: verifica presença em `FLUXER_BOT_TOKEN` ou `.env` ao lado da config,
+  sem exibir o valor nem poluir `process.env`.
+- `config`: importa e valida a config e os comandos (incluindo o código de
+  `YuzuhaError` em caso de falha, como `DISCOVERY_OPTIONS` ou `CACHE_SWEEPER_OPTIONS`).
+- `client`: inspeciona `discovery` (alertando com `warn` em HTTP não-loopback
+  sem TLS e ocultando credenciais/query da URL), `clientOptions` (`shardCount`,
+  `shardIds`, `cache`, `ignoredEvents`) e `cacheSweepers` ativos (alertando se
+  `cache.messages: false` coexistir com `cacheSweepers.messages`).
+- `permissions` e `storage`: validam nomes de permissões declaradas nos comandos
+  e permissões de leitura/escrita no caminho do store.
+
 ## Consultar funções
 
 ```sh

@@ -266,7 +266,7 @@ await ctx.reply(`${membro.displayName}: ${canais.length} canais, ${fixadas.lengt
 
 | Área | Operações principais |
 |---|---|
-| `users` | `user`, `member`, `members`, `memberCount`, `guild`, `bans`, `auditLogs`, `setPresence`, `searchMembers`, `setNickname`, `editGuild`, `me`, `transferOwnership`, `discoveryStatus`, `applyForDiscovery`, `editDiscoveryApplication`, `withdrawDiscoveryApplication` |
+| `users` | `user`, `member`, `members`, `memberCount`, `guild`, `bans`, `auditLogs`, `setPresence` (`(status, activity?)` ou `PresenceInput`), `searchMembers`, `setNickname`, `editGuild`, `me`, `transferOwnership`, `discoveryStatus`, `applyForDiscovery`, `editDiscoveryApplication`, `withdrawDiscoveryApplication` |
 | `roles` | `list`, `resolve`, `has`, `create`, `edit`, `delete`, `add`, `remove`, `move`, `setRoleHoistPositions`, `resetRoleHoistPositions` |
 | `channels` | `list`, `get`, `create`, `edit`, `delete`, `setSlowmode`, `slowmode`, `sendTyping`, `rtcRegions`, `addRecipient`/`removeRecipient` em grupos de DM, `editThreadDefaults`, `setDefaultForumLayout`, `overwrite`, `permissionsFor`, `move`, `setCategory` |
 | `messages` | Histórico com cursores, `pinnedPage`, `reactionUsersPage`, `dm`, `forward`, `search`/`searchAll` com filtros avançados, `bulkFetch`, `bulkDelete`, `purge`, `bulkDeleteOwn`, `acknowledgePins`, `clearReadState`, `purgeDM`, `deleteAttachment`, `sendTo`, `sendFiles`, `sendBytes`, `sendAttachments` |

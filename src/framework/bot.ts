@@ -2,7 +2,7 @@ import { AsyncLocalStorage } from 'node:async_hooks';
 import { randomUUID } from 'node:crypto';
 import { setMaxListeners } from 'node:events';
 import { Client, Events, Message } from '@fluxerjs/core';
-import type { ClientEventName, ClientEvents } from '@fluxerjs/core';
+import type { ClientEventName, ClientEvents, DiscoveryOrigin } from '@fluxerjs/core';
 import { FluxerTransport, MemberCache, incoming } from '../adapter.js';
 import { FluxerResources } from '../infrastructure/fluxer/resources.js';
 import type { Resources } from '../ports/resources.js';
@@ -57,6 +57,13 @@ import type { MusicManager } from '../services/music.js';
 import type { NativeVoice } from '../ports/voice.js';
 import { VoiceStateTracker } from '../services/voice-states.js';
 import { attachVoiceStates } from './voice-states.js';
+import { buildPresenceUpdateOptions } from '../infrastructure/fluxer/resources/users.js';
+import type { PresenceInput } from '../ports/resources/common.js';
+import { validatePresenceInput } from '../ports/resources/common.js';
+import { startPresenceRotation, validatePresenceRotationOptions } from './presence.js';
+import type { ActivePresenceRotation, PresenceRotationOptions } from './presence.js';
+import { CacheSweepersController, validateCacheSweeperOptions } from './cache-sweepers.js';
+import { assertClientOptions, validateDiscoveryOptions } from './discovery.js';
 import { canvasRenderer } from '../infrastructure/canvas/render.js';
 import {
   attachClientShardIfNeeded,
@@ -241,6 +248,10 @@ export class Yuzuha {
   readonly voice?: NativeVoice;
   readonly voiceStates: VoiceStateTracker;
   private detachVoiceStates?: () => void;
+  private presenceRotation?: ActivePresenceRotation;
+  private readonly cacheSweepers?: CacheSweepersController;
+  private readonly discoveryOrigin?: DiscoveryOrigin;
+  private discoveryResolved = false;
   private shardState?: BotShard;
   private readonly shardSchedulerMode: ShardSchedulerMode;
   private readonly explicitShardUtil?: ShardClientUtilLike;
@@ -468,8 +479,16 @@ export class Yuzuha {
       },
     });
     const retryPolicy = resolvePolicy(options.retry);
-    this.client = options.client ?? new Client(options.clientOptions);
-    this.shardState = resolveBotShard(this.client, options.sharding, options.clientOptions);
+    const clientOptions = assertClientOptions(options.clientOptions);
+    this.discoveryOrigin = validateDiscoveryOptions(options.discovery, options.client, clientOptions);
+    try {
+      this.client = options.client ?? new Client(clientOptions);
+    } catch (error) {
+      throw error instanceof ConfigError
+        ? error
+        : new ConfigError('OPTIONS', error instanceof Error ? error.message : 'clientOptions inválido.', { cause: error });
+    }
+    this.shardState = resolveBotShard(this.client, options.sharding, clientOptions);
     this.shardSchedulerMode = resolveShardSchedulerMode(options.sharding, lock !== undefined);
     if (options.sharding && typeof options.sharding === 'object') {
       this.explicitShardUtil = options.sharding.shardUtil;
@@ -493,13 +512,13 @@ export class Yuzuha {
         : options.memberCache;
       this.memberCache = new MemberCache(cacheOptions);
     }
+    this.cdnService = createCdn(options.cdn?.mediaBase);
     this.transport = options.transport ?? new FluxerTransport(this.client, this.reliability, this.memberCache);
     if (this.memberCache && !options.transport && this.transport instanceof FluxerTransport) {
       this.detachMemberCache = this.transport.attachCacheInvalidation(this.client);
     }
-    this.resources = options.resources ?? new FluxerResources(this.client, this.cdnService, this.reliability);
+    this.resources = options.resources ?? new FluxerResources(this.client, this.cdnService, this.reliability, options.now);
     this.resourcesInjected = options.resources !== undefined || options.transport === undefined;
-    this.cdnService = createCdn(options.cdn?.mediaBase);
     this.canvasContext = { renderer: canvasRenderer, config: options.canvas };
     this.emojiMap = emojiRegistry(options.emoji);
     if (options.concurrency !== undefined) {
@@ -512,9 +531,19 @@ export class Yuzuha {
     const sweepOptions = resolveVariableSweepOptions(options.variables);
     this.sweepIntervalMs = sweepOptions.intervalMs;
     this.sweepBatch = sweepOptions.batch;
+    const validatedCacheSweepers = validateCacheSweeperOptions(options.cacheSweepers);
     if (options.unsafeDisableResourceAuthorization && this.hasLogSink)
       void emitLog(this.options, { event: 'authorization.disabled' });
     this.timers = options.timers ?? { setTimeout: (fn: () => void, ms: number) => setTimeout(fn, ms).unref(), clearTimeout: (handle: unknown) => clearTimeout(handle as never) };
+    if (validatedCacheSweepers) {
+      this.cacheSweepers = new CacheSweepersController(validatedCacheSweepers, {
+        getCache: () => this.resources.cache,
+        timers: this.timers,
+        isClosing: () => this.closing,
+        runScoped: (executionID, fn) => runInExecution(this, { executionID, source: 'scheduler' }, fn),
+        onError: error => reportError(this.options, error, undefined, { source: 'scheduler' }),
+      });
+    }
     this.store = options.store ?? new JsonStore(defaultDataPath(options.name));
     this.maintenance = new StateMaintenance(this.store, options.now);
     this.scheduler = options.scheduler === false ? undefined : options.scheduler ?? new Scheduler(this.store,
@@ -571,6 +600,70 @@ export class Yuzuha {
     this.client.on(Events.Error, this.errorListener);
     this.client.on(Events.ShardError, this.shardErrorListener);
     this.attachGatewayLogs();
+  }
+
+  /** Cria um bot resolvendo os endpoints da instância via `Client.fromDiscovery`. */
+  static async fromDiscovery(
+    origin: DiscoveryOrigin,
+    options: Omit<YuzuhaOptions, 'client' | 'discovery'> = {},
+    connectOptions?: { signal?: AbortSignal },
+  ): Promise<Yuzuha> {
+    const rawOptions = options as YuzuhaOptions;
+    const clientOptions = assertClientOptions(rawOptions.clientOptions);
+    const validatedOrigin = validateDiscoveryOptions(origin, rawOptions.client, clientOptions)!;
+    validateCacheSweeperOptions(rawOptions.cacheSweepers);
+    const { instance: _omit, ...sdkOptions } = clientOptions ?? {};
+    const client = await Client.fromDiscovery(
+      validatedOrigin,
+      clientOptions ? sdkOptions : undefined,
+      connectOptions,
+    );
+    try {
+      return new Yuzuha({ ...options, client });
+    } catch (error) {
+      await client.destroy().catch(() => {});
+      throw error;
+    }
+  }
+
+  private async replaceClient(nextClient: Client): Promise<void> {
+    const previous = this.client;
+    previous.off(Events.Error, this.errorListener);
+    previous.off(Events.ShardError, this.shardErrorListener);
+    this.detachGatewayLogs?.();
+    this.detachMemberCache?.();
+    this.detachMemberCache = undefined;
+    this.memberCache?.clear();
+    this.detachVoiceStates?.();
+    this.detachVoiceStates = undefined;
+    this.voiceStates.clear();
+
+    this.events.rebind(nextClient);
+    (this as { client: Client }).client = nextClient;
+    this.shardState = resolveBotShard(nextClient, this.options.sharding, this.options.clientOptions);
+    nextClient.on(Events.Error, this.errorListener);
+    nextClient.on(Events.ShardError, this.shardErrorListener);
+    this.attachGatewayLogs();
+
+    if (!this.options.cdn?.mediaBase) {
+      const discoveredMedia = nextClient.instance?.endpoints?.media;
+      if (typeof discoveredMedia === 'string' && discoveredMedia.startsWith('https://')) {
+        try { this.cdnService = createCdn(discoveredMedia); } catch { /* preserva CDN padrão */ }
+      }
+    }
+    if (!this.options.transport) {
+      const nextTransport = new FluxerTransport(nextClient, this.reliability, this.memberCache);
+      (this as { transport: Transport }).transport = nextTransport;
+      if (this.memberCache) {
+        this.detachMemberCache = nextTransport.attachCacheInvalidation(nextClient);
+      }
+    }
+    if (!this.options.resources) {
+      (this as { resources: Resources }).resources = new FluxerResources(nextClient, this.cdnService, this.reliability, this.options.now);
+    }
+    this.detachVoiceStates = attachVoiceStates(nextClient, this.voiceStates);
+    this.discoveryResolved = true;
+    await previous.destroy().catch(() => {});
   }
 
   /** Engine de function mode instalado, quando presente. */
@@ -960,6 +1053,17 @@ export class Yuzuha {
     await this.sweepTask;
   }
 
+  /** Inicia os sweepers periódicos de cache configurados em `cacheSweepers` e retorna um removedor idempotente. */
+  startCacheSweepers(): () => void {
+    if (this.closing) throw new YuzuhaError('BOT_CLOSED', 'O bot está encerrado.');
+    return this.cacheSweepers?.start() ?? (() => {});
+  }
+
+  /** Para os sweepers periódicos de cache e aguarda qualquer limpeza em andamento. */
+  async stopCacheSweepers(): Promise<void> {
+    await this.cacheSweepers?.drain();
+  }
+
   isReady(): boolean { return this.client.isReady(); }
   get uptime(): number | null { return this.client.uptime; }
   assertReady(): void {
@@ -982,6 +1086,47 @@ export class Yuzuha {
       schedulerRunning: Boolean(this.scheduler?.isRunning),
       timestamp: (this.options.now ?? Date.now)(),
     });
+  }
+
+  /** Define a presença do bot (status, lista de atividades, custom status e flag AFK). */
+  async setPresence(input: PresenceInput): Promise<void> {
+    if (this.closing) throw new YuzuhaError('BOT_CLOSED', 'O bot está encerrado.');
+    const validated = validatePresenceInput(input);
+    try {
+      await this.resources.users.setPresence(validated);
+    } catch (error) {
+      if (
+        error instanceof YuzuhaError
+        && error.code === 'NATIVE_UNAVAILABLE'
+        && this.options.resources !== undefined
+        && this.client.user
+      ) {
+        this.client.user.setPresence(buildPresenceUpdateOptions(validated));
+        return;
+      }
+      throw error;
+    }
+  }
+
+  /** Rotaciona periodicamente a presença do bot usando `this.timers` e retorna um removedor idempotente. */
+  rotatePresence(options: PresenceRotationOptions): () => void {
+    if (this.closing) throw new YuzuhaError('BOT_CLOSED', 'O bot está encerrado.');
+    const config = validatePresenceRotationOptions(options);
+    this.presenceRotation?.stop();
+    const rotation = startPresenceRotation({
+      bot: this,
+      config,
+      timers: this.timers,
+      isClosing: () => this.closing,
+      applyPresence: input => this.setPresence(input),
+      runScoped: (executionID, fn) => runInExecution(this, { executionID, source: 'scheduler' }, fn),
+      onError: error => reportError(this.options, error, undefined, { source: 'scheduler' }),
+    });
+    this.presenceRotation = rotation;
+    return () => {
+      rotation.stop();
+      if (this.presenceRotation === rotation) this.presenceRotation = undefined;
+    };
   }
 
   private addEvent(event: NativeEvent, identity?: unknown): void {
@@ -1261,6 +1406,7 @@ export class Yuzuha {
       this.scheduler?.start();
       this.startVariableSweep();
     }
+    this.cacheSweepers?.start();
     this.client.on(Events.MessageCreate, this.listener);
     this.listening = true;
   }
@@ -1279,38 +1425,58 @@ export class Yuzuha {
       return Promise.reject(new ConfigError('TOKEN_MISSING', 'Defina FLUXER_BOT_TOKEN.'));
     }
     if (this.loginTask) return this.loginTask;
-    if (this.memberCache && !this.detachMemberCache && !this.options.transport && this.transport instanceof FluxerTransport) {
-      this.detachMemberCache = this.transport.attachCacheInvalidation(this.client);
-    }
-    this.attachGatewayLogs();
-    if (!this.detachVoiceStates) {
-      this.detachVoiceStates = attachVoiceStates(this.client, this.voiceStates);
-    }
-    if (this.shouldStartBackgroundJobs()) {
-      this.scheduler?.start();
-      this.startVariableSweep();
-    }
-    this.client.on(Events.MessageCreate, this.listener);
-    this.listening = true;
     this.loginAbort = new AbortController();
-    const needsAutoAttach = this.options.sharding !== false
-      && !this.explicitShardUtil
-      && !getAttachedShardClientUtil(this.client)
-      && isShardingChildProcess(env);
-    const connect = needsAutoAttach
-      ? async () => {
-        await attachClientShardIfNeeded(this.client, { env });
-        return this.client.login(resolvedToken, { signal: this.loginAbort!.signal });
+    const signal = this.loginAbort.signal;
+    const task = (async () => {
+      if (this.discoveryOrigin !== undefined && !this.discoveryResolved) {
+        const { instance: _omit, ...sdkOptions } = this.options.clientOptions ?? {};
+        const discovered = await Client.fromDiscovery(
+          this.discoveryOrigin,
+          this.options.clientOptions ? sdkOptions : undefined,
+          { signal },
+        );
+        if (this.closing) {
+          await discovered.destroy().catch(() => {});
+          throw new YuzuhaError('BOT_CLOSED', 'O bot foi encerrado durante o login.');
+        }
+        await this.replaceClient(discovered);
       }
-      : () => this.client.login(resolvedToken, { signal: this.loginAbort!.signal });
-    const task = connect().then(() => {
+      if (this.memberCache && !this.detachMemberCache && !this.options.transport && this.transport instanceof FluxerTransport) {
+        this.detachMemberCache = this.transport.attachCacheInvalidation(this.client);
+      }
+      this.attachGatewayLogs();
+      if (!this.detachVoiceStates) {
+        this.detachVoiceStates = attachVoiceStates(this.client, this.voiceStates);
+      }
+      if (this.shouldStartBackgroundJobs()) {
+        this.scheduler?.start();
+        this.startVariableSweep();
+      }
+      this.cacheSweepers?.start();
+      this.client.on(Events.MessageCreate, this.listener);
+      this.listening = true;
+      const needsAutoAttach = this.options.sharding !== false
+        && !this.explicitShardUtil
+        && !getAttachedShardClientUtil(this.client)
+        && isShardingChildProcess(env);
+      if (needsAutoAttach) {
+        await attachClientShardIfNeeded(this.client, { env });
+      }
+      await this.client.login(resolvedToken, { signal });
       if (this.closing) throw new YuzuhaError('BOT_CLOSED', 'O bot foi encerrado durante o login.');
       notifyClientShardReady(this.client, this.explicitShardUtil);
-    }).catch(async error => {
-      this.client.off(Events.MessageCreate, this.listener); this.listening = false;
+    })().catch(async error => {
+      if (this.listening) {
+        this.client.off(Events.MessageCreate, this.listener);
+        this.listening = false;
+      }
       this.scheduler?.stop();
       await this.scheduler?.drain();
       await this.stopVariableSweep();
+      await this.cacheSweepers?.drain();
+      await this.presenceRotation?.drain();
+      this.presenceRotation = undefined;
+      if (this.discoveryOrigin !== undefined) this.discoveryResolved = false;
       const needsErrorListener = !this.client.listeners(Events.Error).includes(this.errorListener);
       const needsShardListener = !this.client.listeners(Events.ShardError).includes(this.shardErrorListener);
       const needsGatewayLogs = Boolean(this.gatewayLogConfig && !this.detachGatewayLogs);
@@ -1401,6 +1567,8 @@ export class Yuzuha {
     this.loginAbort?.abort();
     this.scheduler?.stop();
     this.clearVariableSweepTimer();
+    this.cacheSweepers?.stop();
+    this.presenceRotation?.stop();
     this.concurrencyLimiter?.close();
     this.dynamicPrefixCache?.close();
     this.events.close();
@@ -1409,7 +1577,12 @@ export class Yuzuha {
     this.closeTask = (async () => {
       const drainWork = Promise.allSettled([...this.active])
         .then(() => this.scheduler?.drain())
-        .then(() => Promise.allSettled(this.sweepTask ? [this.sweepTask] : []));
+        .then(() => Promise.allSettled([
+          ...(this.sweepTask ? [this.sweepTask] : []),
+          ...(this.cacheSweepers ? [this.cacheSweepers.drain()] : []),
+          ...(this.presenceRotation ? [this.presenceRotation.drain()] : []),
+        ]))
+        .then(() => { this.presenceRotation = undefined; });
       if (timeoutMs !== undefined) {
         let deadlineHandle: unknown;
         let timedOut = false;

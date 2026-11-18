@@ -1,8 +1,8 @@
 import { fixAnimatedAssetUrl, createCdn } from '../../../domain/cdn.js';
 import { auditLogQueryInput, normalizeAuditLogOptions } from '../../../domain/audit-log.js';
 import type { Client, DiscoveryApplicationPayload, Guild, GuildMember, PresenceUpdateOptions, User, ProfilePayload } from '@fluxerjs/core';
-import type { ActivityInfo, ActivityType, PresenceStatus } from '../../../ports/resources/common.js';
-import { limitOf } from '../../../ports/resources/common.js';
+import type { ActivityInfo, ActivityType, CustomStatusInput, PresenceInput, PresenceStatus } from '../../../ports/resources/common.js';
+import { assertActivityInfo, assertPresenceStatus, limitOf, validatePresenceInput } from '../../../ports/resources/common.js';
 import type {
   AuditLogInfo,
   AuditLogQueryInput,
@@ -66,6 +66,82 @@ const ACTIVITY_NUMBERS: Record<ActivityType, number> = {
   competing: 5,
   custom: 4,
 };
+
+function parseCustomStatusEmoji(emoji: string | undefined): { emojiName?: string; emojiId?: string } {
+  if (!emoji) return {};
+  const trimmed = emoji.trim();
+  const mention = /^<a?:([^:>]+):(\d+)>$/.exec(trimmed);
+  if (mention) return { emojiName: mention[1]!, emojiId: mention[2]! };
+  const pair = /^([^:]+):(\d+)$/.exec(trimmed);
+  if (pair) return { emojiName: pair[1]!, emojiId: pair[2]! };
+  if (/^\d+$/.test(trimmed)) return { emojiId: trimmed };
+  return { emojiName: trimmed };
+}
+
+function toCustomStatusOptions(custom: string | CustomStatusInput | null): PresenceUpdateOptions['customStatus'] {
+  if (custom === null) return null;
+  if (typeof custom === 'string') return { text: custom };
+  return { text: custom.text, ...parseCustomStatusEmoji(custom.emoji) };
+}
+
+export function buildPresenceUpdateOptions(
+  statusOrInput: PresenceStatus | PresenceInput,
+  activity?: ActivityInfo,
+): PresenceUpdateOptions {
+  if (typeof statusOrInput === 'string') {
+    const status = assertPresenceStatus(statusOrInput);
+    if (activity === undefined) return { status };
+    const validatedActivity = assertActivityInfo(activity);
+    if (validatedActivity.type === 'custom') {
+      return { status, customStatus: { text: validatedActivity.state ?? validatedActivity.name } };
+    }
+    return {
+      status,
+      activities: [{
+        name: validatedActivity.name,
+        type: ACTIVITY_NUMBERS[validatedActivity.type],
+        ...(validatedActivity.url === undefined ? {} : { url: validatedActivity.url }),
+      }],
+    };
+  }
+  if (activity !== undefined) {
+    throw new YuzuhaError('PRESENCE_OPTIONS', 'Não passe o segundo argumento activity ao informar um objeto PresenceInput.');
+  }
+  const input = validatePresenceInput(statusOrInput);
+  const presence: PresenceUpdateOptions = { status: input.status ?? 'online' };
+  if (input.afk !== undefined) presence.afk = input.afk;
+
+  const combinedActivities = [
+    ...(input.activity ? [input.activity] : []),
+    ...(input.activities ?? []),
+  ];
+  let derivedCustomText: string | undefined;
+  if (input.activities !== undefined || input.activity !== undefined) {
+    const mapped: NonNullable<PresenceUpdateOptions['activities']> = [];
+    for (const item of combinedActivities) {
+      if (item.type === 'custom') {
+        derivedCustomText ??= item.state ?? item.name;
+      } else {
+        mapped.push({
+          name: item.name,
+          type: ACTIVITY_NUMBERS[item.type],
+          ...(item.url === undefined ? {} : { url: item.url }),
+        });
+      }
+    }
+    if (mapped.length > 0 || input.activities !== undefined) {
+      presence.activities = mapped;
+    }
+  }
+
+  if (input.customStatus !== undefined) {
+    presence.customStatus = toCustomStatusOptions(input.customStatus);
+  } else if (derivedCustomText !== undefined) {
+    presence.customStatus = { text: derivedCustomText };
+  }
+
+  return presence;
+}
 
 function snowflakeTimestamp(id: string): number {
   return Number((BigInt(id) >> 22n) + FLUXER_EPOCH);
@@ -260,22 +336,10 @@ export function createUsersResources(client: Client, cdn: import('../../../domai
     async editDiscoveryApplication(guildID, input) {
       return toDiscoveryApplicationInfo(await (await client.guilds.resolve(guildID)).editDiscoveryApplication(input));
     },
-    async setPresence(status: PresenceStatus, activity?: ActivityInfo): Promise<void> {
+    async setPresence(statusOrInput: PresenceStatus | PresenceInput, activity?: ActivityInfo): Promise<void> {
+      const presence = buildPresenceUpdateOptions(statusOrInput, activity);
       const self = client.user;
       if (!self) throw new YuzuhaError('NOT_READY', 'O cliente ainda não está pronto para definir presença.');
-      let presence: PresenceUpdateOptions = { status };
-      if (activity !== undefined) {
-        presence = activity.type === 'custom'
-          ? { status, customStatus: { text: activity.name } }
-          : {
-            status,
-            activities: [{
-              name: activity.name,
-              type: ACTIVITY_NUMBERS[activity.type],
-              ...(activity.url === undefined ? {} : { url: activity.url }),
-            }],
-          };
-      }
       self.setPresence(presence);
     },
     async createDM(userID): Promise<ChannelInfo> {
