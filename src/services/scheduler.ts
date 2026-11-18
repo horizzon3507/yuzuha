@@ -307,7 +307,62 @@ export class Scheduler {
     }).catch(() => {});
     return work;
   }
+  private async runClaimedTick(
+    claimDueSchedules: NonNullable<Store['claimDueSchedules']>,
+    now: number,
+    generation: number,
+  ): Promise<void> {
+    const globalCap = this.options.globalConcurrency;
+    const first = await claimDueSchedules({
+      now,
+      limit: this.concurrency,
+      globalConcurrency: globalCap,
+      createClaimID: randomUUID,
+      canClaim: () => generation === this.generation,
+    });
+    if (generation !== this.generation) return;
+    this.lastNextDue = first.nextDue;
+    if (first.claimed.length === 0) {
+      if (this.running && this.activeCycles === 0) this.armTimer();
+      return;
+    }
+
+    let moreAvailable = first.claimed.length === this.concurrency
+      && first.nextDue !== null
+      && first.nextDue <= now;
+
+    const workers = first.claimed.map(initial => (async () => {
+      let current: ScheduleRecord | undefined = initial;
+      while (current) {
+        await this.runTask(current, now, generation);
+        if (!moreAvailable || generation !== this.generation) break;
+        const next = await claimDueSchedules({
+          now,
+          limit: 1,
+          globalConcurrency: globalCap,
+          createClaimID: randomUUID,
+          canClaim: () => generation === this.generation,
+        });
+        if (generation !== this.generation) break;
+        this.lastNextDue = next.nextDue;
+        if (next.nextDue === null || next.nextDue > now || next.claimed.length === 0) {
+          moreAvailable = false;
+        }
+        current = next.claimed[0];
+      }
+    })());
+
+    const results = await Promise.allSettled(workers);
+    if (this.running && this.activeCycles === 0) this.armTimer();
+    const failure = results.find(result => result.status === 'rejected');
+    if (failure?.status === 'rejected') throw failure.reason;
+  }
+
   private async runTick(now: number, generation: number): Promise<void> {
+    if (this.store.claimDueSchedules) {
+      await this.runClaimedTick(this.store.claimDueSchedules.bind(this.store), now, generation);
+      return;
+    }
     const globalCap = this.options.globalConcurrency;
     const { due, nextDue, runningCount } = await this.store.read(state => {
       const eligible: ScheduleRecord[] = [];
@@ -465,6 +520,14 @@ export class Scheduler {
     } finally { this.activeClaims.delete(claimID); this.controllers.delete(controller); }
   }
   async recover(now = this.now()): Promise<number> {
+    if (this.store.recoverSchedules) {
+      const { freed, nextDue } = await this.store.recoverSchedules(now - this.leaseMs, this.activeClaims);
+      if (freed > 0) {
+        this.lastNextDue = nextDue;
+        if (this.running && this.activeCycles === 0) this.armTimer();
+      }
+      return freed;
+    }
     const stale = (item: ScheduleRecord): boolean => item.runningAt != null && now - item.runningAt > this.leaseMs
       && !this.activeClaims.has(item.claimID ?? '');
     if (!await this.store.read(state => state.schedules.some(stale))) return 0;
