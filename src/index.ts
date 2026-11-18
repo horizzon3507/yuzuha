@@ -17,6 +17,10 @@ export type {
   ErrorSource,
   ErrorReportInfo,
   VariableSweepOptions,
+  CacheSweeperOptions,
+  MessageCacheSweeperOptions,
+  MemberCacheSweeperOptions,
+  UserCacheSweeperOptions,
   ConcurrencyOptions,
   PrefixCacheOptions,
   RateLimitOptions,
@@ -142,7 +146,16 @@ export type {
 export type { InstanceEndpointsInfo, InstanceFeaturesInfo, InstanceServicesInfo, InstanceInfo, GatewayInfo, ApplicationInfo,
   EmojiMetadataInfo, StickerMetadataInfo, EmojiReference, InstanceResources } from './ports/resources/instance.js';
 export type { SudoVerification, SelfGuildInfo, SelfResources } from './ports/resources/self.js';
-export type { CacheLimitsInfo, CacheStatsInfo, MessageSweepInput, MemberSweepInput, CacheResources } from './ports/resources/cache.js';
+export type {
+  CacheLimitsInfo,
+  CacheStatsInfo,
+  MessageSweepInput,
+  MemberSweepInput,
+  UserSweepInput,
+  ChannelSweepInput,
+  GuildSweepInput,
+  CacheResources,
+} from './ports/resources/cache.js';
 export type {
   AttachmentSpec,
   BinaryAttachmentSpec,

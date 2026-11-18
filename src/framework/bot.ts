@@ -62,6 +62,7 @@ import type { PresenceInput } from '../ports/resources/common.js';
 import { validatePresenceInput } from '../ports/resources/common.js';
 import { startPresenceRotation, validatePresenceRotationOptions } from './presence.js';
 import type { ActivePresenceRotation, PresenceRotationOptions } from './presence.js';
+import { CacheSweepersController, validateCacheSweeperOptions } from './cache-sweepers.js';
 import { canvasRenderer } from '../infrastructure/canvas/render.js';
 import {
   attachClientShardIfNeeded,
@@ -247,6 +248,7 @@ export class Yuzuha {
   readonly voiceStates: VoiceStateTracker;
   private detachVoiceStates?: () => void;
   private presenceRotation?: ActivePresenceRotation;
+  private readonly cacheSweepers?: CacheSweepersController;
   private shardState?: BotShard;
   private readonly shardSchedulerMode: ShardSchedulerMode;
   private readonly explicitShardUtil?: ShardClientUtilLike;
@@ -518,9 +520,19 @@ export class Yuzuha {
     const sweepOptions = resolveVariableSweepOptions(options.variables);
     this.sweepIntervalMs = sweepOptions.intervalMs;
     this.sweepBatch = sweepOptions.batch;
+    const validatedCacheSweepers = validateCacheSweeperOptions(options.cacheSweepers);
     if (options.unsafeDisableResourceAuthorization && this.hasLogSink)
       void emitLog(this.options, { event: 'authorization.disabled' });
     this.timers = options.timers ?? { setTimeout: (fn: () => void, ms: number) => setTimeout(fn, ms).unref(), clearTimeout: (handle: unknown) => clearTimeout(handle as never) };
+    if (validatedCacheSweepers) {
+      this.cacheSweepers = new CacheSweepersController(validatedCacheSweepers, {
+        getCache: () => this.resources.cache,
+        timers: this.timers,
+        isClosing: () => this.closing,
+        runScoped: (executionID, fn) => runInExecution(this, { executionID, source: 'scheduler' }, fn),
+        onError: error => reportError(this.options, error, undefined, { source: 'scheduler' }),
+      });
+    }
     this.store = options.store ?? new JsonStore(defaultDataPath(options.name));
     this.maintenance = new StateMaintenance(this.store, options.now);
     this.scheduler = options.scheduler === false ? undefined : options.scheduler ?? new Scheduler(this.store,
@@ -966,6 +978,17 @@ export class Yuzuha {
     await this.sweepTask;
   }
 
+  /** Inicia os sweepers periódicos de cache configurados em `cacheSweepers` e retorna um removedor idempotente. */
+  startCacheSweepers(): () => void {
+    if (this.closing) throw new YuzuhaError('BOT_CLOSED', 'O bot está encerrado.');
+    return this.cacheSweepers?.start() ?? (() => {});
+  }
+
+  /** Para os sweepers periódicos de cache e aguarda qualquer limpeza em andamento. */
+  async stopCacheSweepers(): Promise<void> {
+    await this.cacheSweepers?.drain();
+  }
+
   isReady(): boolean { return this.client.isReady(); }
   get uptime(): number | null { return this.client.uptime; }
   assertReady(): void {
@@ -1308,6 +1331,7 @@ export class Yuzuha {
       this.scheduler?.start();
       this.startVariableSweep();
     }
+    this.cacheSweepers?.start();
     this.client.on(Events.MessageCreate, this.listener);
     this.listening = true;
   }
@@ -1337,6 +1361,7 @@ export class Yuzuha {
       this.scheduler?.start();
       this.startVariableSweep();
     }
+    this.cacheSweepers?.start();
     this.client.on(Events.MessageCreate, this.listener);
     this.listening = true;
     this.loginAbort = new AbortController();
@@ -1358,6 +1383,7 @@ export class Yuzuha {
       this.scheduler?.stop();
       await this.scheduler?.drain();
       await this.stopVariableSweep();
+      await this.cacheSweepers?.drain();
       await this.presenceRotation?.drain();
       this.presenceRotation = undefined;
       const needsErrorListener = !this.client.listeners(Events.Error).includes(this.errorListener);
@@ -1450,6 +1476,7 @@ export class Yuzuha {
     this.loginAbort?.abort();
     this.scheduler?.stop();
     this.clearVariableSweepTimer();
+    this.cacheSweepers?.stop();
     this.presenceRotation?.stop();
     this.concurrencyLimiter?.close();
     this.dynamicPrefixCache?.close();
@@ -1461,6 +1488,7 @@ export class Yuzuha {
         .then(() => this.scheduler?.drain())
         .then(() => Promise.allSettled([
           ...(this.sweepTask ? [this.sweepTask] : []),
+          ...(this.cacheSweepers ? [this.cacheSweepers.drain()] : []),
           ...(this.presenceRotation ? [this.presenceRotation.drain()] : []),
         ]))
         .then(() => { this.presenceRotation = undefined; });

@@ -28,6 +28,12 @@ import type {
   MessagesConfig,
   MessageTranslator,
 } from '../domain/i18n.js';
+import type {
+  CacheSweeperOptions,
+  MemberCacheSweeperOptions,
+  MessageCacheSweeperOptions,
+  UserCacheSweeperOptions,
+} from './cache-sweepers.js';
 
 export type {
   ConcurrencyOptions,
@@ -35,6 +41,10 @@ export type {
   HelpRenderer,
   PrefixCacheOptions,
   ShardingOptions,
+  CacheSweeperOptions,
+  MessageCacheSweeperOptions,
+  MemberCacheSweeperOptions,
+  UserCacheSweeperOptions,
   LocaleMessagesConfig,
   MessageCatalog,
   MessageOverrides,
@@ -149,6 +159,7 @@ export interface YuzuhaOptions {
   messages?: Partial<MessageCatalog> | MessageOverrides | LocaleMessagesConfig;
   locale?: LocaleOption;
   memberCache?: false | MemberCacheOptions;
+  cacheSweepers?: false | CacheSweeperOptions;
   prefixCache?: false | PrefixCacheOptions;
   variables?: false | VariableSweepOptions;
   concurrency?: ConcurrencyOptions;
