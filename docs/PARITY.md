@@ -47,7 +47,7 @@ precisam de `overrides` para o core fixado, como no manifesto do Yuzuha.
 | Cache e presença | `ctx.resources.cache` (estatísticas, limites e limpezas) e opções do SDK | Acesso nativo |
 | Usuário autenticado | `ctx.resources.self` (fetch, guilds, saída e limpeza com verificação sudo) | setPresence, setStatus, setActivity e leaveGuild |
 | Instância e aplicação | `ctx.resources.instance` (describe, gatewayInfo, application, oauthApplications, metadados de emoji/sticker, resolveEmoji); `Client.fromDiscovery`, client injetado | Mesmo adaptador do client |
-| Áudio em voz | `FluxerVoice` sobre `@fluxerjs/voice` opcional; Lavalink v4 com plugin de áudio, `FluxerLavalinkBridge`, filas editáveis e recuperação em `yuzuha/music` | Sem wrappers de reprodução; moderação de membros usa o SDK core |
+| Áudio em voz | `bot.voiceStates` / `ctx.voiceStates` (`VoiceStateTracker`) para estados de voz; `FluxerVoice` sobre `@fluxerjs/voice` opcional; Lavalink v4 com plugin de áudio, `FluxerLavalinkBridge`, filas editáveis e recuperação em `yuzuha/music` | Sem wrappers de reprodução; moderação de membros usa o SDK core |
 | Sharding | `bot.shard`, `ctx.shard`, `shardIdForGuild`, scheduler líder por padrão e `yuzuha/sdk/sharding` sobre `@fluxerjs/sharding` (peer opcional) | Sem coordenação própria |
 | Cluster/subpaths | `YuzuhaCluster` e `YuzuhaClusterEvents` sobre `ClientCluster`; `yuzuha/sdk/cluster` e demais subpaths `yuzuha/sdk/*` espelham `@fluxerjs/core/*` e os pacotes satélites | Sem coordenação própria |
 | Estado e casos | `ctx.data`, TTL, userFor, transaction entre chaves e stores | Variáveis, TTL, incrementos, listas, casos e dataTransaction com operações declarativas |

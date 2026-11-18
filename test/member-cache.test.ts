@@ -172,7 +172,10 @@ test('Yuzuha wires memberCache and detaches gateway invalidation listeners on de
     Events.ChannelUpdate,
     Events.ChannelDelete,
   ] as const;
-  for (const event of events) assert.equal(client.listenerCount(event), 1);
+  const sharedWithVoiceStates = new Set<string>([Events.GuildDelete, Events.ChannelDelete]);
+  for (const event of events) {
+    assert.equal(client.listenerCount(event), sharedWithVoiceStates.has(event) ? 2 : 1);
+  }
 
   await bot.transport.member('100', '2');
   await bot.transport.member('100', '2');

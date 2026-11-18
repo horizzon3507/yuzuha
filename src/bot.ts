@@ -1,5 +1,7 @@
 export { Yuzuha, Bot } from './framework/bot.js';
 export { userError } from './framework/reporting.js';
+export { VoiceStateTracker } from './services/voice-states.js';
+export type { VoiceStateInfo } from './services/voice-states.js';
 export { createServiceKey } from './framework/services.js';
 export type { ServiceKey, ServiceLookup } from './framework/services.js';
 export { startHealthServer } from './framework/health.js';

@@ -1,5 +1,6 @@
-export { Yuzuha, Bot, userError, MemoryRateLimiter, MemoryLock, createServiceKey, startHealthServer, shardIdForGuild, YuzuhaCluster, YuzuhaClusterEvents } from './bot.js';
+export { Yuzuha, Bot, userError, MemoryRateLimiter, MemoryLock, VoiceStateTracker, createServiceKey, startHealthServer, shardIdForGuild, YuzuhaCluster, YuzuhaClusterEvents } from './bot.js';
 export type {
+  VoiceStateInfo,
   YuzuhaOptions,
   ServiceKey,
   ServiceLookup,

@@ -504,7 +504,12 @@ aguardam eventos do gateway com timeout de 5s (configurável de 1 a 60000 ms).
 `channels.create` aceita tipo `GuildLink` com `url` HTTP(S), e `channels.edit`
 aceita `url`, `contentWarningLevel` (0, 1 ou null) e `contentWarningText`.
 Os helpers de script verificam autor/bot e o servidor; ports nativos seguem
-a autoridade do client. `ctx.voice` delega áudio ao pacote oficial opcional;
+a autoridade do client. `bot.voiceStates` e `ctx.voiceStates` (`VoiceStateTracker`)
+rastreiam em memória os estados de voz dos servidores (`get(guildID, userID)`,
+`guild(guildID)`, `channel(guildID, channelID)`, `userChannel(guildID, userID)`,
+`size`, `clear(guildID?)`), sincronizados automaticamente por `voiceStateUpdate`,
+`voiceStatesSync`, `channelDelete`, `guildDelete` e encerrados em `destroy()`.
+`ctx.voice` delega áudio ao pacote oficial opcional;
 `ctx.music` oferece filas e controles Lavalink; `FluxerLavalinkBridge` publica
 o áudio no Fluxer usando o plugin `yuzuha-audio` no servidor Lavalink.
 Veja instalação, métodos e limites em [MUSIC.md](MUSIC.md).
