@@ -270,6 +270,9 @@ export class Yuzuha {
     if (options.errorReply !== undefined && typeof options.errorReply !== 'function') {
       throw new ConfigError('OPTIONS', 'errorReply deve ser uma função.');
     }
+    if (options.helpRenderer !== undefined && typeof options.helpRenderer !== 'function') {
+      throw new ConfigError('OPTIONS', 'helpRenderer deve ser uma função.');
+    }
     validateHooks(options.hooks);
     if (options.locale !== undefined && typeof options.locale !== 'string' && typeof options.locale !== 'function') {
       throw new ConfigError('MESSAGES_OPTIONS', 'locale deve ser texto ou função.');
@@ -462,7 +465,7 @@ export class Yuzuha {
   reload(directory: string): Promise<void> { return this.registry.load(directory, 'reload'); }
   listCommands(): Command[] { return this.registry.list(); }
   help(command?: string, prefix = '', locale?: string): string {
-    return this.registry.help(command, prefix, this.messagesRuntime.translatorFor(locale));
+    return this.registry.help(command, prefix, this.messagesRuntime.translatorFor(locale), this.options.helpRenderer);
   }
   get signal(): AbortSignal { return this.shutdown.signal; }
   deleteLater(channelID: string, messageID: string, ttlMs: number): void {
@@ -597,7 +600,7 @@ export class Yuzuha {
             if (this.closing || this.shutdown.signal.aborted) return;
             ctx = new EventContext({ ...baseEventOptions, executionID: prelim.executionID,
               locale: resolvedLocale.locale, translator: resolvedLocale.translator,
-              help: (cmd, pfx = '') => this.registry.help(cmd, pfx, resolvedLocale.translator) });
+              help: (cmd, pfx = '') => this.registry.help(cmd, pfx, resolvedLocale.translator, this.options.helpRenderer) });
           }
           if (this.options.context) {
             await this.options.context(ctx);
@@ -681,7 +684,7 @@ export class Yuzuha {
           if (this.closing || signal.aborted) throw cancellationError();
           ctx = new EventContext({ ...baseEventOptions, executionID: prelim.executionID,
             locale: resolvedLocale.locale, translator: resolvedLocale.translator,
-            help: (cmd, pfx = '') => this.registry.help(cmd, pfx, resolvedLocale.translator) });
+            help: (cmd, pfx = '') => this.registry.help(cmd, pfx, resolvedLocale.translator, this.options.helpRenderer) });
         }
         if (this.hasLogSink) await emitLog(this.options, { event: 'event.start', executionID: ctx.executionID, command: ctx.command.name });
         if (this.options.context) {
@@ -1165,7 +1168,7 @@ export class Yuzuha {
             activeTranslator = resolvedLocale.translator;
           }
           ctx = new CommandContext({ ...baseContextOptions, locale: activeLocale, translator: activeTranslator,
-            help: (cmd, pfx = '') => this.registry.help(cmd, pfx, activeTranslator) });
+            help: (cmd, pfx = '') => this.registry.help(cmd, pfx, activeTranslator, this.options.helpRenderer) });
           if (this.hasLogSink) await emitLog(this.options, { event: 'command.start', executionID: ctx.executionID, command: ctx.command.name });
           if (signal.aborted) throw cancellationError();
           if (this.options.context) {

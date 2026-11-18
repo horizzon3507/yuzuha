@@ -8,6 +8,8 @@ export type { MemoryLockOptions } from './framework/locks.js';
 export type { Lock, LockLease } from './ports/lock.js';
 export type {
   YuzuhaOptions,
+  HelpRenderContext,
+  HelpRenderer,
   ErrorReplyResult,
   UnknownCommandContext,
   YuzuhaHooks,

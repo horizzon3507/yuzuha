@@ -2,6 +2,7 @@ import { resolve } from 'node:path';
 import { compileFlagLookup, validateArgumentDefinitions, validateFlagDefinitions } from '../commands/arguments.js';
 import { resolveCooldown } from '../commands/definition.js';
 import { commandHelp, commandUsage } from '../commands/help.js';
+import type { HelpRenderer } from '../commands/help.js';
 import { defaultTranslator } from '../domain/i18n.js';
 import type { MessageTranslator } from '../domain/i18n.js';
 import type { ArgumentDefinition, Command } from '../context.js';
@@ -59,6 +60,13 @@ function snapshot(command: Command): Command {
     args: definitions(command.args), flags: definitions(command.flags),
     examples: command.examples && [...command.examples], subcommands: command.subcommands?.map(snapshot),
     checks: command.checks && [...command.checks], middleware: command.middleware && [...command.middleware], http: command.http && structuredClone(command.http) };
+}
+
+function filterVisible(command: Command): Command {
+  return {
+    ...command,
+    subcommands: command.subcommands?.filter(child => !child.hidden).map(filterVisible),
+  };
 }
 
 function inheritedHttp(parent?: HttpPolicy, child?: HttpPolicy): HttpPolicy | undefined {
@@ -174,10 +182,31 @@ export class CommandRegistry {
     return { compiled, input: cursor < tailEnd ? input.slice(cursor, tailEnd) : '' };
   }
   list(): Command[] { return [...new Set(this.entries.values())].map(item => snapshot(item.definition)); }
-  help(path?: string, prefix = '', t: MessageTranslator = defaultTranslator): string {
-    if (!path) return this.list().filter(command => !command.hidden).map(command => `${commandUsage(command, prefix, t)}${command.description ? `: ${command.description}` : ''}`).join('\n');
+  help(
+    path?: string,
+    prefix = '',
+    t: MessageTranslator = defaultTranslator,
+    renderer?: HelpRenderer,
+  ): string {
+    if (!path) {
+      if (renderer) {
+        const commands = this.list().filter(command => !command.hidden).map(filterVisible);
+        return renderer({ commands, prefix });
+      }
+      return this.list().filter(command => !command.hidden).map(command => `${commandUsage(command, prefix, t)}${command.description ? `: ${command.description}` : ''}`).join('\n');
+    }
     const [name, ...parts] = path.trim().split(/\s+/);
     const resolved = this.resolve(name ?? '', parts.join(' '));
-    return resolved && !resolved.input && !resolved.compiled.command.hidden ? commandHelp(resolved.compiled.command, prefix, t) : '';
+    if (!resolved || resolved.input || resolved.compiled.command.hidden) return '';
+    if (renderer) {
+      const commands = this.list().filter(command => !command.hidden).map(filterVisible);
+      return renderer({
+        command: filterVisible(snapshot(resolved.compiled.command)),
+        commands,
+        prefix,
+        query: path,
+      });
+    }
+    return commandHelp(resolved.compiled.command, prefix, t);
   }
 }

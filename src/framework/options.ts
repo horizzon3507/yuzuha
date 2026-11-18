@@ -1,11 +1,10 @@
 import type { Client, ClientOptions } from '@fluxerjs/core';
-import type { CommandContext } from '../context.js';
+import type { Command, CommandContext, HelpRenderContext, HelpRenderer } from '../context.js';
 import type { IncomingMessage, Payload, Store, Transport } from '../contracts.js';
 import type { GuardError } from '../errors.js';
 import type { ScriptEngine, ScriptFunctionDefinition } from '../ports/script-engine.js';
 import type { Lock } from '../ports/lock.js';
 import type { RateLimiter } from '../ports/rate-limiter.js';
-import type { Command } from '../context.js';
 import type { Resources } from '../ports/resources.js';
 import type { HttpService } from '../services/http.js';
 import type { Scheduler } from '../services/scheduler.js';
@@ -29,6 +28,8 @@ import type {
 
 export type {
   ConcurrencyOptions,
+  HelpRenderContext,
+  HelpRenderer,
   PrefixCacheOptions,
   LocaleMessagesConfig,
   MessageCatalog,
@@ -117,6 +118,7 @@ export interface YuzuhaOptions {
   context?: (ctx: CommandContext) => void | Promise<void>;
   onError?: (error: unknown, ctx: CommandContext | undefined, info: ErrorReportInfo) => void | Promise<void>;
   errorReply?: (error: unknown, ctx?: CommandContext) => ErrorReplyResult | Promise<ErrorReplyResult>;
+  helpRenderer?: HelpRenderer;
   hooks?: YuzuhaHooks;
   onCommand?: (ctx: CommandContext, outcome: DispatchResult) => void | Promise<void>;
   onLog?: (record: LogRecord) => void | Promise<void>;
