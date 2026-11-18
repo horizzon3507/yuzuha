@@ -93,7 +93,7 @@ test('awaitMessage filtra por usuário e retorna vazio em timeout', async () => 
     collectors: {
       async awaitMessage(channelID, input): Promise<CollectedMessageInfo | null> {
         seen.push({ channelID, input });
-        if (input.userID === '2') return { id: '9', channelID, authorID: '2', content: 'achei' };
+        if (input.userID === '2') return mockMessage('achei', { id: '9', channelID, authorID: '2' });
         return null;
       },
       async awaitReaction() { return null; },
@@ -137,7 +137,7 @@ test('coletores não consomem o prazo de execução do script', async () => {
       collectors: {
         async awaitMessage() {
           await new Promise(resolve => setTimeout(resolve, 250));
-          return { id: '9', channelID: '200', authorID: '1', content: 'achei' };
+          return mockMessage('achei', { id: '9', channelID: '200', authorID: '1' });
         },
         async awaitReaction() {
           await new Promise(resolve => setTimeout(resolve, 250));

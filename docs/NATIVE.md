@@ -270,7 +270,7 @@ await ctx.reply(`${membro.displayName}: ${canais.length} canais, ${fixadas.lengt
 | `roles` | `list`, `resolve`, `has`, `create`, `edit`, `delete`, `add`, `remove`, `move`, `setRoleHoistPositions`, `resetRoleHoistPositions` |
 | `channels` | `list`, `get`, `create`, `edit`, `delete`, `setSlowmode`, `slowmode`, `sendTyping`, `rtcRegions`, `addRecipient`/`removeRecipient` em grupos de DM, `editThreadDefaults`, `setDefaultForumLayout`, `overwrite`, `permissionsFor`, `move`, `setCategory` |
 | `messages` | Histórico com cursores, `pinnedPage`, `reactionUsersPage`, `dm`, `forward`, `search`/`searchAll` com filtros avançados, `bulkFetch`, `bulkDelete`, `purge`, `bulkDeleteOwn`, `acknowledgePins`, `clearReadState`, `purgeDM`, `deleteAttachment`, `sendTo`, `sendFiles`, `sendBytes`, `sendAttachments` |
-| `collectors` | `awaitMessage`, `awaitReaction`, streams `collectMessages`/`collectReactions` (AsyncIterable) |
+| `collectors` | `awaitMessage`, `awaitReaction` (posicional ou `AwaitReactionInput`), streams `collectMessages`/`collectReactions` (AsyncIterable) com `filter` síncrono |
 | `gateway` | `fetchMembers` (aguardável por chunks), `requestMembers`, `requestGuildCounts`, `requestChannelCounts`, `requestForumUnreads`, `subscribeThreads`, `send` |
 | `instance` | `describe`, `gatewayInfo`, `application`, `oauthApplications`, `emojiMetadata`, `stickerMetadata`, `resolveEmoji` |
 | `self` | `fetch`, `guilds`, `leaveGuild` e `deleteMyMessages` com verificação sudo |
@@ -364,8 +364,16 @@ descrição e motivo; tags são aceitas na criação.
 
 `collectors.collectMessages` e `collectors.collectReactions` retornam um
 `AsyncIterable` que emite cada item coletado até o limite (`timeMs`, `max` ou
-`signal`) ou o cancelamento do comando. Reações exigem `messageID`: o coletor do
-SDK é por mensagem. Iteradores são de uso único; cada chamada cria um novo stream.
+`signal`) ou o cancelamento do comando. `CollectedMessageInfo` inclui todos os
+campos de `IncomingMessage` (`id`, `channelID`, `guildID`, `authorID`,
+`authorName`, `authorBot`, `content`, `mentions` e `raw`). `awaitMessage`,
+`collectMessages`, `collectReactions` e `awaitReaction` (na assinatura posicional,
+com `AwaitReactionOptions` ou com `AwaitReactionInput`) aceitam um predicado
+síncrono `filter`, validado com `COLLECTOR_BOUNDS` e avaliado após os filtros
+embutidos (`userID`, `contains`, `emojis`); se `filter` lançar exceção ou
+retornar valor não booleano, o coletor rejeita imediatamente e remove listeners
+e timers sem vazamentos. Reações exigem `messageID`: o coletor do SDK é por
+mensagem. Iteradores são de uso único; cada chamada cria um novo stream.
 
 `messages.bulkFetch` agrupa pedidos de janela por canal e hidrata as mensagens
 por padrão; `hydrate: false` devolve os payloads brutos da API. `searchAll` é a

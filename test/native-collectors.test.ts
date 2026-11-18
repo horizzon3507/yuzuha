@@ -28,12 +28,16 @@ test('collectMessages yields messages in order and stops at max', async t => {
   const resources = createCollectorsResources(client);
   const emitter = client as unknown as EventEmitter;
   const work = drain(resources.collectMessages('200', { max: 2 }));
-  emitter.emit(Events.MessageCreate, fakeMessage('1'));
+  const first = fakeMessage('1');
+  emitter.emit(Events.MessageCreate, first);
   emitter.emit(Events.MessageCreate, fakeMessage('2'));
   emitter.emit(Events.MessageCreate, fakeMessage('3'));
   const items = await work;
   assert.deepEqual(items.map(m => m.id), ['1', '2']);
-  assert.deepEqual(items[0], { id: '1', channelID: '200', authorID: '1', content: 'msg 1' });
+  assert.deepEqual(items[0], {
+    id: '1', channelID: '200', guildID: undefined, authorID: '1',
+    authorName: '', authorBot: false, content: 'msg 1', mentions: [], raw: first,
+  });
   assert.equal(client.listenerCount(Events.MessageCreate), 0);
 });
 

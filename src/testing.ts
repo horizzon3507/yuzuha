@@ -1,6 +1,7 @@
 import { AsyncLocalStorage } from 'node:async_hooks';
 import type { IncomingMessage, ModerationAction, ModerationMember, Payload, Transport } from './contracts.js';
 import type { Resources } from './ports/resources.js';
+import type { AwaitReactionInput, AwaitReactionOptions, ReactionVote } from './ports/resources/collectors.js';
 import { PermissionFlags } from '@fluxerjs/core';
 import { GuardError, TransportError, YuzuhaError } from './errors.js';
 import type { VoiceModerationOptions } from './domain/moderation.js';
@@ -11,10 +12,26 @@ import type { Command } from './commands/definition.js';
 import { MemoryStore } from './store.js';
 import type { Store } from './ports/store.js';
 
+type MockAwaitReaction = {
+  bivariance(
+    channelID: string,
+    messageID: string | AwaitReactionInput,
+    emojis: string | string[],
+    timeMs: number,
+    userID?: string | AwaitReactionOptions,
+    signal?: AbortSignal,
+    filter?: (vote: ReactionVote) => boolean,
+  ): Promise<ReactionVote | null>;
+}['bivariance'];
+
 /**
  * Recursos nativos simulados para testes. Áreas não informadas falham ao ser usadas.
  */
-export type MockResourceOverrides = { [K in keyof Resources]?: Partial<Resources[K]> };
+export type MockResourceOverrides = {
+  [K in keyof Resources]?: K extends 'collectors'
+    ? Omit<Partial<Resources['collectors']>, 'awaitReaction'> & { awaitReaction?: MockAwaitReaction }
+    : Partial<Resources[K]>;
+};
 
 export function mockResources(overrides: MockResourceOverrides = {}): Resources {
   const resource = <K extends keyof Resources>(area: K): Resources[K] => new Proxy(overrides[area] ?? {}, {
