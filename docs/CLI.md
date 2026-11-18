@@ -20,7 +20,7 @@ e execute `node dist/cli.js` na raiz do repositório.
 | `yuzuha data <stats/cleanup/backup/restore> <store> [opções]` | Manutenção e backup sem config |
 | `yuzuha doctor [config] [--json]` | Diagnóstico offline, sem exibir token |
 | `yuzuha editor` | Caminho da extensão VS Code incluída no pacote |
-| `yuzuha run [config] [--health-port porta] [--health-host host]` | Carrega ambiente, config e comandos e conecta |
+| `yuzuha run [config] [--shards <auto\|N>] [--shards-per-process <N>] [--health-port porta] [--health-host host]` | Carrega ambiente, config e comandos e conecta (ou supervisiona processos de shards) |
 | `yuzuha dev [config] [--health-port porta] [--health-host host]` | Executa com recarga dos arquivos de comando |
 
 Opções desconhecidas, repetidas, argumentos extras ou `--js --ts` juntos
@@ -45,6 +45,33 @@ de `setup`; colisões recusam a carga.
 
 `run` e `dev` leem o `.env` da pasta da config. Valores existentes no ambiente
 do processo têm prioridade. `check` não carrega esse arquivo automaticamente.
+
+## Execução com múltiplos shards
+
+```sh
+yuzuha run --shards 4
+yuzuha run ./config/bot.ts --shards 8 --shards-per-process 2
+yuzuha run --shards auto
+```
+
+`--shards` aceita `auto` ou um inteiro entre `1` e `4096`; `--shards-per-process`
+aceita um inteiro entre `1` e `4096` e exige `--shards`. `dev` permanece restrito
+a processo único.
+
+Quando `--shards` é informado no processo principal, a CLI carrega o `.env` da
+pasta da config, valida `FLUXER_BOT_TOKEN`, importa dinamicamente o peer opcional
+`@fluxerjs/sharding` (falhando com `SHARDING_UNAVAILABLE` se não estiver
+instalado) e inicia o `ShardingManager` apontando para o próprio binário da CLI
+(`yuzuha run <config>`). Em `--shards auto`, a contagem de servidores é obtida
+paginando `GET /users/@me/guilds` via REST antes do spawn. Sinais `SIGINT` e
+`SIGTERM` são repassados para `manager.destroy()`, aguardando o encerramento
+limpo de todos os processos filhos.
+
+Nos processos filhos gerados pelo `ShardingManager`, `yuzuha run` detecta as
+variáveis `FLUXER_SHARD_*` e o canal IPC, anexa `attachShardClientUtil(bot.client)`
+antes de `bot.login()`, inicia o `Scheduler` e a limpeza de variáveis somente no
+shard líder por padrão (veja [INTEGRATIONS.md](INTEGRATIONS.md)) e chama
+`notifyReady()` assim que a conexão conclui.
 
 ## Validação e JSON
 

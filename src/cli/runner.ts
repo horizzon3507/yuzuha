@@ -7,6 +7,8 @@ import type { YuzuhaLogger } from '../framework/logging.js';
 import { reportError } from '../framework/reporting.js';
 import { watchCommands } from './watch.js';
 import type { CommandWatcher } from './watch.js';
+import { isShardingChildProcess, notifyClientShardReady, prepareShardedChildRun } from './sharding.js';
+import type { ChildShardingOptions } from './sharding.js';
 
 export interface RunnerTarget {
   on(event: string, listener: (...args: any[]) => void): unknown;
@@ -20,6 +22,7 @@ export interface RunBotOptions {
   healthPort?: number;
   healthHost?: string;
   onHealthListening?: (server: HealthServer) => void;
+  sharding?: ChildShardingOptions;
 }
 
 function logRunnerInfo(logger: YuzuhaLogger | false | undefined, message: string): void {
@@ -110,7 +113,15 @@ export async function runBot(
         return;
       }
     }
-    await bot.login();
+    const shardUtil = await prepareShardedChildRun(bot, runtime?.sharding);
+    const customEnv = runtime?.sharding?.env;
+    const token = customEnv !== undefined
+      ? (customEnv.FLUXER_BOT_TOKEN?.trim()
+        ? customEnv.FLUXER_BOT_TOKEN
+        : (isShardingChildProcess(customEnv, runtime?.sharding?.hasIpc) ? customEnv.FLUXER_TOKEN : customEnv.FLUXER_BOT_TOKEN))
+      : undefined;
+    await bot.login(token);
+    if (shardUtil) notifyClientShardReady(bot.client, shardUtil);
     if (closeTask) { await closeTask; return; }
     if (development) watcher = watchCommands(commandsPath, async () => {
       await bot.reload(commandsPath); logRunnerInfo(bot.options.logger, 'Comandos recarregados.');
