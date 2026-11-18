@@ -21,6 +21,22 @@ documentos. Veja a [política completa](VERSIONING.md).
 
 </details>
 
+## v0.4.0 · 17/11/2026
+
+Despacho de alto volume, redução de chamadas REST, erros tipados, hooks de guarda, logger compatível com Pino e encerramento limitado — a atualização da biblioteca Yuzuha foi preparada em 17/11/2026 (v0.4.0).
+
+**Notas de comportamento**
+- `onCooldownCapacity` em `rateLimits` passa a usar `'evict'` como padrão ao atingir `maxCooldowns` (despejando o vencimento mais próximo e registrando `rate_limit.evicted` em vez de derrubar comandos com `COOLDOWN_CAPACITY`); passe `onCooldownCapacity: 'throw'` para manter o erro.
+- Falhas de configuração, persistência e transporte agora usam `ConfigError`, `StoreError` e `TransportError` (todas subclasses de `YuzuhaError`, com os mesmos códigos listados em `YUZUHA_ERROR_CODES`).
+- `onError(error, ctx, info)` passa a receber `ErrorReportInfo` congelado no terceiro parâmetro (`source`, `event?`, `ctx?`, `executionID?`); callbacks existentes de 1 ou 2 parâmetros permanecem compatíveis.
+- `FluxerTransport.edit`, `delete` e `react` enviam requisições diretas às rotas REST sem `fetchMessage` prévio.
+
+- **Transporte e permissões:** `FluxerTransport.member()` ordena cargos em passagem única com `compareSnowflake` (sem `BigInt`) e busca o canal em paralelo via `Promise.all`; `AuthorizationService`, `CommandContext.prepare()` e `bindAuthorizedResources` compartilham `MemberMemo` por execução com deduplicação de promessas em voo e invalidação após mutações de cargos/overwrites; novo `MemberCache` (`YuzuhaOptions.memberCache`) oferece cache LRU+TTL invalidado automaticamente por eventos do gateway. `MockTransport` expõe contadores `calls` e `resetCalls()`, acompanhado do benchmark `benchmarks/rest-calls.mjs`.
+- **Agendamento e limpeza de TTL:** `Scheduler` substitui o polling fixo de 1s por timer calculado para o próximo vencimento (limitado a `pollMs` padrão de 30s) usando os `timers` injetados do bot, espaça recuperações em segundo plano por `leaseMs / 3` e escaneia claims/saturação de `globalConcurrency` em passada única. `VariableService` passa a purgar chaves com TTL vencido preguiçosamente em transações de escrita, e `YuzuhaOptions.variables` + `bot.sweepVariables()` executam varredura incremental em segundo plano.
+- **Concorrência, prefixos, rate limits e coletores:** novo `YuzuhaOptions.concurrency` (`max`, `perGuild`, `maxPending`) garante justiça por servidor com fila FIFO e evento `dispatch.dropped`; `YuzuhaOptions.prefixCache` (`ttlMs`, `max?`) + `bot.invalidatePrefix()` cacheiam prefixos dinâmicos via LRU e `ValidatedPrefixCache` de 256 entradas reaproveita arrays congelados; deduplicação usa dois baldes temporais geracionais configuráveis via `rateLimits`; coletores passam a usar fila circular limitada (`maxBuffer`, padrão `1_000`) e limpam `collector.collected`; o gateway pré-filtra mensagens de bots e prefixos estáticos antes de `incoming()`, o registro pré-compila mapas de flags e `route()`/`CommandRegistry` substituem regex de corte por varredura de índices.
+- **Erros, hooks e retry:** adicionados `YUZUHA_ERROR_CODES`, `isYuzuhaError(error, ...codes)`, `TransportError`, `StoreError` e `ConfigError`; `YuzuhaOptions.errorReply` personaliza respostas de erro; `YuzuhaOptions.hooks` (`onCooldown`, `onDenied`, `onUnknownCommand`) junto com `GuardError.remainingMs` e reason `'CHECK_FAILED'` interceptam guardas e comandos desconhecidos antes do erro padrão; `TransportRetryPolicy` adiciona `backoff`, `maxDelayMs`, `jitter`, `random`, `retryOn` e campo `delayMs` em `transport.retry`.
+- **Observabilidade e ciclo de vida:** novo `YuzuhaOptions.logger` (compatível com Pino, `false` para silenciar fallbacks) e `createConsoleLogger({ level? })` encaminham logs por nível sem alterar o resultado dos comandos; `currentExecution()` (`AsyncLocalStorage`) propaga `executionID`, origem e dono em handlers, retries, erros, TTL e agendamentos (`destroy()` só retorna antecipado para o dono da execução); `destroy({ timeoutMs })`, `bot.handleSignals()` e handlers de `timeoutMs`, `unhandledRejection` e `uncaughtException` na CLI limitam a drenagem e registram `shutdown.timeout`.
+
 ## v0.3.2 · 09/11/2026
 
 Limpeza de mensagens com `ctx.purge`, TTL de mensagens existentes, resolver com autor padrão e registro de emoji — a atualização da biblioteca Yuzuha foi preparada em 09/11/2026 (v0.3.2).

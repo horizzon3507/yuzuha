@@ -1,6 +1,6 @@
 {
   "name": "yuzuha",
-  "version": "0.3.2",
+  "version": "0.4.0",
   "description": "Fluxer bots with simple scripts and typed JavaScript/TypeScript.",
   "type": "module",
   "license": "MIT",
