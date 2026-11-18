@@ -1,6 +1,8 @@
 import { Events } from '@fluxerjs/core';
 import type { Yuzuha } from '../bot.js';
 import { ScriptError } from '../errors.js';
+import { startHealthServer } from '../framework/health.js';
+import type { HealthMetricsSource, HealthServer } from '../framework/health.js';
 import type { YuzuhaLogger } from '../framework/logging.js';
 import { reportError } from '../framework/reporting.js';
 import { watchCommands } from './watch.js';
@@ -15,6 +17,9 @@ export interface RunnerTarget {
 export interface RunBotOptions {
   target?: Pick<NodeJS.Process, 'on' | 'once' | 'off'> | RunnerTarget;
   timeoutMs?: number;
+  healthPort?: number;
+  healthHost?: string;
+  onHealthListening?: (server: HealthServer) => void;
 }
 
 function logRunnerInfo(logger: YuzuhaLogger | false | undefined, message: string): void {
@@ -44,6 +49,7 @@ export async function runBot(
   const target = (runtime?.target ?? process) as RunnerTarget;
   const timeoutMs = runtime?.timeoutMs ?? 10_000;
   let watcher: CommandWatcher | undefined;
+  let healthServer: HealthServer | undefined;
   let closeTask: Promise<void> | undefined;
   let crashing = false;
 
@@ -60,7 +66,10 @@ export async function runBot(
       bot.client.off(Events.Ready, onReady);
       await watcher?.close();
       try { await bot.destroy({ timeoutMs }); }
-      finally { await bot.options.store?.close?.(); }
+      finally {
+        try { await healthServer?.close(); }
+        finally { await bot.options.store?.close?.(); }
+      }
     })();
     return closeTask;
   };
@@ -84,6 +93,23 @@ export async function runBot(
   bot.client.on(Events.Ready, onReady);
 
   try {
+    if (runtime?.healthPort !== undefined) {
+      const candidateMetrics = bot.options.metrics as Partial<HealthMetricsSource> | undefined;
+      const metrics = candidateMetrics && typeof candidateMetrics.render === 'function'
+        ? (candidateMetrics as HealthMetricsSource)
+        : undefined;
+      healthServer = await startHealthServer(bot, {
+        port: runtime.healthPort,
+        ...(runtime.healthHost !== undefined ? { host: runtime.healthHost } : {}),
+        ...(metrics ? { metrics } : {}),
+      });
+      runtime.onHealthListening?.(healthServer);
+      if (closeTask) {
+        await healthServer.close();
+        await closeTask;
+        return;
+      }
+    }
     await bot.login();
     if (closeTask) { await closeTask; return; }
     if (development) watcher = watchCommands(commandsPath, async () => {

@@ -15,8 +15,8 @@ yuzuha data <stats|cleanup|backup|restore> <store> [opções] Manutenção offli
 yuzuha functions --catalog [--config arquivo] Exporta catálogo JSON
 yuzuha doctor [config] [--json]            Diagnostica ambiente e configuração sem login
 yuzuha editor                             Mostra o caminho da extensão VS Code
-yuzuha run [config]                        Carrega .env e conecta
-yuzuha dev [config]                        Recarrega comandos ao editar
+yuzuha run [config] [--health-port porta] [--health-host host] Carrega .env e conecta
+yuzuha dev [config] [--health-port porta] [--health-host host] Recarrega comandos ao editar
 
 Bases: ${Object.keys(botTemplates).join(', ')}.
 
@@ -31,10 +31,11 @@ export type CLIArguments = { action: 'help' } | { action: 'version' }
   | { action: 'test'; input: string; json: boolean }
   | { action: 'data'; operation: 'stats' | 'cleanup' | 'backup' | 'restore'; input: string; json: boolean;
       limit?: number; cursor?: string; file?: string; policy?: 'replace' | 'merge'; apply: boolean }
-  | { action: 'check' | 'doctor'; input?: string; json: boolean }
+  | { action: 'check'; input?: string; json: boolean }
+  | { action: 'doctor'; input?: string; json: boolean }
   | { action: 'templates'; json: boolean }
   | { action: 'editor' }
-  | { action: 'run' | 'dev'; input?: string };
+  | { action: 'run' | 'dev'; input?: string; healthPort?: number; healthHost?: string };
 
 export function parseArguments(args: string[]): CLIArguments {
   const [action, ...rest] = args;
@@ -124,14 +125,47 @@ export function parseArguments(args: string[]): CLIArguments {
       ...(limit === undefined ? {} : { limit }), ...(cursor === undefined ? {} : { cursor }),
       ...(file === undefined ? {} : { file }), ...(policy === undefined ? {} : { policy }) };
   }
-  if (action === 'check' || action === 'doctor' || action === 'run' || action === 'dev') {
+  if (action === 'check' || action === 'doctor') {
     let input: string | undefined, json = false;
     for (const value of rest) {
-      if ((action === 'check' || action === 'doctor') && value === '--json' && !json) json = true;
+      if (value === '--json' && !json) json = true;
       else if (!value.startsWith('-') && !input) input = value;
       else fail();
     }
-    return action === 'check' || action === 'doctor' ? { action, input, json } : { action, input };
+    return { action, input, json };
+  }
+  if (action === 'run' || action === 'dev') {
+    let input: string | undefined, healthPort: number | undefined, healthHost: string | undefined;
+    for (let i = 0; i < rest.length; i++) {
+      const value = rest[i]!;
+      if (value === '--health-port' && healthPort === undefined) {
+        const raw = rest[++i];
+        const parsed = raw !== undefined && /^\d+$/.test(raw) ? Number(raw) : Number.NaN;
+        if (!Number.isSafeInteger(parsed) || parsed < 1 || parsed > 65_535) {
+          fail('Porta de healthcheck deve estar entre 1 e 65535.');
+        }
+        healthPort = parsed;
+      } else if (value === '--health-host' && healthHost === undefined) {
+        const raw = rest[++i];
+        if (!raw || raw.startsWith('-') || raw !== raw.trim()) {
+          fail('--health-host exige um endereço válido.');
+        }
+        healthHost = raw;
+      } else if (!value.startsWith('-') && !input) {
+        input = value;
+      } else {
+        fail();
+      }
+    }
+    if (healthHost !== undefined && healthPort === undefined) {
+      fail('--health-host exige --health-port <porta>.');
+    }
+    return {
+      action,
+      input,
+      ...(healthPort !== undefined ? { healthPort } : {}),
+      ...(healthHost !== undefined ? { healthHost } : {}),
+    };
   }
   return fail(`Comando desconhecido: ${action}.`);
 }

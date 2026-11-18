@@ -87,7 +87,10 @@ export async function main(args = process.argv.slice(2)): Promise<void> {
     } finally { await bot.destroy(); await bot.options.store?.close?.(); }
     return;
   }
-  await runBot(bot, commandsPath, options.action === 'dev');
+  await runBot(bot, commandsPath, options.action === 'dev', {
+    ...(options.healthPort !== undefined ? { healthPort: options.healthPort } : {}),
+    ...(options.healthHost !== undefined ? { healthHost: options.healthHost } : {}),
+  });
 }
 
 export function formatCLIError(error: unknown, json: boolean): string {
