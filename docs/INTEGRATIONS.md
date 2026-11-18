@@ -78,8 +78,6 @@ Processos separados usam o peer opcional `@fluxerjs/sharding` (carregado sob
 demanda; se ausente, falha com `ConfigError('SHARDING_UNAVAILABLE')`). Em um
 processo filho do `ShardingManager`, `bot.login()` anexa `attachShardClientUtil`
 automaticamente quando necessário e notifica `notifyReady()` após conectar.
-`ClientCluster` e `ClientClusterEvents` do core coordenam clientes de tokens
-distintos no mesmo processo e não substituem sharding de um mesmo bot.
 
 Não execute callbacks serializados ou `broadcastEval` com dados não confiáveis de
 usuários ou scripts. Para estado compartilhado entre shards, prefira um store
@@ -88,3 +86,38 @@ transacional com `Lock` e `RateLimiter` distribuídos; veja [SCHEDULER.md](SCHED
 Fonte: [guia oficial de sharding](https://github.com/fluxerjs/core/blob/main/apps/docs/content/guides/sharding.mdx).
 A conexão real de shards precisa de validação num servidor autorizado; os testes
 da biblioteca conferem roteamento snowflake, liderança, IPC mockado e client sem login.
+
+### Cluster multi-bot no mesmo processo (`YuzuhaCluster`)
+
+Enquanto sharding divide **um mesmo token** em fatias de servidores, `YuzuhaCluster`
+e `YuzuhaClusterEvents` supervisionam **múltiplos bots independentes** (tokens
+distintos ou instâncias Fluxer separadas via `discovery`) no mesmo processo sobre
+`ClientCluster`:
+
+```ts
+import { MemoryStore, YuzuhaCluster, YuzuhaClusterEvents } from 'yuzuha';
+
+const cluster = new YuzuhaCluster<{ prefix: string }>({
+  botOptions: (_runtime, meta) => ({
+    prefix: meta?.prefix ?? '!',
+    store: new MemoryStore(),
+  }),
+  setup(bot) {
+    bot.command({ name: 'ping', async run(ctx) { await ctx.reply('pong'); } });
+  },
+});
+
+cluster.on(YuzuhaClusterEvents.RuntimeReady, entry => {
+  console.log(entry.id, entry.status);
+});
+
+await cluster.addAll([
+  { id: 'instancia-a', token: process.env.TOKEN_A!, meta: { prefix: '!' } },
+  { id: 'instancia-b', token: process.env.TOKEN_B!, discovery: 'https://chat.exemplo.org', meta: { prefix: '?' } },
+]);
+```
+
+Cada entrada mantém seu próprio `Client`, `Yuzuha`, registro de comandos e `Store`
+isolados. Tokens nunca ficam retidos nas entradas nem na receita interna: `restart(id, { token })`
+exige o novo token explicitamente, destrói o bot e o client anteriores sem vazar
+listeners e reconstrói o runtime com a mesma configuração não sensível. Veja [API.md](API.md).

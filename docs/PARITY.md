@@ -49,7 +49,7 @@ precisam de `overrides` para o core fixado, como no manifesto do Yuzuha.
 | Instância e aplicação | `ctx.resources.instance` (describe, gatewayInfo, application, oauthApplications, metadados de emoji/sticker, resolveEmoji); `Client.fromDiscovery`, client injetado | Mesmo adaptador do client |
 | Áudio em voz | `FluxerVoice` sobre `@fluxerjs/voice` opcional; Lavalink v4 com plugin de áudio, `FluxerLavalinkBridge`, filas editáveis e recuperação em `yuzuha/music` | Sem wrappers de reprodução; moderação de membros usa o SDK core |
 | Sharding | `bot.shard`, `ctx.shard`, `shardIdForGuild`, scheduler líder por padrão e `yuzuha/sdk/sharding` sobre `@fluxerjs/sharding` (peer opcional) | Sem coordenação própria |
-| Cluster/subpaths | `yuzuha/sdk/cluster` e demais subpaths `yuzuha/sdk/*` espelham `@fluxerjs/core/*` e os pacotes satélites | Sem wrapper próprio |
+| Cluster/subpaths | `YuzuhaCluster` e `YuzuhaClusterEvents` sobre `ClientCluster`; `yuzuha/sdk/cluster` e demais subpaths `yuzuha/sdk/*` espelham `@fluxerjs/core/*` e os pacotes satélites | Sem coordenação própria |
 | Estado e casos | `ctx.data`, TTL, userFor, transaction entre chaves e stores | Variáveis, TTL, incrementos, listas, casos e dataTransaction com operações declarativas |
 | Agendamentos | `ctx.scheduler`, cron/fusos, concorrência limitada, histórico, heartbeat e controles | schedule, scheduleEvery, scheduleCron, controles, histórico, reexecução e retry com jitter |
 | HTTP | `request`, `requestBytes`, `stream`, `multipart`, `withPolicy` e cancelamento | `$http`, `$httpJson`, `$httpMultipart` e download de imagens com política de rede por comando |
@@ -151,7 +151,8 @@ um servidor de teste antes de distribuir um bot para produção.
 `yuzuha/images` oferece transformações opcionais com Sharp; `yuzuha/canvas`
 oferece composição opcional com `@napi-rs/canvas`. Shards são expostos em
 `bot.shard` e `ctx.shard`, com supervisão de processos pelo peer opcional
-`@fluxerjs/sharding`. Veja [IMAGES.md](IMAGES.md) e a [auditoria de integrações](INTEGRATIONS.md).
+`@fluxerjs/sharding`, e múltiplos bots de tokens distintos no mesmo processo são
+supervisionados por `YuzuhaCluster`. Veja [IMAGES.md](IMAGES.md) e a [auditoria de integrações](INTEGRATIONS.md).
 
 A CLI também gera sete bases nativas JS/TS com testes offline específicos;
 `templates` lista as opções sem configuração. Esses comandos de bot não são

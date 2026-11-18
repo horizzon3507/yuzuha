@@ -90,6 +90,30 @@ confirmação imediata para poder terminar; o encerramento efetivo aguarda esse
 retorno. O login pendente recebe cancelamento. Não use esse reconhecimento
 dentro do handler como se todos os recursos já estivessem fechados.
 
+## Cluster multi-bot (`YuzuhaCluster`)
+
+`YuzuhaCluster<TMeta>` supervisiona múltiplos bots `Yuzuha` com tokens
+independentes no mesmo processo sobre `ClientCluster` (`@fluxerjs/core/cluster`),
+sem armazenar tokens em memória inspecionável.
+
+| Opção (`YuzuhaClusterOptions<TMeta>`) | Contrato |
+|---|---|
+| `createBot(runtime, meta?)` | Fábrica sync/async que retorna `Yuzuha` construído sobre `runtime.client` (mutuamente exclusivo com `botOptions`) |
+| `botOptions` | Objeto `Omit<YuzuhaOptions, 'client' \| 'clientOptions'>` ou função `(runtime, meta?) => ...`; quando `store` e `name` são omitidos e `runtime.id` é válido, usa `name: runtime.id` |
+| `setup(bot, runtime, meta?)` | Hook executado antes do login para registrar comandos, plugins e eventos por runtime |
+| `suppressBetaWarning` | Suprime o aviso beta de `ClientCluster` no processo; padrão `true` |
+
+| Método / Propriedade | Contrato |
+|---|---|
+| `add(input)` | Cria/configura o `Yuzuha`, conecta o runtime (`id`, `token`, `discovery? \| clientOptions? \| client?`, `meta?`, overrides locais e `signal?`) e retorna `YuzuhaClusterEntry<TMeta>` |
+| `addAll(inputs)` | Conecta vários runtimes em paralelo via `Promise.allSettled` sem abortar os saudáveis se um falhar |
+| `restart(id, { token, signal?, timeoutMs? })` | Encerra o `Yuzuha` e o `Client` atuais e reconstrói o runtime com novo token preservando a receita não sensível (recusa `client` pré-construído com `CLUSTER_OPTIONS`) |
+| `remove(id, { timeoutMs? })` | Cancela login pendente ou executa `bot.destroy()` + `cluster.remove(id)`; retorna `boolean` |
+| `destroy({ timeoutMs? })` | Encerra todos os bots e runtimes de forma idempotente e bloqueia novas adições com `CLUSTER_CLOSED` |
+| `handleSignals(options?)` | Registra `SIGINT`/`SIGTERM` (ou `signals` customizados) para encerrar todo o cluster e devolve um removedor idempotente |
+| `size`, `has(id)`, `get(id)`, `values()`, `runtimeValues()` | Inspeção e iteração sobre `YuzuhaClusterEntry<TMeta>` (`id`, `bot`, `client`, `runtime`, `status`, `lastError`, `meta`) |
+| `on`, `once`, `off` (`YuzuhaClusterEvents`) | Eventos tipados `runtimeAdded`, `runtimeReady`, `runtimeRemoved` e `runtimeError` |
+
 ## Comandos e argumentos
 
 `defineCommand` preserva a definição recebida no formato de array e normaliza
@@ -382,7 +406,8 @@ exceto a comparação, que retorna -1, 0 ou 1. Veja [operações de dados](funct
 | `YuzuhaError` | Erro base com `code` tipado (`YuzuhaErrorCode \| (string & {})`) para diagnóstico (inclui `PLUGIN_DEPENDENCY`, `PLUGIN_NOT_FOUND`, `SERVICE_DUPLICATE`, `SERVICE_KEY`, `SERVICE_MISSING`) |
 | `TransportError` | Subclasse de `YuzuhaError` para falhas do transporte (`ROLES_UNAVAILABLE`, `CHANNEL_GUILD`, `VOICE_CHANNEL`, `MODERATION_ACTION`, `NOT_FOUND`, `API_ERROR`) |
 | `StoreError` | Subclasse de `YuzuhaError` para falhas de persistência (`STORE_NAME`, `STORE_CLOSED`, `STORE_ASYNC`, `STORE_CORRUPT`, `STORE_INVALID`, `STORE_READONLY`) |
-| `ConfigError` | Subclasse de `YuzuhaError` para configuração, opções inválidas e token ausente (`CONFIG_MISSING`, `CONFIG_INVALID`, `MEMBER_CACHE_OPTIONS`, `MESSAGES_OPTIONS`, `RATE_LIMIT_OPTIONS`, `LOCK_OPTIONS`, `SHARDING_OPTIONS`, `SHARDING_UNAVAILABLE`, `PREFIX`, `EMOJI_OPTIONS`, `ENGINE_INVALID`, `VARIABLE_SWEEP_OPTIONS`, `OPTIONS`, `TOKEN_MISSING`) |
+| `ConfigError` | Subclasse de `YuzuhaError` para configuração, opções inválidas e token ausente (`CONFIG_MISSING`, `CONFIG_INVALID`, `CLUSTER_OPTIONS`, `MEMBER_CACHE_OPTIONS`, `MESSAGES_OPTIONS`, `RATE_LIMIT_OPTIONS`, `LOCK_OPTIONS`, `SHARDING_OPTIONS`, `SHARDING_UNAVAILABLE`, `PREFIX`, `EMOJI_OPTIONS`, `ENGINE_INVALID`, `VARIABLE_SWEEP_OPTIONS`, `OPTIONS`, `TOKEN_MISSING`) |
+| `CLUSTER_CLOSED` | Operação (`add`, `addAll`, `restart` ou `handleSignals`) chamada após `cluster.destroy()` |
 | `SHARDING_UNAVAILABLE` | Operação exige `@fluxerjs/sharding` instalado ou processo supervisionado por `ShardingManager` |
 | `ScriptError` | Erro com fonte, offset, arquivo, linha, coluna e `format()` |
 | `GuardError` / `GUARD` | Condição de uso recusada; mensagem apropriada ao usuário |
