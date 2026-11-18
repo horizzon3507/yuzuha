@@ -15,7 +15,7 @@ yuzuha data <stats|cleanup|backup|restore> <store> [opções] Manutenção offli
 yuzuha functions --catalog [--config arquivo] Exporta catálogo JSON
 yuzuha doctor [config] [--json]            Diagnostica ambiente e configuração sem login
 yuzuha editor                             Mostra o caminho da extensão VS Code
-yuzuha run [config] [--health-port porta] [--health-host host] Carrega .env e conecta
+yuzuha run [config] [--shards <auto|N>] [--shards-per-process <N>] [--health-port porta] [--health-host host] Carrega .env e conecta
 yuzuha dev [config] [--health-port porta] [--health-host host] Recarrega comandos ao editar
 
 Bases: ${Object.keys(botTemplates).join(', ')}.
@@ -35,7 +35,8 @@ export type CLIArguments = { action: 'help' } | { action: 'version' }
   | { action: 'doctor'; input?: string; json: boolean }
   | { action: 'templates'; json: boolean }
   | { action: 'editor' }
-  | { action: 'run' | 'dev'; input?: string; healthPort?: number; healthHost?: string };
+  | { action: 'run'; input?: string; shards?: number | 'auto'; shardsPerProcess?: number; healthPort?: number; healthHost?: string }
+  | { action: 'dev'; input?: string; healthPort?: number; healthHost?: string };
 
 export function parseArguments(args: string[]): CLIArguments {
   const [action, ...rest] = args;
@@ -136,6 +137,7 @@ export function parseArguments(args: string[]): CLIArguments {
   }
   if (action === 'run' || action === 'dev') {
     let input: string | undefined, healthPort: number | undefined, healthHost: string | undefined;
+    let shards: number | 'auto' | undefined, shardsPerProcess: number | undefined;
     for (let i = 0; i < rest.length; i++) {
       const value = rest[i]!;
       if (value === '--health-port' && healthPort === undefined) {
@@ -151,6 +153,24 @@ export function parseArguments(args: string[]): CLIArguments {
           fail('--health-host exige um endereço válido.');
         }
         healthHost = raw;
+      } else if (action === 'run' && value === '--shards' && shards === undefined) {
+        const raw = rest[++i];
+        if (raw === undefined || raw.startsWith('-')) return fail('Use --shards <auto|1..4096>.');
+        if (raw === 'auto') shards = 'auto';
+        else {
+          const parsed = Number(raw);
+          if (!/^\d+$/.test(raw) || !Number.isSafeInteger(parsed) || parsed < 1 || parsed > 4_096) {
+            fail('Use --shards <auto|1..4096>.');
+          }
+          shards = parsed;
+        }
+      } else if (action === 'run' && value === '--shards-per-process' && shardsPerProcess === undefined) {
+        const raw = rest[++i];
+        const parsed = raw !== undefined && /^\d+$/.test(raw) ? Number(raw) : Number.NaN;
+        if (!Number.isSafeInteger(parsed) || parsed < 1 || parsed > 4_096) {
+          fail('Use --shards-per-process <1..4096>.');
+        }
+        shardsPerProcess = parsed;
       } else if (!value.startsWith('-') && !input) {
         input = value;
       } else {
@@ -160,9 +180,22 @@ export function parseArguments(args: string[]): CLIArguments {
     if (healthHost !== undefined && healthPort === undefined) {
       fail('--health-host exige --health-port <porta>.');
     }
+    if (shardsPerProcess !== undefined && shards === undefined) {
+      fail('--shards-per-process exige --shards.');
+    }
+    if (action === 'dev') {
+      return {
+        action,
+        input,
+        ...(healthPort !== undefined ? { healthPort } : {}),
+        ...(healthHost !== undefined ? { healthHost } : {}),
+      };
+    }
     return {
       action,
       input,
+      ...(shards === undefined ? {} : { shards }),
+      ...(shardsPerProcess === undefined ? {} : { shardsPerProcess }),
       ...(healthPort !== undefined ? { healthPort } : {}),
       ...(healthHost !== undefined ? { healthHost } : {}),
     };
