@@ -116,6 +116,8 @@ export { HttpService } from './services/http.js';
 export type { HttpOptions, HttpRequest, HttpResponse, HttpPolicy, HttpMultipartPart, HttpStreamResponse } from './services/http.js';
 export { StateMaintenance } from './services/state-maintenance.js';
 export type { StoreStatistics, CleanupOptions, CleanupResult, StateBackup, RestoreOptions, RestoreReport } from './services/state-maintenance.js';
+export { GuildSettings, guildPrefix } from './services/guild-settings.js';
+export type { GuildSettingsOptions, GuildSettingsRecord, GuildSettingsValidator } from './services/guild-settings.js';
 export type { ScheduleRecord, ScheduleExecutionRecord } from './domain/state.js';
 export { defineConfig } from './config.js';
 export type { YuzuhaConfig } from './config.js';

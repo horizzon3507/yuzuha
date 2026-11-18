@@ -1,12 +1,14 @@
+import type { IncomingMessage } from '../domain/messages.js';
 import type { JsonValue, State } from '../domain/state.js';
 import { isPlainRecord, validateVariableValue } from '../domain/state-validation.js';
 import type { Store } from '../ports/store.js';
 import { cloneValue } from '../shared/clone.js';
 import { ConfigError, YuzuhaError } from '../shared/errors.js';
 
+export type GuildSettingsRecord = Record<string, JsonValue | undefined>;
 export type GuildSettingsValidator<T> = (candidate: T) => boolean | string | void;
 
-export interface GuildSettingsOptions<T extends Record<string, JsonValue>> {
+export interface GuildSettingsOptions<T extends GuildSettingsRecord> {
   /** Store onde as configurações por servidor serão persistidas. */
   store: Store;
   /** Objeto JSON plano com os valores padrão mesclados em cada leitura. */
@@ -56,21 +58,21 @@ function readPersistedFromState(state: Readonly<State>, key: string, now: number
   return state.variables[key];
 }
 
-function clonePlainObject<T extends Record<string, JsonValue>>(source: T): T {
+function clonePlainObject<T extends GuildSettingsRecord>(source: T): T {
   const copy: Record<string, JsonValue> = {};
   for (const [key, value] of Object.entries(source)) {
     if (key === '__proto__' || value === undefined) continue;
     copy[key] = cloneValue(value);
   }
-  return copy as T;
+  return copy as unknown as T;
 }
 
-function mergeWithDefaults<T extends Record<string, JsonValue>>(
+function mergeWithDefaults<T extends GuildSettingsRecord>(
   defaults: T,
   persisted: Record<string, unknown> | undefined,
 ): T {
   const merged = clonePlainObject(defaults) as Record<string, JsonValue>;
-  if (!persisted) return merged as T;
+  if (!persisted) return merged as unknown as T;
   for (const [key, value] of Object.entries(persisted)) {
     if (key === '__proto__' || value === undefined) continue;
     if (!validateVariableValue(value)) {
@@ -78,11 +80,11 @@ function mergeWithDefaults<T extends Record<string, JsonValue>>(
     }
     merged[key] = cloneValue(value);
   }
-  return merged as T;
+  return merged as unknown as T;
 }
 
 /** Serviço tipado de configurações por servidor sobre `Store` com cache LRU+TTL e atualização atômica. */
-export class GuildSettings<T extends Record<string, JsonValue>> {
+export class GuildSettings<T extends GuildSettingsRecord = Record<string, JsonValue>> {
   readonly namespace: string;
   private readonly store: Store;
   private readonly defaults: T;
@@ -198,7 +200,7 @@ export class GuildSettings<T extends Record<string, JsonValue>> {
     const committed = await this.store.update(state => {
       const next = mergeWithDefaults(this.defaults, value);
       this.assertValid(next);
-      state.variables[key] = cloneValue(next);
+      state.variables[key] = cloneValue(next) as JsonValue;
       if (state.variableExpirations) delete state.variableExpirations[key];
       seq = ++this.writeSeq;
       this.committedSeq.set(id, seq);
@@ -237,9 +239,9 @@ export class GuildSettings<T extends Record<string, JsonValue>> {
         }
         next[field] = cloneValue(fieldValue);
       }
-      const typedNext = next as T;
+      const typedNext = next as unknown as T;
       this.assertValid(typedNext);
-      state.variables[key] = cloneValue(typedNext);
+      state.variables[key] = cloneValue(typedNext) as JsonValue;
       if (state.variableExpirations) delete state.variableExpirations[key];
       seq = ++this.writeSeq;
       this.committedSeq.set(id, seq);
@@ -386,3 +388,35 @@ export class GuildSettings<T extends Record<string, JsonValue>> {
     this.cache.set(guildID, { value: cloneValue(value), expiresAt: now + this.ttlMs });
   }
 }
+
+function clonePrefixValue(value: string | readonly string[]): string | string[] {
+  return Array.isArray(value) ? [...value] : (value as string);
+}
+
+/**
+ * Cria um resolvedor dinâmico de prefixo para `YuzuhaOptions.prefix` apoiado em {@link GuildSettings}.
+ * Retorna `fallback` sincronamente em DMs (`!message.guildID`) e consulta `settings.get(guildID)` em servidores.
+ */
+export function guildPrefix<T extends GuildSettingsRecord & { prefix?: string | string[] | null }>(
+  settings: GuildSettings<T>,
+  fallback: string | string[] = '!',
+): (message: IncomingMessage) => string | string[] | Promise<string | string[]> {
+  if (!settings || typeof (settings as { get?: unknown }).get !== 'function') {
+    throw new ConfigError('GUILD_SETTINGS_OPTIONS', 'settings deve ser uma instância válida de GuildSettings.');
+  }
+  const candidates = Array.isArray(fallback) ? [...fallback] : [fallback];
+  if (candidates.length === 0 || candidates.some(item => typeof item !== 'string' || !item || /\s/.test(item))) {
+    throw new ConfigError('PREFIX', 'Prefixos devem ser textos não vazios sem espaços.');
+  }
+  const safeFallback: string | readonly string[] = Array.isArray(fallback) ? Object.freeze(candidates) : fallback;
+
+  return (message: IncomingMessage): string | string[] | Promise<string | string[]> => {
+    if (!message.guildID) return clonePrefixValue(safeFallback);
+    return settings.get(message.guildID).then(current => {
+      const configured = current.prefix;
+      if (configured === undefined || configured === null) return clonePrefixValue(safeFallback);
+      return clonePrefixValue(configured);
+    });
+  };
+}
+
