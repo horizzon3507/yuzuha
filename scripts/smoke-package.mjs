@@ -387,7 +387,8 @@ try {
       const compiler = join(directory, 'node_modules/typescript/bin/tsc');
       await run(process.execPath, [compiler, '--noEmit'], directory);
       await writeFile(join(directory, 'extra-types.ts'), `
-        import { arg, defineCommand, EventContext, HttpService, StateMaintenance } from 'yuzuha';
+        import { arg, defineCommand, EventContext, GuildSettings, guildPrefix, HttpService, StateMaintenance } from 'yuzuha';
+        import type { GuildSettingsOptions, GuildSettingsValidator } from 'yuzuha';
         import { createTestBot, TestClock } from 'yuzuha/testing';
         import { MockMusicBackend, mockTrack } from 'yuzuha/testing';
         import { transformImage } from 'yuzuha/images';
@@ -475,6 +476,11 @@ try {
           await response.body.cancel();
           await http.multipart({ method: 'POST', url: 'https://example.com', parts: [part] });
           const maintenance = new StateMaintenance(ctx.store);
+          const settings = new GuildSettings({ store: ctx.store, defaults: { prefix: '!' } });
+          const prefixFn = guildPrefix(settings, '!');
+          const validator: GuildSettingsValidator<{ prefix: string }> = value => value.prefix.length > 0;
+          const settingsOpts: GuildSettingsOptions<{ prefix: string }> = { store: ctx.store, defaults: { prefix: '!' }, validate: validator };
+          void [prefixFn, settingsOpts];
           const backup: StateBackup = await maintenance.backup();
           const emoji: EmojiCreateInput = { name: 'teste', image: 'AA==' };
           const bulk: EmojiBulkResult = await ctx.resources.expressions.createEmojisBulk(ctx.guildID, [emoji]);

@@ -270,7 +270,8 @@ Aceita overrides parciais por método, tipados por `MockResourceOverrides`.
 - `new StateMaintenance(store)` expõe `stats`, `cleanupExpired`, `backup` e
   `restore`. `StateBackup` usa versão própria e `RestoreOptions` exige política
   de conflito; o padrão é simulação. Os tipos de opções e relatórios são
-  exportados na raiz. Veja [STORAGE.md](STORAGE.md).
+  exportados na raiz. `GuildSettings` e `guildPrefix` oferecem configurações JSON
+  tipadas por servidor com cache LRU+TTL e prefixos dinâmicos. Veja [STORAGE.md](STORAGE.md).
 - `messages.preload` e `expressions.createEmojisBulk` usam lotes limitados;
   `EmojiCreateInput` e `EmojiBulkResult` são públicos. Recursos de contexto
   verificam autorização compartilhada para cargos, canais e webhooks.
