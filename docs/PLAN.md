@@ -73,6 +73,25 @@ recursos. O runtime de scripts só é registrado quando o function mode é usado
 
 ## Entregas e dependências
 
+A atualização 0.7.0 aprofunda a cobertura nativa do SDK, sharding, clusters e
+operação contínua sobre o Fluxer.js 3.3.0: expõe contexto de shard nativo
+(`bot.shard`, `ctx.shard`, `shardIdForGuild`, coordenação leader-only padrão do
+scheduler/sweep), supervisão multiprocesso em `yuzuha run --shards <auto|N>
+[--shards-per-process <N>]` sobre `@fluxerjs/sharding` e supervisão multi-bot em
+processo via `YuzuhaCluster` (`ClientCluster`); generaliza `bot.contextEvent`,
+`defineContextEvent` e `plugin.contextEvents` para qualquer `ClientEventName`
+via `adaptClientEvent` e encaminha eventos de gateway/shards a `onLog`/`logger`
+com `gatewayLogs`; adiciona `gateway.fetchMembers` aguardável por chunks com
+`nonce`/`AbortSignal`, rastreamento reativo de estados de voz (`VoiceStateTracker`
+em `bot.voiceStates`/`ctx.voiceStates`), `users.auditLogs` com filtros de consulta,
+`changes`/`options` normalizados, guarda `ViewAuditLog` e mocks de teste,
+webhooks ricos (embeds, anexos, `allowedMentions`, `threadID`, `avatar`,
+`channelID` com autorização dupla e `fetchMessage`), predicados `filter`
+síncronos e metadados completos `IncomingMessage` em todos os collectors,
+presença rica (`PresenceInput`, `bot.setPresence`, `bot.rotatePresence`) e
+suporte declarativo a `cacheSweepers`, `discovery` (`Yuzuha.fromDiscovery` e
+resolução em `login()`) e inspeção `client` no `yuzuha doctor`.
+
 A atualização 0.6.0 expande a ergonomia nativa, internacionalização, plugins e
 observabilidade operacional: introduz `MessageCatalog`, `DEFAULT_MESSAGES` e
 resolução multi-idioma síncrona/assíncrona (`messages`, `locale`, `ctx.locale`,

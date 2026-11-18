@@ -1,16 +1,16 @@
 # Versionamento
 
 O Yuzuha aplica o formato Hory ao histórico e usa **SemVer simples** no pacote.
-A versão desta atualização é **0.6.0**.
+A versão desta atualização é **0.7.0**.
 
 ## Pacote e histórico
 
 | Lugar | Formato nesta versão |
 |---|---|
-| `package.json` e entrada raiz de `package-lock.json` | `0.6.0` |
-| Pacote npm e saída de `yuzuha --version` | `0.6.0` |
-| Título do changelog | `## v0.6.0 · 17/11/2026` |
-| Tag Git | `v0.6.0` |
+| `package.json` e entrada raiz de `package-lock.json` | `0.7.0` |
+| Pacote npm e saída de `yuzuha --version` | `0.7.0` |
+| Título do changelog | `## v0.7.0 · 17/11/2026` |
+| Tag Git | `v0.7.0` |
 
 O SDK e a CLI pertencem ao mesmo pacote. Para bibliotecas, a convenção Hory mantém
 SemVer sem `m`, sem seções por superfície e sem sufixos de canal.
@@ -41,6 +41,56 @@ A versão do SDK é fixada separadamente. Atualizá-la exige revisar
 gerado por `init` pertence ao consumidor e não precisa acompanhar a biblioteca.
 
 ## Preparar uma atualização
+
+### Migrar para 0.7.0
+
+A 0.7.0 é uma release minor na família `0.x` que amplia a integração nativa com
+sharding, clusters, eventos do SDK, gateway, voz, auditoria, webhooks,
+collectors, presença, varredura de caches e descoberta de instância. O schema
+persistido do `SQLiteStore` permanece em **3** (`State` e `StateBackup`
+inalterados) e o SDK fixado continua em `3.3.0`. Observe os contratos abaixo ao
+atualizar:
+
+- **Autorização de `users.auditLogs` no contexto:** quando a autorização de
+  recursos está ativa (padrão), `ctx.resources.users.auditLogs(guildID, input?)`
+  passa a validar o servidor atual e exigir `ViewAuditLog` para o autor e para o
+  bot antes da consulta, aceitando número (`limit`) ou `AuditLogQueryInput`
+  (`limit`, `userID`, `actionType`, `before`, `after`) e expondo `changes` e
+  `options` normalizados em cada `AuditLogInfo`. Chamadas administrativas fora do
+  escopo de um autor devem usar `bot.resources.users.auditLogs(...)`; em testes
+  offline com `MockTransport`, conceda `PermissionFlags.ViewAuditLog` aos atores
+  que consultam auditoria pelo contexto.
+- **Sharding nativo, CLI e `YuzuhaCluster`:** `bot.shard` e `ctx.shard` expõem
+  `BotShard` (`id`, `ids`, `count`, `isLeader`, `shardIdForGuild`,
+  `broadcastEval`, `fetchClientValues`, `respawn`). Em topologias multi-shard sem
+  `lock` distribuído, o `Scheduler` e a varredura de variáveis rodam apenas no
+  shard líder por padrão (`schedulerMode: 'leader'`); `yuzuha run --shards <auto|N>
+  [--shards-per-process <N>]` supervisiona processos filhos via
+  `@fluxerjs/sharding`, e `YuzuhaCluster` gerencia múltiplos bots independentes
+  em um único processo sobre `ClientCluster`.
+- **Eventos, logs de gateway, membros e voz:** `bot.contextEvent`,
+  `defineContextEvent` e `plugin.contextEvents` agora aceitam qualquer
+  `ClientEventName` do SDK (normalizado por `adaptClientEvent`, com remoção em
+  `bot.off` e `bot.unplugin`); `YuzuhaOptions.gatewayLogs` encaminha eventos de
+  conexão e shards a `onLog`/`logger` (desligado por padrão);
+  `gateway.fetchMembers` aguarda chunks de membros com `nonce` isolado e
+  `AbortSignal`; e `bot.voiceStates` / `ctx.voiceStates` (`VoiceStateTracker`)
+  mantêm o mapa vivo de estados de voz e limpam seus listeners em `destroy()` ou
+  falha de `login()`.
+- **Webhooks ricos, collectors, presença, caches e discovery:** `webhooks.send` e
+  `webhooks.editMessage` suportam embeds, arquivos, `allowedMentions` e
+  `threadID`, `webhooks.edit` aceita `{ name?, avatar?, channelID? }` (exigindo
+  `ManageWebhooks` também no canal de destino ao mover) e `webhooks.fetchMessage`
+  lê mensagens normalizadas; `CollectedMessageInfo` passa a estender
+  `IncomingMessage` com metadados completos e todos os métodos de `collectors`
+  aceitam `filter` síncrono; `users.setPresence` / `bot.setPresence` aceitam
+  `PresenceInput` rico ao lado de `bot.rotatePresence`; e `YuzuhaOptions` /
+  `defineConfig` ganham `cacheSweepers` e `discovery` (`Yuzuha.fromDiscovery`),
+  inspecionados pela checagem `client` do `yuzuha doctor`.
+
+```sh
+npm install yuzuha@0.7.0
+```
 
 ### Migrar para 0.6.0
 
