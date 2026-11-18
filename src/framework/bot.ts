@@ -55,6 +55,8 @@ import type { ScriptEventDefinition } from './script-events.js';
 import type { ScriptEngine } from '../ports/script-engine.js';
 import type { MusicManager } from '../services/music.js';
 import type { NativeVoice } from '../ports/voice.js';
+import { VoiceStateTracker } from '../services/voice-states.js';
+import { attachVoiceStates } from './voice-states.js';
 import { canvasRenderer } from '../infrastructure/canvas/render.js';
 import {
   attachClientShardIfNeeded,
@@ -237,6 +239,8 @@ export class Yuzuha {
   readonly http?: HttpService;
   readonly music?: MusicManager;
   readonly voice?: NativeVoice;
+  readonly voiceStates: VoiceStateTracker;
+  private detachVoiceStates?: () => void;
   private shardState?: BotShard;
   private readonly shardSchedulerMode: ShardSchedulerMode;
   private readonly explicitShardUtil?: ShardClientUtilLike;
@@ -546,6 +550,8 @@ export class Yuzuha {
     this.http = options.http === false ? undefined : options.http ?? new HttpService();
     this.music = options.music;
     this.voice = options.voice;
+    this.voiceStates = new VoiceStateTracker();
+    this.detachVoiceStates = attachVoiceStates(this.client, this.voiceStates);
     if (options.engine !== undefined) this.scriptEngine = assertEngine(options.engine);
     this.registry = new CommandRegistry(() => this.scriptEngine, command => {
       if (command.http) (this.http ?? new HttpService()).withPolicy(command.http);
@@ -1034,6 +1040,7 @@ export class Yuzuha {
           http: this.http,
           music: this.music,
           voice: this.voice,
+          voiceStates: this.voiceStates,
           canvas: this.canvasContext,
           now: this.options.now,
           help: this.contextHelp,
@@ -1140,7 +1147,7 @@ export class Yuzuha {
       resources: this.resources,
       resourcesInjected: this.resourcesInjected,
       argumentTypes: this.customArgumentTypes,
-      scheduler: this.scheduler, http: this.http, music: this.music, voice: this.voice,
+      scheduler: this.scheduler, http: this.http, music: this.music, voice: this.voice, voiceStates: this.voiceStates,
       canvas: this.canvasContext, now: this.options.now, help: this.contextHelp, cooldown: this.contextCooldown, signal,
       cdn: this.cdnService, disableResourceAuthorization: this.options.unsafeDisableResourceAuthorization === true, emoji: this.emojiMap,
       deleteLater: this.contextDeleteLater, isOwner: this.contextIsOwner, isDevGuild: this.contextIsDevGuild,
@@ -1247,6 +1254,9 @@ export class Yuzuha {
       this.detachMemberCache = this.transport.attachCacheInvalidation(this.client);
     }
     this.attachGatewayLogs();
+    if (!this.detachVoiceStates) {
+      this.detachVoiceStates = attachVoiceStates(this.client, this.voiceStates);
+    }
     if (this.shouldStartBackgroundJobs()) {
       this.scheduler?.start();
       this.startVariableSweep();
@@ -1263,6 +1273,9 @@ export class Yuzuha {
       : (env.FLUXER_BOT_TOKEN?.trim() ? env.FLUXER_BOT_TOKEN : (hasShardingProcessEnv(env) ? env.FLUXER_TOKEN : env.FLUXER_BOT_TOKEN));
     if (!resolvedToken?.trim()) {
       this.detachGatewayLogs?.();
+      this.detachVoiceStates?.();
+      this.detachVoiceStates = undefined;
+      this.voiceStates.clear();
       return Promise.reject(new ConfigError('TOKEN_MISSING', 'Defina FLUXER_BOT_TOKEN.'));
     }
     if (this.loginTask) return this.loginTask;
@@ -1270,6 +1283,9 @@ export class Yuzuha {
       this.detachMemberCache = this.transport.attachCacheInvalidation(this.client);
     }
     this.attachGatewayLogs();
+    if (!this.detachVoiceStates) {
+      this.detachVoiceStates = attachVoiceStates(this.client, this.voiceStates);
+    }
     if (this.shouldStartBackgroundJobs()) {
       this.scheduler?.start();
       this.startVariableSweep();
@@ -1311,6 +1327,9 @@ export class Yuzuha {
         this.detachMemberCache?.();
         this.detachMemberCache = undefined;
         this.memberCache?.clear();
+        this.detachVoiceStates?.();
+        this.detachVoiceStates = undefined;
+        this.voiceStates.clear();
         await Promise.allSettled([...this.gatewayReports]);
       }
       throw error;
@@ -1434,6 +1453,9 @@ export class Yuzuha {
           this.detachMemberCache?.();
           this.detachMemberCache = undefined;
           this.memberCache?.clear();
+          this.detachVoiceStates?.();
+          this.detachVoiceStates = undefined;
+          this.voiceStates.clear();
           await Promise.allSettled([...this.gatewayReports]);
           try {
             if (!this.options.store) await this.store.close?.();
@@ -1719,7 +1741,7 @@ export class Yuzuha {
             native: { client: this.client, message: message.raw instanceof Message ? message.raw : undefined },
             shard: this.shard,
             resources: this.resources, resourcesInjected: this.resourcesInjected,
-            scheduler: this.scheduler, http: this.http, music: this.music, voice: this.voice,
+            scheduler: this.scheduler, http: this.http, music: this.music, voice: this.voice, voiceStates: this.voiceStates,
             canvas: this.canvasContext, now: this.options.now, signal, executionID,
             cdn: this.cdnService, disableResourceAuthorization: this.options.unsafeDisableResourceAuthorization === true, emoji: this.emojiMap,
             deleteLater: this.contextDeleteLater, isOwner: this.contextIsOwner, isDevGuild: this.contextIsDevGuild,

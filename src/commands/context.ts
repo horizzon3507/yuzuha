@@ -30,6 +30,7 @@ import { createCdn } from '../domain/cdn.js';
 import { MemberService } from '../services/members.js';
 import type { MusicManager } from '../services/music.js';
 import type { NativeVoice } from '../ports/voice.js';
+import type { VoiceStateTracker } from '../services/voice-states.js';
 import type { CanvasConfig } from '../domain/canvas.js';
 import type { CanvasRenderer } from '../ports/canvas.js';
 import { CanvasService } from '../services/canvas.js';
@@ -72,6 +73,7 @@ export interface ContextOptions {
   http?: HttpService;
   music?: MusicManager;
   voice?: NativeVoice;
+  voiceStates?: VoiceStateTracker;
   canvas?: { renderer: CanvasRenderer; config?: CanvasConfig };
   signal?: AbortSignal;
   executionID?: string;
@@ -138,6 +140,7 @@ export class CommandContext {
   private readonly httpService?: HttpService;
   private readonly musicService?: MusicManager;
   private readonly voiceService?: NativeVoice;
+  private readonly voiceStatesTracker?: VoiceStateTracker;
   private readonly canvasRenderer?: CanvasRenderer;
   private readonly canvasConfig?: CanvasConfig;
   private canvasService?: CanvasService;
@@ -186,6 +189,7 @@ export class CommandContext {
     this.httpService = options.http;
     this.musicService = options.music;
     this.voiceService = options.voice;
+    this.voiceStatesTracker = options.voiceStates;
     this.cdnService = options.cdn ?? createCdn();
     this.emojiMap = options.emoji ?? {};
     this.disableResourceAuthorization = options.disableResourceAuthorization === true;
@@ -306,6 +310,10 @@ export class CommandContext {
   get voice(): NativeVoice {
     if (!this.voiceService) throw new YuzuhaError('NATIVE_UNAVAILABLE', 'O serviço de voz não foi fornecido a este contexto.');
     return this.voiceService;
+  }
+  get voiceStates(): VoiceStateTracker {
+    if (!this.voiceStatesTracker) throw new YuzuhaError('NATIVE_UNAVAILABLE', 'O rastreador de estados de voz não foi fornecido a este contexto.');
+    return this.voiceStatesTracker;
   }
   get canvas(): CanvasService {
     if (!this.canvasRenderer) throw new YuzuhaError('NATIVE_UNAVAILABLE', 'O renderer de Canvas não foi fornecido a este contexto.');
