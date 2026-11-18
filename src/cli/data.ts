@@ -1,9 +1,15 @@
-import type { Store } from '../ports/store.js';
+import type { State, Store } from '../contracts.js';
 import { decodeState } from '../domain/state-validation.js';
 import { readFile, stat, writeFile } from 'node:fs/promises';
 import { extname, resolve } from 'node:path';
 import { JsonStore } from '../infrastructure/storage/json.js';
 import { SQLiteStore } from '../infrastructure/storage/sqlite.js';
+import {
+  SCHEMA_V3_TABLES,
+  corruptStoreError,
+  listYuzuhaTables,
+  readNormalizedState,
+} from '../infrastructure/storage/sqlite-schema.js';
 import { StateMaintenance } from '../services/state-maintenance.js';
 import { StoreError, YuzuhaError } from '../errors.js';
 import type { CLIArguments } from './arguments.js';
@@ -12,10 +18,31 @@ async function readonlySQLite(path: string): Promise<Store> {
   const { DatabaseSync } = await import('node:sqlite');
   const db = new DatabaseSync(path, { readOnly: true });
   try {
-    const row = db.prepare('SELECT value FROM yuzuha_state WHERE id=1').get();
-    const state = decodeState(String(row?.['value']));
-    return { read: async reader => reader(structuredClone(state)),
-      update: async () => { throw new StoreError('STORE_READONLY', 'Operação exige um store gravável.'); } };
+    const tables = listYuzuhaTables(db);
+    let state: State;
+    if (tables.has('yuzuha_meta')) {
+      for (const required of SCHEMA_V3_TABLES) {
+        if (!tables.has(required)) throw corruptStoreError();
+      }
+      db.exec('BEGIN');
+      try {
+        state = readNormalizedState(db);
+        db.exec('COMMIT');
+      } catch (error) {
+        db.exec('ROLLBACK');
+        throw error;
+      }
+    } else if (tables.has('yuzuha_state')) {
+      const row = db.prepare('SELECT value FROM yuzuha_state WHERE id=1').get();
+      if (!row) throw corruptStoreError();
+      state = decodeState(String(row['value']));
+    } else {
+      throw corruptStoreError();
+    }
+    return {
+      read: async reader => reader(structuredClone(state)),
+      update: async () => { throw new StoreError('STORE_READONLY', 'Operação exige um store gravável.'); },
+    };
   } finally { db.close(); }
 }
 
