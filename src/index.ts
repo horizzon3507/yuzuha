@@ -103,7 +103,8 @@ export type { ScriptEngine, ScriptFunctionDefinition, ScriptLimits } from './por
 export type { NativeVoice, FluxerVoiceConnection, FluxerVoiceDriver } from './ports/voice.js';
 export type { Resources } from './ports/resources.js';
 export type {
-  UserInfo, MemberInfo, GuildInfo, BanInfo, AuditLogInfo, UsersResources, GuildEditInput, MemberSearchPage,
+  UserInfo, MemberInfo, GuildInfo, BanInfo, AuditLogInfo, AuditLogChangeInfo, AuditLogOptionsInfo, AuditLogQueryInput,
+  UsersResources, GuildEditInput, MemberSearchPage,
   ProfileInfo, UserProfileInfo, LiveCountsInput, GuildCountsInfo, ChannelCountsInfo,
 } from './ports/resources/users.js';
 export type { RoleInfo, RoleCreateInput, RoleEditInput, RolesResources } from './ports/resources/roles.js';
