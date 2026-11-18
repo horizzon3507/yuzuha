@@ -51,6 +51,7 @@ inferência. O formato anterior `args: [{ name, type, ... }]` permanece válido 
 | `arg.boolean()` | `boolean` |
 | `arg.user()` | ID de usuário em `string`, normalizado de ID/menção |
 | `arg.duration()` | Duração em milissegundos, como `number` |
+| `arg.custom<T>(nome)` | Tipo customizado registrado em `bot.argumentType(nome, ...)` |
 
 Os builders são imutáveis. `required()`, `optional()` e `default(valor)` definem
 como tratar a ausência. `min(n)` e `max(n)` limitam números; em texto limitam o
@@ -72,6 +73,46 @@ permitem um argumento com espaços. `boolean()` aceita `true/false`, `yes/no`,
 resolva o membro pelo SDK. Nos comandos legados ou em código que recebe apenas
 `CommandContext`, `ctx.args.require(nome)` exige a presença;
 `string/number/boolean(nome)` verificam o tipo e retornam `undefined` se ausente.
+
+### Tipos de argumento customizados
+
+Para converter entradas específicas do domínio (itens de loja, códigos, entidades
+persistidas) com inferência estática completa em `args` e `flags`, registre um
+`CustomArgumentType<T>` em `bot.argumentType(nome, definição)` e referencie-o com
+`arg.custom<T>(nome)`:
+
+```ts
+import { GuardError, Yuzuha, arg, defineCommand } from 'yuzuha';
+
+interface ItemLoja { id: string; preco: number }
+
+const bot = new Yuzuha({ prefix: '!' });
+
+bot.argumentType<ItemLoja>('item', {
+  description: 'Item cadastrado na loja.',
+  async parse(raw, ctx) {
+    const catalogo = await ctx.data.guild.get('itens', {}) as Record<string, ItemLoja>;
+    const item = catalogo[raw.toLowerCase()];
+    if (!item) throw new GuardError(`Item inexistente: ${raw}.`, 'INVALID_ARGUMENT');
+    return item;
+  },
+});
+
+bot.command(defineCommand({
+  name: 'comprar',
+  args: { item: arg.custom<ItemLoja>('item').required() },
+  async run(ctx) {
+    const item = ctx.args.get('item'); // ItemLoja
+    await ctx.reply(`Comprado: ${item.id} (${item.preco} moedas).`);
+  },
+}));
+```
+
+`parse(raw, ctx)` pode ser síncrono ou assíncrono. Quando lança `GuardError`, o
+framework anexa `Uso: ...` e trata o resultado como `'guarded'`; outros erros
+propagam intactos para `onError`. Nomes vazios, duplicados ou que colidam com
+tipos nativos — ou o uso de um tipo ainda não registrado no bot — lançam
+`YuzuhaError` com código `'ARGUMENT_TYPE'`.
 
 ## Moderação com um serviço compartilhado
 
