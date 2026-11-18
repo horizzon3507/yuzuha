@@ -1,7 +1,8 @@
 # API pública
 
 Os exports suportados são `yuzuha` (nativo), `yuzuha/functions` (function mode),
-`yuzuha/sdk`, `yuzuha/testing`, `yuzuha/tooling` (auxiliares de editor) e
+`yuzuha/sdk`, `yuzuha/testing`, `yuzuha/tooling` (auxiliares de editor),
+`yuzuha/metrics` (exportador Prometheus sem dependências) e
 `yuzuha/music` (Lavalink, filas e voz opcional).
 A fonte das assinaturas completas são as declarações TypeScript distribuídas em
 `dist/`. Este guia explica os contratos usados pelos comandos e extensões.
@@ -43,6 +44,7 @@ A fonte das assinaturas completas são as declarações TypeScript distribuídas
 | `onError(error, ctx?)` | Observação de falhas internas e operacionais |
 | `onCommand(ctx, outcome)` | Observação do resultado de comandos encontrados |
 | `onLog(record)` | Eventos estruturados opcionais, sem conteúdo/segredos automáticos |
+| `metrics` | Porta `MetricsSink` opcional (como `createPrometheusMetrics()` de `yuzuha/metrics`) |
 
 `onCommand` recebe `success`, `guarded` ou `error` após o despacho; mensagens
 ignoradas retornam `ignored` de `handle` e não chegam a esse hook.

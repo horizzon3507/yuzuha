@@ -34,7 +34,7 @@ conectam ao Fluxer.
 | [HTTP](HTTP.md) | Streaming, multipart, cancelamento e políticas por comando |
 | [Canvas](CANVAS.md) | Composição opcional de cartões, fontes, imagens e envio de anexos |
 | [Música e voz](MUSIC.md) | Lavalink v4, plugin e ponte de áudio para Fluxer, filas e recuperação |
-| [Logs e correlação](OBSERVABILITY.md) | Eventos estruturados opcionais, duração, erros e privacidade |
+| [Logs, correlação e métricas](OBSERVABILITY.md) | Eventos estruturados, `MetricsSink`, `yuzuha/metrics` e privacidade |
 | [Cobertura](PARITY.md) | Acesso ao SDK, contratos do function mode e limites |
 | [Matriz de paridade](PARITY-MATRIX.md) | Status automático de cada export e membro do SDK 3.3.0 |
 | [Embeds e mensagens](EMBEDS.md) | Modelo, funções, limites, menções e leitura de embeds |
