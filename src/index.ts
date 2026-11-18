@@ -141,7 +141,15 @@ export type { InstanceEndpointsInfo, InstanceFeaturesInfo, InstanceServicesInfo,
   EmojiMetadataInfo, StickerMetadataInfo, EmojiReference, InstanceResources } from './ports/resources/instance.js';
 export type { SudoVerification, SelfGuildInfo, SelfResources } from './ports/resources/self.js';
 export type { CacheLimitsInfo, CacheStatsInfo, MessageSweepInput, MemberSweepInput, CacheResources } from './ports/resources/cache.js';
-export type { AttachmentSpec, BinaryAttachmentSpec, PresenceStatus, ActivityType, ActivityInfo } from './ports/resources/common.js';
+export type {
+  AttachmentSpec,
+  BinaryAttachmentSpec,
+  PresenceStatus,
+  ActivityType,
+  ActivityInfo,
+  CustomStatusInput,
+  PresenceInput,
+} from './ports/resources/common.js';
 export { NativeModeration } from './services/native-moderation.js';
 export type { NativeModerationOptions, NativeBanOptions, NativeTimeoutOptions, NativeMoveOptions, NativeVoiceOptions, ModerationTarget } from './services/native-moderation.js';
 export { ScopedData } from './services/native-data.js';

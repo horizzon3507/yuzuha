@@ -1,4 +1,4 @@
-import type { ActivityInfo, PresenceStatus } from './common.js';
+import type { ActivityInfo, PresenceInput, PresenceStatus } from './common.js';
 import type { ChannelInfo } from './channels.js';
 import type { AuditLogChangeInfo, AuditLogOptionsInfo, AuditLogQueryInput } from '../../domain/audit-log.js';
 
@@ -64,6 +64,8 @@ export interface UsersResources {
   resolveBan(guildID: string, query: string): Promise<import('../../domain/resolvers.js').ResolvedBan>;
   auditLogs(guildID: string, input?: number | AuditLogQueryInput): Promise<AuditLogInfo[]>;
   setPresence(status: PresenceStatus, activity?: ActivityInfo): Promise<void>;
+  setPresence(input: PresenceInput): Promise<void>;
+  setPresence(statusOrInput: PresenceStatus | PresenceInput, activity?: ActivityInfo): Promise<void>;
   searchMembers(guildID: string, query: string, limit?: number, offset?: number): Promise<MemberSearchPage>;
   setNickname(guildID: string, userID: string, nickname: string | null, reason: string): Promise<MemberInfo>;
   editGuild(guildID: string, input: GuildEditInput): Promise<GuildInfo>;
