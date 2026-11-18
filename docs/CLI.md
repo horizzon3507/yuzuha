@@ -147,9 +147,13 @@ Config, ambiente e plugins não são recarregados. Alterações em dependências
 importadas também podem exigir reinício, pois não há invalidação geral do cache
 ESM. Reimporte módulos sem efeitos de inicialização desnecessários.
 
-`SIGINT` e `SIGTERM` fecham o watcher, aguardam comandos em execução, encerram
-o client e fecham o store da config. O encerramento usa o mesmo contrato de
-propriedade descrito em [STORAGE.md](STORAGE.md).
+`SIGINT` e `SIGTERM` fecham o watcher, aguardam comandos em execução (com limite
+padrão de `10_000` ms na CLI, ou `timeoutMs` configurado em `runBot`), encerram o
+client e fecham o store da config. `unhandledRejection` e `uncaughtException`
+reportam a falha via `onError`/`logger`, definem `process.exitCode = 1`,
+iniciam o mesmo encerramento limitado e removem os listeners instalados. O
+encerramento usa o mesmo contrato de propriedade descrito em
+[STORAGE.md](STORAGE.md).
 
 ## Gerar JavaScript ou TypeScript
 

@@ -164,12 +164,12 @@ test('native bot.on and pre-dispatch messageCreate errors report event source an
   assert.equal(reports[0]!.info.source, 'event');
   assert.equal(reports[0]!.info.event, Events.Ready);
   assert.equal(reports[0]!.info.ctx, undefined);
-  assert.equal(reports[0]!.info.executionID, undefined);
+  assert.equal(typeof reports[0]!.info.executionID, 'string');
 
   assert.equal(logs[0]?.event, 'error');
   assert.equal(logs[0]?.source, 'event');
   assert.equal(logs[0]?.trigger, Events.Ready);
-  assert.equal(logs[0]?.executionID, undefined);
+  assert.equal(logs[0]?.executionID, reports[0]!.info.executionID);
 
   await bot.login('offline-token');
   const rawMessage = new Message(bot.client, {
@@ -220,22 +220,24 @@ test('gateway error and shardError report gateway source and distinct event name
   assert.equal(reports[0]!.ctx, undefined);
   assert.equal(reports[0]!.info.source, 'gateway');
   assert.equal(reports[0]!.info.event, 'error');
-  assert.equal(reports[0]!.info.executionID, undefined);
+  assert.equal(typeof reports[0]!.info.executionID, 'string');
 
   assert.equal(reports[1]!.error, shardFailure);
   assert.equal(reports[1]!.ctx, undefined);
   assert.equal(reports[1]!.info.source, 'gateway');
   assert.equal(reports[1]!.info.event, 'shardError');
-  assert.equal(reports[1]!.info.executionID, undefined);
+  assert.equal(typeof reports[1]!.info.executionID, 'string');
 
   const errorLogs = logs.filter((row): row is Extract<LogRecord, { source?: unknown }> => row.event === 'error');
   assert.equal(errorLogs.length, 2);
   assert.equal(errorLogs[0]?.event, 'error');
   assert.equal(errorLogs[0]?.source, 'gateway');
   assert.equal(errorLogs[0]?.trigger, 'error');
+  assert.equal(errorLogs[0]?.executionID, reports[0]!.info.executionID);
   assert.equal(errorLogs[1]?.event, 'error');
   assert.equal(errorLogs[1]?.source, 'gateway');
   assert.equal(errorLogs[1]?.trigger, 'shardError');
+  assert.equal(errorLogs[1]?.executionID, reports[1]!.info.executionID);
 });
 
 test('scheduler maintenance errors report scheduler source', async t => {
@@ -269,13 +271,14 @@ test('scheduler maintenance errors report scheduler source', async t => {
   assert.equal(reports[0]!.ctx, undefined);
   assert.equal(reports[0]!.info.source, 'scheduler');
   assert.equal(reports[0]!.info.event, undefined);
-  assert.equal(reports[0]!.info.executionID, undefined);
+  assert.equal(typeof reports[0]!.info.executionID, 'string');
 
   const errorLog = logs.find(row => row.event === 'error');
   assert.ok(errorLog);
   assert.equal(errorLog.event, 'error');
   assert.equal(errorLog.source, 'scheduler');
   assert.equal(errorLog.trigger, undefined);
+  assert.equal(errorLog.executionID, reports[0]!.info.executionID);
 });
 
 test('createTestBot stays compatible with 2-arg and 3-arg onError callbacks', async t => {

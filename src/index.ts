@@ -13,6 +13,9 @@ export type {
   YuzuhaPlugin,
   Middleware,
   DispatchResult,
+  DestroyOptions,
+  SignalHandlerOptions,
+  SignalHandlerTarget,
 } from './bot.js';
 export { CommandContext, defineCommand, parseDuration } from './context.js';
 export type { Command, ArgumentDefinition } from './context.js';
@@ -26,7 +29,10 @@ export type { TypedArguments } from './commands/typed-arguments.js';
 export type { NativeCommandContext, NativeCommandDefinition, CommandCheck, CommandMiddleware } from './commands/definition.js';
 export { defineEvent } from './framework/events.js';
 export type { ContextEventDefinition, EventDefinition, NativeEvent, NativeListener } from './framework/events.js';
-export type { LogRecord } from './framework/logging.js';
+export { createConsoleLogger } from './framework/logging.js';
+export type { LogMethod, LogRecord, YuzuhaLogger } from './framework/logging.js';
+export { currentExecution } from './framework/execution.js';
+export type { ExecutionStore } from './framework/execution.js';
 export { EventContext } from './commands/event-context.js';
 export type { EventContextOptions } from './commands/event-context.js';
 export type { ScriptEventDefinition } from './framework/script-events.js';
