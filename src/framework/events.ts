@@ -1,7 +1,7 @@
 import { Events } from '@fluxerjs/core';
 import type { Client, ClientEventName, ClientEvents, Message, PartialMessage, ReactionEmojiPayload } from '@fluxerjs/core';
 import { YuzuhaError } from '../errors.js';
-import type { EventData, ScriptEventName } from '../domain/events.js';
+import type { EventData } from '../domain/events.js';
 import type { IncomingMessage } from '../domain/messages.js';
 import type { EventContext } from '../commands/event-context.js';
 import { incoming } from '../infrastructure/fluxer/messages.js';
@@ -18,14 +18,14 @@ export interface NativeEvent {
   readonly once: boolean;
   readonly invoke: (args: unknown[]) => unknown | Promise<unknown>;
 }
-export interface ContextEventDefinition<K extends ScriptEventName = ScriptEventName> {
+export interface ContextEventDefinition<K extends ClientEventName = ClientEventName> {
   event: K;
   once?: boolean;
   channelID?: string;
   actorID?: string;
   ignoreBots?: boolean;
   http?: HttpPolicy;
-  run: (ctx: EventContext, ...args: ClientEvents[K]) => unknown | Promise<unknown>;
+  run: (ctx: EventContext<K>, ...args: ClientEvents[K]) => unknown | Promise<unknown>;
 }
 
 const knownEvents = new Set<string>(Object.values(Events));
@@ -491,6 +491,25 @@ export function adaptClientEvent<K extends ClientEventName>(name: K, args: Reado
   }
 
   return { event, ...(message ? { message } : {}) };
+}
+
+export function validateContextEvent(definition: ContextEventDefinition<ClientEventName>): void {
+  if (!definition || typeof definition !== 'object'
+    || !knownEvents.has(definition.event)
+    || typeof definition.run !== 'function'
+    || (definition.once !== undefined && typeof definition.once !== 'boolean')
+    || (definition.ignoreBots !== undefined && typeof definition.ignoreBots !== 'boolean')
+    || [definition.channelID, definition.actorID].some(id => id !== undefined && (typeof id !== 'string' || !/^\d+$/.test(id)))) {
+    throw new YuzuhaError('EVENT', 'Evento com contexto ou opções inválidos.');
+  }
+}
+
+export function defineContextEvent<K extends ClientEventName>(definition: ContextEventDefinition<K>): Readonly<ContextEventDefinition<K>> {
+  validateContextEvent(definition as unknown as ContextEventDefinition<ClientEventName>);
+  return Object.freeze({
+    ...definition,
+    ...(definition.http !== undefined ? { http: structuredClone(definition.http) } : {}),
+  });
 }
 
 export function defineEvent<K extends ClientEventName>(definition: EventDefinition<K>): NativeEvent {

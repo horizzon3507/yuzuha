@@ -31,7 +31,7 @@ import { ConcurrencyLimiter } from './concurrency.js';
 import { reportError, resolveErrorReply } from './reporting.js';
 import { route } from './routing.js';
 import { DynamicPrefixCache, ValidatedPrefixCache, prefixCacheKey, validatePrefixCacheOptions } from './prefix-cache.js';
-import { defineEvent, NativeEvents } from './events.js';
+import { adaptClientEvent, defineEvent, NativeEvents, validateContextEvent } from './events.js';
 import type { ContextEventDefinition, NativeEvent, NativeListener } from './events.js';
 import { ServiceContainer } from './services.js';
 import type { ServiceKey } from './services.js';
@@ -49,7 +49,7 @@ import { cancellationError } from '../services/cancellation.js';
 import { resolvePolicy } from '../services/retry.js';
 import { EventContext } from '../commands/event-context.js';
 import type { EventContextOptions } from '../commands/event-context.js';
-import { adaptScriptEvent, scriptEventNames, validateScriptEvent } from './script-events.js';
+import { adaptScriptEvent, validateScriptEvent } from './script-events.js';
 import type { ScriptEventDefinition } from './script-events.js';
 import type { ScriptEngine } from '../ports/script-engine.js';
 import type { MusicManager } from '../services/music.js';
@@ -591,6 +591,10 @@ export class Yuzuha {
     stagedEngine?.registerAll(plugin.functions ?? []);
     const commitCommands = this.registry.prepare(plugin.commands ?? [], stagedEngine);
     for (const event of plugin.events ?? []) this.events.validate(event);
+    const contextEvents = (plugin.contextEvents ?? []).map(event => ({
+      prepared: this.prepareContextEvent(event),
+      identity: event,
+    }));
     const scriptEvents = (plugin.scriptEvents ?? []).map(event => this.prepareScriptEvent(event, stagedEngine));
 
     const record: InstalledPlugin = {
@@ -624,6 +628,7 @@ export class Yuzuha {
       record.middlewares.push(owned);
     }
     for (const event of plugin.events ?? []) record.eventDisposers.push(this.events.add(event));
+    for (const item of contextEvents) record.eventDisposers.push(this.events.add(item.prepared, item.identity));
     for (const event of scriptEvents) record.eventDisposers.push(this.events.add(event));
 
     if (!plugin.setup) {
@@ -883,71 +888,110 @@ export class Yuzuha {
   once<K extends ClientEventName>(event: K, listener: NativeListener<K>): this {
     this.addEvent(defineEvent({ event, once: true, run: listener }), listener); return this;
   }
-  off<K extends ClientEventName>(event: K, listener: NativeListener<K>): this {
+  off<K extends ClientEventName>(event: K, listener: NativeListener<K> | ContextEventDefinition<K> | NativeEvent): this {
     this.events.off(event, listener); return this;
   }
   event(event: NativeEvent): this { this.addEvent(event); return this; }
 
-  contextEvent<K extends import('../domain/events.js').ScriptEventName>(definition: ContextEventDefinition<K>): this {
+  contextEvent<K extends ClientEventName>(definition: ContextEventDefinition<K>): this {
     if (this.closing) throw new YuzuhaError('BOT_CLOSED', 'O bot está encerrado.');
-    if (!scriptEventNames.includes(definition.event) || typeof definition.run !== 'function' || (definition.once !== undefined && typeof definition.once !== 'boolean')
-      || (definition.ignoreBots !== undefined && typeof definition.ignoreBots !== 'boolean')
-      || [definition.channelID, definition.actorID].some(id => id !== undefined && (typeof id !== 'string' || !/^\d+$/.test(id)))) {
-      throw new YuzuhaError('EVENT', 'Evento com contexto ou opções inválidos.');
-    }
-    if (definition.http) (this.http ?? new HttpService()).withPolicy(definition.http);
-    this.addEvent({ event: definition.event, once: definition.once ?? false, invoke: async (args: unknown[]) => {
-      const source = adaptScriptEvent(definition.event, args);
-      if ((definition.ignoreBots ?? true) && source.event.userBot) return;
-      const baseEventOptions: EventContextOptions = { ...source, channelID: definition.channelID, actorID: definition.actorID,
-        policy: definition.http, transport: this.transport, store: this.store, shard: this.shard, resources: this.resources,
-        resourcesInjected: this.resourcesInjected, argumentTypes: this.customArgumentTypes,
-        scheduler: this.scheduler, http: this.http, music: this.music, voice: this.voice,
-        canvas: this.canvasContext, now: this.options.now, help: this.contextHelp,
-        cdn: this.cdnService, disableResourceAuthorization: this.options.unsafeDisableResourceAuthorization === true,
-        cooldown: this.contextCooldown, signal: this.shutdown.signal, emoji: this.emojiMap,
-        deleteLater: this.contextDeleteLater, isOwner: this.contextIsOwner, isDevGuild: this.contextIsDevGuild,
-        services: this.services, locale: this.messagesRuntime.defaultLocale, translator: this.messagesRuntime.defaultTranslator };
-      const prelim = new EventContext(baseEventOptions);
-      await runInExecution(this, {
-        executionID: prelim.executionID,
-        source: 'event',
-        event: definition.event,
-        guildID: prelim.guildID || undefined,
-        channelID: prelim.channelID || undefined,
-        userID: prelim.authorID || undefined,
-      }, async () => {
-        let ctx = prelim;
-        try {
-          if (typeof this.options.locale === 'function') {
-            const resolvedLocale = await this.resolveEventLocale(baseEventOptions, prelim.executionID);
-            if (this.closing || this.shutdown.signal.aborted) return;
-            ctx = new EventContext({ ...baseEventOptions, executionID: prelim.executionID,
-              locale: resolvedLocale.locale, translator: resolvedLocale.translator,
-              help: (cmd, pfx = '') => this.registry.help(cmd, pfx, resolvedLocale.translator, this.options.helpRenderer) });
-          }
-          if (this.options.context) {
-            await this.options.context(ctx);
-            if (this.shutdown.signal.aborted) throw cancellationError();
-          }
-          await definition.run(ctx, ...args as ClientEvents[K]);
-        } catch (error) {
-          await reportError(this.options, error, ctx, { source: 'event', event: definition.event, executionID: prelim.executionID });
-        }
-      });
-    } });
+    this.addEvent(this.prepareContextEvent(definition), definition);
     return this;
   }
 
-  private async resolveEventLocale(
-    options: EventContextOptions,
+  private prepareContextEvent<K extends ClientEventName>(definition: ContextEventDefinition<K>): NativeEvent {
+    validateContextEvent(definition as unknown as ContextEventDefinition<ClientEventName>);
+    const event = definition.event;
+    const once = definition.once ?? false;
+    const channelID = definition.channelID;
+    const actorID = definition.actorID;
+    const ignoreBots = definition.ignoreBots;
+    const http = definition.http !== undefined ? structuredClone(definition.http) : undefined;
+    const run = definition.run;
+    if (http) (this.http ?? new HttpService()).withPolicy(http);
+    return {
+      event,
+      once,
+      invoke: async (args: unknown[]) => {
+        const typedArgs = args as ClientEvents[K];
+        const source = adaptClientEvent(event, typedArgs);
+        if ((ignoreBots ?? true) && source.event.userBot) return;
+        const baseEventOptions: EventContextOptions<K> = {
+          ...source,
+          eventArgs: typedArgs,
+          channelID,
+          actorID,
+          policy: http,
+          transport: this.transport,
+          store: this.store,
+          shard: this.shard,
+          native: { client: this.client, message: source.message?.raw instanceof Message ? source.message.raw : undefined },
+          resources: this.resources,
+          resourcesInjected: this.resourcesInjected,
+          argumentTypes: this.customArgumentTypes,
+          scheduler: this.scheduler,
+          http: this.http,
+          music: this.music,
+          voice: this.voice,
+          canvas: this.canvasContext,
+          now: this.options.now,
+          help: this.contextHelp,
+          cdn: this.cdnService,
+          disableResourceAuthorization: this.options.unsafeDisableResourceAuthorization === true,
+          cooldown: this.contextCooldown,
+          signal: this.shutdown.signal,
+          emoji: this.emojiMap,
+          deleteLater: this.contextDeleteLater,
+          isOwner: this.contextIsOwner,
+          isDevGuild: this.contextIsDevGuild,
+          services: this.services,
+          locale: this.messagesRuntime.defaultLocale,
+          translator: this.messagesRuntime.defaultTranslator,
+        };
+        const prelim = new EventContext<K>(baseEventOptions);
+        await runInExecution(this, {
+          executionID: prelim.executionID,
+          source: 'event',
+          event,
+          guildID: prelim.guildID || undefined,
+          channelID: prelim.channelID || undefined,
+          userID: prelim.authorID || undefined,
+        }, async () => {
+          let ctx = prelim;
+          try {
+            if (typeof this.options.locale === 'function') {
+              const resolvedLocale = await this.resolveEventLocale(baseEventOptions, prelim.executionID);
+              if (this.closing || this.shutdown.signal.aborted) return;
+              ctx = new EventContext<K>({
+                ...baseEventOptions,
+                executionID: prelim.executionID,
+                locale: resolvedLocale.locale,
+                translator: resolvedLocale.translator,
+                help: (cmd, pfx = '') => this.registry.help(cmd, pfx, resolvedLocale.translator, this.options.helpRenderer),
+              });
+            }
+            if (this.options.context) {
+              await this.options.context(ctx);
+              if (this.shutdown.signal.aborted) throw cancellationError();
+            }
+            await run(ctx, ...typedArgs);
+          } catch (error) {
+            await reportError(this.options, error, ctx, { source: 'event', event, executionID: prelim.executionID });
+          }
+        });
+      },
+    };
+  }
+
+  private async resolveEventLocale<K extends ClientEventName>(
+    options: EventContextOptions<K>,
     executionID: string,
   ): Promise<{ readonly locale: string; readonly translator: MessageTranslator }> {
     if (typeof this.options.locale !== 'function') {
       return { locale: this.messagesRuntime.defaultLocale, translator: this.messagesRuntime.defaultTranslator };
     }
     const event = options.event;
-    const probe = new EventContext({
+    const probe = new EventContext<K>({
       ...options,
       executionID,
       message: options.message ?? {
@@ -982,9 +1026,19 @@ export class Yuzuha {
     const source = adaptScriptEvent(definition.event, args);
     if ((definition.ignoreBots ?? true) && source.event.userBot) return;
     const signal = this.shutdown.signal;
-    const baseEventOptions: EventContextOptions = { ...source, channelID: definition.channelID, actorID: definition.actorID,
-      policy: definition.http, transport: this.transport, store: this.store, shard: this.shard, resources: this.resources,
-      resourcesInjected: this.resourcesInjected, argumentTypes: this.customArgumentTypes,
+    const baseEventOptions: EventContextOptions<ScriptEventDefinition['event']> = {
+      ...source,
+      eventArgs: args as ClientEvents[ScriptEventDefinition['event']],
+      channelID: definition.channelID,
+      actorID: definition.actorID,
+      policy: definition.http,
+      transport: this.transport,
+      store: this.store,
+      shard: this.shard,
+      native: { client: this.client, message: source.message?.raw instanceof Message ? source.message.raw : undefined },
+      resources: this.resources,
+      resourcesInjected: this.resourcesInjected,
+      argumentTypes: this.customArgumentTypes,
       scheduler: this.scheduler, http: this.http, music: this.music, voice: this.voice,
       canvas: this.canvasContext, now: this.options.now, help: this.contextHelp, cooldown: this.contextCooldown, signal,
       cdn: this.cdnService, disableResourceAuthorization: this.options.unsafeDisableResourceAuthorization === true, emoji: this.emojiMap,
