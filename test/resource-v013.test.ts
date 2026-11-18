@@ -192,11 +192,12 @@ test('canais de link e avisos usam URL/nível nativos, autorizam ambos e restrin
   const calls: unknown[] = [];
   const channel = { id: '300', name: 'site', type: 998, guildID: '100', parentID: null,
     position: 0, topic: null, slowmode: 0, nsfw: false };
-  const { run, transport } = harness({ resources: { channels: {
+  const channelsResource = {
     async get() { return channel; },
-    async create(...args) { calls.push(args); return channel; },
-    async edit(...args) { calls.push(args); return channel; },
-  } } });
+    async create(...args: unknown[]) { calls.push(args); return channel; },
+    async edit(...args: unknown[]) { calls.push(args); return channel; },
+  };
+  const { run } = harness({ resources: { channels: channelsResource } });
   await run('$createLinkChannel[site;https://example.com]');
   await run('$editLinkChannel[300;https://example.org;atualizar]');
   await run('$setContentWarning[300;1;conteúdo sensível;aviso]');
@@ -211,9 +212,9 @@ test('canais de link e avisos usam URL/nível nativos, autorizam ambos e restrin
   await assert.rejects(run('$editLinkChannel[300;https://example.com]'), GuardError);
   channel.guildID = '100';
   for (const id of ['1', '999']) {
-    transport.setMember('100', { id, owner: false, permissions: 0n, rank: 90 });
-    await assert.rejects(run('$createLinkChannel[site;https://example.com]'), GuardError);
-    transport.setMember('100', { id, owner: false, permissions: PermissionFlags.Administrator, rank: 90 });
+    const denied = harness({ resources: { channels: channelsResource } });
+    denied.transport.setMember('100', { id, owner: false, permissions: 0n, rank: 90 });
+    await assert.rejects(denied.run('$createLinkChannel[site;https://example.com]'), GuardError);
   }
   assert.equal(calls.length, 4);
 });

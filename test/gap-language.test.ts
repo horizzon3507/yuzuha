@@ -81,9 +81,11 @@ test('guild features are copied and leaveGuild requires the server owner in nati
   await f.ctx.leaveGuild();
   await f.run('$leaveGuild');
   assert.deepEqual(f.departures, ['100', '100']);
-  f.transport.setMember('100', { id: '1', owner: false, rank: 999, permissions: (1n << 60n) - 1n });
-  await assert.rejects(f.ctx.leaveGuild(), GuardError);
-  await assert.rejects(f.run('$try[$leaveGuild;ignorado]'), GuardError);
+  const nonOwner = fixture();
+  nonOwner.transport.setMember('100', { id: '1', owner: false, rank: 999, permissions: (1n << 60n) - 1n });
+  await assert.rejects(nonOwner.ctx.leaveGuild(), GuardError);
+  await assert.rejects(nonOwner.run('$try[$leaveGuild;ignorado]'), GuardError);
+  assert.equal(nonOwner.departures.length, 0);
   assert.equal(f.departures.length, 2);
   const dm = fixture({ dm: true });
   await assert.rejects(dm.run('$guildFeatures'), GuardError);
