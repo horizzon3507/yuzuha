@@ -9,20 +9,28 @@ import type { Transport } from '../ports/transport.js';
 import { GuardError, YuzuhaError } from '../shared/errors.js';
 import { AuthorizationService, MemberMemo, requireGuild } from './authorization.js';
 import type { ActorScope } from './authorization.js';
+import { defaultTranslator } from '../domain/i18n.js';
+import type { MessageTranslator } from '../domain/i18n.js';
 
-export function bindAuthorizedResources(source: Resources, transport: Transport, scope: ActorScope, sharedMemo?: MemberMemo): Resources {
+export function bindAuthorizedResources(
+  source: Resources,
+  transport: Transport,
+  scope: ActorScope,
+  sharedMemo?: MemberMemo,
+  t: MessageTranslator = defaultTranslator,
+): Resources {
   const createGuards = (memo: MemberMemo) => {
-    const authorization = new AuthorizationService(transport, scope, memo);
+    const authorization = new AuthorizationService(transport, scope, memo, t);
     const guild = (id: string) => {
-      if (id !== requireGuild(scope.guildID)) throw new GuardError('O recurso deve pertencer ao servidor atual.', 'GENERIC');
+      if (id !== requireGuild(scope.guildID, t)) throw new GuardError('O recurso deve pertencer ao servidor atual.', 'GENERIC');
       return id;
     };
     const allowed = async (name: string, channelID?: string) => {
       await authorization.requireBothPermissions(name, channelID);
     };
     const actors = async (): Promise<[ModerationMember, ModerationMember]> => Promise.all([
-      memo.get(requireGuild(scope.guildID), scope.authorID),
-      memo.get(requireGuild(scope.guildID), transport.botID),
+      memo.get(requireGuild(scope.guildID, t), scope.authorID),
+      memo.get(requireGuild(scope.guildID, t), transport.botID),
     ]);
     const permissions = async (names: string[] | undefined, channelID?: string) => {
       for (const name of names ?? []) {
@@ -43,9 +51,9 @@ export function bindAuthorizedResources(source: Resources, transport: Transport,
     };
     const memberHierarchy = async (id: string) => {
       const [author, bot, target] = await Promise.all([
-        memo.get(requireGuild(scope.guildID), scope.authorID),
-        memo.get(requireGuild(scope.guildID), transport.botID),
-        transport.member(requireGuild(scope.guildID), id),
+        memo.get(requireGuild(scope.guildID, t), scope.authorID),
+        memo.get(requireGuild(scope.guildID, t), transport.botID),
+        transport.member(requireGuild(scope.guildID, t), id),
       ]);
       if (target.owner || (id !== author.id && !author.owner && !isAbove(author, target))
         || (id !== bot.id && !isAbove(bot, target))) {
@@ -60,7 +68,7 @@ export function bindAuthorizedResources(source: Resources, transport: Transport,
       return target;
     };
     const channel = async (id: string, flag = 'ManageChannels') => {
-      requireGuild(scope.guildID);
+      requireGuild(scope.guildID, t);
       const target = await source.channels.get(id);
       guild(target.guildID ?? '');
       await allowed(flag, id);
@@ -78,7 +86,7 @@ export function bindAuthorizedResources(source: Resources, transport: Transport,
       if (target.type !== 4) throw new GuardError('O canal pai deve ser uma categoria.', 'INVALID_ARGUMENT');
     };
     const webhook = async (id: string) => {
-      requireGuild(scope.guildID);
+      requireGuild(scope.guildID, t);
       const target = await source.webhooks.fetch(id);
       guild(target.guildID);
       await channel(target.channelID, 'ManageWebhooks');
@@ -111,7 +119,7 @@ export function bindAuthorizedResources(source: Resources, transport: Transport,
   return { users: Object.assign(Object.create(source.users), {
     async transferOwnership(guildID: string, userID: string) {
       const g = guards();
-      requireGuild(guildID);
+      requireGuild(guildID, t);
       const [author] = await g.actors();
       if (!author.owner) throw new GuardError('Apenas o dono do servidor pode transferir a propriedade.', 'PERMISSION_MISSING_AUTHOR');
       const target = await source.users.member(guildID, userID);
@@ -329,7 +337,7 @@ export function bindAuthorizedResources(source: Resources, transport: Transport,
     async overwrite(id, targetID, input, options) {
       const g = guards();
       await g.channel(id, 'ManageRoles');
-      const roles = await source.roles.list(requireGuild(scope.guildID));
+      const roles = await source.roles.list(requireGuild(scope.guildID, t));
       const targetRole = roles.find(candidate => candidate.id === targetID);
       if (input.type === 'role' || (input.type === undefined && targetRole)) {
         if (!targetRole) throw new GuardError('Cargo não encontrado no servidor atual.', 'GENERIC');
@@ -353,7 +361,7 @@ export function bindAuthorizedResources(source: Resources, transport: Transport,
   }, webhooks: {
     async fetch(id) {
       const g = guards();
-      requireGuild(scope.guildID);
+      requireGuild(scope.guildID, t);
       const target = await source.webhooks.fetch(id);
       g.guild(target.guildID);
       await g.channel(target.channelID, 'ManageWebhooks');

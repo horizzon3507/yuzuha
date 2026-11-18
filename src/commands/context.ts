@@ -170,11 +170,11 @@ export class CommandContext {
   }
 
   private get memo(): MemberMemo { return this.memberMemo ??= new MemberMemo(this.transport); }
-  private get authorization(): AuthorizationService { return this.authorizationService ??= new AuthorizationService(this.transport, this.scope, this.memo); }
-  private get moderation(): ModerationService { return this.moderationService ??= new ModerationService(this.transport, this.store, this.scope, this.memo); }
+  private get authorization(): AuthorizationService { return this.authorizationService ??= new AuthorizationService(this.transport, this.scope, this.memo, this.t); }
+  private get moderation(): ModerationService { return this.moderationService ??= new ModerationService(this.transport, this.store, this.scope, this.memo, this.t); }
   private get cases(): CaseService { return this.caseService ??= new CaseService(this.store); }
-  private get variables(): VariableService { return this.variableService ??= new VariableService(this.store, this.scope, this.now); }
-  get members(): MemberService { return this.memberService ??= new MemberService(this.transport, this.scope, () => this.resources.users); }
+  private get variables(): VariableService { return this.variableService ??= new VariableService(this.store, this.scope, this.now, this.t); }
+  get members(): MemberService { return this.memberService ??= new MemberService(this.transport, this.scope, () => this.resources.users, this.t); }
   get vars(): Map<string, unknown> { return this.localVars ??= new Map(); }
   get args(): ArgumentBag { return this.argumentsBag ??= new ArgumentBag(this.t); }
   get flags(): ArgumentBag { return this.flagsBag ??= new ArgumentBag(this.t); }
@@ -227,7 +227,7 @@ export class CommandContext {
     if (!this.nativeResources) throw new YuzuhaError('NATIVE_UNAVAILABLE', 'Os recursos nativos não foram fornecidos a este contexto.');
     if (this.scopedResources) return this.scopedResources;
     const source = this.disableResourceAuthorization ? this.nativeResources
-      : bindAuthorizedResources(this.nativeResources, this.transport, this.scope, this.memo);
+      : bindAuthorizedResources(this.nativeResources, this.transport, this.scope, this.memo, this.t);
     const collectors = source.collectors;
     return this.scopedResources = { users: source.users, roles: source.roles, channels: source.channels,
       messages: source.messages, webhooks: source.webhooks, expressions: source.expressions,
@@ -265,7 +265,7 @@ export class CommandContext {
     if (!this.httpService) throw new YuzuhaError('NATIVE_UNAVAILABLE', 'O serviço HTTP não foi fornecido a este contexto.');
     return this.scopedHttp ??= bindHttp(this.command.http ? this.httpService.withPolicy(this.command.http) : this.httpService, this.signal);
   }
-  requireGuild(): string { return requireGuild(this.guildID); }
+  requireGuild(): string { return requireGuild(this.guildID, this.t); }
 
   assert(condition: unknown, message: string): void {
     if (!condition) throw new GuardError(message, 'GENERIC');
@@ -344,8 +344,13 @@ export class CommandContext {
     const key = JSON.stringify([this.guildID, this.message.channelID, this.authorID, this.command.name]);
     const remaining = this.claimCooldown(key, parseDuration(duration));
     const enforce = (ms: number): void => {
-      if (ms > 0) throw new GuardError((message ?? 'Aguarde {remaining} antes de usar novamente.')
-        .replaceAll('{remaining}', `${Math.ceil(ms / 1000)}s`), 'COOLDOWN', { remainingMs: ms });
+      if (ms > 0) {
+        const formatted = `${Math.ceil(ms / 1000)}s`;
+        const text = message !== undefined
+          ? message.replaceAll('{remaining}', formatted)
+          : this.t('cooldown', formatted, ms);
+        throw new GuardError(text, 'COOLDOWN', { remainingMs: ms });
+      }
     };
     if (typeof remaining === 'number') {
       enforce(remaining);
@@ -391,7 +396,13 @@ export class CommandContext {
       const key = JSON.stringify([this.guildID, this.message.channelID, this.authorID, command.name]);
       const raw = this.claimCooldown(key, parseDuration(command.cooldown));
       const remaining = typeof raw === 'number' ? raw : await raw;
-      if (remaining > 0) throw new GuardError(`Aguarde ${Math.ceil(remaining / 1000)}s antes de usar novamente.`, 'COOLDOWN', { remainingMs: remaining });
+      if (remaining > 0) {
+        throw new GuardError(
+          this.t('cooldown', `${Math.ceil(remaining / 1000)}s`, remaining),
+          'COOLDOWN',
+          { remainingMs: remaining },
+        );
+      }
     }
   }
 

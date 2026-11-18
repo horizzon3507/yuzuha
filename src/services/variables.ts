@@ -6,6 +6,8 @@ import { assertSynchronous, variableKey } from '../domain/state.js';
 import type { Store } from '../ports/store.js';
 import { requireActor, requireGuild } from './authorization.js';
 import type { ActorScope } from './authorization.js';
+import { defaultTranslator } from '../domain/i18n.js';
+import type { MessageTranslator } from '../domain/i18n.js';
 import { YuzuhaError } from '../shared/errors.js';
 
 export interface VariableOptions {
@@ -85,16 +87,17 @@ function write(state: State, key: string, value: JsonValue, expiry: number | nul
 
 export class VariableService {
   constructor(private readonly store: Store, private readonly scope: ActorScope,
-    private readonly now: () => number = Date.now) {}
+    private readonly now: () => number = Date.now,
+    private readonly t: MessageTranslator = defaultTranslator) {}
 
   forUser(id: string): VariableService {
-    requireGuild(this.scope.guildID);
-    return new VariableService(this.store, { ...this.scope, authorID: userID(id) }, this.now);
+    requireGuild(this.scope.guildID, this.t);
+    return new VariableService(this.store, { ...this.scope, authorID: userID(id) }, this.now, this.t);
   }
 
   private key(scope: VariableScope, name: string, targetUserID?: string): string {
-    const id = scope === 'guild' ? requireGuild(this.scope.guildID)
-      : scope === 'user' ? targetUserID ?? requireActor(this.scope.authorID) : '';
+    const id = scope === 'guild' ? requireGuild(this.scope.guildID, this.t)
+      : scope === 'user' ? targetUserID ?? requireActor(this.scope.authorID, this.t) : '';
     return variableKey(scope, id, name);
   }
 
@@ -105,8 +108,8 @@ export class VariableService {
   }
 
   query(scope: VariableScope, options: VariableQueryOptions = {}): Promise<VariablePage> {
-    const subject = scope === 'guild' ? requireGuild(this.scope.guildID)
-      : scope === 'user' ? requireActor(this.scope.authorID) : '';
+    const subject = scope === 'guild' ? requireGuild(this.scope.guildID, this.t)
+      : scope === 'user' ? requireActor(this.scope.authorID, this.t) : '';
     const query = { scope, subject, ...queryOptions(options) };
     if (this.store.queryVariables) return this.store.queryVariables(query, this.now);
     return this.store.read(state => queryState(state, query, this.now()));
@@ -187,7 +190,7 @@ export class VariableService {
         get global() { return globalScope ??= scope('global'); },
         userFor: (id: string) => {
           if (!active) throw new YuzuhaError('TRANSACTION_CLOSED', 'A transação já terminou.');
-          requireGuild(this.scope.guildID);
+          requireGuild(this.scope.guildID, this.t);
           return scope('user', userID(id));
         },
       });

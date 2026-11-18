@@ -1,4 +1,4 @@
-export { Yuzuha, Bot, MemoryRateLimiter, MemoryLock } from './bot.js';
+export { Yuzuha, Bot, userError, MemoryRateLimiter, MemoryLock } from './bot.js';
 export type {
   YuzuhaOptions,
   ErrorReplyResult,
