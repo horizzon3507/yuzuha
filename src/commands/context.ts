@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import type { IncomingMessage, Payload } from '../domain/messages.js';
-import type { ScriptEventData } from '../domain/events.js';
+import type { EventData } from '../domain/events.js';
 import type { CaseRecord, ModerationAction, ModerationOptions } from '../domain/moderation.js';
 import type { JsonValue, VariableScope } from '../domain/state.js';
 import { DEFAULT_LOCALE, defaultTranslator, validateLocale } from '../domain/i18n.js';
@@ -75,7 +75,7 @@ export interface ContextOptions {
   canvas?: { renderer: CanvasRenderer; config?: CanvasConfig };
   signal?: AbortSignal;
   executionID?: string;
-  event?: Readonly<ScriptEventData>;
+  event?: Readonly<EventData>;
   messageAvailable?: boolean;
   deleteLater?: (channelID: string, messageID: string, ttlMs: number) => void;
   /** Mapa nome → emoji do bot, compartilhado por referência. */
@@ -103,7 +103,7 @@ export class CommandContext {
   lastCase?: CaseRecord;
   private moderationApplied = false;
   private readonly sourceMessage: IncomingMessage;
-  readonly event?: Readonly<ScriptEventData>;
+  readonly event?: Readonly<EventData>;
   private readonly messageAvailable: boolean;
   private readonly deleteLaterFn?: (channelID: string, messageID: string, ttlMs: number) => void;
   private cdnService = createCdn();
