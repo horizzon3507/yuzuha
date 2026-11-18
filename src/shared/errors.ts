@@ -387,7 +387,7 @@ export class ScriptError extends YuzuhaError {
 export type GuardReason = 'GENERIC' | 'NOT_IN_GUILD' | 'NO_AUTHOR' | 'PERMISSION_MISSING_AUTHOR'
   | 'PERMISSION_MISSING_BOT' | 'HIERARCHY' | 'ADMIN_IMMUNE' | 'SELF_TARGET' | 'BOT_TARGET'
   | 'OWNER_TARGET' | 'MEMBER_NOT_FOUND' | 'NOT_BANNED' | 'INVALID_ARGUMENT' | 'INVALID_REASON'
-  | 'INVALID_DURATION' | 'COOLDOWN' | 'CHECK_FAILED';
+  | 'INVALID_DURATION' | 'COOLDOWN' | 'CHECK_FAILED' | 'OWNER_ONLY' | 'DEV_ONLY';
 
 export class GuardError extends YuzuhaError {
   readonly remainingMs?: number;

@@ -644,6 +644,40 @@ aquela mensagem — ambos geram `GuardError` com motivo `CHECK_FAILED`. `true` o
 cooldown) e antes dos middlewares globais e locais. Cooldowns declarativos e
 `ctx.cooldown(...)` preenchem `GuardError.remainingMs` em milissegundos,
 permitindo tratamento específico em `hooks.onCooldown` e `hooks.onDenied`.
+
+### Cooldown com escopos, múltiplos usos e bypass (`CooldownOptions`)
+
+Além de `string | number` (que preserva a chave padrão por servidor, canal, autor
+e comando), `Command.cooldown` e `ctx.cooldown(opções, mensagem?)` aceitam
+`CooldownOptions`:
+
+```ts
+import { defineCommand } from 'yuzuha';
+
+export default defineCommand({
+  name: 'relatorio',
+  cooldown: {
+    duration: '30s',
+    scope: 'guild',
+    uses: 3,
+    bypass: ctx => ctx.authorID === '1',
+  },
+  async run(ctx) {
+    await ctx.reply('Relatório gerado.');
+  },
+});
+```
+
+- `scope` (`CooldownScope`): omitido usa `[guildID, channelID, authorID, commandName]`;
+  `'user'` isola por autor em todos os canais/servidores; `'channel'` compartilha
+  a janela no canal; `'guild'` compartilha no servidor (com fallback para
+  `channelID` em DM); `'global'` aplica uma única janela global ao comando.
+- `uses`: inteiro positivo (padrão `1`) com o número de execuções permitidas na
+  janela fixa `[start, start + durationMs)`.
+- `bypass(ctx)`: função síncrona ou assíncrona; quando retorna `true`, ignora o
+  cooldown sem consumir uso da janela. Em subcomandos, cada nível da `lineage`
+  avalia seu próprio `scope`, `uses` e `bypass`. Opções inválidas lançam
+  `YuzuhaError` com código `COMMAND_METADATA`.
 `ctx.assert(condição, mensagem)` lança `GuardError` para recusar dentro de um handler. Para estreitar tipos no
 TypeScript, importe `assert` de `yuzuha`, como no exemplo de dados acima;
 `ctx.assert` oferece a mesma recusa em runtime sem estreitamento estático.
@@ -804,8 +838,9 @@ roteamento, configure a função `prefix` do bot para ler o store.
 
 Grupos não declaram `args` ou `flags`; cada folha define a entrada que recebe.
 Aliases são únicos entre irmãos, sem distinguir maiúsculas de minúsculas.
-Restrições de servidor, permissões de autor/bot, checks, middleware e cooldown
-dos grupos continuam valendo nos filhos. Políticas HTTP só podem restringir
+Restrições de servidor (`guildOnly`), dono (`ownerOnly`), servidores de
+desenvolvimento (`devOnly`), permissões de autor/bot, checks, middleware e
+cooldown dos grupos continuam valendo nos filhos. Políticas HTTP só podem restringir
 as políticas ancestrais. O registro e a recarga validam a árvore inteira antes
 de substituir comandos.
 

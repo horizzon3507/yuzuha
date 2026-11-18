@@ -14,6 +14,9 @@ A fonte das assinaturas completas são as declarações TypeScript distribuídas
 |---|---|
 | `name` | Nome do diretório de dados padrão; letras ASCII, números, `_` e `-` |
 | `prefix` | String, array de strings ou função sync/async de `IncomingMessage` |
+| `owners` | Lista de IDs de donos do bot (`bot.isOwner`, `ctx.isOwner`, `ownerOnly`) |
+| `devGuilds` | Lista de IDs de servidores de desenvolvimento aceitos por `devOnly: true` |
+| `gate` | Filtro `(message) => boolean \| Promise<boolean>` executado antes do roteamento/prefixo |
 | `client` | Instância de `Client` do Fluxer.js |
 | `clientOptions` | Opções do SDK quando o client não é fornecido |
 | `transport` | Implementação de `Transport`; padrão `FluxerTransport` |
@@ -47,6 +50,7 @@ erro, o resultado continua sendo `success`.
 |---|---|
 | `command(command)` | Registra um comando validado e retorna o bot |
 | `argumentType(name, definition)` | Registra um `CustomArgumentType<T>` para `arg.custom<T>(name)` e retorna o bot |
+| `isOwner(userID)` | Retorna `true` se `userID` consta em `options.owners` |
 | `useEngine(engine)` | Instala o engine de function mode (`functions()` de `yuzuha/functions`) |
 | `engine` | Engine de function mode instalado, quando presente |
 | `use(middleware)` | Acrescenta middleware e retorna o bot |
@@ -102,11 +106,14 @@ export default defineCommand({
 ```
 
 Esse exemplo valida a duração e responde; ele não agenda um lembrete.
-`duration` retorna milissegundos. Números usados como cooldown também são ms.
+`duration` retorna milissegundos. Em `cooldown`, durações (`string | number`) ou
+`CooldownOptions` (`{ duration, scope?, uses?, bypass? }`, onde `scope` é
+`'user' | 'channel' | 'guild' | 'global'`) definem a janela de uso; metadados
+inválidos lançam `YuzuhaError` (`COMMAND_METADATA`).
 
 Campos: `name`, `aliases`, `description`, `code` ou `run`, `guildOnly`,
-`permissions`, `botPermissions`, `cooldown`, `args`, `flags`, `subcommands`, `examples`,
-`checks`, `middleware`, `hidden`, `http` e `file`.
+`ownerOnly`, `devOnly`, `permissions`, `botPermissions`, `cooldown`, `args`,
+`flags`, `subcommands`, `examples`, `checks`, `middleware`, `hidden`, `http` e `file`.
 `hidden` omite da ajuda, mas não bloqueia execução. `file` identifica a origem
 dos diagnósticos e é preenchido pelo loader.
 
@@ -171,8 +178,9 @@ Nomes/aliases são únicos sem distinção entre maiúsculas e minúsculas.
 | `signal` | AbortSignal cooperativo do encerramento |
 | `executionID` | Identificador de correlação, compartilhado com a claim em agendamentos |
 | `requireGuild()` | Retorna o ID do servidor ou lança `GuardError` |
+| `isOwner()` | Retorna `true` se `authorID` consta em `options.owners` |
 | `requirePermission(name, bot?, message?)` | Verifica permissão de servidor do autor ou bot |
-| `cooldown(duration, message?)` | Reivindica cooldown por autor/canal/servidor/comando (`void \| Promise<void>`) |
+| `cooldown(durationOrOptions, message?)` | Reivindica cooldown (`string \| number \| CooldownOptions`, retorno `void \| Promise<void>`) |
 | `moderate(action, target, reason, options?)` | Executa moderação; retorna caso se `record` |
 | `case(id)` | Consulta caso do servidor, ou `undefined` |
 | `variable(scope, name, fallback?)` | Lê valor JSON |

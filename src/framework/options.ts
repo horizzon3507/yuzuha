@@ -38,6 +38,7 @@ export type {
 };
 
 export type DispatchResult = 'ignored' | 'success' | 'guarded' | 'error';
+export type MessageGate = (message: IncomingMessage) => boolean | Promise<boolean>;
 export type ErrorReplyResult = Payload | string | null | undefined;
 export interface UnknownCommandContext {
   readonly name: string;
@@ -95,6 +96,9 @@ export interface SignalHandlerOptions {
 }
 export interface YuzuhaOptions {
   prefix?: string | string[] | ((message: IncomingMessage) => string | string[] | Promise<string | string[]>);
+  owners?: readonly string[];
+  devGuilds?: readonly string[];
+  gate?: MessageGate;
   client?: Client;
   clientOptions?: ClientOptions;
   transport?: Transport;

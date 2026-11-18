@@ -46,6 +46,8 @@ export interface MessageCatalog {
   unknownCommand(name: string, prefix?: string): string;
   unknownSubcommand(): string;
   notInGuild(): string;
+  ownerOnly(): string;
+  devOnly(): string;
   noAuthor(): string;
   permissionMissingAuthor(permission: string): string;
   permissionMissingBot(permission: string): string;
@@ -133,6 +135,8 @@ const DEFAULT_CATALOG: MessageCatalog = {
   unknownCommand: (name, prefix = '') => `Comando desconhecido: ${prefix}${name}.`,
   unknownSubcommand: () => 'Subcomando desconhecido.',
   notInGuild: () => 'Este comando só funciona em servidores.',
+  ownerOnly: () => 'Apenas os donos do bot podem usar este comando.',
+  devOnly: () => 'Este comando está restrito aos servidores de desenvolvimento.',
   noAuthor: () => 'Esta operação exige um autor identificado.',
   permissionMissingAuthor: permission => `Você precisa da permissão ${permission}.`,
   permissionMissingBot: permission => `Preciso da permissão ${permission}.`,
@@ -203,6 +207,8 @@ const PARAMETER_NAMES: Readonly<Record<MessageKey, readonly string[]>> = {
   unknownCommand: ['name', 'prefix'],
   unknownSubcommand: [],
   notInGuild: [],
+  ownerOnly: [],
+  devOnly: [],
   noAuthor: [],
   permissionMissingAuthor: ['permission'],
   permissionMissingBot: ['permission'],

@@ -110,9 +110,9 @@ const bot = new Yuzuha({
   `reason === 'COOLDOWN'` (`error.remainingMs` é preenchido tanto pelo cooldown
   declarativo quanto por `ctx.cooldown`).
 - `onDenied(error, ctx)`: chamado para os demais motivos de `GuardError` quando
-  o contexto já existe (`CHECK_FAILED`, `PERMISSION_MISSING_AUTHOR`,
-  `NOT_IN_GUILD`, etc.). Falhas antes de `ctx` (ex.: aspas abertas) seguem
-  diretamente para `errorReply`.
+  o contexto já existe (`CHECK_FAILED`, `OWNER_ONLY`, `DEV_ONLY`,
+  `PERMISSION_MISSING_AUTHOR`, `NOT_IN_GUILD`, etc.). Falhas antes de `ctx`
+  (ex.: aspas abertas) seguem diretamente para `errorReply`.
 - **Precedência**: `string` ou `Payload` do hook substitui a resposta; `null`
   silencia; hook ausente ou retorno `undefined`/`void` segue para `errorReply` e
   depois para a mensagem padrão. Se o hook lançar erro, a falha é enviada a
@@ -181,6 +181,54 @@ e a ajuda. Consulte os detalhes em [API.md](API.md).
 O [guia nativo JS/TS](NATIVE.md) cobre schemas `arg.*`, handlers com tipos
 inferidos, eventos, checks e middleware por comando.
 
+### Donos, servidores de desenvolvimento e filtro de entrada (`owners`, `devGuilds`, `gate`)
+
+```ts
+import { Yuzuha, defineCommand } from 'yuzuha';
+
+const bloqueados = new Set<string>(['usuario-banido']);
+let manutencao = false;
+
+const bot = new Yuzuha({
+  prefix: '!',
+  owners: ['123456789012345678'],
+  devGuilds: ['987654321098765432'],
+  gate(message) {
+    if (manutencao && !bot.isOwner(message.authorID)) return false;
+    return !bloqueados.has(message.authorID);
+  },
+});
+
+bot.command(defineCommand({
+  name: 'diagnostico',
+  ownerOnly: true,
+  devOnly: true,
+  async run(ctx) {
+    await ctx.reply(`Dono verificado: ${ctx.isOwner()}`);
+  },
+}));
+```
+
+- `owners?: readonly string[]`: lista de IDs não vazios sem espaços nas pontas
+  (validada com `ConfigError` `OPTIONS`). Exposta em `bot.isOwner(userID)` e
+  `ctx.isOwner()` (em comandos e eventos com contexto).
+- `Command.ownerOnly?: boolean`: herdado de grupos pais em subcomandos; avaliado
+  no início de `ctx.prepare()`, antes de consultas de membro, argumentos e
+  cooldowns, lançando `GuardError` com `reason === 'OWNER_ONLY'`.
+- `devGuilds?: readonly string[]` e `Command.devOnly?: boolean`: `devOnly`
+  também é herdado por subcomandos e exige que `ctx.guildID` pertença a
+  `devGuilds` — recusando DMs e servidores fora da lista (inclusive quando
+  `devGuilds` estiver vazio ou omitido) com `GuardError` e `reason === 'DEV_ONLY'`.
+- `gate?: MessageGate` (`(message: IncomingMessage) => boolean | Promise<boolean>`):
+  executado antes da resolução de prefixo, de `rateLimiter.duplicate()` e de
+  `hooks.onUnknownCommand` nas mensagens recebidas (`MessageCreate` e
+  `bot.handle`), retornando `'ignored'` com custo mínimo quando retorna `false`.
+  Erros síncronos ou promessas rejeitadas em `gate` são reportados em `onError`
+  com `{ source: 'hook', event: 'gate' }` e retornam `'ignored'`. Tarefas
+  internas disparadas pelo `Scheduler` (`taskExecution = true`) não passam por
+  `gate` para não falharem durante janelas de manutenção, mas continuam sujeitas
+  aos guards do comando (`ownerOnly`, `devOnly`, `guildOnly`, `permissions`, `checks`).
+
 ## Comando nativo
 
 ```ts
@@ -218,8 +266,9 @@ folha. As regras de herança, parsing e exemplos completos estão em
 | `ctx.vars` | Map de variáveis locais da execução |
 | `ctx.reply(textoOuPayload)` | Resposta sem pings pelo adaptador |
 | `ctx.requireGuild()` | Exige servidor e retorna seu ID |
+| `ctx.isOwner()` | Indica se `ctx.authorID` pertence a `YuzuhaOptions.owners` |
 | `ctx.requirePermission(nome, bot?, mensagem?)` | Exige permissão de servidor |
-| `ctx.cooldown(duração, mensagem?)` | Cooldown da execução (`void \| Promise<void>`; use `await` com `rateLimiter` assíncrono) |
+| `ctx.cooldown(duraçãoOuOpções, mensagem?)` | Cooldown da execução com escopo, múltiplos usos e `bypass` opcionais (`void \| Promise<void>`) |
 | `ctx.moderate(ação, alvo, motivo, opções)` | Moderação compartilhada com scripts |
 | `ctx.store`, `ctx.transport` | Persistência e operações de transporte |
 | `ctx.variable`, `ctx.setVariable` | Variáveis JSON por escopo |
@@ -495,8 +544,8 @@ import { Yuzuha } from 'yuzuha';
 import type { RateLimiter } from 'yuzuha';
 
 const rateLimiter: RateLimiter = {
-  async cooldown(key, durationMs) {
-    // Retorne 0 se concedido ou os milissegundos restantes (> 0) se bloqueado.
+  async cooldown(key, durationMs, maxUses = 1) {
+    // Retorne 0 se concedido (até maxUses dentro da janela) ou os ms restantes (> 0) se bloqueado.
     return 0;
   },
   async duplicate(channelID, messageID) {
@@ -511,12 +560,19 @@ const rateLimiter: RateLimiter = {
 const bot = new Yuzuha({ prefix: '!', rateLimiter });
 ```
 
+- **Múltiplos usos por janela (`maxUses`)**: o 3º argumento `maxUses?: number`
+  (padrão `1`) preserva compatibilidade total com implementações externas de 2
+  argumentos. Em `MemoryRateLimiter`, `maxUses === 1` mantém o caminho enxuto;
+  `maxUses > 1` permite até `maxUses` usos em `[start, start + durationMs)` e
+  retorna `until - time` a partir da `(maxUses + 1)`-ésima chamada até a janela
+  expirar, respeitando `sweep` e a política de capacidade (`evict` ou `throw`).
 - **Modo síncrono e assíncrono**: `cooldown` retorna `number | Promise<number>`
   e `duplicate` retorna `boolean | Promise<boolean>`. Limitadores síncronos
   (como `MemoryRateLimiter`) preservam o caminho rápido síncrono e o lançamento
-  síncrono de `GuardError` em `ctx.cooldown(...)`. Quando `rateLimiter.cooldown`
-  retorna uma `Promise`, `ctx.cooldown(...)` também retorna `Promise<void>` —
-  prefira `await ctx.cooldown(...)` ao escrever comandos portáveis; `cooldown`
+  síncrono de `GuardError` em `ctx.cooldown(...)` (inclusive com `CooldownOptions`
+  sem `bypass` assíncrono). Quando `rateLimiter.cooldown` ou `bypass` retorna
+  uma `Promise`, `ctx.cooldown(...)` também retorna `Promise<void>` — prefira
+  `await ctx.cooldown(...)` ao escrever comandos portáveis; `cooldown`
   declarativo e `$cooldown` aguardam automaticamente.
 - **Deduplicação assíncrona**: se `duplicate` retornar `Promise<boolean>`, o
   bot aguarda a resolução dentro do despacho rastreado (inclusive sob

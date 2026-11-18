@@ -19,6 +19,7 @@ export type {
   RateLimitOptions,
   YuzuhaPlugin,
   Middleware,
+  MessageGate,
   DispatchResult,
   DestroyOptions,
   SignalHandlerOptions,

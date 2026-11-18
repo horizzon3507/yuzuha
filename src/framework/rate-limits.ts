@@ -44,6 +44,12 @@ export function resolveRateLimitOptions(input: unknown): Required<RateLimitOptio
   return { maxCooldowns, onCooldownCapacity, maxDedupe, dedupeWindowMs };
 }
 
+type CooldownEntry = number | { until: number; count: number };
+
+function cooldownUntil(entry: CooldownEntry): number {
+  return typeof entry === 'number' ? entry : entry.until;
+}
+
 /** In-memory cooldown and two-generation message deduplication implementation of {@link RateLimiter}. */
 export class MemoryRateLimiter implements RateLimiter {
   private readonly now: () => number;
@@ -55,7 +61,7 @@ export class MemoryRateLimiter implements RateLimiter {
   private currentBucket = new Map<string, number>();
   private previousBucket = new Map<string, number>();
   private nextBucketRotation?: number;
-  private readonly cooldowns = new Map<string, number>();
+  private readonly cooldowns = new Map<string, CooldownEntry>();
   private nextSweep = 0;
   private nextExpiration = Infinity;
 
@@ -87,9 +93,10 @@ export class MemoryRateLimiter implements RateLimiter {
   private sweep(time: number, force = false): void {
     if (time < this.nextExpiration || (!force && time < this.nextSweep)) return;
     this.nextExpiration = Infinity;
-    for (const [key, until] of this.cooldowns) {
+    for (const [key, entry] of this.cooldowns) {
+      const until = cooldownUntil(entry);
       if (until <= time) this.cooldowns.delete(key);
-      else this.nextExpiration = Math.min(this.nextExpiration, until);
+      else if (until < this.nextExpiration) this.nextExpiration = until;
     }
     this.nextSweep = time + 1000;
   }
@@ -98,7 +105,8 @@ export class MemoryRateLimiter implements RateLimiter {
     let victimKey: string | undefined;
     let victimUntil = Infinity;
     let next = Infinity;
-    for (const [entryKey, entryUntil] of this.cooldowns) {
+    for (const [entryKey, entry] of this.cooldowns) {
+      const entryUntil = cooldownUntil(entry);
       if (victimKey === undefined || entryUntil < victimUntil) {
         next = victimUntil;
         victimUntil = entryUntil;
@@ -143,10 +151,33 @@ export class MemoryRateLimiter implements RateLimiter {
     return false;
   }
 
-  cooldown(key: string, duration: number): number {
+  cooldown(key: string, duration: number, maxUses = 1): number {
+    if (maxUses !== 1 && (!Number.isSafeInteger(maxUses) || maxUses < 1)) {
+      throw new YuzuhaError('ARGUMENT', 'maxUses deve ser um inteiro positivo.');
+    }
     const time = this.now();
-    const remaining = (this.cooldowns.get(key) ?? 0) - time;
-    if (remaining > 0) return remaining;
+    const existing = this.cooldowns.get(key);
+    if (existing !== undefined) {
+      if (typeof existing === 'number') {
+        const remaining = existing - time;
+        if (remaining > 0) {
+          if (maxUses > 1) {
+            this.cooldowns.set(key, { until: existing, count: 2 });
+            return 0;
+          }
+          return remaining;
+        }
+      } else {
+        const remaining = existing.until - time;
+        if (remaining > 0) {
+          if (existing.count < maxUses) {
+            existing.count++;
+            return 0;
+          }
+          return remaining;
+        }
+      }
+    }
     this.sweep(time);
     if (this.cooldowns.size >= this.maxCooldowns && !this.cooldowns.has(key)) {
       this.sweep(time, true);
@@ -158,7 +189,7 @@ export class MemoryRateLimiter implements RateLimiter {
       }
     }
     const until = time + duration;
-    this.cooldowns.set(key, until);
+    this.cooldowns.set(key, maxUses === 1 ? until : { until, count: 1 });
     if (until < this.nextExpiration) this.nextExpiration = until;
     return 0;
   }
