@@ -193,7 +193,7 @@ export function createTestBot(options: TestBotOptions = {}): TestBot {
   if (botOptions.authorization === 'off') (botOptions as { unsafeDisableResourceAuthorization?: boolean }).unsafeDisableResourceAuthorization = true;
   const bot = new Yuzuha({ timers, ...botOptions, transport, resources: mockResources(resources), store,
     now: clock.now, http: options.http ?? false,
-    onError: async (error, ctx) => { errors.push(error); await onError?.(error, ctx); },
+    onError: async (error, ctx, info) => { errors.push(error); await onError?.(error, ctx, info); },
   });
   try { for (const command of commands) bot.command(command); }
   catch (error) {

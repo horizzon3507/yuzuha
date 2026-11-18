@@ -1,7 +1,7 @@
 import type { CommandContext } from '../context.js';
 import type { Payload } from '../contracts.js';
 import { GuardError, PartialModerationError, YuzuhaError } from '../errors.js';
-import type { YuzuhaOptions } from './options.js';
+import type { ErrorReportInfo, YuzuhaOptions } from './options.js';
 import { emitLog } from './logging.js';
 import { errorCode } from '../services/scheduler.js';
 
@@ -11,10 +11,29 @@ export function userError(error: unknown, ctx?: CommandContext): string {
   return 'Não foi possível concluir o comando.';
 }
 
-export async function reportError(options: YuzuhaOptions, error: unknown, ctx?: CommandContext): Promise<void> {
-  await emitLog(options, { event: 'error', errorCode: errorCode(error), ...(ctx ? { executionID: ctx.executionID, command: ctx.command.name } : {}) });
+export async function reportError(
+  options: YuzuhaOptions,
+  error: unknown,
+  ctx?: CommandContext,
+  info?: Partial<Omit<ErrorReportInfo, 'ctx'>>,
+): Promise<void> {
+  const executionID = info?.executionID ?? ctx?.executionID;
+  const reportInfo: ErrorReportInfo = Object.freeze({
+    source: info?.source ?? (ctx ? 'command' : 'event'),
+    ...(info?.event ? { event: info.event } : {}),
+    ...(ctx ? { ctx } : {}),
+    ...(executionID ? { executionID } : {}),
+  });
+  await emitLog(options, {
+    event: 'error',
+    errorCode: errorCode(error),
+    source: reportInfo.source,
+    ...(reportInfo.event ? { trigger: reportInfo.event } : {}),
+    ...(executionID ? { executionID } : {}),
+    ...(ctx ? { command: ctx.command.name } : {}),
+  });
   try {
-    if (options.onError) await options.onError(error, ctx);
+    if (options.onError) await options.onError(error, ctx, reportInfo);
     else console.error(`[yuzuha] ${error instanceof YuzuhaError ? error.code : 'UNEXPECTED_ERROR'}`, error);
   } catch { console.error('[yuzuha] ERROR_HANDLER_FAILED'); }
 }
@@ -33,7 +52,10 @@ async function runGuardHook(
     if (result === undefined) return { handled: false };
     return { handled: true, reply: result };
   } catch (hookError) {
-    await reportError(options, hookError, ctx);
+    await reportError(options, hookError, ctx, {
+      source: 'hook',
+      event: error.reason === 'COOLDOWN' ? 'onCooldown' : 'onDenied',
+    });
     return { handled: true, reply: userError(error, ctx) };
   }
 }
@@ -52,7 +74,7 @@ export async function resolveErrorReply(
       const custom = await options.errorReply(error, ctx);
       if (custom !== undefined) return custom;
     } catch (replyHandlerError) {
-      await reportError(options, replyHandlerError, ctx);
+      await reportError(options, replyHandlerError, ctx, { source: 'hook', event: 'errorReply' });
     }
   }
   return userError(error, ctx);

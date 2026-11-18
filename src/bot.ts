@@ -4,6 +4,8 @@ export type {
   ErrorReplyResult,
   UnknownCommandContext,
   YuzuhaHooks,
+  ErrorSource,
+  ErrorReportInfo,
   VariableSweepOptions,
   ConcurrencyOptions,
   PrefixCacheOptions,
@@ -12,3 +14,4 @@ export type {
   Middleware,
   DispatchResult,
 } from './framework/options.js';
+export type { TransportRetryPolicy } from './services/retry.js';

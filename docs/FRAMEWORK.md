@@ -335,6 +335,43 @@ servidor ou `bot.invalidatePrefix()` para limpar todo o cache; resoluções em
 andamento antes da invalidação ou de `destroy()` não populam o cache. Arrays de
 prefixos validados também reutilizam um cache LRU interno de até 256 entradas.
 
+### Retry de transporte
+
+Por padrão, `FluxerTransport` e os recursos de mensagens repetem operações
+idempotentes em falhas transitórias e envios não entregues usando backoff
+exponencial. Configure `retry: false | TransportRetryPolicy` nas opções de
+`Yuzuha`:
+
+```ts
+const bot = new Yuzuha({
+  name: 'meu-bot',
+  retry: {
+    requests: 3,
+    delayMs: 500,
+    backoff: 2,
+    maxDelayMs: 10_000,
+    jitter: 0.25,
+    retryOn: (error, attempt) => attempt <= 2 && isTransientError(error),
+  },
+});
+```
+
+- `requests` (padrão `1`): inteiro não negativo com o máximo de repetições.
+- `delayMs` (padrão `750`): atraso inicial finito maior que zero, em ms.
+- `backoff` (padrão `2`): fator finito `>= 1` para o cálculo
+  `min(maxDelayMs, delayMs * backoff ** (attempt - 1))`.
+- `maxDelayMs` (padrão `30_000`): teto finito maior que zero para o atraso.
+- `jitter` (padrão `0`): fator finito entre `0` e `1`; quando maior que zero,
+  sorteia via `random()` (padrão `Math.random`, validado entre `0` e `1`) e
+  limita o resultado a `[1, maxDelayMs]` (ou `maxDelayMs` se menor que `1`).
+- `retryOn(error, attempt)`: predicado opcional com o número 1-based da
+  repetição; quando informado, substitui o predicado padrão da operação.
+- `retry: false`: desativa repetições; opções inválidas lançam
+  `ConfigError` (subclasse de `YuzuhaError`) com código `RETRY_OPTIONS` já no construtor.
+
+Quando `onLog` está definido, cada repetição emite `transport.retry` com
+`attempt` e `delayMs`.
+
 ## Testes sem rede
 
 ```ts

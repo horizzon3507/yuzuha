@@ -19,7 +19,7 @@ Os registros têm `timestamp` ISO e um `event`:
 | `command.finish` | Mesmos campos, `outcome`, `durationMs` |
 | `event.start` | `executionID`, `command` no formato `event:nome` |
 | `event.finish` | Mesmos campos, `outcome`, `durationMs` |
-| `error` | `errorCode`, contexto de execução quando houver |
+| `error` | `errorCode`, `source`, `trigger?`, contexto de execução quando houver |
 | `schedule.start` | `scheduleID`, `executionID` da claim |
 | `schedule.finish` | Mesmos campos, `status`, `durationMs`, `retryable`, `errorCode?` |
 | `schedule.error` | `errorCode` da falha de manutenção |
@@ -34,12 +34,18 @@ token, stack ou mensagem de erro. Erros conhecidos usam um código; os demais
 recebem `UNEXPECTED_ERROR`. O histórico persistente do scheduler contém a tarefa
 original, incluindo `input`, e deve receber a mesma proteção do store.
 
-`onError(error, ctx?)` continua disponível para diagnóstico com a causa original;
-o código do bot decide o que registrar desse objeto. Eventos nativos podem não
-ter contexto de comando. `onCommand(ctx, outcome)` mantém seu contrato anterior.
-Eventos de script fornecem `EventContext` a `onError`, incluindo `ctx.event`,
-mas não chamam `onCommand`. O payload do evento não é incluído nos logs
-automáticos. Veja [EVENTS.md](EVENTS.md).
+`onError(error, ctx, info)` continua disponível para diagnóstico com a causa
+original; o código do bot decide o que registrar desse objeto. O terceiro
+parâmetro `info` (`ErrorReportInfo`) é congelado e traz `source`
+(`'command' | 'event' | 'gateway' | 'scheduler' | 'hook'`), além de `event?`,
+`ctx?` e `executionID?` quando disponíveis; assinaturas com um ou dois parâmetros
+permanecem compatíveis. Nos registros de log de `error`, `source` identifica a
+origem e `trigger?` traz o nome do evento disparador (como `'error'`,
+`'shardError'`, `'messageCreate'` ou o evento registrado). Eventos nativos podem
+não ter contexto de comando. `onCommand(ctx, outcome)` mantém seu contrato
+anterior. Eventos de script e `contextEvent` fornecem `EventContext` a
+`onError`, incluindo `ctx.event`, mas não chamam `onCommand`. O payload do
+evento não é incluído nos logs automáticos. Veja [EVENTS.md](EVENTS.md).
 
 Callbacks são confiáveis e aguardados. Uma falha de `onLog` gera apenas
 `LOG_HANDLER_FAILED` no stderr e não altera o resultado do comando. Hooks podem

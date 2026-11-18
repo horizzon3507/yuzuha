@@ -16,6 +16,7 @@ import type { CanvasConfig } from '../domain/canvas.js';
 import type { MemberCacheOptions } from '../infrastructure/fluxer/member-cache.js';
 import type { ConcurrencyOptions } from './concurrency.js';
 import type { PrefixCacheOptions } from './prefix-cache.js';
+import type { TransportRetryPolicy } from '../services/retry.js';
 
 export type { ConcurrencyOptions, PrefixCacheOptions };
 
@@ -31,6 +32,13 @@ export interface YuzuhaHooks {
   onCooldown?: (remainingMs: number, ctx: CommandContext, error: GuardError) => ErrorReplyResult | void | Promise<ErrorReplyResult | void>;
   onDenied?: (error: GuardError, ctx: CommandContext) => ErrorReplyResult | void | Promise<ErrorReplyResult | void>;
   onUnknownCommand?: (info: UnknownCommandContext) => Payload | string | null | void | Promise<Payload | string | null | void>;
+}
+export type ErrorSource = 'command' | 'event' | 'gateway' | 'scheduler' | 'hook';
+export interface ErrorReportInfo {
+  readonly source: ErrorSource;
+  readonly event?: string;
+  readonly ctx?: CommandContext;
+  readonly executionID?: string;
 }
 export type Middleware = (ctx: CommandContext, next: () => Promise<void>) => Promise<void>;
 export interface YuzuhaPlugin {
@@ -67,12 +75,12 @@ export interface YuzuhaOptions {
   music?: MusicManager;
   voice?: NativeVoice;
   canvas?: CanvasConfig;
-  onError?: (error: unknown, ctx?: CommandContext) => void | Promise<void>;
+  onError?: (error: unknown, ctx: CommandContext | undefined, info: ErrorReportInfo) => void | Promise<void>;
   errorReply?: (error: unknown, ctx?: CommandContext) => ErrorReplyResult | Promise<ErrorReplyResult>;
   hooks?: YuzuhaHooks;
   onCommand?: (ctx: CommandContext, outcome: DispatchResult) => void | Promise<void>;
   onLog?: (record: LogRecord) => void | Promise<void>;
-  retry?: false | { requests?: number; delayMs?: number };
+  retry?: false | TransportRetryPolicy;
   timers?: { setTimeout(fn: () => void, ms: number): unknown; clearTimeout(handle: unknown): void };
   cdn?: { mediaBase?: string };
   /** Mapa nome → emoji copiado para um registro sem protótipo, exposto como `bot.emoji` e `ctx.emoji` (mapa vivo). */
