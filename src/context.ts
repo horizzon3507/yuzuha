@@ -1,5 +1,5 @@
 export { CommandContext } from './commands/context.js';
-export type { ContextOptions } from './commands/context.js';
+export type { ContextOptions, YuzuhaLocals } from './commands/context.js';
 export { defineCommand } from './commands/definition.js';
 export type { Command, ArgumentDefinition } from './commands/definition.js';
 export { commandUsage, commandHelp } from './commands/help.js';

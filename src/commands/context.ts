@@ -40,6 +40,12 @@ import type { ArgumentDefinition, Command } from './definition.js';
 
 export interface SendOptions { ttlMs?: number }
 
+/**
+ * Interface extensível via declaration merging (`declare module 'yuzuha' { interface YuzuhaLocals { ... } }`)
+ * para dados locais tipados por execução em `ctx.locals`.
+ */
+export interface YuzuhaLocals {}
+
 export interface ContextOptions {
   message: IncomingMessage;
   transport: Transport;
@@ -78,6 +84,7 @@ export interface ContextOptions {
 export class CommandContext {
   private executionKey?: string;
   private localVars?: Map<string, unknown>;
+  readonly locals: YuzuhaLocals = {} as YuzuhaLocals;
   private argumentsBag?: ArgumentBag;
   private flagsBag?: ArgumentBag;
   private nativeMod?: NativeModeration;

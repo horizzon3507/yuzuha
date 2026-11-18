@@ -251,6 +251,9 @@ export class Yuzuha {
   constructor(public readonly options: YuzuhaOptions = {}) {
     setMaxListeners(0, this.shutdown.signal);
     assertLogger(options.logger);
+    if (options.context !== undefined && typeof options.context !== 'function') {
+      throw new ConfigError('OPTIONS', 'context deve ser uma função.');
+    }
     if (options.errorReply !== undefined && typeof options.errorReply !== 'function') {
       throw new ConfigError('OPTIONS', 'errorReply deve ser uma função.');
     }
@@ -573,6 +576,10 @@ export class Yuzuha {
               locale: resolvedLocale.locale, translator: resolvedLocale.translator,
               help: (cmd, pfx = '') => this.registry.help(cmd, pfx, resolvedLocale.translator) });
           }
+          if (this.options.context) {
+            await this.options.context(ctx);
+            if (this.shutdown.signal.aborted) throw cancellationError();
+          }
           await definition.run(ctx, ...args as ClientEvents[K]);
         } catch (error) {
           await reportError(this.options, error, ctx, { source: 'event', event: definition.event, executionID: prelim.executionID });
@@ -654,6 +661,10 @@ export class Yuzuha {
             help: (cmd, pfx = '') => this.registry.help(cmd, pfx, resolvedLocale.translator) });
         }
         if (this.hasLogSink) await emitLog(this.options, { event: 'event.start', executionID: ctx.executionID, command: ctx.command.name });
+        if (this.options.context) {
+          await this.options.context(ctx);
+          if (signal.aborted) throw cancellationError();
+        }
         const output = engine.text(await engine.execute(program, ctx)).trim();
         if (output) {
           if (!ctx.channelID) throw new GuardError(ctx.t('eventChannelRequired'), 'INVALID_ARGUMENT');
@@ -1094,6 +1105,10 @@ export class Yuzuha {
             help: (cmd, pfx = '') => this.registry.help(cmd, pfx, activeTranslator) });
           if (this.hasLogSink) await emitLog(this.options, { event: 'command.start', executionID: ctx.executionID, command: ctx.command.name });
           if (signal.aborted) throw cancellationError();
+          if (this.options.context) {
+            await this.options.context(ctx);
+            if (signal.aborted) throw cancellationError();
+          }
           await ctx.prepare();
           const current = ctx;
           for (const check of compiled.command.checks ?? []) {

@@ -33,6 +33,7 @@ A fonte das assinaturas completas são as declarações TypeScript distribuídas
 | `rateLimits` | Opções de capacidade e janela do `MemoryRateLimiter` padrão (`maxCooldowns`, `onCooldownCapacity`, `maxDedupe`, `dedupeWindowMs`) |
 | `rateLimiter` | Implementação síncrona ou assíncrona de `RateLimiter` para cooldowns e deduplicação distribuída |
 | `variables` | `false` ou `{ sweepIntervalMs?, sweepBatch? }` para varredura periódica de variáveis expiradas após `login()` |
+| `context(ctx)` | Fábrica sync/async chamada antes de `ctx.prepare()`, checks, middleware e eventos com contexto para popular `ctx.locals` |
 | `onError(error, ctx?)` | Observação de falhas internas e operacionais |
 | `onCommand(ctx, outcome)` | Observação do resultado de comandos encontrados |
 | `onLog(record)` | Eventos estruturados opcionais, sem conteúdo/segredos automáticos |
@@ -149,6 +150,7 @@ Nomes/aliases são únicos sem distinção entre maiúsculas e minúsculas.
 | `args` | ArgumentBag compatível com Map; get/require inferidos para schemas |
 | `flags` | Flags declaradas e convertidas; get/require inferidos para schemas |
 | `now()` | Epoch em ms pelo relógio configurado; use para cálculos de prazo |
+| `locals` | Objeto isolado da execução (`YuzuhaLocals`), extensível via `declare module 'yuzuha'` |
 | `vars` | Map local daquela execução |
 | `reply(stringOuPayload)` | Retorna o ID da resposta |
 | `send`, `edit`, `delete`, `react` | Helpers do transporte, usando o canal/mensagem atuais como padrão |
