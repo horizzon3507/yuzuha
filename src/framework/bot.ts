@@ -275,6 +275,9 @@ export class Yuzuha {
       throw new ConfigError('MESSAGES_OPTIONS', 'locale deve ser texto ou função.');
     }
     this.messagesRuntime = resolveMessagesConfig(options.messages, typeof options.locale === 'string' ? options.locale : undefined);
+    if (options.gate !== undefined && typeof options.gate !== 'function') {
+      throw new ConfigError('OPTIONS', 'gate deve ser uma função.');
+    }
     this.ownerIDs = resolveIdSet(options.owners, 'owners');
     this.devGuildIDs = resolveIdSet(options.devGuilds, 'devGuilds');
     const rateLimitOptions = resolveRateLimitOptions(options.rateLimits);
@@ -981,23 +984,51 @@ export class Yuzuha {
 
   private handleMessage(message: IncomingMessage, onFailure?: (error: unknown, ctx?: CommandContext) => void, parentSignal?: AbortSignal, executionID?: string, taskExecution = false): Promise<DispatchResult> {
     if (this.closing || message.authorBot || message.authorID === this.transport.botID) return ignored;
+    let pendingGate: Promise<boolean> | undefined;
+    if (!taskExecution && this.options.gate) {
+      try {
+        const allowed = this.options.gate(message);
+        if (isPromiseLike(allowed)) {
+          pendingGate = Promise.resolve(allowed);
+        } else if (!allowed || this.closing) {
+          return ignored;
+        }
+      } catch (error) {
+        const resolvedExecutionID = executionID ?? randomUUID();
+        const task = runInExecution(this, {
+          executionID: resolvedExecutionID,
+          source: 'command',
+          guildID: message.guildID,
+          channelID: message.channelID,
+          userID: message.authorID,
+        }, async (): Promise<DispatchResult> => {
+          await reportError(this.options, error, undefined, { source: 'hook', event: 'gate', executionID: resolvedExecutionID });
+          return 'ignored';
+        });
+        this.active.add(task);
+        void task.then(() => this.active.delete(task), () => this.active.delete(task));
+        return task;
+      }
+    }
     let routed: RoutedCommand | undefined;
     let pendingRoute: Promise<RoutedCommand | undefined> | undefined;
-    const prefixes = typeof this.options.prefix !== 'function'
-      ? (this.options.prefix ?? '!')
-      : this.dynamicPrefixCache?.get(prefixCacheKey(message));
-    if (prefixes !== undefined) {
-      let candidate: RoutedCommand | undefined | Promise<RoutedCommand | undefined>;
-      try { candidate = this.resolveRoute(message, prefixes); }
-      catch (error) { return Promise.reject(error); }
-      if (!candidate) return ignored;
-      if (isPromiseLike(candidate)) pendingRoute = candidate;
-      else routed = candidate;
+    if (!pendingGate) {
+      const prefixes = typeof this.options.prefix !== 'function'
+        ? (this.options.prefix ?? '!')
+        : this.dynamicPrefixCache?.get(prefixCacheKey(message));
+      if (prefixes !== undefined) {
+        let candidate: RoutedCommand | undefined | Promise<RoutedCommand | undefined>;
+        try { candidate = this.resolveRoute(message, prefixes); }
+        catch (error) { return Promise.reject(error); }
+        if (!candidate) return ignored;
+        if (isPromiseLike(candidate)) pendingRoute = candidate;
+        else routed = candidate;
+      }
     }
     const signal = parentSignal ? AbortSignal.any([this.shutdown.signal, parentSignal]) : this.shutdown.signal;
     const resolvedExecutionID = executionID ?? randomUUID();
     const source = taskExecution ? 'scheduler' : 'command';
-    const run = () => this.dispatch(message, signal, onFailure, resolvedExecutionID, source, routed, pendingRoute);
+    const run = () => this.dispatch(message, signal, onFailure, resolvedExecutionID, source, routed, pendingRoute, pendingGate);
     const task = routed
       ? run()
       : runInExecution(this, {
@@ -1042,7 +1073,18 @@ export class Yuzuha {
     source: 'command' | 'scheduler',
     resolved?: RoutedCommand,
     pendingRoute?: Promise<RoutedCommand | undefined>,
+    pendingGate?: Promise<boolean>,
   ): Promise<DispatchResult> {
+    if (pendingGate) {
+      let allowed: boolean;
+      try {
+        allowed = Boolean(await pendingGate);
+      } catch (error) {
+        await reportError(this.options, error, undefined, { source: 'hook', event: 'gate', executionID });
+        return 'ignored';
+      }
+      if (!allowed || this.closing || signal.aborted) return 'ignored';
+    }
     if (!resolved) {
       if (pendingRoute) {
         resolved = await pendingRoute;
