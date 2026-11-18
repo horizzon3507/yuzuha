@@ -22,6 +22,7 @@ export type {
   PrefixCacheOptions,
   RateLimitOptions,
   YuzuhaPlugin,
+  AsyncYuzuhaPlugin,
   Middleware,
   MessageGate,
   DispatchResult,

@@ -19,6 +19,7 @@ export type {
   Lock,
   LockLease,
   YuzuhaPlugin,
+  AsyncYuzuhaPlugin,
   Middleware,
   MessageGate,
   DispatchResult,

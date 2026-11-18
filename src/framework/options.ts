@@ -1,4 +1,5 @@
 import type { Client, ClientOptions } from '@fluxerjs/core';
+import type { Yuzuha } from './bot.js';
 import type { Command, CommandContext, HelpRenderContext, HelpRenderer } from '../context.js';
 import type { IncomingMessage, Payload, Store, Transport } from '../contracts.js';
 import type { GuardError } from '../errors.js';
@@ -66,11 +67,17 @@ export interface ErrorReportInfo {
 export type Middleware = (ctx: CommandContext, next: () => Promise<void>) => Promise<void>;
 export interface YuzuhaPlugin {
   name: string;
+  dependsOn?: readonly string[];
   functions?: ScriptFunctionDefinition[];
   middleware?: Middleware[];
   commands?: Command[];
   events?: NativeEvent[];
   scriptEvents?: ScriptEventDefinition[];
+  setup?: (bot: Yuzuha) => void | Promise<void>;
+  teardown?: (bot: Yuzuha) => void | Promise<void>;
+}
+export interface AsyncYuzuhaPlugin extends YuzuhaPlugin {
+  setup: (bot: Yuzuha) => Promise<void>;
 }
 export interface VariableSweepOptions {
   sweepIntervalMs?: number | false;
