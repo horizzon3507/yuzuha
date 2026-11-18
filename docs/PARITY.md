@@ -96,7 +96,8 @@ locais vêm de `transport.member(guildID, userID, channelID)`.
 Criação, listagem, consulta, envio, edição e exclusão de webhooks exigem
 `ManageWebhooks` efetivo para autor e bot no canal do webhook. Mesmo com token,
 o webhook precisa ser consultável pela autenticação do bot e pertencer ao
-servidor atual. Criação, edição, exclusão e clonagem de emojis/stickers exigem
+servidor atual. `users.auditLogs` exige `ViewAuditLog` de autor e bot no
+servidor atual e valida filtros/cursores antes de consultar o port. Criação, edição, exclusão e clonagem de emojis/stickers exigem
 `ManageExpressions` de autor e bot no servidor atual. `$createEmoji` verifica
 ambos antes do download, e o contexto revalida antes da mutação.
 `bot.resources` e `bot.client` preservam a autoridade direta do

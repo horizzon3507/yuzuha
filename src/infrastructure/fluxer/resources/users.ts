@@ -1,9 +1,11 @@
 import { fixAnimatedAssetUrl, createCdn } from '../../../domain/cdn.js';
+import { auditLogQueryInput, normalizeAuditLogOptions } from '../../../domain/audit-log.js';
 import type { Client, DiscoveryApplicationPayload, Guild, GuildMember, PresenceUpdateOptions, User, ProfilePayload } from '@fluxerjs/core';
 import type { ActivityInfo, ActivityType, PresenceStatus } from '../../../ports/resources/common.js';
 import { limitOf } from '../../../ports/resources/common.js';
 import type {
   AuditLogInfo,
+  AuditLogQueryInput,
   BanInfo,
   GuildInfo,
   MemberInfo,
@@ -194,9 +196,16 @@ export function createUsersResources(client: Client, cdn: import('../../../domai
       return (await guild.fetchBans()).slice(0, capped)
         .map(ban => ({ userID: ban.user.id, username: ban.user.username, reason: ban.reason }));
     },
-    async auditLogs(guildID: string, limit?: number): Promise<AuditLogInfo[]> {
+    async auditLogs(guildID: string, input?: number | AuditLogQueryInput): Promise<AuditLogInfo[]> {
+      const query = auditLogQueryInput(input);
       const guild = await client.guilds.fetch(guildID, { force: true });
-      const { entries } = await guild.fetchAuditLogs({ limit: limitOf(limit, 50, 100) });
+      const { entries } = await guild.fetchAuditLogs({
+        limit: query.limit,
+        ...(query.before === undefined ? {} : { before: query.before }),
+        ...(query.after === undefined ? {} : { after: query.after }),
+        ...(query.userID === undefined ? {} : { userId: query.userID }),
+        ...(query.actionType === undefined ? {} : { actionType: query.actionType }),
+      });
       return entries.map(entry => ({
         id: entry.id,
         actionType: entry.actionType,
@@ -204,6 +213,12 @@ export function createUsersResources(client: Client, cdn: import('../../../domai
         targetID: entry.targetId,
         reason: entry.reason,
         createdTimestamp: snowflakeTimestamp(entry.id),
+        changes: (entry.changes ?? []).map(change => ({
+          key: change.key,
+          ...(change.oldValue === undefined ? {} : { oldValue: change.oldValue }),
+          ...(change.newValue === undefined ? {} : { newValue: change.newValue }),
+        })),
+        options: normalizeAuditLogOptions(entry.options),
       }));
     },
     async searchMembers(guildID, query, limit, offset = 0) {

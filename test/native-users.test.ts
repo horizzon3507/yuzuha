@@ -25,7 +25,7 @@ function harness(options: { guildID?: string } = {}) {
     async memberCount(guildID: string) { calls.push(['memberCount', guildID]); return 42; },
     async guild(guildID: string) { calls.push(['guild', guildID]); return { id: guildID, name: 'Servidor', ownerID: '1', iconURL: 'https://cdn/icon.png', bannerURL: null, memberCount: 42, createdTimestamp: 1_500_000_000_000 }; },
     async bans(guildID: string, limit?: number) { calls.push(['bans', guildID, limit]); return [{ userID: '2', username: 'banido', reason: null }]; },
-    async auditLogs(guildID: string, limit?: number) { calls.push(['auditLogs', guildID, limit]); return [{ id: '9', actionType: 20, userID: '1', targetID: '2', reason: 'motivo', createdTimestamp: 1 }]; },
+    async auditLogs(guildID: string, limit?: number) { calls.push(['auditLogs', guildID, limit]); return [{ id: '9', actionType: 20, userID: '1', targetID: '2', reason: 'motivo', createdTimestamp: 1, changes: [], options: null }]; },
     async setPresence(status: string, activity?: unknown) { calls.push(['presence', status, activity]); },
   };
   const message = mockMessage('!test', 'guildID' in options ? { guildID: options.guildID } : {});
