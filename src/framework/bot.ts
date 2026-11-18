@@ -198,7 +198,7 @@ function isPromiseLike<T>(value: T | PromiseLike<T>): value is PromiseLike<T> {
 
 const MAX_SHUTDOWN_TIMEOUT_MS = 600_000;
 
-function resolveDestroyTimeout(options?: DestroyOptions): number | undefined {
+export function resolveDestroyTimeout(options?: DestroyOptions): number | undefined {
   if (options === undefined) return undefined;
   const prototype = options === null || typeof options !== 'object' || Array.isArray(options)
     ? undefined : Object.getPrototypeOf(options);
@@ -1082,6 +1082,21 @@ export class Yuzuha {
 
   private shouldStartBackgroundJobs(): boolean {
     return shouldStartShardedJobs(this.shard, this.shardSchedulerMode);
+  }
+
+  /** @internal Prepara o bot quando o ciclo de login do Client é conduzido por YuzuhaCluster. */
+  bindClusterRuntime(): void {
+    if (this.closing) throw new YuzuhaError('BOT_CLOSED', 'O bot está encerrado.');
+    if (this.listening) return;
+    if (this.memberCache && !this.detachMemberCache && !this.options.transport && this.transport instanceof FluxerTransport) {
+      this.detachMemberCache = this.transport.attachCacheInvalidation(this.client);
+    }
+    if (this.shouldStartBackgroundJobs()) {
+      this.scheduler?.start();
+      this.startVariableSweep();
+    }
+    this.client.on(Events.MessageCreate, this.listener);
+    this.listening = true;
   }
 
   login(token?: string): Promise<void> {

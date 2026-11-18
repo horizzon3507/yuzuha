@@ -26,6 +26,22 @@ export type {
   ShardRespawnOptions,
   ShardClientUtilLike,
 } from './framework/sharding.js';
+export { YuzuhaCluster, YuzuhaClusterEvents } from './framework/cluster.js';
+export type {
+  YuzuhaClusterEntry,
+  YuzuhaClusterOptions,
+  AddYuzuhaRuntimeOptions,
+  RestartYuzuhaRuntimeOptions,
+  YuzuhaClusterEventMap,
+  YuzuhaClusterEventName,
+  YuzuhaClusterEventListener,
+  ClusterBotOptions,
+  ClusterBotOptionsInput,
+  ClientRuntime,
+  ClientRuntimeStatus,
+  AddClientRuntimeOptions,
+  RestartClientRuntimeOptions,
+} from './framework/cluster.js';
 export type {
   MetricsSink,
   CommandMetricEvent,

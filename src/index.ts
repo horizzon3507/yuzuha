@@ -1,4 +1,4 @@
-export { Yuzuha, Bot, userError, MemoryRateLimiter, MemoryLock, createServiceKey, startHealthServer, shardIdForGuild } from './bot.js';
+export { Yuzuha, Bot, userError, MemoryRateLimiter, MemoryLock, createServiceKey, startHealthServer, shardIdForGuild, YuzuhaCluster, YuzuhaClusterEvents } from './bot.js';
 export type {
   YuzuhaOptions,
   ServiceKey,
@@ -40,6 +40,19 @@ export type {
   ShardBroadcastOptions,
   ShardRespawnOptions,
   ShardClientUtilLike,
+  YuzuhaClusterEntry,
+  YuzuhaClusterOptions,
+  AddYuzuhaRuntimeOptions,
+  RestartYuzuhaRuntimeOptions,
+  YuzuhaClusterEventMap,
+  YuzuhaClusterEventName,
+  YuzuhaClusterEventListener,
+  ClusterBotOptions,
+  ClusterBotOptionsInput,
+  ClientRuntime,
+  ClientRuntimeStatus,
+  AddClientRuntimeOptions,
+  RestartClientRuntimeOptions,
   YuzuhaPlugin,
   AsyncYuzuhaPlugin,
   Middleware,
