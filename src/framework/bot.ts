@@ -410,7 +410,9 @@ export class Yuzuha {
   load(directory: string, replace = true): Promise<void> { return this.registry.load(directory, replace ? 'replace' : 'append'); }
   reload(directory: string): Promise<void> { return this.registry.load(directory, 'reload'); }
   listCommands(): Command[] { return this.registry.list(); }
-  help(command?: string, prefix = ''): string { return this.registry.help(command, prefix); }
+  help(command?: string, prefix = '', locale?: string): string {
+    return this.registry.help(command, prefix, this.messagesRuntime.translatorFor(locale));
+  }
   get signal(): AbortSignal { return this.shutdown.signal; }
   deleteLater(channelID: string, messageID: string, ttlMs: number): void {
     const capturedExecutionID = currentExecution()?.executionID;
@@ -542,7 +544,8 @@ export class Yuzuha {
             const resolvedLocale = await this.resolveEventLocale(baseEventOptions, prelim.executionID);
             if (this.closing || this.shutdown.signal.aborted) return;
             ctx = new EventContext({ ...baseEventOptions, executionID: prelim.executionID,
-              locale: resolvedLocale.locale, translator: resolvedLocale.translator });
+              locale: resolvedLocale.locale, translator: resolvedLocale.translator,
+              help: (cmd, pfx = '') => this.registry.help(cmd, pfx, resolvedLocale.translator) });
           }
           await definition.run(ctx, ...args as ClientEvents[K]);
         } catch (error) {
@@ -620,7 +623,8 @@ export class Yuzuha {
           const resolvedLocale = await this.resolveEventLocale(baseEventOptions, prelim.executionID);
           if (this.closing || signal.aborted) throw cancellationError();
           ctx = new EventContext({ ...baseEventOptions, executionID: prelim.executionID,
-            locale: resolvedLocale.locale, translator: resolvedLocale.translator });
+            locale: resolvedLocale.locale, translator: resolvedLocale.translator,
+            help: (cmd, pfx = '') => this.registry.help(cmd, pfx, resolvedLocale.translator) });
         }
         if (this.hasLogSink) await emitLog(this.options, { event: 'event.start', executionID: ctx.executionID, command: ctx.command.name });
         const output = engine.text(await engine.execute(program, ctx)).trim();
@@ -1057,7 +1061,8 @@ export class Yuzuha {
             activeLocale = resolvedLocale.locale;
             activeTranslator = resolvedLocale.translator;
           }
-          ctx = new CommandContext({ ...baseContextOptions, locale: activeLocale, translator: activeTranslator });
+          ctx = new CommandContext({ ...baseContextOptions, locale: activeLocale, translator: activeTranslator,
+            help: (cmd, pfx = '') => this.registry.help(cmd, pfx, activeTranslator) });
           if (this.hasLogSink) await emitLog(this.options, { event: 'command.start', executionID: ctx.executionID, command: ctx.command.name });
           if (signal.aborted) throw cancellationError();
           await ctx.prepare();

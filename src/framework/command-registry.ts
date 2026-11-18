@@ -1,6 +1,8 @@
 import { resolve } from 'node:path';
 import { compileFlagLookup, validateArgumentDefinitions, validateFlagDefinitions } from '../commands/arguments.js';
 import { commandHelp, commandUsage } from '../commands/help.js';
+import { defaultTranslator } from '../domain/i18n.js';
+import type { MessageTranslator } from '../domain/i18n.js';
 import type { ArgumentDefinition, Command } from '../context.js';
 import { parseDuration } from '../context.js';
 import { YuzuhaError } from '../errors.js';
@@ -159,10 +161,10 @@ export class CommandRegistry {
     return { compiled, input: cursor < tailEnd ? input.slice(cursor, tailEnd) : '' };
   }
   list(): Command[] { return [...new Set(this.entries.values())].map(item => snapshot(item.definition)); }
-  help(path?: string, prefix = ''): string {
-    if (!path) return this.list().filter(command => !command.hidden).map(command => `${commandUsage(command, prefix)}${command.description ? `: ${command.description}` : ''}`).join('\n');
+  help(path?: string, prefix = '', t: MessageTranslator = defaultTranslator): string {
+    if (!path) return this.list().filter(command => !command.hidden).map(command => `${commandUsage(command, prefix, t)}${command.description ? `: ${command.description}` : ''}`).join('\n');
     const [name, ...parts] = path.trim().split(/\s+/);
     const resolved = this.resolve(name ?? '', parts.join(' '));
-    return resolved && !resolved.input && !resolved.compiled.command.hidden ? commandHelp(resolved.compiled.command, prefix) : '';
+    return resolved && !resolved.input && !resolved.compiled.command.hidden ? commandHelp(resolved.compiled.command, prefix, t) : '';
   }
 }
