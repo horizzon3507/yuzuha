@@ -40,7 +40,9 @@ function validateMetadata(command: Command): void {
   }
   if ((command.description !== undefined && typeof command.description !== 'string')
     || (command.guildOnly !== undefined && typeof command.guildOnly !== 'boolean')
-    || (command.hidden !== undefined && typeof command.hidden !== 'boolean')) throw new YuzuhaError('COMMAND_METADATA', 'description deve ser texto; guildOnly e hidden devem ser booleanos.');
+    || (command.ownerOnly !== undefined && typeof command.ownerOnly !== 'boolean')
+    || (command.devOnly !== undefined && typeof command.devOnly !== 'boolean')
+    || (command.hidden !== undefined && typeof command.hidden !== 'boolean')) throw new YuzuhaError('COMMAND_METADATA', 'description deve ser texto; guildOnly, ownerOnly, devOnly e hidden devem ser booleanos.');
 }
 
 function snapshot(command: Command): Command {
@@ -101,7 +103,10 @@ export class CommandRegistry {
     const definition = snapshot({ ...input, subcommands: undefined });
     const parent = ancestors.at(-1)?.command;
     const command: Command = { ...definition, name: parent ? `${parent.name} ${definition.name}` : definition.name,
-      guildOnly: Boolean(parent?.guildOnly || definition.guildOnly), hidden: Boolean(parent?.hidden || definition.hidden),
+      guildOnly: Boolean(parent?.guildOnly || definition.guildOnly),
+      ownerOnly: Boolean(parent?.ownerOnly || definition.ownerOnly),
+      devOnly: Boolean(parent?.devOnly || definition.devOnly),
+      hidden: Boolean(parent?.hidden || definition.hidden),
       permissions: [...parent?.permissions ?? [], ...definition.permissions ?? []], botPermissions: [...parent?.botPermissions ?? [], ...definition.botPermissions ?? []],
       checks: [...parent?.checks ?? [], ...definition.checks ?? []], middleware: [...parent?.middleware ?? [], ...definition.middleware ?? []],
       http: inheritedHttp(parent?.http, definition.http) };

@@ -95,6 +95,8 @@ export interface SignalHandlerOptions {
 }
 export interface YuzuhaOptions {
   prefix?: string | string[] | ((message: IncomingMessage) => string | string[] | Promise<string | string[]>);
+  owners?: readonly string[];
+  devGuilds?: readonly string[];
   client?: Client;
   clientOptions?: ClientOptions;
   transport?: Transport;

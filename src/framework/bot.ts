@@ -68,6 +68,14 @@ function validateHooks(hooks: YuzuhaOptions['hooks']): void {
   }
 }
 
+function resolveIdSet(input: unknown, field: string): ReadonlySet<string> {
+  if (input === undefined) return new Set();
+  if (!Array.isArray(input) || input.some(item => typeof item !== 'string' || !item || item.trim() !== item)) {
+    throw new ConfigError('OPTIONS', `${field} deve ser uma lista de IDs não vazios sem espaços nas pontas.`);
+  }
+  return new Set(input);
+}
+
 function emojiRegistry(input: Record<string, string> | undefined): Record<string, string> {
   const registry: Record<string, string> = Object.create(null);
   if (input === undefined) return registry;
@@ -241,10 +249,14 @@ export class Yuzuha {
   }
   private readonly validatedPrefixes = new ValidatedPrefixCache();
   private readonly dynamicPrefixCache?: DynamicPrefixCache;
+  private readonly ownerIDs: ReadonlySet<string>;
+  private readonly devGuildIDs: ReadonlySet<string>;
   private readonly contextCooldown = (key: string, duration: number, maxUses?: number) =>
     maxUses === undefined ? this.limits.cooldown(key, duration) : this.limits.cooldown(key, duration, maxUses);
   private readonly contextHelp = (command?: string, prefix = '') => this.help(command, prefix);
   private readonly contextDeleteLater = (channelID: string, messageID: string, ttlMs: number) => this.deleteLater(channelID, messageID, ttlMs);
+  private readonly contextIsOwner = (userID: string) => this.isOwner(userID);
+  private readonly contextIsDevGuild = (guildID: string) => this.devGuildIDs.has(guildID);
   private readonly canvasContext: ContextOptions['canvas'];
 
   private get hasLogSink(): boolean { return Boolean(this.options.onLog || this.options.logger); }
@@ -263,6 +275,8 @@ export class Yuzuha {
       throw new ConfigError('MESSAGES_OPTIONS', 'locale deve ser texto ou função.');
     }
     this.messagesRuntime = resolveMessagesConfig(options.messages, typeof options.locale === 'string' ? options.locale : undefined);
+    this.ownerIDs = resolveIdSet(options.owners, 'owners');
+    this.devGuildIDs = resolveIdSet(options.devGuilds, 'devGuilds');
     const rateLimitOptions = resolveRateLimitOptions(options.rateLimits);
     const customRateLimiter = assertRateLimiter(options.rateLimiter);
     const lock = validateLock(options.lock);
@@ -367,6 +381,11 @@ export class Yuzuha {
 
   /** Mapa nome → emoji compartilhado com `ctx.emoji`; mutações são visíveis imediatamente. */
   get emoji(): Record<string, string> { return this.emojiMap; }
+
+  /** Verifica se `userID` pertence aos donos configurados em `options.owners`. */
+  isOwner(userID: string): boolean {
+    return typeof userID === 'string' && userID.length > 0 && this.ownerIDs.has(userID);
+  }
 
   /** Instala o motor de function mode; exigido por comandos com `code` e eventos de script. */
   useEngine(engine: ScriptEngine): this {
@@ -557,8 +576,8 @@ export class Yuzuha {
         canvas: this.canvasContext, now: this.options.now, help: this.contextHelp,
         cdn: this.cdnService, disableResourceAuthorization: this.options.unsafeDisableResourceAuthorization === true,
         cooldown: this.contextCooldown, signal: this.shutdown.signal, emoji: this.emojiMap,
-        deleteLater: this.contextDeleteLater, locale: this.messagesRuntime.defaultLocale,
-        translator: this.messagesRuntime.defaultTranslator };
+        deleteLater: this.contextDeleteLater, isOwner: this.contextIsOwner, isDevGuild: this.contextIsDevGuild,
+        locale: this.messagesRuntime.defaultLocale, translator: this.messagesRuntime.defaultTranslator };
       const prelim = new EventContext(baseEventOptions);
       await runInExecution(this, {
         executionID: prelim.executionID,
@@ -639,8 +658,8 @@ export class Yuzuha {
       scheduler: this.scheduler, http: this.http, music: this.music, voice: this.voice,
       canvas: this.canvasContext, now: this.options.now, help: this.contextHelp, cooldown: this.contextCooldown, signal,
       cdn: this.cdnService, disableResourceAuthorization: this.options.unsafeDisableResourceAuthorization === true, emoji: this.emojiMap,
-      deleteLater: this.contextDeleteLater, locale: this.messagesRuntime.defaultLocale,
-      translator: this.messagesRuntime.defaultTranslator };
+      deleteLater: this.contextDeleteLater, isOwner: this.contextIsOwner, isDevGuild: this.contextIsDevGuild,
+      locale: this.messagesRuntime.defaultLocale, translator: this.messagesRuntime.defaultTranslator };
     const prelim = new EventContext(baseEventOptions);
     await runInExecution(this, {
       executionID: prelim.executionID,
@@ -1093,7 +1112,8 @@ export class Yuzuha {
             scheduler: this.scheduler, http: this.http, music: this.music, voice: this.voice,
             canvas: this.canvasContext, now: this.options.now, signal, executionID,
             cdn: this.cdnService, disableResourceAuthorization: this.options.unsafeDisableResourceAuthorization === true, emoji: this.emojiMap,
-            deleteLater: this.contextDeleteLater, locale: activeLocale, translator: activeTranslator };
+            deleteLater: this.contextDeleteLater, isOwner: this.contextIsOwner, isDevGuild: this.contextIsDevGuild,
+            locale: activeLocale, translator: activeTranslator };
           if (typeof this.options.locale === 'function') {
             const probe = createLocaleProbeContext(baseContextOptions);
             const dynamicLocale = await this.options.locale(probe);

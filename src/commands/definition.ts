@@ -90,6 +90,8 @@ export interface Command {
   code?: string;
   run?: (ctx: CommandContext) => unknown | Promise<unknown>;
   guildOnly?: boolean;
+  ownerOnly?: boolean;
+  devOnly?: boolean;
   permissions?: string[];
   botPermissions?: string[];
   cooldown?: string | number | CooldownOptions;

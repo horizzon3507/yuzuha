@@ -79,6 +79,8 @@ export interface ContextOptions {
   cdn?: import('../domain/cdn.js').Cdn;
   disableResourceAuthorization?: boolean;
   actor?: { guildID: string; authorID: string };
+  isOwner?: (userID: string) => boolean;
+  isDevGuild?: (guildID: string) => boolean;
 }
 
 export class CommandContext {
@@ -103,6 +105,8 @@ export class CommandContext {
   private readonly emojiMap: Record<string, string> = {};
   private disableResourceAuthorization = false;
   private readonly actor?: { guildID: string; authorID: string };
+  private readonly checkOwner?: (userID: string) => boolean;
+  private readonly checkDevGuild?: (guildID: string) => boolean;
   readonly transport: Transport;
   readonly store: Store;
   readonly command: Command;
@@ -177,6 +181,8 @@ export class CommandContext {
     this.cdnService = options.cdn ?? createCdn();
     this.emojiMap = options.emoji ?? {};
     this.disableResourceAuthorization = options.disableResourceAuthorization === true;
+    this.checkOwner = options.isOwner;
+    this.checkDevGuild = options.isDevGuild;
     this.canvasRenderer = options.canvas?.renderer;
     this.canvasConfig = options.canvas?.config;
     this.nativeResources = options.resources;
@@ -280,6 +286,11 @@ export class CommandContext {
     return this.scopedHttp ??= bindHttp(this.command.http ? this.httpService.withPolicy(this.command.http) : this.httpService, this.signal);
   }
   requireGuild(): string { return requireGuild(this.guildID, this.t); }
+
+  /** Verifica se o autor desta execução pertence aos donos configurados no bot. */
+  isOwner(): boolean {
+    return Boolean(this.authorID) && (this.checkOwner?.(this.authorID) ?? false);
+  }
 
   assert(condition: unknown, message: string): void {
     if (!condition) throw new GuardError(message, 'GENERIC');
@@ -402,6 +413,12 @@ export class CommandContext {
   }
 
   async prepare(): Promise<void> {
+    if (this.command.ownerOnly && !this.isOwner()) {
+      throw new GuardError(this.t('ownerOnly'), 'OWNER_ONLY');
+    }
+    if (this.command.devOnly && (!this.guildID || !this.checkDevGuild?.(this.guildID))) {
+      throw new GuardError(this.t('devOnly'), 'DEV_ONLY');
+    }
     if (this.command.guildOnly) this.requireGuild();
     const authorPerms = this.command.permissions ?? [];
     const botPerms = this.command.botPermissions ?? [];
