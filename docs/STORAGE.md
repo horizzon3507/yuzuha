@@ -128,10 +128,14 @@ fallback, sem prazo. Uma transação usa um único instante para todas as opera�
 
 As expirações são timestamps absolutos em `state.variableExpirations`, campo
 opcional compatível com schema 2 antigo. Memória, JSON e SQLite compartilham as
-mesmas regras. Não existe timer por chave: leituras filtram valores expirados
-sem gravar no disco; apagar, substituir ou atualizar uma chave também remove
-seus metadados vencidos. Entradas ainda não acessadas podem permanecer no estado
-bruto após o prazo. Alterar o relógio do sistema afeta o tempo restante.
+mesmas regras. Não existe timer por chave: leituras isoladas (`get`/`ttl`)
+filtram valores expirados sem gravar no disco, enquanto `get`, `update`, `ttl`,
+`expire`, `delete` e `set` dentro de uma transação de escrita (`transaction`)
+removem fisicamente entradas vencidas tocadas na operação. Em execução contínua
+após `bot.login()`, o bot também varre entradas vencidas em lotes incrementais
+por `options.variables` (`sweepIntervalMs` de 100 a 86400000 ms ou `false`,
+padrão `60_000`; `sweepBatch` de 1 a 10000, padrão `500`), ou manualmente via
+`bot.sweepVariables()`. Alterar o relógio do sistema afeta o tempo restante.
 
 `ctx.data.userFor(id)` e `tx.userFor(id)` escolhem explicitamente outro usuário.
 Exigem um contexto de servidor e ID de 1–128 caracteres sem espaços nas
@@ -210,12 +214,14 @@ Falhas operacionais são tentadas novamente por padrão após 30 segundos, até 
 que estava em execução e cujo processo morreu fica com `runningAt` antigo; após
 cinco minutos, `recover` a libera. Enquanto está executando, o heartbeat renova
 `runningAt` a cada 100 segundos por padrão, impedindo recuperação por outra
-instância que compartilhe o mesmo store. Cada ciclo automático verifica órfãs;
-não há escrita de recuperação quando não existem tarefas vencidas. A execução é um novo despacho de mensagem no
+instância que compartilhe o mesmo store. O ciclo automático espaça a verificação
+de órfãs por `Math.max(1000, Math.floor(leaseMs / 3))` (100 segundos por padrão),
+sem escrita quando não existem tarefas vencidas; chamadas diretas a `recover()`
+executam imediatamente. A execução é um novo despacho de mensagem no
 canal original, com o autor original, e passa pelos mesmos guards e limites.
 
-`new Scheduler(store, executar, { leaseMs, heartbeatMs, historyLimit, onEvent,
-onError })` configura a instância. `leaseMs` deve ser inteiro de pelo menos 3 ms;
+`new Scheduler(store, executar, { leaseMs, heartbeatMs, historyLimit, pollMs,
+timers, onEvent, onError })` configura a instância. `leaseMs` deve ser inteiro de pelo menos 3 ms;
 `heartbeatMs` deve ser positivo e menor que o lease. `historyLimit` aceita 1–10000
 (padrão 1000). `onError` recebe falhas de manutenção, incluindo store/heartbeat;
 sem hook, o stderr recebe apenas um código. O callback `executar(tarefa, signal)`
@@ -315,6 +321,15 @@ valores que vencerem depois de sua passagem precisam de uma nova passagem.
 A quantidade de mutações e entradas examinadas é limitada; o contrato atual dos
 stores ainda carrega/clona/valida o estado completo e ordena suas chaves de TTL.
 A limpeza não é um índice SQL ou uma operação de custo constante.
+
+Em `Yuzuha`, `bot.sweepVariables()` reutiliza `StateMaintenance.cleanupExpired`
+mantendo o cursor entre chamadas usando `sweepBatch` (1–10000, padrão 500).
+Quando `options.variables` não é `false` e `sweepIntervalMs` não é `false`,
+`bot.login()` inicia um timer periódico via `options.timers` para chamar
+`sweepVariables()` a cada `sweepIntervalMs` (100–86400000 ms, padrão 60000 ms),
+encaminhando falhas para `onError` e encerrando o timer e a varredura em
+andamento em `destroy()` ou em falha de `login()`. O construtor de `Yuzuha` não
+inicia timers em segundo plano, mantendo testes offline determinísticos.
 
 O backup é JSON de dados com `{ format: "yuzuha-state", version: 1, createdAt,
 state }`, preservando variáveis, TTL, casos, tarefas e histórico. `createdAt` é ISO

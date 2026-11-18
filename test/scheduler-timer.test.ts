@@ -281,6 +281,7 @@ test('bot wires timers into default scheduler and clears them on destroy and fai
     store: new MemoryStore(),
     now: clock.now,
     timers,
+    variables: false,
   });
   let executed = 0;
   bot.command({ name: 'ping', run() { executed++; } });

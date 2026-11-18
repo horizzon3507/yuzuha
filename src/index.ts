@@ -1,5 +1,5 @@
 export { Yuzuha, Bot } from './bot.js';
-export type { YuzuhaOptions, YuzuhaPlugin, Middleware, DispatchResult } from './bot.js';
+export type { YuzuhaOptions, VariableSweepOptions, YuzuhaPlugin, Middleware, DispatchResult } from './bot.js';
 export { CommandContext, defineCommand, parseDuration } from './context.js';
 export type { Command, ArgumentDefinition } from './context.js';
 export { commandUsage, commandHelp } from './commands/help.js';

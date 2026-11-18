@@ -23,6 +23,8 @@ import { route, validatePrefixes } from './routing.js';
 import { defineEvent, NativeEvents } from './events.js';
 import type { ContextEventDefinition, NativeEvent, NativeListener } from './events.js';
 import { ScheduleExecutionError, Scheduler } from '../services/scheduler.js';
+import { StateMaintenance } from '../services/state-maintenance.js';
+import type { CleanupResult } from '../services/state-maintenance.js';
 import type { ScheduleRecord } from '../domain/state.js';
 import { HttpService } from '../services/http.js';
 import { createCdn } from '../domain/cdn.js';
@@ -53,6 +55,30 @@ function emojiRegistry(input: Record<string, string> | undefined): Record<string
     registry[name] = value;
   }
   return registry;
+}
+
+const DEFAULT_SWEEP_INTERVAL_MS = 60_000;
+const MIN_SWEEP_INTERVAL_MS = 100;
+const MAX_SWEEP_INTERVAL_MS = 86_400_000;
+const DEFAULT_SWEEP_BATCH = 500;
+const MAX_SWEEP_BATCH = 10_000;
+
+function resolveVariableSweepOptions(input: YuzuhaOptions['variables']): { intervalMs: number | false; batch: number } {
+  if (input === false) return { intervalMs: false, batch: DEFAULT_SWEEP_BATCH };
+  if (input === undefined) return { intervalMs: DEFAULT_SWEEP_INTERVAL_MS, batch: DEFAULT_SWEEP_BATCH };
+  const prototype = input === null || typeof input !== 'object' || Array.isArray(input) ? undefined : Object.getPrototypeOf(input);
+  if (prototype !== Object.prototype && prototype !== null) {
+    throw new YuzuhaError('VARIABLE_SWEEP_OPTIONS', 'Opções de limpeza de variáveis inválidas.');
+  }
+  const intervalMs = input.sweepIntervalMs === undefined ? DEFAULT_SWEEP_INTERVAL_MS : input.sweepIntervalMs;
+  if (intervalMs !== false && (!Number.isSafeInteger(intervalMs) || intervalMs < MIN_SWEEP_INTERVAL_MS || intervalMs > MAX_SWEEP_INTERVAL_MS)) {
+    throw new YuzuhaError('VARIABLE_SWEEP_OPTIONS', `sweepIntervalMs deve ser false ou inteiro entre ${MIN_SWEEP_INTERVAL_MS} e ${MAX_SWEEP_INTERVAL_MS}.`);
+  }
+  const batch = input.sweepBatch === undefined ? DEFAULT_SWEEP_BATCH : input.sweepBatch;
+  if (!Number.isSafeInteger(batch) || batch < 1 || batch > MAX_SWEEP_BATCH) {
+    throw new YuzuhaError('VARIABLE_SWEEP_OPTIONS', `sweepBatch deve ser inteiro entre 1 e ${MAX_SWEEP_BATCH}.`);
+  }
+  return { intervalMs, batch };
 }
 
 function assertEngine(engine: unknown): ScriptEngine {
@@ -86,6 +112,14 @@ export class Yuzuha {
   private readonly emojiMap: Record<string, string>;
   private readonly memberCache?: MemberCache;
   private detachMemberCache?: () => void;
+  private readonly maintenance: StateMaintenance;
+  private readonly sweepIntervalMs: number | false;
+  private readonly sweepBatch: number;
+  private sweepCursor: string | null = null;
+  private sweepTimer?: unknown;
+  private hasSweepTimer = false;
+  private sweepGeneration = 0;
+  private sweepTask?: Promise<void>;
   private readonly events: NativeEvents;
   private readonly execution = new AsyncLocalStorage<boolean>();
   private listening = false;
@@ -135,10 +169,14 @@ export class Yuzuha {
     this.resources = options.resources ?? new FluxerResources(this.client, this.cdnService, this.reliability);
     this.cdnService = createCdn(options.cdn?.mediaBase);
     this.emojiMap = emojiRegistry(options.emoji);
+    const sweepOptions = resolveVariableSweepOptions(options.variables);
+    this.sweepIntervalMs = sweepOptions.intervalMs;
+    this.sweepBatch = sweepOptions.batch;
     if (options.unsafeDisableResourceAuthorization && options.onLog)
       void emitLog(this.options, { event: 'authorization.disabled' });
     this.timers = options.timers ?? { setTimeout: (fn: () => void, ms: number) => setTimeout(fn, ms).unref(), clearTimeout: (handle: unknown) => clearTimeout(handle as never) };
     this.store = options.store ?? new JsonStore(defaultDataPath(options.name));
+    this.maintenance = new StateMaintenance(this.store, options.now);
     this.scheduler = options.scheduler === false ? undefined : options.scheduler ?? new Scheduler(this.store,
       (task, signal) => this.runScheduled(task, signal), {
         now: options.now,
@@ -229,6 +267,66 @@ export class Yuzuha {
     }, ttlMs);
     this.pendingTimers.add(handle);
   }
+
+  /** Executa um lote incremental de limpeza de variáveis expiradas no store. */
+  async sweepVariables(): Promise<CleanupResult> {
+    if (this.closing) throw new YuzuhaError('BOT_CLOSED', 'O bot está encerrado.');
+    const work = this.maintenance.cleanupExpired({ limit: this.sweepBatch, cursor: this.sweepCursor });
+    const tracked = work.then(() => undefined, () => undefined);
+    this.active.add(tracked);
+    try {
+      const result = await work;
+      this.sweepCursor = result.cursor;
+      return result;
+    } finally {
+      this.active.delete(tracked);
+    }
+  }
+
+  private clearVariableSweepTimer(): void {
+    this.sweepGeneration++;
+    if (!this.hasSweepTimer) return;
+    this.timers.clearTimeout(this.sweepTimer);
+    this.sweepTimer = undefined;
+    this.hasSweepTimer = false;
+  }
+
+  private startVariableSweep(): void {
+    if (this.sweepIntervalMs === false || this.hasSweepTimer || this.sweepTask || this.closing) return;
+    const intervalMs = this.sweepIntervalMs;
+    const generation = this.sweepGeneration;
+    const schedule = (): void => {
+      if (this.closing || generation !== this.sweepGeneration || this.hasSweepTimer) return;
+      let fired = false;
+      const handle = this.timers.setTimeout(() => {
+        fired = true;
+        if (this.sweepTimer === handle) {
+          this.sweepTimer = undefined;
+          this.hasSweepTimer = false;
+        }
+        if (this.closing || generation !== this.sweepGeneration) return;
+        const work = this.execution.run(true, async () => {
+          try { await this.sweepVariables(); }
+          catch (error) { await reportError(this.options, error); }
+        }).finally(() => {
+          if (this.sweepTask === work) this.sweepTask = undefined;
+          if (!this.closing && generation === this.sweepGeneration) schedule();
+        });
+        this.sweepTask = work;
+      }, intervalMs);
+      if (!fired && !this.closing && generation === this.sweepGeneration) {
+        this.sweepTimer = handle;
+        this.hasSweepTimer = true;
+      }
+    };
+    schedule();
+  }
+
+  private async stopVariableSweep(): Promise<void> {
+    this.clearVariableSweepTimer();
+    await this.sweepTask;
+  }
+
   isReady(): boolean { return this.client.isReady(); }
   get uptime(): number | null { return this.client.uptime; }
   assertReady(): void {
@@ -347,6 +445,7 @@ export class Yuzuha {
       this.detachMemberCache = this.transport.attachCacheInvalidation(this.client);
     }
     this.scheduler?.start();
+    this.startVariableSweep();
     this.client.on(Events.MessageCreate, this.listener);
     this.listening = true;
     this.loginAbort = new AbortController();
@@ -356,6 +455,7 @@ export class Yuzuha {
       this.client.off(Events.MessageCreate, this.listener); this.listening = false;
       this.scheduler?.stop();
       await this.scheduler?.drain();
+      await this.stopVariableSweep();
       const needsErrorListener = !this.client.listeners(Events.Error).includes(this.errorListener);
       const needsShardListener = !this.client.listeners(Events.ShardError).includes(this.shardErrorListener);
       if (needsErrorListener) this.client.on(Events.Error, this.errorListener);
@@ -384,12 +484,14 @@ export class Yuzuha {
     this.shutdown.abort();
     this.loginAbort?.abort();
     this.scheduler?.stop();
+    this.clearVariableSweepTimer();
     this.events.close();
     if (this.listening) this.client.off(Events.MessageCreate, this.listener);
     this.listening = false;
     this.closeTask = (async () => {
       await Promise.allSettled([...this.active]);
       await this.scheduler?.drain();
+      await Promise.allSettled(this.sweepTask ? [this.sweepTask] : []);
       try {
         const results = await Promise.allSettled([this.music?.close(), this.voice?.close()]);
         const failures = results.filter((item): item is PromiseRejectedResult => item.status === 'rejected');
