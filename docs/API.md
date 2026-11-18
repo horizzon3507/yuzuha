@@ -39,6 +39,7 @@ A fonte das assinaturas completas são as declarações TypeScript distribuídas
 | `memberCache` | `false` (padrão) ou `{ ttlMs, max?, now? }` para cache LRU+TTL em `FluxerTransport` com invalidação via gateway |
 | `rateLimits` | Opções de capacidade e janela do `MemoryRateLimiter` padrão (`maxCooldowns`, `onCooldownCapacity`, `maxDedupe`, `dedupeWindowMs`) |
 | `rateLimiter` | Implementação síncrona ou assíncrona de `RateLimiter` para cooldowns e deduplicação distribuída |
+| `sharding` | `boolean` ou `{ leaderShardID?, schedulerMode?: 'leader' \| 'all' \| 'disabled', ids?, count?, shardUtil? }` para expor `bot.shard`/`ctx.shard` e coordenar o scheduler entre shards |
 | `variables` | `false` ou `{ sweepIntervalMs?, sweepBatch? }` para varredura periódica de variáveis expiradas após `login()` |
 | `context(ctx)` | Fábrica sync/async chamada antes de `ctx.prepare()`, checks, middleware e eventos com contexto para popular `ctx.locals` |
 | `onError(error, ctx?)` | Observação de falhas internas e operacionais |
@@ -58,6 +59,7 @@ erro, o resultado continua sendo `success`.
 | `isOwner(userID)` | Retorna `true` se `userID` consta em `options.owners` |
 | `useEngine(engine)` | Instala o engine de function mode (`functions()` de `yuzuha/functions`) |
 | `engine` | Engine de function mode instalado, quando presente |
+| `shard` | `BotShard` com `id`, `ids`, `count`, `isLeader`, `shardIdForGuild`, `broadcastEval`, `fetchClientValues` e `respawn`, quando configurado ou anexado |
 | `use(middleware)` | Acrescenta middleware e retorna o bot |
 | `provide(key, value)` | Registra serviço tipado associado a `ServiceKey<T>` (`SERVICE_DUPLICATE` se repetido) e retorna o bot |
 | `hasService(key)` | Informa se `ServiceKey` possui valor registrado |
@@ -176,6 +178,7 @@ Nomes/aliases são únicos sem distinção entre maiúsculas e minúsculas.
 | `emoji` | Mapa nome → emoji de `YuzuhaOptions.emoji`, compartilhado com `bot.emoji` |
 | `locale`, `t(key, ...args)` | Idioma resolvido (`'pt-BR'` por padrão) e tradutor tipado do catálogo ativo |
 | `client`, `nativeMessage` | Client real e mensagem original opcional do SDK |
+| `shard` | `BotShard` espelhado de `bot.shard`, quando sharding está ativo |
 | `mod` | ban/kick/timeout/unban/move/mute/deafen com registro de caso por padrão |
 | `resources` | Contratos nativos de usuários, cargos, canais, mensagens, coletores, webhooks, emojis, threads e convites |
 | `scheduler` | Agendador persistente; lança `NATIVE_UNAVAILABLE` se desligado |
@@ -379,7 +382,8 @@ exceto a comparação, que retorna -1, 0 ou 1. Veja [operações de dados](funct
 | `YuzuhaError` | Erro base com `code` tipado (`YuzuhaErrorCode \| (string & {})`) para diagnóstico (inclui `PLUGIN_DEPENDENCY`, `PLUGIN_NOT_FOUND`, `SERVICE_DUPLICATE`, `SERVICE_KEY`, `SERVICE_MISSING`) |
 | `TransportError` | Subclasse de `YuzuhaError` para falhas do transporte (`ROLES_UNAVAILABLE`, `CHANNEL_GUILD`, `VOICE_CHANNEL`, `MODERATION_ACTION`, `NOT_FOUND`, `API_ERROR`) |
 | `StoreError` | Subclasse de `YuzuhaError` para falhas de persistência (`STORE_NAME`, `STORE_CLOSED`, `STORE_ASYNC`, `STORE_CORRUPT`, `STORE_INVALID`, `STORE_READONLY`) |
-| `ConfigError` | Subclasse de `YuzuhaError` para configuração, opções inválidas e token ausente (`CONFIG_MISSING`, `CONFIG_INVALID`, `MEMBER_CACHE_OPTIONS`, `MESSAGES_OPTIONS`, `RATE_LIMIT_OPTIONS`, `LOCK_OPTIONS`, `PREFIX`, `EMOJI_OPTIONS`, `ENGINE_INVALID`, `VARIABLE_SWEEP_OPTIONS`, `OPTIONS`, `TOKEN_MISSING`) |
+| `ConfigError` | Subclasse de `YuzuhaError` para configuração, opções inválidas e token ausente (`CONFIG_MISSING`, `CONFIG_INVALID`, `MEMBER_CACHE_OPTIONS`, `MESSAGES_OPTIONS`, `RATE_LIMIT_OPTIONS`, `LOCK_OPTIONS`, `SHARDING_OPTIONS`, `SHARDING_UNAVAILABLE`, `PREFIX`, `EMOJI_OPTIONS`, `ENGINE_INVALID`, `VARIABLE_SWEEP_OPTIONS`, `OPTIONS`, `TOKEN_MISSING`) |
+| `SHARDING_UNAVAILABLE` | Operação exige `@fluxerjs/sharding` instalado ou processo supervisionado por `ShardingManager` |
 | `ScriptError` | Erro com fonte, offset, arquivo, linha, coluna e `format()` |
 | `GuardError` / `GUARD` | Condição de uso recusada; mensagem apropriada ao usuário |
 | `PartialModerationError` / `MODERATION_PARTIAL` | API confirmou ação, mas o caso não foi salvo |

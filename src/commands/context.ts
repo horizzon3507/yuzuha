@@ -8,6 +8,7 @@ import type { MessageTranslator } from '../domain/i18n.js';
 import type { Store } from '../ports/store.js';
 import type { Transport } from '../ports/transport.js';
 import type { NativeAccess } from '../ports/native.js';
+import type { BotShard } from '../ports/sharding.js';
 import type { Resources } from '../ports/resources.js';
 import { assertServiceKey } from '../ports/services.js';
 import type { ServiceKey, ServiceLookup } from '../ports/services.js';
@@ -64,6 +65,7 @@ export interface ContextOptions {
   locale?: string;
   translator?: MessageTranslator;
   native?: NativeAccess;
+  shard?: BotShard;
   resources?: Resources;
   resourcesInjected?: boolean;
   scheduler?: Scheduler;
@@ -112,6 +114,7 @@ export class CommandContext {
   private readonly checkDevGuild?: (guildID: string) => boolean;
   readonly transport: Transport;
   readonly store: Store;
+  readonly shard?: BotShard;
   readonly command: Command;
   private readonly flagLookup?: ReadonlyMap<string, ArgumentDefinition>;
   private readonly argumentTypes?: ArgumentTypeRegistry;
@@ -176,6 +179,7 @@ export class CommandContext {
     this.claimCooldown = options.cooldown;
     this.help = options.help ?? (() => '');
     this.native = options.native;
+    this.shard = options.shard;
     this.schedulerService = options.scheduler;
     this.signal = options.signal ?? new AbortController().signal;
     this.now = options.now ?? Date.now;

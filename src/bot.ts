@@ -16,6 +16,16 @@ export type { RateLimiter } from './ports/rate-limiter.js';
 export { MemoryLock } from './framework/locks.js';
 export type { MemoryLockOptions } from './framework/locks.js';
 export type { Lock, LockLease } from './ports/lock.js';
+export { shardIdForGuild } from './framework/sharding.js';
+export type {
+  BotShard,
+  ShardInfo,
+  ShardingOptions,
+  ShardSchedulerMode,
+  ShardBroadcastOptions,
+  ShardRespawnOptions,
+  ShardClientUtilLike,
+} from './framework/sharding.js';
 export type {
   MetricsSink,
   CommandMetricEvent,

@@ -55,6 +55,17 @@ import type { ScriptEngine } from '../ports/script-engine.js';
 import type { MusicManager } from '../services/music.js';
 import type { NativeVoice } from '../ports/voice.js';
 import { canvasRenderer } from '../infrastructure/canvas/render.js';
+import {
+  attachClientShardIfNeeded,
+  getAttachedShardClientUtil,
+  hasShardingProcessEnv,
+  isShardingChildProcess,
+  notifyClientShardReady,
+  resolveBotShard,
+  resolveShardSchedulerMode,
+  shouldStartShardedJobs,
+} from './sharding.js';
+import type { BotShard, ShardClientUtilLike, ShardSchedulerMode } from './sharding.js';
 
 type RoutedCommand = { kind: 'command'; compiled: CompiledCommand; input: string; prefix: string }
   | { kind: 'unknown'; unknown: UnknownCommandContext };
@@ -211,6 +222,10 @@ export class Yuzuha {
   readonly http?: HttpService;
   readonly music?: MusicManager;
   readonly voice?: NativeVoice;
+  private shardState?: BotShard;
+  private readonly shardSchedulerMode: ShardSchedulerMode;
+  private readonly explicitShardUtil?: ShardClientUtilLike;
+  private readonly shardingEnv?: NodeJS.ProcessEnv;
   private scriptEngine?: ScriptEngine;
   private readonly registry: CommandRegistry;
   private readonly customArgumentTypes = new Map<string, CustomArgumentType<unknown>>();
@@ -350,6 +365,12 @@ export class Yuzuha {
     });
     const retryPolicy = resolvePolicy(options.retry);
     this.client = options.client ?? new Client(options.clientOptions);
+    this.shardState = resolveBotShard(this.client, options.sharding, options.clientOptions);
+    this.shardSchedulerMode = resolveShardSchedulerMode(options.sharding, lock !== undefined);
+    if (options.sharding && typeof options.sharding === 'object') {
+      this.explicitShardUtil = options.sharding.shardUtil;
+      this.shardingEnv = options.sharding.env;
+    }
     this.reliability = { retry: retryPolicy, signal: this.shutdown.signal,
       onRetry: (attempt, _error, delayMs) => {
         emitMetric(this.options.metrics, m => m.onTransportRetry?.({ attempt, delayMs }));
@@ -447,6 +468,15 @@ export class Yuzuha {
 
   /** Engine de function mode instalado, quando presente. */
   get engine(): ScriptEngine | undefined { return this.scriptEngine; }
+
+  /** Contexto de shard configurado ou anexado ao client, quando presente. */
+  get shard(): BotShard | undefined {
+    if (this.shardState) return this.shardState;
+    if (this.options.sharding !== false && getAttachedShardClientUtil(this.client)) {
+      this.shardState = resolveBotShard(this.client, this.options.sharding, this.options.clientOptions);
+    }
+    return this.shardState;
+  }
 
   /** Mapa nome → emoji compartilhado com `ctx.emoji`; mutações são visíveis imediatamente. */
   get emoji(): Record<string, string> { return this.emojiMap; }
@@ -870,7 +900,7 @@ export class Yuzuha {
       const source = adaptScriptEvent(definition.event, args);
       if ((definition.ignoreBots ?? true) && source.event.userBot) return;
       const baseEventOptions: EventContextOptions = { ...source, channelID: definition.channelID, actorID: definition.actorID,
-        policy: definition.http, transport: this.transport, store: this.store, resources: this.resources,
+        policy: definition.http, transport: this.transport, store: this.store, shard: this.shard, resources: this.resources,
         resourcesInjected: this.resourcesInjected, argumentTypes: this.customArgumentTypes,
         scheduler: this.scheduler, http: this.http, music: this.music, voice: this.voice,
         canvas: this.canvasContext, now: this.options.now, help: this.contextHelp,
@@ -953,7 +983,7 @@ export class Yuzuha {
     if ((definition.ignoreBots ?? true) && source.event.userBot) return;
     const signal = this.shutdown.signal;
     const baseEventOptions: EventContextOptions = { ...source, channelID: definition.channelID, actorID: definition.actorID,
-      policy: definition.http, transport: this.transport, store: this.store, resources: this.resources,
+      policy: definition.http, transport: this.transport, store: this.store, shard: this.shard, resources: this.resources,
       resourcesInjected: this.resourcesInjected, argumentTypes: this.customArgumentTypes,
       scheduler: this.scheduler, http: this.http, music: this.music, voice: this.voice,
       canvas: this.canvasContext, now: this.options.now, help: this.contextHelp, cooldown: this.contextCooldown, signal,
@@ -1050,20 +1080,41 @@ export class Yuzuha {
     });
   }
 
-  login(token = process.env.FLUXER_BOT_TOKEN): Promise<void> {
+  private shouldStartBackgroundJobs(): boolean {
+    return shouldStartShardedJobs(this.shard, this.shardSchedulerMode);
+  }
+
+  login(token?: string): Promise<void> {
     if (this.closing) return Promise.reject(new YuzuhaError('BOT_CLOSED', 'O bot está encerrado.'));
-    if (!token?.trim()) return Promise.reject(new ConfigError('TOKEN_MISSING', 'Defina FLUXER_BOT_TOKEN.'));
+    const env = this.shardingEnv ?? process.env;
+    const resolvedToken = token !== undefined
+      ? token
+      : (env.FLUXER_BOT_TOKEN?.trim() ? env.FLUXER_BOT_TOKEN : (hasShardingProcessEnv(env) ? env.FLUXER_TOKEN : env.FLUXER_BOT_TOKEN));
+    if (!resolvedToken?.trim()) return Promise.reject(new ConfigError('TOKEN_MISSING', 'Defina FLUXER_BOT_TOKEN.'));
     if (this.loginTask) return this.loginTask;
     if (this.memberCache && !this.detachMemberCache && !this.options.transport && this.transport instanceof FluxerTransport) {
       this.detachMemberCache = this.transport.attachCacheInvalidation(this.client);
     }
-    this.scheduler?.start();
-    this.startVariableSweep();
+    if (this.shouldStartBackgroundJobs()) {
+      this.scheduler?.start();
+      this.startVariableSweep();
+    }
     this.client.on(Events.MessageCreate, this.listener);
     this.listening = true;
     this.loginAbort = new AbortController();
-    const task = this.client.login(token, { signal: this.loginAbort.signal }).then(() => {
+    const needsAutoAttach = this.options.sharding !== false
+      && !this.explicitShardUtil
+      && !getAttachedShardClientUtil(this.client)
+      && isShardingChildProcess(env);
+    const connect = needsAutoAttach
+      ? async () => {
+        await attachClientShardIfNeeded(this.client, { env });
+        return this.client.login(resolvedToken, { signal: this.loginAbort!.signal });
+      }
+      : () => this.client.login(resolvedToken, { signal: this.loginAbort!.signal });
+    const task = connect().then(() => {
       if (this.closing) throw new YuzuhaError('BOT_CLOSED', 'O bot foi encerrado durante o login.');
+      notifyClientShardReady(this.client, this.explicitShardUtil);
     }).catch(async error => {
       this.client.off(Events.MessageCreate, this.listener); this.listening = false;
       this.scheduler?.stop();
@@ -1487,6 +1538,7 @@ export class Yuzuha {
             input: resolved.input, prefix, lineage: compiled.lineage,
             help: this.contextHelp, cooldown: this.contextCooldown,
             native: { client: this.client, message: message.raw instanceof Message ? message.raw : undefined },
+            shard: this.shard,
             resources: this.resources, resourcesInjected: this.resourcesInjected,
             scheduler: this.scheduler, http: this.http, music: this.music, voice: this.voice,
             canvas: this.canvasContext, now: this.options.now, signal, executionID,
