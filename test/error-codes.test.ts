@@ -54,6 +54,7 @@ test('YUZUHA_ERROR_CODES está ordenado alfabeticamente e sem duplicatas', () =>
     'LAVALINK_AUDIO_PLUGIN',
     'SOURCE_LIMIT',
     'MEMBER_CACHE_OPTIONS',
+    'MESSAGES_OPTIONS',
     'VARIABLE_SWEEP_OPTIONS',
     'CONCURRENCY_OPTIONS',
     'PREFIX_CACHE_OPTIONS',
