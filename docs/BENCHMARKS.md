@@ -97,6 +97,32 @@ O runner usa `MockTransport.calls` (com contadores separados para `reply` e
 | Comando `ban` com permissões declarativas e `ctx.mod.ban` | `3` (`author` e `bot` reaproveitados; `target` atualizado) | `1` `moderate`, `1` `reply` |
 | 10 execuções seguidas com `memberCache` | `6` chamadas REST frias na 1ª execução; `0` nas 9 seguintes | `10` envios (`54` chamadas REST economizadas) |
 
+## Throughput de stores
+
+`benchmarks/store-throughput.mjs` mede de forma offline e reproduzível escritas pontuais
+(`updateSingle`), leituras pontuais (`readVariable`, com fallback limpo para `store.read`
+quando o backend não expõe `readVariable`) e consultas paginadas por prefixo (`queryPrefix`)
+em `MemoryStore`, `JsonStore` e `SQLiteStore`:
+
+```sh
+npm run build
+node benchmarks/store-throughput.mjs
+node benchmarks/store-throughput.mjs --entries 10000 --iterations 100 --json > store-throughput.json
+node benchmarks/store-throughput.mjs --entries 100000 --iterations 20
+```
+
+Opções suportadas:
+
+- `--entries`: quantidade de variáveis pré-populada em lotes na guild `100` (`100` a `100000`; padrão `10000`).
+- `--iterations`: número de operações medidas por cenário após até 5 aquecimentos (`1` a `10000`; padrão `100`).
+- `--json`: emite relatório estruturado com `entries`, `iterations`, metadados de runtime (`node`, `version`),
+  resumo por backend (`stores`) e resultados por cenário (`opsPerSec`, `totalMs`, `avgUsPerOp`, `fileBytes`).
+
+Cada execução cria um diretório temporário próprio com `mkdtemp`, fecha os stores antes
+de medir `fileBytes` (permitindo o checkpoint do WAL no SQLite) e remove todos os arquivos
+temporários em `try/finally`. Os resultados refletem cargas sintéticas locais em disco e
+memória e não medem latência de rede ou da API do Fluxer.
+
 ## Cooldowns e deduplicação após a 0.1.7
 
 `benchmarks/rate-limits.mjs` compara o build atual com a implementação congelada
