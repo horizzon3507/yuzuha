@@ -42,6 +42,7 @@ import type { ScheduleRecord } from '../domain/state.js';
 import { HttpService } from '../services/http.js';
 import { createCdn } from '../domain/cdn.js';
 import { emitLog } from './logging.js';
+import type { GatewayLogEvent } from './logging.js';
 import type { HealthReport, HealthStatus } from './health.js';
 import { assertMetricsSink, emitMetric } from './metrics.js';
 import { currentExecution, isExecutionOwner, runInExecution } from './execution.js';
@@ -173,6 +174,20 @@ function assertLogger(logger: YuzuhaOptions['logger']): void {
   }
 }
 
+function resolveGatewayLogOptions(input: YuzuhaOptions['gatewayLogs']): { readonly debug: boolean } | undefined {
+  if (input === undefined || input === false) return undefined;
+  if (input === true) return { debug: false };
+  const prototype = input === null || typeof input !== 'object' || Array.isArray(input) ? undefined : Object.getPrototypeOf(input);
+  if (prototype !== Object.prototype && prototype !== null) {
+    throw new ConfigError('GATEWAY_LOG_OPTIONS', 'gatewayLogs deve ser um booleano ou objeto de opções.');
+  }
+  const options = input as { debug?: unknown };
+  if (options.debug !== undefined && typeof options.debug !== 'boolean') {
+    throw new ConfigError('GATEWAY_LOG_OPTIONS', 'gatewayLogs.debug deve ser um booleano.');
+  }
+  return { debug: options.debug === true };
+}
+
 function assertRateLimiter(limiter: YuzuhaOptions['rateLimiter']): RateLimiter | undefined {
   if (limiter === undefined) return undefined;
   if (!limiter || typeof limiter !== 'object' || Array.isArray(limiter)) {
@@ -268,6 +283,8 @@ export class Yuzuha {
   private readonly listener: (message: Message) => void;
   private readonly gatewayErrors = new WeakSet<Error>();
   private readonly gatewayReports = new Set<Promise<void>>();
+  private readonly gatewayLogConfig?: { readonly debug: boolean };
+  private detachGatewayLogs?: () => void;
   private readonly errorListener = (error: Error): void => {
     if (this.gatewayErrors.delete(error)) return;
     this.reportGatewayError(error, 'error');
@@ -286,6 +303,88 @@ export class Yuzuha {
     );
     this.gatewayReports.add(task);
     void task.then(() => this.gatewayReports.delete(task), () => this.gatewayReports.delete(task));
+  }
+  private emitGatewayLog(trigger: string, build: (executionID: string) => GatewayLogEvent): void {
+    if (!this.hasLogSink) return;
+    const executionID = randomUUID();
+    const task = runInExecution(
+      this,
+      { executionID, source: 'gateway', event: trigger },
+      () => emitLog(this.options, build(executionID)),
+    );
+    this.gatewayReports.add(task);
+    void task.then(() => this.gatewayReports.delete(task), () => this.gatewayReports.delete(task));
+  }
+  private attachGatewayLogs(allowClosing = false): void {
+    if (!this.gatewayLogConfig || this.detachGatewayLogs || (this.closing && !allowClosing)) return;
+    const onReady = (): void => {
+      this.emitGatewayLog(Events.Ready, executionID => ({ event: 'gateway.ready', executionID }));
+    };
+    const onResumed = (): void => {
+      this.emitGatewayLog(Events.Resumed, executionID => ({ event: 'gateway.resumed', executionID }));
+    };
+    const onShardReady = (shardID: number): void => {
+      this.emitGatewayLog(Events.ShardReady, executionID => ({ event: 'gateway.shard_ready', shardID, executionID }));
+    };
+    const onShardResumed = (shardID: number): void => {
+      this.emitGatewayLog(Events.ShardResumed, executionID => ({ event: 'gateway.shard_resumed', shardID, executionID }));
+    };
+    const onShardReconnecting = (shardID: number): void => {
+      this.emitGatewayLog(Events.ShardReconnecting, executionID => ({ event: 'gateway.shard_reconnecting', shardID, executionID }));
+    };
+    const onShardDisconnect = (shardID: number, closeCode: number): void => {
+      this.emitGatewayLog(Events.ShardDisconnect, executionID => ({ event: 'gateway.shard_disconnect', shardID, closeCode, executionID }));
+    };
+    const onShardingRequired = (payload: { shardId: number; numShards: number }): void => {
+      this.emitGatewayLog(Events.ShardingRequired, executionID => ({
+        event: 'gateway.sharding_required',
+        shardID: payload.shardId,
+        numShards: payload.numShards,
+        executionID,
+      }));
+    };
+    const onWarn = (message: unknown): void => {
+      this.emitGatewayLog('warn', executionID => ({
+        event: 'sdk.warn',
+        message: typeof message === 'string' ? message : String(message),
+        executionID,
+      }));
+    };
+    const onDebug = this.gatewayLogConfig.debug
+      ? (message: string): void => {
+        this.emitGatewayLog(Events.Debug, executionID => ({
+          event: 'sdk.debug',
+          message: typeof message === 'string' ? message : String(message),
+          executionID,
+        }));
+      }
+      : undefined;
+
+    this.client.on(Events.Ready, onReady);
+    this.client.on(Events.Resumed, onResumed);
+    this.client.on(Events.ShardReady, onShardReady);
+    this.client.on(Events.ShardResumed, onShardResumed);
+    this.client.on(Events.ShardReconnecting, onShardReconnecting);
+    this.client.on(Events.ShardDisconnect, onShardDisconnect);
+    this.client.on(Events.ShardingRequired, onShardingRequired);
+    this.client.on('warn', onWarn);
+    if (onDebug) this.client.on(Events.Debug, onDebug);
+
+    let detached = false;
+    this.detachGatewayLogs = () => {
+      if (detached) return;
+      detached = true;
+      this.detachGatewayLogs = undefined;
+      this.client.off(Events.Ready, onReady);
+      this.client.off(Events.Resumed, onResumed);
+      this.client.off(Events.ShardReady, onShardReady);
+      this.client.off(Events.ShardResumed, onShardResumed);
+      this.client.off(Events.ShardReconnecting, onShardReconnecting);
+      this.client.off(Events.ShardDisconnect, onShardDisconnect);
+      this.client.off(Events.ShardingRequired, onShardingRequired);
+      this.client.off('warn', onWarn);
+      if (onDebug) this.client.off(Events.Debug, onDebug);
+    };
   }
   private readonly validatedPrefixes = new ValidatedPrefixCache();
   private readonly dynamicPrefixCache?: DynamicPrefixCache;
@@ -320,6 +419,7 @@ export class Yuzuha {
     setMaxListeners(0, this.shutdown.signal);
     assertLogger(options.logger);
     assertMetricsSink(options.metrics);
+    this.gatewayLogConfig = resolveGatewayLogOptions(options.gatewayLogs);
     if (options.context !== undefined && typeof options.context !== 'function') {
       throw new ConfigError('OPTIONS', 'context deve ser uma função.');
     }
@@ -464,6 +564,7 @@ export class Yuzuha {
     };
     this.client.on(Events.Error, this.errorListener);
     this.client.on(Events.ShardError, this.shardErrorListener);
+    this.attachGatewayLogs();
   }
 
   /** Engine de function mode instalado, quando presente. */
@@ -1145,6 +1246,7 @@ export class Yuzuha {
     if (this.memberCache && !this.detachMemberCache && !this.options.transport && this.transport instanceof FluxerTransport) {
       this.detachMemberCache = this.transport.attachCacheInvalidation(this.client);
     }
+    this.attachGatewayLogs();
     if (this.shouldStartBackgroundJobs()) {
       this.scheduler?.start();
       this.startVariableSweep();
@@ -1159,11 +1261,15 @@ export class Yuzuha {
     const resolvedToken = token !== undefined
       ? token
       : (env.FLUXER_BOT_TOKEN?.trim() ? env.FLUXER_BOT_TOKEN : (hasShardingProcessEnv(env) ? env.FLUXER_TOKEN : env.FLUXER_BOT_TOKEN));
-    if (!resolvedToken?.trim()) return Promise.reject(new ConfigError('TOKEN_MISSING', 'Defina FLUXER_BOT_TOKEN.'));
+    if (!resolvedToken?.trim()) {
+      this.detachGatewayLogs?.();
+      return Promise.reject(new ConfigError('TOKEN_MISSING', 'Defina FLUXER_BOT_TOKEN.'));
+    }
     if (this.loginTask) return this.loginTask;
     if (this.memberCache && !this.detachMemberCache && !this.options.transport && this.transport instanceof FluxerTransport) {
       this.detachMemberCache = this.transport.attachCacheInvalidation(this.client);
     }
+    this.attachGatewayLogs();
     if (this.shouldStartBackgroundJobs()) {
       this.scheduler?.start();
       this.startVariableSweep();
@@ -1191,14 +1297,17 @@ export class Yuzuha {
       await this.stopVariableSweep();
       const needsErrorListener = !this.client.listeners(Events.Error).includes(this.errorListener);
       const needsShardListener = !this.client.listeners(Events.ShardError).includes(this.shardErrorListener);
+      const needsGatewayLogs = Boolean(this.gatewayLogConfig && !this.detachGatewayLogs);
       if (needsErrorListener) this.client.on(Events.Error, this.errorListener);
       if (needsShardListener) this.client.on(Events.ShardError, this.shardErrorListener);
+      if (needsGatewayLogs) this.attachGatewayLogs(true);
       for (const handle of this.pendingTimers) this.timers.clearTimeout(handle);
       this.pendingTimers.clear();
       try { await this.client.destroy(); }
       finally {
         if (needsErrorListener) this.client.off(Events.Error, this.errorListener);
         if (needsShardListener) this.client.off(Events.ShardError, this.shardErrorListener);
+        this.detachGatewayLogs?.();
         this.detachMemberCache?.();
         this.detachMemberCache = undefined;
         this.memberCache?.clear();
@@ -1321,6 +1430,7 @@ export class Yuzuha {
         finally {
           this.client.off(Events.Error, this.errorListener);
           this.client.off(Events.ShardError, this.shardErrorListener);
+          this.detachGatewayLogs?.();
           this.detachMemberCache?.();
           this.detachMemberCache = undefined;
           this.memberCache?.clear();

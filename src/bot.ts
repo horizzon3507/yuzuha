@@ -73,6 +73,7 @@ export type {
   MessageGate,
   DispatchResult,
   DestroyOptions,
+  GatewayLogOptions,
   SignalHandlerOptions,
   SignalHandlerTarget,
   LocaleOption,

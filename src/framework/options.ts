@@ -96,6 +96,9 @@ export interface RateLimitOptions {
 export interface DestroyOptions {
   timeoutMs?: number;
 }
+export interface GatewayLogOptions {
+  debug?: boolean;
+}
 export interface SignalHandlerTarget {
   on(event: string, listener: (...args: any[]) => void): unknown;
   off(event: string, listener: (...args: any[]) => void): unknown;
@@ -137,6 +140,7 @@ export interface YuzuhaOptions {
   onLog?: (record: LogRecord) => void | Promise<void>;
   logger?: YuzuhaLogger | false;
   metrics?: MetricsSink;
+  gatewayLogs?: boolean | GatewayLogOptions;
   retry?: false | TransportRetryPolicy;
   timers?: { setTimeout(fn: () => void, ms: number): unknown; clearTimeout(handle: unknown): void };
   cdn?: { mediaBase?: string };

@@ -59,6 +59,7 @@ export type {
   MessageGate,
   DispatchResult,
   DestroyOptions,
+  GatewayLogOptions,
   SignalHandlerOptions,
   SignalHandlerTarget,
   LocaleOption,
@@ -89,7 +90,7 @@ export type { NativeCommandContext, NativeCommandDefinition, CommandCheck, Comma
 export { adaptClientEvent, defineContextEvent, defineEvent } from './framework/events.js';
 export type { AdaptedClientEvent, ContextEventDefinition, EventDefinition, NativeEvent, NativeListener } from './framework/events.js';
 export { createConsoleLogger } from './framework/logging.js';
-export type { LogMethod, LogRecord, YuzuhaLogger } from './framework/logging.js';
+export type { ConsoleLogLevel, GatewayLogEvent, LogEvent, LogMethod, LogRecord, YuzuhaLogger } from './framework/logging.js';
 export { currentExecution } from './framework/execution.js';
 export type { ExecutionStore } from './framework/execution.js';
 export { EventContext } from './commands/event-context.js';
