@@ -1,7 +1,7 @@
 import { Client, Events, Message, Routes } from '@fluxerjs/core';
 import type { ClientEventListener } from '@fluxerjs/core';
 import type { IncomingMessage, ModerationAction, ModerationMember, Payload, Transport } from '../../contracts.js';
-import { GuardError, YuzuhaError } from '../../errors.js';
+import { GuardError, TransportError } from '../../errors.js';
 import { isNotFound, isTransientError, isUndeliveredSend, resolvePolicy, withRetry } from '../../services/retry.js';
 import type { Reliability } from '../../services/retry.js';
 import { editBody, replyTarget, safePayload as safe } from './payload.js';
@@ -86,11 +86,11 @@ export class FluxerTransport implements Transport {
       channelID ? this.client.channels.fetch(channelID) : Promise.resolve(undefined),
     ]);
     const topRole = pickTopRole(member.roles.cache.values(), guild.roles.get(guildID));
-    if (!topRole) throw new YuzuhaError('ROLES_UNAVAILABLE', 'Não foi possível verificar os cargos.');
+    if (!topRole) throw new TransportError('ROLES_UNAVAILABLE', 'Não foi possível verificar os cargos.');
     let permissions = member.permissions.bitfield;
     if (channelID) {
       if (!channel || !channel.isGuild() || channel.guildId !== guildID) {
-        throw new YuzuhaError('CHANNEL_GUILD', 'O canal deve pertencer ao mesmo servidor.');
+        throw new TransportError('CHANNEL_GUILD', 'O canal deve pertencer ao mesmo servidor.');
       }
       permissions = member.permissionsIn(channel).bitfield;
     }
@@ -157,7 +157,7 @@ export class FluxerTransport implements Transport {
     if (action === 'move' && voice?.channelID) {
       const channel = await this.client.channels.fetch(voice.channelID);
       if (!channel.isGuild() || !channel.isVoice() || channel.guildId !== guildID) {
-        throw new YuzuhaError('VOICE_CHANNEL', 'O destino deve ser um canal de voz do mesmo servidor.');
+        throw new TransportError('VOICE_CHANNEL', 'O destino deve ser um canal de voz do mesmo servidor.');
       }
     }
     const guild = await this.client.guilds.resolve(guildID);
@@ -171,7 +171,7 @@ export class FluxerTransport implements Transport {
       else if (action === 'move') await member.edit({ channelId: voice!.channelID!, reason });
       else if (action === 'mute') await member.edit({ mute: voice!.enabled!, reason });
       else if (action === 'deafen') await member.edit({ deaf: voice!.enabled!, reason });
-      else throw new YuzuhaError('MODERATION_ACTION', 'Ação de moderação inválida.');
+      else throw new TransportError('MODERATION_ACTION', 'Ação de moderação inválida.');
     }
   }
 }

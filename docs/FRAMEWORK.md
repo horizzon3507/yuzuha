@@ -58,6 +58,71 @@ mensagens ou dados pessoais em produção. O logger padrão do Yuzuha registra s
 o código do erro. `onCommand(ctx, outcome)` recebe `success`, `guarded` ou `error`.
 `handle` retorna também `ignored` para mensagens que não executam comandos.
 
+### Respostas de erro (`errorReply`)
+
+Para personalizar a resposta enviada ao usuário quando um comando é recusado por
+guard ou falha na execução, configure `errorReply(error, ctx?)` (tipo de retorno
+`ErrorReplyResult`):
+
+```ts
+import { GuardError, Yuzuha, embed } from 'yuzuha';
+
+const bot = new Yuzuha({
+  prefix: '!',
+  errorReply(error, ctx) {
+    if (error instanceof GuardError) return `Aviso em ${ctx?.command.name ?? 'entrada'}: ${error.message}`;
+    return { embeds: [embed({ title: 'Falha inesperada', description: 'Tente novamente em instantes.' })] };
+  },
+});
+```
+
+- `string` ou `Payload` substitui a resposta padrão via `ctx.reply` (ou pelo transporte quando `ctx` ainda não existe, como em erro de aspas abertas).
+- `null` silencia a resposta ao usuário (sem afetar `onError` em falhas reais).
+- `undefined` mantém a resposta padrão (`GuardError.message`, `PartialModerationError.message` ou mensagem genérica).
+- Se `errorReply` lançar erro, o framework reporta a falha em `onError` e envia a resposta padrão.
+
+### Hooks de ciclo de comando (`hooks`)
+
+`YuzuhaOptions.hooks` (`YuzuhaHooks`) oferece pontos especializados para
+cooldown, recusas de guarda e comandos desconhecidos:
+
+```ts
+import { Yuzuha } from 'yuzuha';
+
+const bot = new Yuzuha({
+  prefix: '!',
+  hooks: {
+    onCooldown(remainingMs, ctx) {
+      return `Aguarde ${Math.ceil(remainingMs / 1000)}s para usar ${ctx.command.name}.`;
+    },
+    onDenied(error, ctx) {
+      if (error.reason === 'CHECK_FAILED') return `Check recusado em ${ctx.command.name}: ${error.message}`;
+      return undefined; // segue para errorReply -> resposta padrão
+    },
+    onUnknownCommand(info) {
+      return `Comando ${info.prefix}${info.name} não encontrado.`;
+    },
+  },
+});
+```
+
+- `onCooldown(remainingMs, ctx, error)`: chamado quando `GuardError` tem
+  `reason === 'COOLDOWN'` (`error.remainingMs` é preenchido tanto pelo cooldown
+  declarativo quanto por `ctx.cooldown`).
+- `onDenied(error, ctx)`: chamado para os demais motivos de `GuardError` quando
+  o contexto já existe (`CHECK_FAILED`, `PERMISSION_MISSING_AUTHOR`,
+  `NOT_IN_GUILD`, etc.). Falhas antes de `ctx` (ex.: aspas abertas) seguem
+  diretamente para `errorReply`.
+- **Precedência**: `string` ou `Payload` do hook substitui a resposta; `null`
+  silencia; hook ausente ou retorno `undefined`/`void` segue para `errorReply` e
+  depois para a mensagem padrão. Se o hook lançar erro, a falha é enviada a
+  `onError` e a resposta cai no padrão do framework.
+- `onUnknownCommand(info)`: recebe `UnknownCommandContext` (`{ name, input,
+  prefix, message }`) quando o prefixo (estático ou assíncrono) casa, o comando
+  raiz não existe e a mensagem não é duplicada. Retornar `string` ou `Payload`
+  responde à mensagem; `handle` continua retornando `'ignored'` sem acionar
+  `onCommand`. A execução assíncrona é rastreada até `destroy()`.
+
 `bot.load(dir)` substitui todos os comandos após validar o diretório inteiro.
 `bot.load(dir, false)` adiciona comandos, recusando colisões. `bot.reload(dir)`
 atualiza somente a pasta indicada e preserva comandos manuais e de outras pastas.

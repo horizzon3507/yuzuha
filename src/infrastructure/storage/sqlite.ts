@@ -6,7 +6,7 @@ import { chmod, mkdir } from 'node:fs/promises';
 import { dirname } from 'node:path';
 import type { DatabaseSync, StatementSync } from 'node:sqlite';
 import type { State, Store } from '../../contracts.js';
-import { YuzuhaError } from '../../errors.js';
+import { StoreError } from '../../errors.js';
 import { defaultDataPath } from './paths.js';
 import { TransactionQueue } from './queue.js';
 import { assertState, assertSynchronous, decodeState, emptyState } from './state.js';
@@ -20,7 +20,7 @@ export class SQLiteStore implements Store {
   constructor(public readonly path = defaultDataPath().replace(/\.json$/, '.sqlite')) {}
 
   private async open(): Promise<DatabaseSync> {
-    if (this.closed) throw new YuzuhaError('STORE_CLOSED', 'O store SQLite está fechado.');
+    if (this.closed) throw new StoreError('STORE_CLOSED', 'O store SQLite está fechado.');
     if (this.database) return this.database;
     if (this.path !== ':memory:') await mkdir(dirname(this.path), { recursive: true, mode: 0o700 });
     const { DatabaseSync } = await import('node:sqlite');

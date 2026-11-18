@@ -1,5 +1,5 @@
 import type { CaseRecord } from './moderation.js';
-import { YuzuhaError } from '../shared/errors.js';
+import { StoreError, YuzuhaError } from '../shared/errors.js';
 
 export type JsonValue = null | boolean | number | string | JsonValue[] | { [key: string]: JsonValue };
 export type VariableScope = 'global' | 'guild' | 'user';
@@ -54,6 +54,6 @@ export function variableKey(scope: string, id: string, name: string): string {
 export function assertSynchronous(value: unknown): void {
   if (value && (typeof value === 'object' || typeof value === 'function') && 'then' in value) {
     void Promise.resolve(value).catch(() => {});
-    throw new YuzuhaError('STORE_ASYNC', 'Callbacks de transação devem ser síncronos.');
+    throw new StoreError('STORE_ASYNC', 'Callbacks de transação devem ser síncronos.');
   }
 }

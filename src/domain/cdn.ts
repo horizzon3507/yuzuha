@@ -1,4 +1,4 @@
-import { GuardError, YuzuhaError } from '../shared/errors.js';
+import { ConfigError, GuardError } from '../shared/errors.js';
 import { cdnAvatarURL, cdnBannerURL, cdnEmojiURL, cdnGuildAssetURL,
   cdnMemberAvatarURL, cdnMemberBannerURL, cdnStickerURL } from '@fluxerjs/core';
 import type { CdnUrlOptions } from '@fluxerjs/core';
@@ -24,7 +24,7 @@ export interface Cdn {
 
 export function createCdn(mediaBase?: string): Cdn {
   if (mediaBase !== undefined && !/^https:\/\//.test(mediaBase)) {
-    throw new YuzuhaError('OPTIONS', 'cdn.mediaBase deve ser uma URL https.');
+    throw new ConfigError('OPTIONS', 'cdn.mediaBase deve ser uma URL https.');
   }
   const base = <T extends { mediaBase?: string }>(options: T | undefined): T | undefined =>
     mediaBase === undefined ? options : { ...options, mediaBase } as T;

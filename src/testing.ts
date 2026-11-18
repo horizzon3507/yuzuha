@@ -2,7 +2,7 @@ import { AsyncLocalStorage } from 'node:async_hooks';
 import type { IncomingMessage, ModerationAction, ModerationMember, Payload, Transport } from './contracts.js';
 import type { Resources } from './ports/resources.js';
 import { PermissionFlags } from '@fluxerjs/core';
-import { GuardError, YuzuhaError } from './errors.js';
+import { GuardError, TransportError, YuzuhaError } from './errors.js';
 import type { VoiceModerationOptions } from './domain/moderation.js';
 import { Yuzuha } from './framework/bot.js';
 import type { DispatchResult, YuzuhaOptions } from './framework/options.js';
@@ -85,13 +85,13 @@ export class MockTransport implements Transport {
   async edit(channelID: string, messageID: string, payload: Payload): Promise<void> {
     this.calls.edit++;
     const message = this.messages.find(m => m.id === messageID && m.channelID === channelID);
-    if (!message) throw new YuzuhaError('NOT_FOUND', 'Mensagem não encontrada.');
+    if (!message) throw new TransportError('NOT_FOUND', 'Mensagem não encontrada.');
     message.payload = structuredClone(payload);
   }
   async delete(channelID: string, messageID: string): Promise<void> {
     this.calls.delete++;
     const i = this.messages.findIndex(m => m.id === messageID && m.channelID === channelID);
-    if (i < 0) throw new YuzuhaError('NOT_FOUND', 'Mensagem não encontrada.');
+    if (i < 0) throw new TransportError('NOT_FOUND', 'Mensagem não encontrada.');
     this.messages.splice(i, 1);
   }
   async react(channelID: string, messageID: string, emoji: string): Promise<void> {
@@ -106,7 +106,7 @@ export class MockTransport implements Transport {
   }
   async moderate(guildID: string, action: ModerationAction, targetID: string, reason: string, duration?: number, voice?: VoiceModerationOptions): Promise<void> {
     this.calls.moderate++;
-    if (this.failAction) throw new YuzuhaError('API_ERROR', 'Falha simulada.');
+    if (this.failAction) throw new TransportError('API_ERROR', 'Falha simulada.');
     this.actions.push({ guildID, action, targetID, reason, duration, ...voice });
   }
 }

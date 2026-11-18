@@ -1,5 +1,17 @@
 export { Yuzuha, Bot } from './bot.js';
-export type { YuzuhaOptions, VariableSweepOptions, ConcurrencyOptions, PrefixCacheOptions, RateLimitOptions, YuzuhaPlugin, Middleware, DispatchResult } from './bot.js';
+export type {
+  YuzuhaOptions,
+  ErrorReplyResult,
+  UnknownCommandContext,
+  YuzuhaHooks,
+  VariableSweepOptions,
+  ConcurrencyOptions,
+  PrefixCacheOptions,
+  RateLimitOptions,
+  YuzuhaPlugin,
+  Middleware,
+  DispatchResult,
+} from './bot.js';
 export { CommandContext, defineCommand, parseDuration } from './context.js';
 export type { Command, ArgumentDefinition } from './context.js';
 export { commandUsage, commandHelp } from './commands/help.js';

@@ -10,16 +10,16 @@ import type { Command, ContextOptions } from '../context.js';
 import { defineCommand } from '../commands/definition.js';
 import type { NativeCommandDefinition } from '../commands/definition.js';
 import type { ArgumentSchema } from '../commands/builders.js';
-import type { IncomingMessage, Store, Transport } from '../contracts.js';
-import { GuardError, PartialModerationError, YuzuhaError } from '../errors.js';
+import type { IncomingMessage, Payload, Store, Transport } from '../contracts.js';
+import { ConfigError, GuardError, PartialModerationError, YuzuhaError } from '../errors.js';
 import { JsonStore, defaultDataPath } from '../store.js';
 import { CommandRegistry, functionsRequired } from './command-registry.js';
 import type { CompiledCommand } from './command-registry.js';
 import { runMiddleware } from './middleware.js';
-import type { DispatchResult, Middleware, YuzuhaOptions, YuzuhaPlugin } from './options.js';
+import type { DispatchResult, Middleware, UnknownCommandContext, YuzuhaOptions, YuzuhaPlugin } from './options.js';
 import { RateLimits, resolveRateLimitOptions } from './rate-limits.js';
 import { ConcurrencyLimiter } from './concurrency.js';
-import { reportError, userError } from './reporting.js';
+import { reportError, resolveErrorReply } from './reporting.js';
 import { route } from './routing.js';
 import { DynamicPrefixCache, ValidatedPrefixCache, prefixCacheKey, validatePrefixCacheOptions } from './prefix-cache.js';
 import { defineEvent, NativeEvents } from './events.js';
@@ -40,19 +40,33 @@ import type { MusicManager } from '../services/music.js';
 import type { NativeVoice } from '../ports/voice.js';
 import { canvasRenderer } from '../infrastructure/canvas/render.js';
 
-type RoutedCommand = { compiled: CompiledCommand; input: string; prefix: string };
+type RoutedCommand = { kind: 'command'; compiled: CompiledCommand; input: string; prefix: string }
+  | { kind: 'unknown'; unknown: UnknownCommandContext };
 const ignored: Promise<DispatchResult> = Promise.resolve('ignored');
+
+function validateHooks(hooks: YuzuhaOptions['hooks']): void {
+  if (hooks === undefined) return;
+  const prototype = hooks === null || typeof hooks !== 'object' || Array.isArray(hooks) ? undefined : Object.getPrototypeOf(hooks);
+  if (prototype !== Object.prototype && prototype !== null) {
+    throw new ConfigError('OPTIONS', 'hooks deve ser um objeto.');
+  }
+  for (const key of ['onCooldown', 'onDenied', 'onUnknownCommand'] as const) {
+    if (hooks[key] !== undefined && typeof hooks[key] !== 'function') {
+      throw new ConfigError('OPTIONS', `hooks.${key} deve ser uma função.`);
+    }
+  }
+}
 
 function emojiRegistry(input: Record<string, string> | undefined): Record<string, string> {
   const registry: Record<string, string> = Object.create(null);
   if (input === undefined) return registry;
   const prototype = input === null || typeof input !== 'object' ? undefined : Object.getPrototypeOf(input);
   if (prototype !== Object.prototype && prototype !== null) {
-    throw new YuzuhaError('EMOJI_OPTIONS', 'emoji deve ser um objeto nome → texto.');
+    throw new ConfigError('EMOJI_OPTIONS', 'emoji deve ser um objeto nome → texto.');
   }
   for (const [name, value] of Object.entries(input)) {
     if (!name || typeof value !== 'string' || !value) {
-      throw new YuzuhaError('EMOJI_OPTIONS', 'emoji deve mapear nomes não vazios para textos não vazios.');
+      throw new ConfigError('EMOJI_OPTIONS', 'emoji deve mapear nomes não vazios para textos não vazios.');
     }
     registry[name] = value;
   }
@@ -70,15 +84,15 @@ function resolveVariableSweepOptions(input: YuzuhaOptions['variables']): { inter
   if (input === undefined) return { intervalMs: DEFAULT_SWEEP_INTERVAL_MS, batch: DEFAULT_SWEEP_BATCH };
   const prototype = input === null || typeof input !== 'object' || Array.isArray(input) ? undefined : Object.getPrototypeOf(input);
   if (prototype !== Object.prototype && prototype !== null) {
-    throw new YuzuhaError('VARIABLE_SWEEP_OPTIONS', 'Opções de limpeza de variáveis inválidas.');
+    throw new ConfigError('VARIABLE_SWEEP_OPTIONS', 'Opções de limpeza de variáveis inválidas.');
   }
   const intervalMs = input.sweepIntervalMs === undefined ? DEFAULT_SWEEP_INTERVAL_MS : input.sweepIntervalMs;
   if (intervalMs !== false && (!Number.isSafeInteger(intervalMs) || intervalMs < MIN_SWEEP_INTERVAL_MS || intervalMs > MAX_SWEEP_INTERVAL_MS)) {
-    throw new YuzuhaError('VARIABLE_SWEEP_OPTIONS', `sweepIntervalMs deve ser false ou inteiro entre ${MIN_SWEEP_INTERVAL_MS} e ${MAX_SWEEP_INTERVAL_MS}.`);
+    throw new ConfigError('VARIABLE_SWEEP_OPTIONS', `sweepIntervalMs deve ser false ou inteiro entre ${MIN_SWEEP_INTERVAL_MS} e ${MAX_SWEEP_INTERVAL_MS}.`);
   }
   const batch = input.sweepBatch === undefined ? DEFAULT_SWEEP_BATCH : input.sweepBatch;
   if (!Number.isSafeInteger(batch) || batch < 1 || batch > MAX_SWEEP_BATCH) {
-    throw new YuzuhaError('VARIABLE_SWEEP_OPTIONS', `sweepBatch deve ser inteiro entre 1 e ${MAX_SWEEP_BATCH}.`);
+    throw new ConfigError('VARIABLE_SWEEP_OPTIONS', `sweepBatch deve ser inteiro entre 1 e ${MAX_SWEEP_BATCH}.`);
   }
   return { intervalMs, batch };
 }
@@ -86,7 +100,7 @@ function resolveVariableSweepOptions(input: YuzuhaOptions['variables']): { inter
 function assertEngine(engine: unknown): ScriptEngine {
   const candidate = engine as Partial<Record<keyof ScriptEngine, unknown>> | null | undefined;
   if (!candidate || (['compile', 'execute', 'functions', 'registerAll', 'fork', 'text'] as const).some(key => typeof candidate[key] !== 'function')) {
-    throw new YuzuhaError('ENGINE_INVALID', 'Engine de function mode inválido: precisa de compile, execute, functions, registerAll, fork e text.');
+    throw new ConfigError('ENGINE_INVALID', 'Engine de function mode inválido: precisa de compile, execute, functions, registerAll, fork e text.');
   }
   return engine as ScriptEngine;
 }
@@ -158,6 +172,10 @@ export class Yuzuha {
 
   constructor(public readonly options: YuzuhaOptions = {}) {
     setMaxListeners(0, this.shutdown.signal);
+    if (options.errorReply !== undefined && typeof options.errorReply !== 'function') {
+      throw new ConfigError('OPTIONS', 'errorReply deve ser uma função.');
+    }
+    validateHooks(options.hooks);
     const rateLimitOptions = resolveRateLimitOptions(options.rateLimits);
     this.limits = new RateLimits({
       ...rateLimitOptions,
@@ -474,7 +492,7 @@ export class Yuzuha {
 
   login(token = process.env.FLUXER_BOT_TOKEN): Promise<void> {
     if (this.closing) return Promise.reject(new YuzuhaError('BOT_CLOSED', 'O bot está encerrado.'));
-    if (!token?.trim()) return Promise.reject(new YuzuhaError('TOKEN_MISSING', 'Defina FLUXER_BOT_TOKEN.'));
+    if (!token?.trim()) return Promise.reject(new ConfigError('TOKEN_MISSING', 'Defina FLUXER_BOT_TOKEN.'));
     if (this.loginTask) return this.loginTask;
     if (this.memberCache && !this.detachMemberCache && !this.options.transport && this.transport instanceof FluxerTransport) {
       this.detachMemberCache = this.transport.attachCacheInvalidation(this.client);
@@ -590,25 +608,29 @@ export class Yuzuha {
     }
   }
 
-  private resolveCommand(message: IncomingMessage, configured: string | string[]): RoutedCommand | undefined {
+  private resolveRoute(message: IncomingMessage, configured: string | string[]): RoutedCommand | undefined {
     const routed = route(message.content, this.resolvePrefixes(configured));
     if (!routed) return;
     const resolved = this.registry.resolve(routed.name, routed.input);
-    if (!resolved || this.limits.duplicate(message.channelID, message.id)) return;
-    return { ...resolved, prefix: routed.prefix };
+    if (!resolved) {
+      if (!this.options.hooks?.onUnknownCommand || this.limits.duplicate(message.channelID, message.id)) return;
+      return { kind: 'unknown', unknown: Object.freeze({ name: routed.name, input: routed.input, prefix: routed.prefix, message }) };
+    }
+    if (this.limits.duplicate(message.channelID, message.id)) return;
+    return { kind: 'command', ...resolved, prefix: routed.prefix };
   }
 
   private handleMessage(message: IncomingMessage, onFailure?: (error: unknown, ctx?: CommandContext) => void, parentSignal?: AbortSignal, executionID?: string): Promise<DispatchResult> {
     if (this.closing || message.authorBot || message.authorID === this.transport.botID) return ignored;
     let routed: RoutedCommand | undefined;
     if (typeof this.options.prefix !== 'function') {
-      try { routed = this.resolveCommand(message, this.options.prefix ?? '!'); }
+      try { routed = this.resolveRoute(message, this.options.prefix ?? '!'); }
       catch (error) { return Promise.reject(error); }
       if (!routed) return ignored;
     } else if (this.dynamicPrefixCache) {
       const cached = this.dynamicPrefixCache.get(prefixCacheKey(message));
       if (cached) {
-        routed = this.resolveCommand(message, cached);
+        routed = this.resolveRoute(message, cached);
         if (!routed) return ignored;
       }
     }
@@ -619,15 +641,30 @@ export class Yuzuha {
     return task;
   }
 
+  private async runUnknownCommand(info: UnknownCommandContext, message: IncomingMessage, signal: AbortSignal): Promise<void> {
+    const hook = this.options.hooks?.onUnknownCommand;
+    if (!hook || this.closing || signal.aborted) return;
+    let reply: Payload | string | null | void;
+    try { reply = await hook(info); }
+    catch (error) { await reportError(this.options, error); return; }
+    if (signal.aborted || reply === undefined || reply === null) return;
+    try { await this.transport.reply(message, typeof reply === 'string' ? { content: reply } : reply); }
+    catch (replyError) { await reportError(this.options, replyError); }
+  }
+
   private async dispatch(message: IncomingMessage, signal: AbortSignal, onFailure?: (error: unknown, ctx?: CommandContext) => void, executionID?: string, resolved?: RoutedCommand): Promise<DispatchResult> {
     if (!resolved) {
       const prefixes = typeof this.options.prefix === 'function'
         ? await this.resolveDynamicPrefixes(message, this.options.prefix, signal)
         : this.resolvePrefixes(this.options.prefix ?? '!');
       if (!prefixes || this.closing || signal.aborted) return 'ignored';
-      resolved = this.resolveCommand(message, prefixes);
+      resolved = this.resolveRoute(message, prefixes);
     }
     if (!resolved) return 'ignored';
+    if (resolved.kind === 'unknown') {
+      await this.runUnknownCommand(resolved.unknown, message, signal);
+      return 'ignored';
+    }
     let releaseSlot: (() => void) | undefined;
     try {
       if (this.concurrencyLimiter) {
@@ -665,7 +702,7 @@ export class Yuzuha {
         const current = ctx;
         for (const check of compiled.command.checks ?? []) {
           const result = await check(current);
-          if (result === false || typeof result === 'string') throw new GuardError(typeof result === 'string' ? result : 'Você não pode executar este comando.', 'GENERIC');
+          if (result === false || typeof result === 'string') throw new GuardError(typeof result === 'string' ? result : 'Você não pode executar este comando.', 'CHECK_FAILED');
         }
         const execute = async () => {
           if (compiled.program) {
@@ -682,8 +719,16 @@ export class Yuzuha {
       } catch (error) {
         onFailure?.(error, ctx);
         outcome = error instanceof GuardError ? 'guarded' : 'error';
-        try { if (!signal.aborted) await (ctx ? ctx.reply(userError(error, ctx)) : this.transport.reply(message, { content: userError(error, ctx) })); }
-        catch (replyError) { await reportError(this.options, replyError, ctx); }
+        if (!signal.aborted) {
+          const reply = await resolveErrorReply(this.options, error, ctx);
+          if (reply !== null && !signal.aborted) {
+            try {
+              await (ctx ? ctx.reply(reply) : this.transport.reply(message, typeof reply === 'string' ? { content: reply } : reply));
+            } catch (replyError) {
+              await reportError(this.options, replyError, ctx);
+            }
+          }
+        }
         if (!(error instanceof GuardError)) await reportError(this.options, error, ctx);
       }
       if (ctx && this.options.onCommand) {

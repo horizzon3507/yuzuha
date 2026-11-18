@@ -1,4 +1,4 @@
-import { YuzuhaError } from '../errors.js';
+import { ConfigError } from '../errors.js';
 
 const WHITESPACE = /\s/;
 
@@ -27,7 +27,7 @@ export function firstWord(text: string, start = 0, end = text.length): { word: s
 export function validatePrefixes(value: string | string[]): string[] {
   const prefixes = Array.isArray(value) ? [...value] : [value];
   if (!prefixes.length || prefixes.some(p => typeof p !== 'string' || !p || /\s/.test(p))) {
-    throw new YuzuhaError('PREFIX', 'Prefixos devem ser textos não vazios sem espaços.');
+    throw new ConfigError('PREFIX', 'Prefixos devem ser textos não vazios sem espaços.');
   }
   return prefixes.sort((a, b) => b.length - a.length);
 }

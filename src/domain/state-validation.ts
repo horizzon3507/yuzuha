@@ -1,5 +1,5 @@
 import type { JsonValue, State } from './state.js';
-import { YuzuhaError } from '../shared/errors.js';
+import { StoreError } from '../shared/errors.js';
 import { assertTimezone, parseCron } from './cron.js';
 
 export function emptyState(): State { return { schema: 2, variables: {}, cases: {}, schedules: [] }; }
@@ -95,7 +95,7 @@ export function isState(value: unknown): value is State {
 }
 
 export function assertState(value: unknown): asserts value is State {
-  if (!isState(value)) throw new YuzuhaError('STORE_INVALID', 'A transação produziu estado inválido; nenhuma alteração foi salva.');
+  if (!isState(value)) throw new StoreError('STORE_INVALID', 'A transação produziu estado inválido; nenhuma alteração foi salva.');
 }
 
 export function decodeState(content: string): State {
@@ -108,7 +108,7 @@ export function decodeState(content: string): State {
     }
     throw new Error('Schema ou conteúdo inválido.');
   } catch (cause) {
-    throw new YuzuhaError('STORE_CORRUPT', 'Estado inválido. Preserve os dados e restaure um backup; eles não foram sobrescritos.', { cause });
+    throw new StoreError('STORE_CORRUPT', 'Estado inválido. Preserve os dados e restaure um backup; eles não foram sobrescritos.', { cause });
   }
 }
 

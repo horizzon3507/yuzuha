@@ -1,4 +1,4 @@
-import { YuzuhaError } from '../errors.js';
+import { ConfigError, YuzuhaError } from '../errors.js';
 import type { RateLimitOptions } from './options.js';
 
 export type RateLimitsOptions = RateLimitOptions & {
@@ -13,7 +13,7 @@ const DEFAULT_DEDUPE_WINDOW_MS = 60_000;
 
 function positiveInt(value: unknown, field: string): number {
   if (!Number.isSafeInteger(value) || (value as number) < 1) {
-    throw new YuzuhaError('RATE_LIMIT_OPTIONS', `${field} deve ser um inteiro positivo.`);
+    throw new ConfigError('RATE_LIMIT_OPTIONS', `${field} deve ser um inteiro positivo.`);
   }
   return value as number;
 }
@@ -29,13 +29,13 @@ export function resolveRateLimitOptions(input: unknown): Required<RateLimitOptio
   }
   const prototype = input === null || typeof input !== 'object' || Array.isArray(input) ? undefined : Object.getPrototypeOf(input);
   if (prototype !== Object.prototype && prototype !== null) {
-    throw new YuzuhaError('RATE_LIMIT_OPTIONS', 'Opções de rateLimits inválidas.');
+    throw new ConfigError('RATE_LIMIT_OPTIONS', 'Opções de rateLimits inválidas.');
   }
   const raw = input as RateLimitOptions;
   const maxCooldowns = raw.maxCooldowns === undefined ? DEFAULT_MAX_COOLDOWNS : positiveInt(raw.maxCooldowns, 'maxCooldowns');
   const onCooldownCapacity = raw.onCooldownCapacity === undefined ? DEFAULT_ON_COOLDOWN_CAPACITY : raw.onCooldownCapacity;
   if (onCooldownCapacity !== 'evict' && onCooldownCapacity !== 'throw') {
-    throw new YuzuhaError('RATE_LIMIT_OPTIONS', "onCooldownCapacity deve ser 'evict' ou 'throw'.");
+    throw new ConfigError('RATE_LIMIT_OPTIONS', "onCooldownCapacity deve ser 'evict' ou 'throw'.");
   }
   const maxDedupe = raw.maxDedupe === undefined ? DEFAULT_MAX_DEDUPE : positiveInt(raw.maxDedupe, 'maxDedupe');
   const dedupeWindowMs = raw.dedupeWindowMs === undefined ? DEFAULT_DEDUPE_WINDOW_MS : positiveInt(raw.dedupeWindowMs, 'dedupeWindowMs');
@@ -68,10 +68,10 @@ export class RateLimits {
     }
     const resolved = resolveRateLimitOptions(nowOrOptions);
     if (nowOrOptions.now !== undefined && typeof nowOrOptions.now !== 'function') {
-      throw new YuzuhaError('RATE_LIMIT_OPTIONS', 'now deve ser uma função.');
+      throw new ConfigError('RATE_LIMIT_OPTIONS', 'now deve ser uma função.');
     }
     if (nowOrOptions.onEvict !== undefined && typeof nowOrOptions.onEvict !== 'function') {
-      throw new YuzuhaError('RATE_LIMIT_OPTIONS', 'onEvict deve ser uma função.');
+      throw new ConfigError('RATE_LIMIT_OPTIONS', 'onEvict deve ser uma função.');
     }
     this.now = nowOrOptions.now ?? Date.now;
     this.onEvict = nowOrOptions.onEvict;

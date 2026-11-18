@@ -6,7 +6,7 @@ import { importModule } from '../framework/module-loader.js';
 import { Yuzuha } from '../bot.js';
 import { functions } from '../functions.js';
 import type { YuzuhaConfig } from '../config.js';
-import { YuzuhaError } from '../errors.js';
+import { ConfigError } from '../errors.js';
 
 export async function exists(path: string): Promise<boolean> {
   try { await stat(path); return true; }
@@ -18,7 +18,7 @@ export async function findConfig(input?: string): Promise<string> {
   for (const file of ['yuzuha.config.ts', 'yuzuha.config.js', 'yuzuha.config.mjs']) {
     if (await exists(file)) return resolve(file);
   }
-  throw new YuzuhaError('CONFIG_MISSING', 'Config não encontrada. Execute yuzuha init meu-bot ou informe o caminho.');
+  throw new ConfigError('CONFIG_MISSING', 'Config não encontrada. Execute yuzuha init meu-bot ou informe o caminho.');
 }
 
 export async function loadEnvironment(directory: string): Promise<void> {
@@ -31,9 +31,9 @@ export async function configuredBot(path: string, environment: boolean, loadComm
   const directory = dirname(path);
   if (environment) await loadEnvironment(directory);
   const module = await importModule(pathToFileURL(path).href);
-  if (!module.default || typeof module.default !== 'object' || Array.isArray(module.default)) throw new YuzuhaError('CONFIG_INVALID', 'Config deve exportar um objeto default.');
+  if (!module.default || typeof module.default !== 'object' || Array.isArray(module.default)) throw new ConfigError('CONFIG_INVALID', 'Config deve exportar um objeto default.');
   const config = module.default as YuzuhaConfig;
-  if ((config.commands !== undefined && typeof config.commands !== 'string') || (config.setup !== undefined && typeof config.setup !== 'function')) throw new YuzuhaError('CONFIG_INVALID', 'commands deve ser texto e setup deve ser uma função.');
+  if ((config.commands !== undefined && typeof config.commands !== 'string') || (config.setup !== undefined && typeof config.setup !== 'function')) throw new ConfigError('CONFIG_INVALID', 'commands deve ser texto e setup deve ser uma função.');
   const bot = new Yuzuha({ ...config, engine: config.engine ?? functions() });
   try {
     await config.setup?.(bot);

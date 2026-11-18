@@ -328,7 +328,7 @@ export class CommandContext {
     const key = JSON.stringify([this.guildID, this.message.channelID, this.authorID, this.command.name]);
     const remaining = this.claimCooldown(key, parseDuration(duration));
     if (remaining > 0) throw new GuardError((message ?? 'Aguarde {remaining} antes de usar novamente.')
-      .replaceAll('{remaining}', `${Math.ceil(remaining / 1000)}s`), 'COOLDOWN');
+      .replaceAll('{remaining}', `${Math.ceil(remaining / 1000)}s`), 'COOLDOWN', { remainingMs: remaining });
   }
 
   async prepare(): Promise<void> {
@@ -363,7 +363,7 @@ export class CommandContext {
       if (command.cooldown === undefined) continue;
       const key = JSON.stringify([this.guildID, this.message.channelID, this.authorID, command.name]);
       const remaining = this.claimCooldown(key, parseDuration(command.cooldown));
-      if (remaining > 0) throw new GuardError(`Aguarde ${Math.ceil(remaining / 1000)}s antes de usar novamente.`, 'COOLDOWN');
+      if (remaining > 0) throw new GuardError(`Aguarde ${Math.ceil(remaining / 1000)}s antes de usar novamente.`, 'COOLDOWN', { remainingMs: remaining });
     }
   }
 

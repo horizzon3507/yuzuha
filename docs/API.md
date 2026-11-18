@@ -336,19 +336,35 @@ exceto a comparação, que retorna -1, 0 ou 1. Veja [operações de dados](funct
 
 | Classe/código | Significado |
 |---|---|
-| `YuzuhaError` | Erro com `code` estável para diagnóstico |
+| `YuzuhaError` | Erro base com `code` tipado (`YuzuhaErrorCode \| (string & {})`) para diagnóstico |
+| `TransportError` | Subclasse de `YuzuhaError` para falhas do transporte (`ROLES_UNAVAILABLE`, `CHANNEL_GUILD`, `VOICE_CHANNEL`, `MODERATION_ACTION`, `NOT_FOUND`, `API_ERROR`) |
+| `StoreError` | Subclasse de `YuzuhaError` para falhas de persistência (`STORE_NAME`, `STORE_CLOSED`, `STORE_ASYNC`, `STORE_CORRUPT`, `STORE_INVALID`, `STORE_READONLY`) |
+| `ConfigError` | Subclasse de `YuzuhaError` para configuração, opções inválidas e token ausente (`CONFIG_MISSING`, `CONFIG_INVALID`, `MEMBER_CACHE_OPTIONS`, `PREFIX`, `EMOJI_OPTIONS`, `ENGINE_INVALID`, `VARIABLE_SWEEP_OPTIONS`, `OPTIONS`, `TOKEN_MISSING`) |
 | `ScriptError` | Erro com fonte, offset, arquivo, linha, coluna e `format()` |
 | `GuardError` / `GUARD` | Condição de uso recusada; mensagem apropriada ao usuário |
 | `PartialModerationError` / `MODERATION_PARTIAL` | API confirmou ação, mas o caso não foi salvo |
 | `StopExecution` | Controle interno de parada de scripts |
-| `STORE_CORRUPT` | Arquivo/schema inválido; dados preservados |
-| `STORE_INVALID` | Callback produziu estado inválido; sem commit |
-| `STORE_ASYNC` | Callback de atualização retornou promise/thenable |
 | `EXECUTION_LIMIT` / `OUTPUT_LIMIT` | Orçamento do script excedido |
 | `EXECUTION_ABORTED` | Cancelamento cooperativo; não capturado por `$try` |
 | `NATIVE_UNAVAILABLE` | Client, recurso, agendador ou HTTP não foi fornecido |
 | `HTTP_*` | URL, host, DNS, rede, timeout, redirecionamento, corpo ou JSON inválido |
 | `SCHEDULE` / `SCHEDULE_*` | Entrada de agendamento inválida |
+
+`YUZUHA_ERROR_CODES` exporta a lista somente leitura e ordenada de todos os
+códigos conhecidos pelo framework, e `YuzuhaErrorCode` representa sua união.
+Use `isYuzuhaError(error, ...codes)` para checar instâncias de `YuzuhaError` e
+estreitar `error.code` sem perder compatibilidade com códigos personalizados:
+
+```ts
+import { ConfigError, StoreError, isYuzuhaError } from 'yuzuha';
+
+if (error instanceof StoreError && isYuzuhaError(error, 'STORE_CORRUPT', 'STORE_INVALID')) {
+  console.error(error.code, error.cause);
+}
+if (error instanceof ConfigError) {
+  console.error(error.code, error.message);
+}
+```
 
 No handler de erro, observe `cause` para a causa original.
 Não repita automaticamente moderação após erro parcial. Mais detalhes e
