@@ -9,6 +9,8 @@ import type { Store } from '../ports/store.js';
 import type { Transport } from '../ports/transport.js';
 import type { NativeAccess } from '../ports/native.js';
 import type { Resources } from '../ports/resources.js';
+import { assertServiceKey } from '../ports/services.js';
+import type { ServiceKey, ServiceLookup } from '../ports/services.js';
 import type { Scheduler } from '../services/scheduler.js';
 import { sendStreamAttachment } from '../services/attachments.js';
 import type { StreamAttachmentOptions } from '../services/attachments.js';
@@ -81,6 +83,7 @@ export interface ContextOptions {
   actor?: { guildID: string; authorID: string };
   isOwner?: (userID: string) => boolean;
   isDevGuild?: (guildID: string) => boolean;
+  services?: ServiceLookup;
 }
 
 export class CommandContext {
@@ -137,6 +140,7 @@ export class CommandContext {
   private canvasService?: CanvasService;
   private scopedHttp?: HttpService;
   private scopedResources?: Resources;
+  private readonly serviceLookup?: ServiceLookup;
 
   constructor(options: ContextOptions) {
     const skipTokenize = skipNextTokenize;
@@ -187,6 +191,7 @@ export class CommandContext {
     this.canvasConfig = options.canvas?.config;
     this.nativeResources = options.resources;
     this.hasInjectedResources = options.resourcesInjected ?? (options.resources !== undefined);
+    this.serviceLookup = options.services;
   }
 
   private get memo(): MemberMemo { return this.memberMemo ??= new MemberMemo(this.transport); }
@@ -212,6 +217,19 @@ export class CommandContext {
   get cdn() { return this.cdnService; }
   /** Mapa nome → emoji configurado no bot (`YuzuhaOptions.emoji`). */
   get emoji(): Record<string, string> { return this.emojiMap; }
+
+  get<T>(key: ServiceKey<T>): T {
+    assertServiceKey(key);
+    if (!this.serviceLookup) {
+      throw new YuzuhaError('SERVICE_MISSING', `Serviço não registrado: ${key.description}.`);
+    }
+    return this.serviceLookup.get(key);
+  }
+
+  resolve<T>(key: ServiceKey<T>): T | undefined {
+    assertServiceKey(key);
+    return this.serviceLookup?.resolve(key);
+  }
 
   get mod(): NativeModeration {
     return this.nativeMod ??= new NativeModeration(

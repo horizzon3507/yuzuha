@@ -32,6 +32,8 @@ import { route } from './routing.js';
 import { DynamicPrefixCache, ValidatedPrefixCache, prefixCacheKey, validatePrefixCacheOptions } from './prefix-cache.js';
 import { defineEvent, NativeEvents } from './events.js';
 import type { ContextEventDefinition, NativeEvent, NativeListener } from './events.js';
+import { ServiceContainer } from './services.js';
+import type { ServiceKey } from './services.js';
 import { ScheduleExecutionError, Scheduler, validateLock } from '../services/scheduler.js';
 import { StateMaintenance } from '../services/state-maintenance.js';
 import type { CleanupResult } from '../services/state-maintenance.js';
@@ -196,6 +198,7 @@ export class Yuzuha {
   private readonly customArgumentTypes = new Map<string, CustomArgumentType<unknown>>();
   private readonly middleware: Middleware[] = [];
   private readonly plugins = new Set<string>();
+  private readonly services = new ServiceContainer();
   private readonly limits: RateLimiter;
   private readonly ownsRateLimiter: boolean;
   private lastRateLimitEvictLog?: number;
@@ -438,6 +441,24 @@ export class Yuzuha {
     }));
     return this;
   }
+
+  provide<T>(key: ServiceKey<T>, value: T): this {
+    if (this.closing) throw new YuzuhaError('BOT_CLOSED', 'O bot está encerrado.');
+    this.services.provide(key, value);
+    return this;
+  }
+
+  hasService(key: ServiceKey<unknown>): boolean {
+    return this.services.has(key);
+  }
+
+  get<T>(key: ServiceKey<T>): T {
+    return this.services.get(key);
+  }
+
+  resolve<T>(key: ServiceKey<T>): T | undefined {
+    return this.services.resolve(key);
+  }
   plugin(plugin: YuzuhaPlugin): this {
     if (this.closing) throw new YuzuhaError('BOT_CLOSED', 'O bot está encerrado.');
     if (!plugin.name || this.plugins.has(plugin.name)) throw new YuzuhaError('PLUGIN_DUPLICATE', 'Plugin sem nome ou já instalado.');
@@ -596,7 +617,7 @@ export class Yuzuha {
         cdn: this.cdnService, disableResourceAuthorization: this.options.unsafeDisableResourceAuthorization === true,
         cooldown: this.contextCooldown, signal: this.shutdown.signal, emoji: this.emojiMap,
         deleteLater: this.contextDeleteLater, isOwner: this.contextIsOwner, isDevGuild: this.contextIsDevGuild,
-        locale: this.messagesRuntime.defaultLocale, translator: this.messagesRuntime.defaultTranslator };
+        services: this.services, locale: this.messagesRuntime.defaultLocale, translator: this.messagesRuntime.defaultTranslator };
       const prelim = new EventContext(baseEventOptions);
       await runInExecution(this, {
         executionID: prelim.executionID,
@@ -678,7 +699,7 @@ export class Yuzuha {
       canvas: this.canvasContext, now: this.options.now, help: this.contextHelp, cooldown: this.contextCooldown, signal,
       cdn: this.cdnService, disableResourceAuthorization: this.options.unsafeDisableResourceAuthorization === true, emoji: this.emojiMap,
       deleteLater: this.contextDeleteLater, isOwner: this.contextIsOwner, isDevGuild: this.contextIsDevGuild,
-      locale: this.messagesRuntime.defaultLocale, translator: this.messagesRuntime.defaultTranslator };
+      services: this.services, locale: this.messagesRuntime.defaultLocale, translator: this.messagesRuntime.defaultTranslator };
     const prelim = new EventContext(baseEventOptions);
     await runInExecution(this, {
       executionID: prelim.executionID,
@@ -1190,7 +1211,7 @@ export class Yuzuha {
             canvas: this.canvasContext, now: this.options.now, signal, executionID,
             cdn: this.cdnService, disableResourceAuthorization: this.options.unsafeDisableResourceAuthorization === true, emoji: this.emojiMap,
             deleteLater: this.contextDeleteLater, isOwner: this.contextIsOwner, isDevGuild: this.contextIsDevGuild,
-            locale: activeLocale, translator: activeTranslator };
+            services: this.services, locale: activeLocale, translator: activeTranslator };
           if (typeof this.options.locale === 'function') {
             const probe = createLocaleProbeContext(baseContextOptions);
             const dynamicLocale = await this.options.locale(probe);
