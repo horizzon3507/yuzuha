@@ -28,6 +28,9 @@
       "yuzuha/functions": [
         "./src/functions.ts"
       ],
+      "yuzuha/metrics": [
+        "./src/metrics.ts"
+      ],
       "yuzuha/music": [
         "./src/music.ts"
       ],

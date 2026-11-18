@@ -32,6 +32,7 @@ try {
   assert.ok(info.files.some(file => file.path === 'dist/index.d.ts'));
   assert.ok(info.files.some(file => file.path === 'dist/functions.d.ts'));
   assert.ok(info.files.some(file => file.path === 'dist/tooling.d.ts'));
+  assert.ok(info.files.some(file => file.path === 'dist/metrics.d.ts'));
   assert.ok(info.files.some(file => file.path === 'dist/music.d.ts'));
   assert.ok(info.files.some(file => file.path === 'dist/images.d.ts'));
   assert.ok(info.files.some(file => file.path === 'dist/canvas.d.ts'));
@@ -75,6 +76,7 @@ try {
     import { MockTransport, mockMessage, mockResources, createTestBot } from 'yuzuha/testing';
     import { Runtime, registerBuiltins } from 'yuzuha/functions';
     import { CommandContext, HttpService } from 'yuzuha';
+    import { createPrometheusMetrics, PrometheusMetrics } from 'yuzuha/metrics';
     import { complete, signatureAt, diagnose, parseFunctionCatalog } from 'yuzuha/tooling';
     import { LavalinkNode, MusicManager, FluxerVoice, FluxerLavalinkBridge, TrackQueue } from 'yuzuha/music';
     import { MockMusicBackend, mockTrack } from 'yuzuha/testing';
@@ -205,7 +207,9 @@ try {
     assert.deepEqual(new Uint8Array(await upload.get('file').arrayBuffer()), new Uint8Array([0, 255]));
     const transport = new MockTransport();
     const gatewayErrors = [];
-    const bot = new Yuzuha({ transport, store: new MemoryStore(), engine: functions(), onError: error => { gatewayErrors.push(error); } });
+    const promMetrics = createPrometheusMetrics();
+    assert.equal(promMetrics instanceof PrometheusMetrics, true);
+    const bot = new Yuzuha({ transport, store: new MemoryStore(), engine: functions(), metrics: promMetrics, onError: error => { gatewayErrors.push(error); } });
     const gatewayError = new Error('offline gateway interruption');
     bot.client.emit(sdk.Events.ShardError, 0, gatewayError);
     bot.client.emit(sdk.Events.Error, gatewayError);
@@ -221,6 +225,7 @@ try {
     } });
     assert.equal(await bot.handle(mockMessage('!native')), 'success');
     assert.equal(transport.messages.at(-1).payload.content, '2');
+    assert.match(promMetrics.render(), /yuzuha_commands_total\{command="native",outcome="success"\} 1/);
     let events = 0;
     bot.on(sdk.Events.Ready, async () => { events++; });
     bot.scriptEvent({ event: 'guildMemberAdd', channelID: '200', code: 'Olá $eventUserID' });
@@ -400,6 +405,10 @@ try {
           ScriptEventDefinition, CronScheduleInput, HttpPolicy, HttpMultipartPart, StateBackup, EmojiCreateInput, EmojiBulkResult,
           PinnedMessagesPage, ReactionUsersPage, ThreadMemberDetails } from 'yuzuha';
         import { complete, signatureAt, diagnose, documentDiagnostics, parseFunctionCatalog } from 'yuzuha/tooling';
+        import { createPrometheusMetrics } from 'yuzuha/metrics';
+        import type { MetricsSink } from 'yuzuha';
+        const metricsSink: MetricsSink = createPrometheusMetrics();
+        void metricsSink;
         const typed = defineCommand({ name: 'typed-flags', args: { member: arg.user().required() },
           flags: { count: arg.integer().alias('c').default(1), mode: arg.text().choices(['fast', 'slow']).required() },
           async run(ctx) {

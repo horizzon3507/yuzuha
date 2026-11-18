@@ -42,6 +42,7 @@ import type { ScheduleRecord } from '../domain/state.js';
 import { HttpService } from '../services/http.js';
 import { createCdn } from '../domain/cdn.js';
 import { emitLog } from './logging.js';
+import { assertMetricsSink, emitMetric } from './metrics.js';
 import { currentExecution, isExecutionOwner, runInExecution } from './execution.js';
 import { cancellationError } from '../services/cancellation.js';
 import { resolvePolicy } from '../services/retry.js';
@@ -222,6 +223,7 @@ export class Yuzuha {
   private readonly ownsRateLimiter: boolean;
   private lastRateLimitEvictLog?: number;
   private readonly active = new Set<Promise<unknown>>();
+  private readonly abortedScheduleExecutions = new Set<string>();
   private readonly shutdown = new AbortController();
   private reliability: import('../services/retry.js').Reliability = {};
   private timers: NonNullable<YuzuhaOptions['timers']> = { setTimeout: (fn: () => void, ms: number) => setTimeout(fn, ms), clearTimeout: () => {} };
@@ -288,9 +290,20 @@ export class Yuzuha {
 
   private get hasLogSink(): boolean { return Boolean(this.options.onLog || this.options.logger); }
 
+  private trackActive(task: Promise<unknown>): void {
+    this.active.add(task);
+    emitMetric(this.options.metrics, m => m.onActiveExecutions?.(this.active.size));
+  }
+
+  private untrackActive(task: Promise<unknown>): void {
+    if (!this.active.delete(task)) return;
+    emitMetric(this.options.metrics, m => m.onActiveExecutions?.(this.active.size));
+  }
+
   constructor(public readonly options: YuzuhaOptions = {}) {
     setMaxListeners(0, this.shutdown.signal);
     assertLogger(options.logger);
+    assertMetricsSink(options.metrics);
     if (options.context !== undefined && typeof options.context !== 'function') {
       throw new ConfigError('OPTIONS', 'context deve ser uma função.');
     }
@@ -338,6 +351,7 @@ export class Yuzuha {
     this.client = options.client ?? new Client(options.clientOptions);
     this.reliability = { retry: retryPolicy, signal: this.shutdown.signal,
       onRetry: (attempt, _error, delayMs) => {
+        emitMetric(this.options.metrics, m => m.onTransportRetry?.({ attempt, delayMs }));
         if (!this.hasLogSink) return;
         const executionID = currentExecution()?.executionID;
         void emitLog(this.options, {
@@ -383,6 +397,19 @@ export class Yuzuha {
         timers: this.timers,
         lock,
         onEvent: event => {
+          if (event.event === 'schedule.finish') {
+            const wasCancelled = (event.executionID !== undefined && this.abortedScheduleExecutions.delete(event.executionID))
+              || event.errorCode === 'SCHEDULE_ABORTED'
+              || event.errorCode === 'EXECUTION_ABORTED'
+              || event.errorCode === 'ABORTED';
+            const outcome = event.status === 'success'
+              ? 'completed'
+              : wasCancelled ? 'cancelled' : 'failed';
+            emitMetric(this.options.metrics, m => m.onSchedule?.({
+              outcome,
+              ...(event.durationMs !== undefined ? { durationMs: event.durationMs } : {}),
+            }));
+          }
           if (!this.hasLogSink) return;
           return runInExecution(this, {
             executionID: event.executionID ?? randomUUID(),
@@ -609,8 +636,8 @@ export class Yuzuha {
       },
     );
     const tracked = installTask.then(() => undefined, () => undefined);
-    this.active.add(tracked);
-    void tracked.then(() => this.active.delete(tracked));
+    this.trackActive(tracked);
+    void tracked.then(() => this.untrackActive(tracked));
     return installTask;
   }
 
@@ -651,11 +678,11 @@ export class Yuzuha {
       }
     })();
     const tracked = work.then(() => undefined, () => undefined);
-    this.active.add(tracked);
+    this.trackActive(tracked);
     try {
       await work;
     } finally {
-      this.active.delete(tracked);
+      this.untrackActive(tracked);
     }
   }
 
@@ -736,13 +763,13 @@ export class Yuzuha {
     if (this.closing) throw new YuzuhaError('BOT_CLOSED', 'O bot está encerrado.');
     const work = this.maintenance.cleanupExpired({ limit: this.sweepBatch, cursor: this.sweepCursor });
     const tracked = work.then(() => undefined, () => undefined);
-    this.active.add(tracked);
+    this.trackActive(tracked);
     try {
       const result = await work;
       this.sweepCursor = result.cursor;
       return result;
     } finally {
-      this.active.delete(tracked);
+      this.untrackActive(tracked);
     }
   }
 
@@ -961,13 +988,16 @@ export class Yuzuha {
       try { await Promise.resolve().then(work); }
       catch (error) { await reportError(this.options, error, undefined, { source: 'event', event }); }
     });
-    this.active.add(task);
-    void task.then(() => this.active.delete(task), () => this.active.delete(task));
+    this.trackActive(task);
+    void task.then(() => this.untrackActive(task), () => this.untrackActive(task));
   }
 
   private async runScheduled(task: ScheduleRecord, signal: AbortSignal): Promise<void> {
-    if (this.closing || signal.aborted) throw cancellationError();
     const executionID = task.claimID ?? randomUUID();
+    if (this.closing || signal.aborted) {
+      this.abortedScheduleExecutions.add(executionID);
+      throw cancellationError();
+    }
     return runInExecution(this, {
       executionID,
       source: 'scheduler',
@@ -979,7 +1009,10 @@ export class Yuzuha {
       const prefixes = typeof this.options.prefix === 'function'
         ? await this.resolveDynamicPrefixes({ channelID: task.channelID, guildID: task.guildID } as IncomingMessage, this.options.prefix, signal)
         : this.resolvePrefixes(this.options.prefix ?? '!');
-      if (!prefixes) throw cancellationError();
+      if (!prefixes) {
+        this.abortedScheduleExecutions.add(executionID);
+        throw cancellationError();
+      }
       const prefix = prefixes[0] ?? '!';
       const suffix = task.input ? ` ${task.input}` : '';
       let retryable = true, cause: unknown;
@@ -988,6 +1021,13 @@ export class Yuzuha {
         channelID: task.channelID, guildID: task.guildID, mentions: [] }, (error, ctx) => {
         cause = error; retryable = !(error instanceof GuardError || error instanceof PartialModerationError) && !ctx?.hasModerationEffect;
       }, signal, executionID, true);
+      if (
+        this.closing
+        || signal.aborted
+        || (cause instanceof YuzuhaError && (cause.code === 'EXECUTION_ABORTED' || cause.code === 'ABORTED' || cause.code === 'SCHEDULE_ABORTED'))
+      ) {
+        this.abortedScheduleExecutions.add(executionID);
+      }
       if (outcome !== 'success') throw new ScheduleExecutionError(outcome === 'error' && retryable, cause);
     });
   }
@@ -1277,8 +1317,8 @@ export class Yuzuha {
           await reportError(this.options, error, undefined, { source: 'hook', event: 'gate', executionID: resolvedExecutionID });
           return 'ignored';
         });
-        this.active.add(task);
-        void task.then(() => this.active.delete(task), () => this.active.delete(task));
+        this.trackActive(task);
+        void task.then(() => this.untrackActive(task), () => this.untrackActive(task));
         return task;
       }
     }
@@ -1310,8 +1350,8 @@ export class Yuzuha {
         channelID: message.channelID,
         userID: message.authorID,
       }, run);
-    this.active.add(task);
-    void task.then(() => this.active.delete(task), () => this.active.delete(task));
+    this.trackActive(task);
+    void task.then(() => this.untrackActive(task), () => this.untrackActive(task));
     return task;
   }
 
@@ -1398,13 +1438,19 @@ export class Yuzuha {
         if (this.concurrencyLimiter) {
           const acquired = await this.concurrencyLimiter.acquire(message.guildID, signal);
           if (!acquired) {
-            if (!this.closing && !signal.aborted && this.hasLogSink) {
-              await emitLog(this.options, {
-                event: 'dispatch.dropped',
+            if (!this.closing && !signal.aborted) {
+              emitMetric(this.options.metrics, m => m.onDispatchDropped?.({
                 reason: 'concurrency',
-                guildID: message.guildID,
-                channelID: message.channelID,
-              });
+                ...(message.guildID ? { guildID: message.guildID } : {}),
+              }));
+              if (this.hasLogSink) {
+                await emitLog(this.options, {
+                  event: 'dispatch.dropped',
+                  reason: 'concurrency',
+                  guildID: message.guildID,
+                  channelID: message.channelID,
+                });
+              }
             }
             return 'ignored';
           }
@@ -1414,8 +1460,9 @@ export class Yuzuha {
         let ctx: CommandContext | undefined;
         let activeLocale = this.messagesRuntime.defaultLocale;
         let activeTranslator = this.messagesRuntime.defaultTranslator;
-        let outcome: DispatchResult = 'success';
-        const started = this.hasLogSink ? performance.now() : 0;
+        let outcome: 'success' | 'guarded' | 'error' = 'success';
+        const needsTiming = this.hasLogSink || Boolean(this.options.metrics);
+        const started = needsTiming ? performance.now() : 0;
         try {
           const baseContextOptions: ContextOptions = { message, transport: this.transport, store: this.store, command: compiled.command,
             flagLookup: compiled.flagLookup, argumentTypes: this.customArgumentTypes,
@@ -1488,8 +1535,15 @@ export class Yuzuha {
           try { await this.options.onCommand(ctx, outcome); }
           catch (error) { await reportError(this.options, error, ctx, { source: 'command' }); }
         }
+        const durationMs = needsTiming ? Math.max(0, performance.now() - started) : 0;
+        const commandName = ctx?.command.name ?? compiled.command.name;
+        emitMetric(this.options.metrics, m => m.onCommand?.({
+          command: commandName,
+          outcome,
+          durationMs,
+        }));
         if (ctx && this.hasLogSink) await emitLog(this.options, { event: 'command.finish', executionID: ctx.executionID,
-          command: ctx.command.name, outcome, durationMs: performance.now() - started });
+          command: ctx.command.name, outcome, durationMs });
         return outcome;
       } finally {
         releaseSlot?.();

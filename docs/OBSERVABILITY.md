@@ -1,8 +1,8 @@
-# Logs e correlação
+# Logs, correlação e métricas
 
-`onLog` e `logger` são opcionais. O Yuzuha entrega eventos estruturados ao callback
-ou logger escolhido pelo bot; não envia esses eventos para um serviço externo nem
-instala um logger global.
+`onLog`, `logger` e `metrics` são opcionais. O Yuzuha entrega eventos estruturados e
+observações operacionais aos adaptadores escolhidos pelo bot; não envia dados para
+serviços externos nem instala estado global.
 
 ```ts
 import { createConsoleLogger, Yuzuha } from 'yuzuha';
@@ -123,3 +123,54 @@ Callbacks são confiáveis e aguardados. Uma falha de `onLog` gera apenas
 pedir `bot.destroy()`; o pedido interno retorna e o encerramento drena o trabalho
 após o retorno do hook. Evite I/O lento nesse caminho se o tempo dos comandos
 for relevante para seu bot.
+
+## Métricas operacionais (`MetricsSink` e `yuzuha/metrics`)
+
+`YuzuhaOptions.metrics` aceita qualquer objeto compatível com a porta `MetricsSink`
+(reexportada em `yuzuha` e `yuzuha/metrics`). Opções inválidas lançam `ConfigError`
+com código `METRICS_OPTIONS`. Exceções síncronas ou promises rejeitadas por um
+`MetricsSink` customizado são contidas e nunca derrubam comandos, eventos ou o
+agendador.
+
+| Método de `MetricsSink` | Campos observados |
+|---|---|
+| `onCommand?(event)` | `{ command, outcome: 'success' \| 'guarded' \| 'error', durationMs }` |
+| `onDispatchDropped?(event)` | `{ reason: 'concurrency', guildID? }` |
+| `onError?(event)` | `{ source: 'command' \| 'event' \| 'gateway' \| 'scheduler' \| 'hook', code }` |
+| `onTransportRetry?(event)` | `{ attempt, delayMs }` |
+| `onSchedule?(event)` | `{ outcome: 'completed' \| 'failed' \| 'cancelled', durationMs? }` |
+| `onActiveExecutions?(activeExecutions)` | Inteiro não negativo com a quantidade atual de execuções ativas |
+
+O subpath `yuzuha/metrics` fornece `PrometheusMetrics` e `createPrometheusMetrics`
+sem dependências externas:
+
+```ts
+import { Yuzuha } from 'yuzuha';
+import { createPrometheusMetrics } from 'yuzuha/metrics';
+
+const metrics = createPrometheusMetrics({
+  prefix: 'yuzuha',
+  buckets: [5, 10, 25, 50, 100, 250, 500, 1000, 2500, 5000, 10000],
+});
+
+const bot = new Yuzuha({ metrics });
+
+// Em um endpoint HTTP de raspagem:
+// Content-Type: metrics.contentType ('text/plain; version=0.0.4; charset=utf-8')
+const exposition = metrics.render();
+```
+
+`PrometheusMetricsOptions` aceita `prefix` (padrão `'yuzuha'`), `buckets` em
+milissegundos (estritamente crescentes, positivos e finitos) e `maxSeries`
+(padrão `10_000`, limitando a cardinalidade por família). Valores de labels
+escapam `\\`, `\n` e `"` conforme o formato Prometheus text exposition `0.0.4`, e
+`metrics.reset()` zera contadores, histogramas e gauges em testes.
+
+Séries emitidas com o prefixo padrão `yuzuha`:
+
+- `yuzuha_commands_total{command,outcome}` e `yuzuha_command_duration_milliseconds`
+- `yuzuha_dispatch_dropped_total{reason,guild_id?}`
+- `yuzuha_errors_total{source,code}`
+- `yuzuha_transport_retries_total{attempt}` e `yuzuha_transport_retry_delay_milliseconds_total`
+- `yuzuha_scheduler_executions_total{outcome}` e `yuzuha_scheduler_duration_milliseconds`
+- `yuzuha_active_executions`
