@@ -15,8 +15,9 @@ export interface CommandMetadata {
 }
 
 function argumentMetadata(definition: ArgumentDefinition): ArgumentMetadata {
-  const { name, type, required, rest, choices, defaultValue, min, max, aliases, description } = definition;
-  return { name, type, required, rest, choices: choices && [...choices], defaultValue, min, max,
+  const { name, type, customType, required, rest, anywhere, choices, defaultValue, min, max, aliases, description } = definition;
+  return { name, type, ...(customType !== undefined ? { customType } : {}), required, rest,
+    ...(anywhere !== undefined ? { anywhere } : {}), choices: choices && [...choices], defaultValue, min, max,
     aliases: aliases && [...aliases], description };
 }
 

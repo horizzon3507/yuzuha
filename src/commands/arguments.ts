@@ -1,14 +1,89 @@
+import type { CommandContext } from './context.js';
 import type { ArgumentDefinition } from './definition.js';
 import { defaultTranslator } from '../domain/i18n.js';
 import type { MessageTranslator } from '../domain/i18n.js';
 import { parseDuration, userID } from '../domain/values.js';
 import { GuardError, YuzuhaError } from '../shared/errors.js';
 
-export type ArgumentValue = string | number | boolean;
+export type ArgumentValue = unknown;
+
+export interface CustomArgumentType<T = unknown> {
+  parse(raw: string, ctx: CommandContext): T | Promise<T>;
+  description?: string;
+}
+
+export type ArgumentTypeRegistry = ReadonlyMap<string, CustomArgumentType<unknown>>;
+
+export interface ParseArgumentsOptions {
+  ctx?: CommandContext;
+  argumentTypes?: ArgumentTypeRegistry;
+  translator?: MessageTranslator;
+}
+
+export interface ParseFlagsOptions extends ParseArgumentsOptions {
+  lookup?: ReadonlyMap<string, ArgumentDefinition>;
+}
+
+export const BUILTIN_ARGUMENT_TYPES: ReadonlySet<string> = new Set([
+  'string',
+  'number',
+  'integer',
+  'user',
+  'duration',
+  'boolean',
+  'channel',
+  'role',
+  'member',
+  'url',
+  'enum',
+]);
+
+const IMPLEMENTED_BUILTIN_TYPES: ReadonlySet<string> = new Set([
+  'string',
+  'number',
+  'integer',
+  'user',
+  'duration',
+  'boolean',
+]);
+
+export function assertCustomArgumentTypeName(name: string): string {
+  if (typeof name !== 'string' || !name.trim() || /\s/u.test(name)) {
+    throw new YuzuhaError('ARGUMENT_TYPE', 'Informe um nome válido para o tipo de argumento.');
+  }
+  if (BUILTIN_ARGUMENT_TYPES.has(name)) {
+    throw new YuzuhaError('ARGUMENT_TYPE', `O tipo de argumento ${name} colide com um tipo nativo.`);
+  }
+  return name;
+}
+
+export function hasAsyncArguments(definitions: readonly ArgumentDefinition[] | undefined): boolean {
+  return Boolean(definitions?.some(definition => definition.type === 'custom'));
+}
+
+function isPromiseLike<T>(value: T | PromiseLike<T>): value is PromiseLike<T> {
+  return (typeof value === 'object' || typeof value === 'function')
+    && value !== null
+    && typeof (value as PromiseLike<T>).then === 'function';
+}
+
+function formatChoices(choices: readonly ArgumentValue[]): (string | number | boolean)[] {
+  return choices.map(choice =>
+    typeof choice === 'number' || typeof choice === 'boolean' ? choice : String(choice),
+  );
+}
 
 function validateValue(definition: ArgumentDefinition, value: ArgumentValue, t: MessageTranslator = defaultTranslator): void {
-  if (definition.choices && !definition.choices.some(choice => String(choice) === String(value))) {
-    throw new GuardError(t('argChoices', definition.name, definition.choices), 'INVALID_ARGUMENT');
+  if (definition.choices) {
+    const matched = definition.type === 'custom'
+      ? definition.choices.some(choice => Object.is(choice, value)
+        || (['string', 'number', 'boolean'].includes(typeof choice)
+          && ['string', 'number', 'boolean'].includes(typeof value)
+          && String(choice) === String(value)))
+      : definition.choices.some(choice => String(choice) === String(value));
+    if (!matched) {
+      throw new GuardError(t('argChoices', definition.name, formatChoices(definition.choices)), 'INVALID_ARGUMENT');
+    }
   }
   const size = typeof value === 'string' ? value.length : value;
   if (typeof size === 'number') {
@@ -45,6 +120,14 @@ export function validateArgumentDefinitions(definitions: readonly ArgumentDefini
     throw new YuzuhaError('COMMAND_ARGS', `No máximo um argumento anywhere em ${commandName}.`);
   }
   for (const [index, definition] of definitions.entries()) {
+    const isCustom = definition.type === 'custom';
+    const validType = definition.type === undefined
+      || IMPLEMENTED_BUILTIN_TYPES.has(definition.type)
+      || (isCustom
+        && typeof definition.customType === 'string'
+        && Boolean(definition.customType.trim())
+        && !/\s/u.test(definition.customType)
+        && !BUILTIN_ARGUMENT_TYPES.has(definition.customType));
     if (typeof definition.name !== 'string' || !definition.name || names.has(definition.name)
       || (definition.required !== undefined && typeof definition.required !== 'boolean')
       || (definition.rest !== undefined && typeof definition.rest !== 'boolean')
@@ -52,9 +135,11 @@ export function validateArgumentDefinitions(definitions: readonly ArgumentDefini
       || (definition.description !== undefined && typeof definition.description !== 'string')
       || (definition.aliases !== undefined && (!Array.isArray(definition.aliases) || definition.aliases.some(alias => typeof alias !== 'string')))
       || (definition.rest && index !== definitions.length - 1)
-      || (definition.type !== undefined && !['string', 'number', 'integer', 'user', 'duration', 'boolean'].includes(definition.type))
+      || (!isCustom && definition.customType !== undefined)
+      || !validType
       || (definition.choices !== undefined && (!Array.isArray(definition.choices)
-        || !definition.choices.length || definition.choices.some(choice => !['string', 'number', 'boolean'].includes(typeof choice))))
+        || !definition.choices.length
+        || (!isCustom && definition.choices.some(choice => !['string', 'number', 'boolean'].includes(typeof choice)))))
       || (definition.min !== undefined && !Number.isFinite(definition.min))
       || (definition.max !== undefined && !Number.isFinite(definition.max))
       || (definition.min !== undefined && definition.max !== undefined && definition.min > definition.max)
@@ -66,7 +151,8 @@ export function validateArgumentDefinitions(definitions: readonly ArgumentDefini
     if (definition.defaultValue !== undefined) {
       const value = definition.defaultValue;
       const type = definition.type ?? 'string';
-      const invalidType = type === 'boolean' ? typeof value !== 'boolean'
+      const invalidType = isCustom ? false
+        : type === 'boolean' ? typeof value !== 'boolean'
         : ['number', 'integer', 'duration'].includes(type) ? typeof value !== 'number' || !Number.isFinite(value)
           || (type === 'integer' && !Number.isSafeInteger(value))
           || (type === 'duration' && (!Number.isSafeInteger(value) || value <= 0))
@@ -84,20 +170,32 @@ export function validateArgumentDefinitions(definitions: readonly ArgumentDefini
   }
 }
 
-function parseValue(
+function resolveRegisteredCustomType(
   definition: ArgumentDefinition,
-  input: string | undefined,
-  required = definition.required,
-  t: MessageTranslator = defaultTranslator,
-): ArgumentValue | undefined {
-  if (input === undefined || input.length === 0) {
-    if (definition.defaultValue !== undefined) {
-      const value = definition.type === 'user' ? userID(String(definition.defaultValue), t) : definition.defaultValue;
-      validateValue(definition, value, t);
-      return value;
-    } else if (required) throw new GuardError(t('argRequired', definition.name), 'INVALID_ARGUMENT');
-    return undefined;
+  options?: ParseArgumentsOptions,
+): CustomArgumentType<unknown> {
+  const typeName = definition.customType ?? '';
+  const registered = options?.argumentTypes?.get(typeName);
+  if (!registered) {
+    throw new YuzuhaError('ARGUMENT_TYPE', `Tipo de argumento não registrado: ${typeName}.`);
   }
+  return registered;
+}
+
+function ensureCustomTypesRegistered(
+  definitions: readonly ArgumentDefinition[],
+  options?: ParseArgumentsOptions,
+): void {
+  for (const definition of definitions) {
+    if (definition.type === 'custom') resolveRegisteredCustomType(definition, options);
+  }
+}
+
+function parseBuiltinValue(
+  definition: ArgumentDefinition,
+  input: string,
+  t: MessageTranslator = defaultTranslator,
+): ArgumentValue {
   let value: ArgumentValue = input;
   if (definition.type === 'number' || definition.type === 'integer') {
     value = Number(input);
@@ -121,16 +219,89 @@ function parseValue(
       throw new GuardError(t('argDuration', definition.name), 'INVALID_ARGUMENT');
     }
   }
+  return value;
+}
+
+function resolveMissingValue(
+  definition: ArgumentDefinition,
+  required = definition.required,
+  t: MessageTranslator = defaultTranslator,
+): ArgumentValue | undefined {
+  if (definition.defaultValue !== undefined) {
+    const value = definition.type === 'user' ? userID(String(definition.defaultValue), t) : definition.defaultValue;
+    validateValue(definition, value, t);
+    return value;
+  }
+  if (required) throw new GuardError(t('argRequired', definition.name), 'INVALID_ARGUMENT');
+  return undefined;
+}
+
+function normalizeParseOptions(
+  optionsOrTranslator?: ParseArgumentsOptions | MessageTranslator,
+): ParseArgumentsOptions & { t: MessageTranslator } {
+  if (typeof optionsOrTranslator === 'function') {
+    return { t: optionsOrTranslator };
+  }
+  const options = optionsOrTranslator ?? {};
+  return {
+    ...options,
+    t: options.translator ?? options.ctx?.t ?? defaultTranslator,
+  };
+}
+
+function parseValue(
+  definition: ArgumentDefinition,
+  input: string | undefined,
+  required = definition.required,
+  options?: ParseArgumentsOptions & { t?: MessageTranslator },
+): ArgumentValue | undefined {
+  const t = options?.t ?? options?.translator ?? options?.ctx?.t ?? defaultTranslator;
+  if (input === undefined || input.length === 0) return resolveMissingValue(definition, required, t);
+  let value: ArgumentValue;
+  if (definition.type === 'custom') {
+    const custom = resolveRegisteredCustomType(definition, options);
+    if (!options?.ctx) {
+      throw new YuzuhaError('ARGUMENT_TYPE', `O tipo de argumento ${definition.customType} requer contexto de comando.`);
+    }
+    const parsed = custom.parse(input, options.ctx);
+    if (isPromiseLike(parsed)) {
+      void Promise.resolve(parsed).catch(() => undefined);
+      throw new YuzuhaError('ARGUMENT_TYPE', `O tipo de argumento ${definition.customType} é assíncrono; use parseArgumentsAsync ou parseFlagsAsync.`);
+    }
+    value = parsed;
+  } else {
+    value = parseBuiltinValue(definition, input, t);
+  }
   validateValue(definition, value, t);
   return value;
 }
 
-export function parseArguments(
+async function parseValueAsync(
+  definition: ArgumentDefinition,
+  input: string | undefined,
+  required = definition.required,
+  options?: ParseArgumentsOptions & { t?: MessageTranslator },
+): Promise<ArgumentValue | undefined> {
+  const t = options?.t ?? options?.translator ?? options?.ctx?.t ?? defaultTranslator;
+  if (input === undefined || input.length === 0) return resolveMissingValue(definition, required, t);
+  let value: ArgumentValue;
+  if (definition.type === 'custom') {
+    const custom = resolveRegisteredCustomType(definition, options);
+    if (!options?.ctx) {
+      throw new YuzuhaError('ARGUMENT_TYPE', `O tipo de argumento ${definition.customType} requer contexto de comando.`);
+    }
+    value = await custom.parse(input, options.ctx);
+  } else {
+    value = parseBuiltinValue(definition, input, t);
+  }
+  validateValue(definition, value, t);
+  return value;
+}
+
+function preparePositionalTokens(
   definitions: readonly ArgumentDefinition[],
   tokens: readonly string[],
-  t: MessageTranslator = defaultTranslator,
-): Map<string, ArgumentValue> {
-  const args = new Map<string, ArgumentValue>();
+): { positional: string[]; matched: Map<string, string> } {
   const positional = [...tokens];
   const matched = new Map<string, string>();
   for (const definition of definitions) {
@@ -143,13 +314,46 @@ export function parseArguments(
     }
     if (index >= 0) matched.set(definition.name, positional.splice(index, 1)[0]!);
   }
+  return { positional, matched };
+}
+
+export function parseArguments(
+  definitions: readonly ArgumentDefinition[],
+  tokens: readonly string[],
+  optionsOrTranslator?: ParseArgumentsOptions | MessageTranslator,
+): Map<string, ArgumentValue> {
+  const options = normalizeParseOptions(optionsOrTranslator);
+  ensureCustomTypesRegistered(definitions, options);
+  const args = new Map<string, ArgumentValue>();
+  const { positional, matched } = preparePositionalTokens(definitions, tokens);
   let position = 0;
   for (let index = 0; index < definitions.length; index++) {
     const definition = definitions[index]!;
     const input = definition.rest ? positional.slice(position).join(' ')
       : definition.anywhere ? matched.get(definition.name)
       : positional[position++];
-    const value = parseValue(definition, input, definition.required, t);
+    const value = parseValue(definition, input, definition.required, options);
+    if (value !== undefined) args.set(definition.name, value);
+  }
+  return args;
+}
+
+export async function parseArgumentsAsync(
+  definitions: readonly ArgumentDefinition[],
+  tokens: readonly string[],
+  optionsOrTranslator?: ParseArgumentsOptions | MessageTranslator,
+): Promise<Map<string, ArgumentValue>> {
+  const options = normalizeParseOptions(optionsOrTranslator);
+  ensureCustomTypesRegistered(definitions, options);
+  const args = new Map<string, ArgumentValue>();
+  const { positional, matched } = preparePositionalTokens(definitions, tokens);
+  let position = 0;
+  for (let index = 0; index < definitions.length; index++) {
+    const definition = definitions[index]!;
+    const input = definition.rest ? positional.slice(position).join(' ')
+      : definition.anywhere ? matched.get(definition.name)
+      : positional[position++];
+    const value = await parseValueAsync(definition, input, definition.required, options);
     if (value !== undefined) args.set(definition.name, value);
   }
   return args;
@@ -200,17 +404,31 @@ export function compileFlagLookup(definitions: readonly ArgumentDefinition[] | u
   return lookup;
 }
 
-export function parseFlags(
-  definitions: readonly ArgumentDefinition[] | undefined,
+function normalizeFlagOptions(
+  lookupOrOptions?: ReadonlyMap<string, ArgumentDefinition> | ParseFlagsOptions,
+  translator?: MessageTranslator,
+): ParseFlagsOptions & { t: MessageTranslator } {
+  if (!lookupOrOptions) return { t: translator ?? defaultTranslator };
+  if (lookupOrOptions instanceof Map || typeof (lookupOrOptions as ReadonlyMap<string, ArgumentDefinition>).get === 'function') {
+    return { lookup: lookupOrOptions as ReadonlyMap<string, ArgumentDefinition>, t: translator ?? defaultTranslator };
+  }
+  const options = lookupOrOptions as ParseFlagsOptions;
+  return {
+    ...options,
+    t: translator ?? options.translator ?? options.ctx?.t ?? defaultTranslator,
+  };
+}
+
+function extractFlagTokens(
+  definitions: readonly ArgumentDefinition[],
   tokens: readonly string[],
-  lookup?: ReadonlyMap<string, ArgumentDefinition>,
+  lookup: ReadonlyMap<string, ArgumentDefinition> | undefined,
   t: MessageTranslator = defaultTranslator,
-): {
-  tokens: string[]; flags: Map<string, ArgumentValue>;
-} {
-  if (definitions === undefined) return { tokens: [...tokens], flags: new Map() };
+): { positional: string[]; entries: { definition: ArgumentDefinition; input: string }[]; seen: Set<string> } {
   const resolvedLookup = lookup ?? compileFlagLookup(definitions)!;
-  const values = new Map<string, ArgumentValue>(), positional: string[] = [];
+  const positional: string[] = [];
+  const entries: { definition: ArgumentDefinition; input: string }[] = [];
+  const seen = new Set<string>();
   let terminated = false;
   for (let index = 0; index < tokens.length; index++) {
     const token = tokens[index]!;
@@ -220,22 +438,69 @@ export function parseFlags(
     const match = /^--?([^=]+)(?:=([\s\S]*))?$/.exec(token);
     const definition = match && resolvedLookup.get(match[1]!);
     if (!match || !definition) throw new GuardError(t('flagUnknown', token.split('=')[0]!), 'INVALID_ARGUMENT');
-    if (values.has(definition.name)) throw new GuardError(t('flagDuplicate', definition.name), 'INVALID_ARGUMENT');
+    if (seen.has(definition.name)) throw new GuardError(t('flagDuplicate', definition.name), 'INVALID_ARGUMENT');
     let input = match[2];
     if (input === undefined) {
       if (definition.type === 'boolean') input = 'true';
       else {
         input = tokens[index + 1];
-        if (input === undefined || input.startsWith('--') || /^-[^\d.]/u.test(input)) throw new GuardError(t('flagValueRequired', definition.name), 'INVALID_ARGUMENT');
+        if (input === undefined || input.startsWith('--') || /^-[^\d.]/u.test(input)) {
+          throw new GuardError(t('flagValueRequired', definition.name), 'INVALID_ARGUMENT');
+        }
         index++;
       }
     }
-    const value = parseValue(definition, input, true, t);
-    if (value !== undefined) values.set(definition.name, value);
+    seen.add(definition.name);
+    entries.push({ definition, input });
+  }
+  return { positional, entries, seen };
+}
+
+export function parseFlags(
+  definitions: readonly ArgumentDefinition[] | undefined,
+  tokens: readonly string[],
+  lookupOrOptions?: ReadonlyMap<string, ArgumentDefinition> | ParseFlagsOptions,
+  translator?: MessageTranslator,
+): {
+  tokens: string[]; flags: Map<string, ArgumentValue>;
+} {
+  if (definitions === undefined) return { tokens: [...tokens], flags: new Map() };
+  const options = normalizeFlagOptions(lookupOrOptions, translator);
+  ensureCustomTypesRegistered(definitions, options);
+  const { positional, entries, seen } = extractFlagTokens(definitions, tokens, options.lookup, options.t);
+  const values = new Map<string, ArgumentValue>();
+  for (const entry of entries) {
+    const value = parseValue(entry.definition, entry.input, true, options);
+    if (value !== undefined) values.set(entry.definition.name, value);
   }
   for (const definition of definitions) {
-    if (values.has(definition.name)) continue;
-    const value = parseValue(definition, undefined, definition.required, t);
+    if (seen.has(definition.name)) continue;
+    const value = parseValue(definition, undefined, definition.required, options);
+    if (value !== undefined) values.set(definition.name, value);
+  }
+  return { tokens: positional, flags: values };
+}
+
+export async function parseFlagsAsync(
+  definitions: readonly ArgumentDefinition[] | undefined,
+  tokens: readonly string[],
+  lookupOrOptions?: ReadonlyMap<string, ArgumentDefinition> | ParseFlagsOptions,
+  translator?: MessageTranslator,
+): Promise<{
+  tokens: string[]; flags: Map<string, ArgumentValue>;
+}> {
+  if (definitions === undefined) return { tokens: [...tokens], flags: new Map() };
+  const options = normalizeFlagOptions(lookupOrOptions, translator);
+  ensureCustomTypesRegistered(definitions, options);
+  const { positional, entries, seen } = extractFlagTokens(definitions, tokens, options.lookup, options.t);
+  const values = new Map<string, ArgumentValue>();
+  for (const entry of entries) {
+    const value = await parseValueAsync(entry.definition, entry.input, true, options);
+    if (value !== undefined) values.set(entry.definition.name, value);
+  }
+  for (const definition of definitions) {
+    if (seen.has(definition.name)) continue;
+    const value = await parseValueAsync(definition, undefined, definition.required, options);
     if (value !== undefined) values.set(definition.name, value);
   }
   return { tokens: positional, flags: values };

@@ -47,6 +47,7 @@ test('YUZUHA_ERROR_CODES está ordenado alfabeticamente e sem duplicatas', () =>
 
   const requiredCodes: readonly YuzuhaErrorCode[] = [
     'IMAGE_DEPENDENCY',
+    'ARGUMENT_TYPE',
     'CANVAS_DEPENDENCY',
     'VOICE_DEPENDENCY',
     'OUTPUT_LIMIT',

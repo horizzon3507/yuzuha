@@ -12,6 +12,8 @@ import { resolveMessagesConfig } from '../domain/i18n.js';
 import type { MessageTranslator, ResolvedMessages } from '../domain/i18n.js';
 import { defineCommand } from '../commands/definition.js';
 import type { NativeCommandDefinition } from '../commands/definition.js';
+import { assertCustomArgumentTypeName } from '../commands/arguments.js';
+import type { CustomArgumentType } from '../commands/arguments.js';
 import type { ArgumentSchema } from '../commands/builders.js';
 import type { IncomingMessage, Payload, Store, Transport } from '../contracts.js';
 import { ConfigError, GuardError, PartialModerationError, YuzuhaError } from '../errors.js';
@@ -182,6 +184,7 @@ export class Yuzuha {
   readonly voice?: NativeVoice;
   private scriptEngine?: ScriptEngine;
   private readonly registry: CommandRegistry;
+  private readonly customArgumentTypes = new Map<string, CustomArgumentType<unknown>>();
   private readonly middleware: Middleware[] = [];
   private readonly plugins = new Set<string>();
   private readonly limits: RateLimiter;
@@ -371,6 +374,26 @@ export class Yuzuha {
     if (typeof middleware !== 'function') throw new YuzuhaError('MIDDLEWARE', 'Middleware deve ser uma função.');
     this.middleware.push(middleware); return this;
   }
+
+  /** Registra um tipo customizado de argumento disponível para `arg.custom<T>(name)`. */
+  argumentType<T = unknown>(name: string, definition: CustomArgumentType<T>): this {
+    if (this.closing) throw new YuzuhaError('BOT_CLOSED', 'O bot está encerrado.');
+    const validatedName = assertCustomArgumentTypeName(name);
+    if (this.customArgumentTypes.has(validatedName)) {
+      throw new YuzuhaError('ARGUMENT_TYPE', `Tipo de argumento já registrado: ${validatedName}.`);
+    }
+    if (!definition || typeof definition !== 'object' || typeof definition.parse !== 'function') {
+      throw new YuzuhaError('ARGUMENT_TYPE', `Definição inválida para o tipo de argumento ${validatedName}: parse deve ser uma função.`);
+    }
+    if (definition.description !== undefined && typeof definition.description !== 'string') {
+      throw new YuzuhaError('ARGUMENT_TYPE', `Descrição inválida para o tipo de argumento ${validatedName}.`);
+    }
+    this.customArgumentTypes.set(validatedName, Object.freeze({
+      parse: (raw: string, ctx: CommandContext) => definition.parse(raw, ctx),
+      ...(definition.description !== undefined ? { description: definition.description } : {}),
+    }));
+    return this;
+  }
   plugin(plugin: YuzuhaPlugin): this {
     if (this.closing) throw new YuzuhaError('BOT_CLOSED', 'O bot está encerrado.');
     if (!plugin.name || this.plugins.has(plugin.name)) throw new YuzuhaError('PLUGIN_DUPLICATE', 'Plugin sem nome ou já instalado.');
@@ -523,6 +546,7 @@ export class Yuzuha {
       if ((definition.ignoreBots ?? true) && source.event.userBot) return;
       const baseEventOptions: EventContextOptions = { ...source, channelID: definition.channelID, actorID: definition.actorID,
         policy: definition.http, transport: this.transport, store: this.store, resources: this.resources,
+        argumentTypes: this.customArgumentTypes,
         scheduler: this.scheduler, http: this.http, music: this.music, voice: this.voice,
         canvas: this.canvasContext, now: this.options.now, help: this.contextHelp,
         cdn: this.cdnService, disableResourceAuthorization: this.options.unsafeDisableResourceAuthorization === true,
@@ -601,6 +625,7 @@ export class Yuzuha {
     const signal = this.shutdown.signal;
     const baseEventOptions: EventContextOptions = { ...source, channelID: definition.channelID, actorID: definition.actorID,
       policy: definition.http, transport: this.transport, store: this.store, resources: this.resources,
+      argumentTypes: this.customArgumentTypes,
       scheduler: this.scheduler, http: this.http, music: this.music, voice: this.voice,
       canvas: this.canvasContext, now: this.options.now, help: this.contextHelp, cooldown: this.contextCooldown, signal,
       cdn: this.cdnService, disableResourceAuthorization: this.options.unsafeDisableResourceAuthorization === true, emoji: this.emojiMap,
@@ -1046,7 +1071,8 @@ export class Yuzuha {
         const started = this.hasLogSink ? performance.now() : 0;
         try {
           const baseContextOptions: ContextOptions = { message, transport: this.transport, store: this.store, command: compiled.command,
-            flagLookup: compiled.flagLookup, input: resolved.input, prefix, lineage: compiled.lineage,
+            flagLookup: compiled.flagLookup, argumentTypes: this.customArgumentTypes,
+            input: resolved.input, prefix, lineage: compiled.lineage,
             help: this.contextHelp, cooldown: this.contextCooldown,
             native: { client: this.client, message: message.raw instanceof Message ? message.raw : undefined },
             resources: this.resources, scheduler: this.scheduler, http: this.http, music: this.music, voice: this.voice,

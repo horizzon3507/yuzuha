@@ -32,7 +32,8 @@ import type { CanvasConfig } from '../domain/canvas.js';
 import type { CanvasRenderer } from '../ports/canvas.js';
 import { CanvasService } from '../services/canvas.js';
 import { GuardError, PartialModerationError, YuzuhaError } from '../shared/errors.js';
-import { parseArguments, parseFlags, tokenize } from './arguments.js';
+import { hasAsyncArguments, parseArguments, parseArgumentsAsync, parseFlags, parseFlagsAsync, tokenize } from './arguments.js';
+import type { ArgumentTypeRegistry } from './arguments.js';
 import { commandUsage } from './help.js';
 import { ArgumentBag } from './typed-arguments.js';
 import type { ArgumentDefinition, Command } from './definition.js';
@@ -45,6 +46,7 @@ export interface ContextOptions {
   store: Store;
   command: Command;
   flagLookup?: ReadonlyMap<string, ArgumentDefinition>;
+  argumentTypes?: ArgumentTypeRegistry;
   lineage?: readonly Command[];
   prefix?: string;
   input?: string;
@@ -97,6 +99,7 @@ export class CommandContext {
   readonly store: Store;
   readonly command: Command;
   private readonly flagLookup?: ReadonlyMap<string, ArgumentDefinition>;
+  private readonly argumentTypes?: ArgumentTypeRegistry;
   readonly input: string;
   readonly help: (command?: string, prefix?: string) => string;
   readonly locale: string;
@@ -136,6 +139,7 @@ export class CommandContext {
     this.deleteLaterFn = options.deleteLater;
     this.command = options.command;
     this.flagLookup = options.flagLookup;
+    this.argumentTypes = options.argumentTypes;
     this.lineage = options.lineage ?? [options.command];
     this.prefix = options.prefix ?? '';
     this.input = options.input ?? '';
@@ -378,16 +382,25 @@ export class CommandContext {
     }
     try {
       if (this.command.flags !== undefined) {
-        const parsed = parseFlags(this.command.flags, this.tokens, this.flagLookup, this.t);
+        const parsed = hasAsyncArguments(this.command.flags)
+          ? await parseFlagsAsync(this.command.flags, this.tokens, { lookup: this.flagLookup, ctx: this, argumentTypes: this.argumentTypes, translator: this.t })
+          : parseFlags(this.command.flags, this.tokens, { lookup: this.flagLookup, ctx: this, argumentTypes: this.argumentTypes, translator: this.t });
         for (const [name, value] of parsed.flags) this.flags.set(name, value);
         this.tokens.splice(0, this.tokens.length, ...parsed.tokens);
       }
       if (this.command.args?.length) {
-        for (const [name, value] of parseArguments(this.command.args, this.tokens, this.t)) this.args.set(name, value);
+        const parsedArgs = hasAsyncArguments(this.command.args)
+          ? await parseArgumentsAsync(this.command.args, this.tokens, { ctx: this, argumentTypes: this.argumentTypes, translator: this.t })
+          : parseArguments(this.command.args, this.tokens, { ctx: this, argumentTypes: this.argumentTypes, translator: this.t });
+        for (const [name, value] of parsedArgs) this.args.set(name, value);
       }
     } catch (error) {
       if (error instanceof GuardError) {
-        throw new GuardError(`${error.message}\n${this.t('usageLine', commandUsage(this.command, this.prefix, this.t))}`, error.reason);
+        throw new GuardError(
+          `${error.message}\n${this.t('usageLine', commandUsage(this.command, this.prefix, this.t))}`,
+          error.reason,
+          { cause: error, ...(error.remainingMs !== undefined ? { remainingMs: error.remainingMs } : {}) },
+        );
       }
       throw error;
     }

@@ -45,6 +45,7 @@ erro, o resultado continua sendo `success`.
 | Método | Resultado e uso |
 |---|---|
 | `command(command)` | Registra um comando validado e retorna o bot |
+| `argumentType(name, definition)` | Registra um `CustomArgumentType<T>` para `arg.custom<T>(name)` e retorna o bot |
 | `useEngine(engine)` | Instala o engine de function mode (`functions()` de `yuzuha/functions`) |
 | `engine` | Engine de function mode instalado, quando presente |
 | `use(middleware)` | Acrescenta middleware e retorna o bot |
@@ -124,6 +125,7 @@ Tipos de argumento:
 | `user` | ID textual validado a partir de menção ou ID, sem buscar membro |
 | `duration` | Milissegundos inteiros positivos |
 | `boolean` | Booleano convertido de true/false, yes/no, sim/não/nao ou 1/0 |
+| `custom` (`customType`) | Valor convertido por `CustomArgumentType.parse(raw, ctx)` registrado em `bot.argumentType` |
 
 `required` exige presença; `choices` compara a representação textual;
 `rest` junta os tokens restantes e só pode aparecer no último argumento.
