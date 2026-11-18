@@ -209,8 +209,9 @@ que o teste não utiliza.
 `input` e `interval` completam a tarefa. `HttpOptions` aceita `timeoutMs`,
 `maxBytes`, `maxRequestBytes`, `allowedHosts`, `allowPrivate`, `fetch` e `signal`. HTTP e collectors
 obtidos por `ctx` recebem o sinal de encerramento automaticamente.
-`SchedulerOptions` configura lease/heartbeat, retenção e hooks; histórico e
-reexecução estão descritos em [STORAGE.md](STORAGE.md). `mockResources` está em
+`SchedulerOptions` configura `leaseMs`, `heartbeatMs`, `pollMs` (1–3600000 ms,
+padrão 30000 ms), `timers`, retenção e hooks; histórico, recuperação e
+reexecução estão descritos em [STORAGE.md](STORAGE.md) e [SCHEDULER.md](SCHEDULER.md). `mockResources` está em
 `yuzuha/testing` e falha com `NATIVE_UNAVAILABLE` em áreas ou métodos ausentes.
 Aceita overrides parciais por método, tipados por `MockResourceOverrides`.
 
