@@ -21,6 +21,21 @@ documentos. Veja a [política completa](VERSIONING.md).
 
 </details>
 
+## v0.5.0 · 17/11/2026
+
+Snapshots copy-on-write em memória, coalescência compacta no `JsonStore`, SQLite normalizado em schema 3 e ports distribuídos `RateLimiter` e `Lock` — a atualização da biblioteca Yuzuha foi preparada em 17/11/2026 (v0.5.0).
+
+**Notas de comportamento**
+- **Mudança de schema interno do SQLite (`schema 3`):** ao abrir um banco SQLite legado (`yuzuha_state`, schema 2) em modo de escrita, o `SQLiteStore` migra automaticamente e em transação para tabelas normalizadas; versões anteriores da biblioteca não abrem bancos já migrados para v3. Faça backup prévio (`yuzuha data backup`). `State` e `StateBackup` permanecem compatíveis.
+- `JsonStore` agora serializa JSON compacto por padrão (`pretty: false`; passe `{ pretty: true }` para identar) e recusa operações após `close()` com `StoreError('STORE_CLOSED')`.
+- Com o limitador padrão em memória ou qualquer `RateLimiter` síncrono, `ctx.cooldown(...)` permanece síncrono; com um `RateLimiter` assíncrono (ex.: Redis), comandos nativos que chamam `ctx.cooldown` diretamente devem usar `await ctx.cooldown(...)`.
+
+- **Snapshots e validação incremental (`MemoryStore`):** leituras em `MemoryStore` usam snapshots estruturais copy-on-write e `update()` valida somente as fatias/chaves modificadas (`validateVariableValue`, `validateExpiration`, `validateCasesForGuild`, `validateSchedules`, `validateScheduleHistory`), preservando isolamento contra mutações do chamador, clonagem do retorno antes de confirmar e rollback em falhas.
+- **Coalescência e formato compacto (`JsonStore`):** `new JsonStore(path?, options?)` aceita `JsonStoreOptions` (`flushMs`, `pretty`, `onError`, `timers`, validado com `ConfigError('JSON_STORE_OPTIONS')`), agrupa rajadas concorrentes de `update()` em um único commit atômico em disco e expõe `flush()` e `close()` determinísticos.
+- **SQLite normalizado (`schema 3`):** `SQLiteStore` persiste dados em `yuzuha_meta`, `yuzuha_variables` (`WITHOUT ROWID`), `yuzuha_raw_variables`, `yuzuha_cases`, `yuzuha_schedules` e `yuzuha_schedule_history`, reutiliza `StatementSync`s em cache, implementa `readVariable` e `queryVariables` diretamente em SQL sem hidratar o estado completo, oferece claims e recuperações atômicas (`claimDueSchedules` e `recoverSchedules`) usadas pelo `Scheduler` quando `lock` externo não está ativo, sincroniza atualizações por delta e mantém inspeção somente leitura na CLI (`v2` e `v3`) sem tocar nos bytes do arquivo.
+- **Ports distribuídos (`RateLimiter` e `Lock`):** novos contratos `RateLimiter` (`MemoryRateLimiter`, `YuzuhaOptions.rateLimiter`) para cooldowns e deduplicação síncronos ou assíncronos e `Lock` / `LockLease` (`MemoryLock`, `YuzuhaOptions.lock`, `SchedulerOptions.lock`, validados com `ConfigError('LOCK_OPTIONS')`) para exclusão mútua, renovação de lease no heartbeat e coordenação entre processos no `Scheduler`, preservando a posse do chamador sobre instâncias injetadas.
+- **Benchmark de stores:** `benchmarks/store-throughput.mjs` mede vazão (`updateSingle`, `readVariable` e `queryPrefix`) e tamanho em disco para 100 a 100.000 variáveis em `MemoryStore`, `JsonStore` e `SQLiteStore`.
+
 ## v0.4.0 · 17/11/2026
 
 Despacho de alto volume, redução de chamadas REST, erros tipados, hooks de guarda, logger compatível com Pino e encerramento limitado — a atualização da biblioteca Yuzuha foi preparada em 17/11/2026 (v0.4.0).
