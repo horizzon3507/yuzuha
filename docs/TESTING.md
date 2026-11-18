@@ -123,7 +123,9 @@ ou timeouts de HTTP. Um scheduler fornecido pelo chamador controla seu próprio
 relógio.
 
 `resources` aceita overrides parciais como `mockResources`; métodos ausentes
-falham explicitamente. `transport` aceita um `MockTransport` próprio. Stores
+falham explicitamente. Para logs de auditoria, `mockAuditLogEntry` e
+`createMockAuditLogs` em `yuzuha/testing` simulam entradas e filtragem por
+`userID`, `actionType`, `before`, `after` e `limit`. `transport` aceita um `MockTransport` próprio. Stores
 fornecidos continuam sendo responsabilidade do chamador.
 `destroy()`, `close()` e `Symbol.asyncDispose` solicitam o encerramento e drenam
 o trabalho conforme o contrato do bot. Use `t.after` ou `await using` para

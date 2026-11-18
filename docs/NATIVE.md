@@ -317,6 +317,12 @@ scripts, nos testes e no contexto nativo. Para métodos não cobertos, use
 `messages`, `pinnedAt`, `hasMore` e `nextBefore`. `messages.reactionUsersPage`
 recebe os mesmos argumentos de `reactionUsers` e retorna `users` como IDs,
 `hasMore` e `nextAfter`. Os métodos anteriores continuam retornando arrays.
+`users.auditLogs(guildID, input?)` continua aceitando `limit` numérico (1 a 100,
+padrão 50) e também recebe `{ limit?, userID?, actionType?, before?, after? }`
+(cursores `before` e `after` mutuamente exclusivos), retornando entradas com
+`changes` (`key`, `oldValue?`, `newValue?`) e `options` normalizado em camelCase
+(`channelID`, `messageID`, `deleteMemberDays`, `membersRemoved`, `roleName`,
+`applicationID` etc.) ou `null`; no contexto, exige `ViewAuditLog` de autor e bot.
 `threads.member(threadID, userID)` retorna um membro individual com flags e
 metadados de mute. Adaptadores próprios que implementam os contratos completos
 devem fornecer esses métodos; `mockResources` continua aceitando substituições parciais.
