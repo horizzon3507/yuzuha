@@ -131,7 +131,7 @@ function dmFixture(dm: ChannelInfo) {
     messages: { purgeDM: async () => { calls.push('purge'); return 7; } },
     webhooks: {
       fetch: async () => ({ id: '50', name: 'logs', channelID: '200', guildID: '100', token: 'secret' }),
-      editMessage: async (w: string, t: string, m: string, i: { content?: string }) => { calls.push('edit:' + m + ':' + i.content); return m; },
+      editMessage: async (w: string, t: string, m: string, i: { content?: string | null }) => { calls.push('edit:' + m + ':' + i.content); return m; },
       deleteMessage: async (w: string, t: string, m: string) => { calls.push('del:' + m); },
     },
   });

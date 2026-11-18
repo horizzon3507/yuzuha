@@ -1,3 +1,6 @@
+import type { AllowedMentionsPolicy, Embed } from '../../domain/messages.js';
+import type { AttachmentSpec, BinaryAttachmentSpec } from './common.js';
+
 export interface WebhookInfo {
   id: string;
   name: string;
@@ -7,13 +10,21 @@ export interface WebhookInfo {
 }
 
 export interface WebhookSendInput {
-  content: string;
+  content?: string;
   username?: string;
   avatarURL?: string;
+  embeds?: Embed[];
+  files?: (AttachmentSpec | BinaryAttachmentSpec)[];
+  allowedMentions?: AllowedMentionsPolicy;
+  threadID?: string;
 }
 
 export interface WebhookMessageEditInput {
-  content?: string;
+  content?: string | null;
+  embeds?: Embed[];
+  files?: (AttachmentSpec | BinaryAttachmentSpec)[];
+  allowedMentions?: AllowedMentionsPolicy;
+  threadID?: string;
 }
 
 export interface WebhooksResources {

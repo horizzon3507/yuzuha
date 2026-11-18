@@ -31,7 +31,7 @@ function harness() {
     fetch: async (): Promise<WebhookInfo> => webhook,
     create: async (channelID: string, name: string): Promise<WebhookInfo> => ({ ...webhook, channelID, name }),
     list: async (): Promise<WebhookInfo[]> => [webhook],
-    send: async (id: string, token: string, input: { content: string }): Promise<string | null> =>
+    send: async (id: string, token: string, input: { content?: string }): Promise<string | null> =>
       (id === webhook.id && token === webhook.token && input.content ? '30' : null),
     edit: async (): Promise<void> => {},
     delete: async (): Promise<void> => {},
