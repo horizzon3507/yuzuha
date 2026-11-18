@@ -1,4 +1,5 @@
 export { Yuzuha, Bot } from './framework/bot.js';
+export { userError } from './framework/reporting.js';
 export { MemoryRateLimiter } from './framework/rate-limits.js';
 export type { MemoryRateLimiterOptions, RateLimitsOptions } from './framework/rate-limits.js';
 export type { RateLimiter } from './ports/rate-limiter.js';

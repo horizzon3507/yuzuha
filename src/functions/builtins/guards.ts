@@ -8,7 +8,7 @@ export const guardFunctions = defineFunctions(fn => {
     return '';
   }, ['require']);
   fn('requireGuild', 'guards', 0, 1, '[erro?]', 'Exige execução em servidor.', async c => {
-    if (!c.ctx.guildID) throw new GuardError(c.count ? await c.text(0) : 'Este comando só funciona em servidores.');
+    if (!c.ctx.guildID) throw new GuardError(c.count ? await c.text(0) : c.ctx.t('notInGuild'));
     return '';
   }, ['onlyGuild']);
   fn('onlyPerms', 'guards', 1, 2, '[permissão;erro?]', 'Exige permissão do autor no servidor.', async c => {

@@ -1,15 +1,24 @@
 import type { CommandContext } from '../context.js';
-import type { Payload } from '../contracts.js';
+import type { CaseRecord, Payload } from '../contracts.js';
+import { defaultTranslator } from '../domain/i18n.js';
+import type { MessageTranslator } from '../domain/i18n.js';
 import { GuardError, PartialModerationError, YuzuhaError } from '../errors.js';
 import type { ErrorReportInfo, YuzuhaOptions } from './options.js';
 import { emitLog } from './logging.js';
 import { currentExecution } from './execution.js';
 import { errorCode } from '../services/scheduler.js';
 
-export function userError(error: unknown, ctx?: CommandContext): string {
-  if (error instanceof GuardError || error instanceof PartialModerationError) return error.message;
-  if (ctx?.lastCase) return `A ação foi realizada e registrada no caso #${ctx.lastCase.id}, mas o comando não terminou.`;
-  return 'Não foi possível concluir o comando.';
+export function userError(
+  error: unknown,
+  ctx?: { readonly lastCase?: CaseRecord; readonly t?: MessageTranslator },
+  t: MessageTranslator = ctx?.t ?? defaultTranslator,
+): string {
+  if (error instanceof GuardError) return error.message;
+  if (error instanceof PartialModerationError) {
+    return error.hasCustomMessage ? error.message : t('moderationPartial', error.action, error.targetID);
+  }
+  if (ctx?.lastCase) return t('userErrorAfterCase', ctx.lastCase.id);
+  return t('userErrorGeneric');
 }
 
 export async function reportError(
@@ -65,6 +74,7 @@ async function runGuardHook(
   options: YuzuhaOptions,
   error: GuardError,
   ctx: CommandContext,
+  t?: MessageTranslator,
 ): Promise<{ handled: true; reply: Payload | string | null } | { handled: false }> {
   const hook = error.reason === 'COOLDOWN'
     ? (options.hooks?.onCooldown ? () => options.hooks!.onCooldown!(error.remainingMs ?? 0, ctx, error) : undefined)
@@ -79,7 +89,7 @@ async function runGuardHook(
       source: 'hook',
       event: error.reason === 'COOLDOWN' ? 'onCooldown' : 'onDenied',
     });
-    return { handled: true, reply: userError(error, ctx) };
+    return { handled: true, reply: userError(error, ctx, t) };
   }
 }
 
@@ -87,9 +97,10 @@ export async function resolveErrorReply(
   options: YuzuhaOptions,
   error: unknown,
   ctx?: CommandContext,
+  t?: MessageTranslator,
 ): Promise<Payload | string | null> {
   if (error instanceof GuardError && ctx) {
-    const guarded = await runGuardHook(options, error, ctx);
+    const guarded = await runGuardHook(options, error, ctx, t);
     if (guarded.handled) return guarded.reply;
   }
   if (options.errorReply) {
@@ -100,5 +111,5 @@ export async function resolveErrorReply(
       await reportError(options, replyHandlerError, ctx, { source: 'hook', event: 'errorReply' });
     }
   }
-  return userError(error, ctx);
+  return userError(error, ctx, t);
 }

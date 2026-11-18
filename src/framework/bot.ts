@@ -629,7 +629,7 @@ export class Yuzuha {
         if (this.hasLogSink) await emitLog(this.options, { event: 'event.start', executionID: ctx.executionID, command: ctx.command.name });
         const output = engine.text(await engine.execute(program, ctx)).trim();
         if (output) {
-          if (!ctx.channelID) throw new GuardError('Defina um canal para a saída deste evento.', 'INVALID_ARGUMENT');
+          if (!ctx.channelID) throw new GuardError(ctx.t('eventChannelRequired'), 'INVALID_ARGUMENT');
           await ctx.send(output, ctx.channelID);
         }
       } catch (error) {
@@ -1069,7 +1069,9 @@ export class Yuzuha {
           const current = ctx;
           for (const check of compiled.command.checks ?? []) {
             const result = await check(current);
-            if (result === false || typeof result === 'string') throw new GuardError(typeof result === 'string' ? result : 'Você não pode executar este comando.', 'CHECK_FAILED');
+            if (result === false || typeof result === 'string') {
+              throw new GuardError(typeof result === 'string' ? result : current.t('checkFailed'), 'CHECK_FAILED');
+            }
           }
           const execute = async () => {
             if (compiled.program) {
@@ -1077,7 +1079,12 @@ export class Yuzuha {
               const output = programEngine.text(await programEngine.execute(compiled.program, current)).trim();
               if (output) await current.reply(output);
             } else if (compiled.command.run) await compiled.command.run(current);
-            else throw new GuardError(`${resolved.input ? 'Subcomando desconhecido.\n' : ''}${this.help(compiled.command.name, prefix)}`, 'INVALID_ARGUMENT');
+            else {
+              throw new GuardError(
+                `${resolved.input ? `${current.t('unknownSubcommand')}\n` : ''}${current.help(compiled.command.name, prefix)}`,
+                'INVALID_ARGUMENT',
+              );
+            }
           };
           const local = compiled.command.middleware ?? [];
           if (this.middleware.length) await runMiddleware(local.length ? [...this.middleware, ...local] : this.middleware, current, execute);
@@ -1087,7 +1094,7 @@ export class Yuzuha {
           onFailure?.(error, ctx);
           outcome = error instanceof GuardError ? 'guarded' : 'error';
           if (!signal.aborted) {
-            const reply = await resolveErrorReply(this.options, error, ctx);
+            const reply = await resolveErrorReply(this.options, error, ctx, activeTranslator);
             if (reply !== null && !signal.aborted) {
               try {
                 await (ctx ? ctx.reply(reply) : this.transport.reply(message, typeof reply === 'string' ? { content: reply } : reply));
