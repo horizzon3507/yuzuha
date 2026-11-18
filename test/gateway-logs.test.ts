@@ -83,7 +83,8 @@ test('gatewayLogs is disabled by default and validates GatewayLogOptions', async
     });
 
     for (const name of ALL_GATEWAY_LOG_EVENTS) {
-      assert.equal(client.listenerCount(name), 0, `unexpected listener on ${name}`);
+      const expectedCount = name === Events.Ready ? 1 : 0;
+      assert.equal(client.listenerCount(name), expectedCount, `unexpected listener on ${name}`);
     }
 
     client.emit(Events.Ready);
@@ -153,7 +154,8 @@ test('forwards all gateway, shard and SDK lifecycle events to onLog and logger w
   t.after(() => bot.destroy());
 
   for (const name of ALL_GATEWAY_LOG_EVENTS) {
-    assert.equal(client.listenerCount(name), 1, `expected 1 listener on ${name}`);
+    const expectedCount = name === Events.Ready ? 2 : 1;
+    assert.equal(client.listenerCount(name), expectedCount, `expected ${expectedCount} listener(s) on ${name}`);
   }
 
   client.emit(Events.ShardReady, 2);
@@ -239,7 +241,7 @@ test('debug gateway logs require explicit debug: true and respect logger debug s
     });
 
     assert.equal(client.listenerCount(Events.Debug), 0);
-    assert.equal(client.listenerCount(Events.Ready), 1);
+    assert.equal(client.listenerCount(Events.Ready), 2);
 
     client.emit(Events.Debug, 'ignored debug frame');
     client.emit(Events.Ready);
@@ -461,7 +463,8 @@ test('failed login and mid-login destroy symmetrically clean up 100% of gateway 
   assert.equal(client.listenerCount(Events.ShardReady), 2);
   for (const name of ALL_GATEWAY_LOG_EVENTS) {
     if (name === Events.ShardReady) continue;
-    assert.equal(client.listenerCount(name), 1, `during active login: ${name}`);
+    const expectedCount = name === Events.Ready ? 2 : 1;
+    assert.equal(client.listenerCount(name), expectedCount, `during active login: ${name}`);
   }
   await flush();
   assert.deepEqual(logged, ['sdk.debug', 'gateway.shard_ready', 'gateway.ready']);
