@@ -2,6 +2,14 @@ export { Yuzuha, Bot } from './framework/bot.js';
 export { userError } from './framework/reporting.js';
 export { createServiceKey } from './framework/services.js';
 export type { ServiceKey, ServiceLookup } from './framework/services.js';
+export { startHealthServer } from './framework/health.js';
+export type {
+  HealthMetricsSource,
+  HealthReport,
+  HealthServer,
+  HealthServerOptions,
+  HealthStatus,
+} from './framework/health.js';
 export { MemoryRateLimiter } from './framework/rate-limits.js';
 export type { MemoryRateLimiterOptions, RateLimitsOptions } from './framework/rate-limits.js';
 export type { RateLimiter } from './ports/rate-limiter.js';

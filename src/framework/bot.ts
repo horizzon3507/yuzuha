@@ -42,6 +42,7 @@ import type { ScheduleRecord } from '../domain/state.js';
 import { HttpService } from '../services/http.js';
 import { createCdn } from '../domain/cdn.js';
 import { emitLog } from './logging.js';
+import type { HealthReport, HealthStatus } from './health.js';
 import { assertMetricsSink, emitMetric } from './metrics.js';
 import { currentExecution, isExecutionOwner, runInExecution } from './execution.js';
 import { cancellationError } from '../services/cancellation.js';
@@ -822,6 +823,23 @@ export class Yuzuha {
   assertReady(): void {
     try { this.client.assertReady(); }
     catch { throw new YuzuhaError('BOT_NOT_READY', 'O bot ainda não está pronto.'); }
+  }
+
+  /** Retorna um relatório imutável do estado operacional atual do bot. */
+  health(): HealthReport {
+    const closing = this.closing;
+    const ready = !closing && this.isReady();
+    const status: HealthStatus = closing ? 'closed' : ready ? 'ok' : 'starting';
+    const uptimeMs = closing || !ready ? null : this.uptime;
+    return Object.freeze({
+      status,
+      ready,
+      closing,
+      uptimeMs,
+      activeExecutions: this.active.size,
+      schedulerRunning: Boolean(this.scheduler?.isRunning),
+      timestamp: (this.options.now ?? Date.now)(),
+    });
   }
 
   private addEvent(event: NativeEvent, identity?: unknown): void {

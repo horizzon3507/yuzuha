@@ -1,8 +1,13 @@
-export { Yuzuha, Bot, userError, MemoryRateLimiter, MemoryLock, createServiceKey } from './bot.js';
+export { Yuzuha, Bot, userError, MemoryRateLimiter, MemoryLock, createServiceKey, startHealthServer } from './bot.js';
 export type {
   YuzuhaOptions,
   ServiceKey,
   ServiceLookup,
+  HealthMetricsSource,
+  HealthReport,
+  HealthServer,
+  HealthServerOptions,
+  HealthStatus,
   ErrorReplyResult,
   UnknownCommandContext,
   YuzuhaHooks,

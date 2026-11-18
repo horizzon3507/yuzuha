@@ -406,9 +406,10 @@ try {
           PinnedMessagesPage, ReactionUsersPage, ThreadMemberDetails } from 'yuzuha';
         import { complete, signatureAt, diagnose, documentDiagnostics, parseFunctionCatalog } from 'yuzuha/tooling';
         import { createPrometheusMetrics } from 'yuzuha/metrics';
-        import type { MetricsSink } from 'yuzuha';
+        import { startHealthServer } from 'yuzuha';
+        import type { HealthReport, HealthServer, HealthServerOptions, HealthStatus, MetricsSink } from 'yuzuha';
         const metricsSink: MetricsSink = createPrometheusMetrics();
-        void metricsSink;
+        void [metricsSink, startHealthServer, undefined as unknown as HealthReport, undefined as unknown as HealthServer, undefined as unknown as HealthServerOptions, undefined as unknown as HealthStatus];
         const typed = defineCommand({ name: 'typed-flags', args: { member: arg.user().required() },
           flags: { count: arg.integer().alias('c').default(1), mode: arg.text().choices(['fast', 'slow']).required() },
           async run(ctx) {

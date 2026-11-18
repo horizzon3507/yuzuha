@@ -674,6 +674,9 @@ export class Scheduler {
     }
     if (this.running && generation === this.generation) this.armTimer();
   }
+  get isRunning(): boolean {
+    return this.running;
+  }
   start(intervalMs?: number): void {
     if (intervalMs !== undefined && (!Number.isSafeInteger(intervalMs) || intervalMs < 1)) {
       throw new YuzuhaError('SCHEDULE', 'Intervalo do relógio deve ser inteiro positivo.');
