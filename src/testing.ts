@@ -222,3 +222,4 @@ export function createTestBot(options: TestBotOptions = {}): TestBot {
   };
 }
 export { MockMusicBackend, mockTrack } from './testing/music.js';
+export { createMockAuditLogs, mockAuditLogEntry } from './testing/audit-log.js';

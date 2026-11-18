@@ -1,5 +1,7 @@
 import type { ModerationMember } from '../domain/moderation.js';
 import { isAbove } from '../domain/moderation.js';
+import { auditLogQueryInput } from '../domain/audit-log.js';
+import type { AuditLogQueryInput } from '../domain/audit-log.js';
 import { hasPermission, permission } from '../domain/permissions.js';
 import { emojiBatch } from '../domain/resource-batches.js';
 import type { Resources } from '../ports/resources.js';
@@ -131,6 +133,13 @@ export function bindAuthorizedResources(
       g.guild(guildID);
       await g.allowed('BanMembers');
       return source.users.resolveBan(guildID, query);
+    },
+    async auditLogs(guildID: string, input?: number | AuditLogQueryInput) {
+      const g = guards();
+      g.guild(guildID);
+      await g.allowed('ViewAuditLog');
+      auditLogQueryInput(input);
+      return input === undefined ? source.users.auditLogs(guildID) : source.users.auditLogs(guildID, input);
     },
   }), messages: Object.assign(Object.create(source.messages), {
     async deleteAttachment(channelID: string, messageID: string, attachmentID: string) {
