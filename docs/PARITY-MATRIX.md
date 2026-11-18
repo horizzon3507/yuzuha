@@ -16,8 +16,8 @@ A cobertura é por nome: um método `send` de uma classe conta como coberto se q
 
 | Status | Exports de runtime | Membros |
 |---|---:|---:|
-| coberto-recurso | 51 | 432 |
-| coberto-nativo | 10 | 134 |
+| coberto-recurso | 51 | 435 |
+| coberto-nativo | 10 | 131 |
 | coberto-equivalente | 0 | 55 |
 | só-SDK | 51 | 101 |
 | lacuna | 5 | 0 |
@@ -85,7 +85,7 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são
 | @fluxerjs/core | `LinkChannel` | class | Canais | coberto-recurso | builtins |
 | @fluxerjs/core | `MediaChannel` | class | Canais | só-SDK |  |
 | @fluxerjs/core | `Message` | class | Mensagens e reações | coberto-recurso | builtins |
-| @fluxerjs/core | `MessageAttachmentFlags` | variable | Constantes e bitfields | só-SDK |  |
+| @fluxerjs/core | `MessageAttachmentFlags` | variable | Constantes e bitfields | só-SDK | builtins |
 | @fluxerjs/core | `MessageCollector` | class | Coletores | coberto-recurso | builtins |
 | @fluxerjs/core | `MessageFlags` | variable | Constantes e bitfields | só-SDK |  |
 | @fluxerjs/core | `MessageFlagsBitField` | class | Constantes e bitfields | só-SDK |  |
@@ -139,7 +139,7 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são
 | @fluxerjs/types | `isGroupDmInvite` | function | Texto e guards | só-SDK |  |
 | @fluxerjs/types | `isGuildInvite` | function | Texto e guards | só-SDK |  |
 | @fluxerjs/types | `isUploadedAttachment` | function | Texto e guards | só-SDK |  |
-| @fluxerjs/types | `MessageAttachmentFlags` | variable | Constantes e bitfields | só-SDK |  |
+| @fluxerjs/types | `MessageAttachmentFlags` | variable | Constantes e bitfields | só-SDK | builtins |
 | @fluxerjs/types | `MessageFlags` | variable | Constantes e bitfields | só-SDK |  |
 | @fluxerjs/types | `PublicUserFlags` | variable | Constantes e bitfields | só-SDK |  |
 | @fluxerjs/types | `Routes` | variable | Constantes e bitfields | só-SDK | builtins |
@@ -494,7 +494,7 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são
 | `GuildMember` | `_clone` | método | só-SDK |
 | `GuildMember` | `_patch` | método | só-SDK |
 | `GuildMember` | `accentColor` | propriedade | coberto-recurso |
-| `GuildMember` | `avatar` | propriedade | coberto-nativo |
+| `GuildMember` | `avatar` | propriedade | coberto-recurso |
 | `GuildMember` | `avatarURL` | método | coberto-recurso |
 | `GuildMember` | `ban` | método | coberto-recurso |
 | `GuildMember` | `bannable` | acessor | coberto-equivalente |
@@ -814,7 +814,7 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são
 | `ThreadMemberManager` | `fetchOne` | método | coberto-recurso |
 | `ThreadMemberManager` | `remove` | método | coberto-recurso |
 | `User` | `_patch` | método | só-SDK |
-| `User` | `avatar` | propriedade | coberto-nativo |
+| `User` | `avatar` | propriedade | coberto-recurso |
 | `User` | `avatarColor` | propriedade | só-SDK |
 | `User` | `avatarURL` | método | coberto-recurso |
 | `User` | `banner` | propriedade | coberto-recurso |
@@ -852,7 +852,7 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são
 | `VoiceChannel` | `topic` | propriedade | coberto-recurso |
 | `VoiceChannel` | `userLimit` | propriedade | só-SDK |
 | `VoiceChannel` | `voiceConnectionLimit` | propriedade | só-SDK |
-| `Webhook` | `avatar` | propriedade | coberto-nativo |
+| `Webhook` | `avatar` | propriedade | coberto-recurso |
 | `Webhook` | `avatarURL` | método | coberto-recurso |
 | `Webhook` | `channelId` | propriedade | coberto-recurso |
 | `Webhook` | `client` | propriedade | coberto-recurso |

@@ -275,7 +275,7 @@ await ctx.reply(`${membro.displayName}: ${canais.length} canais, ${fixadas.lengt
 | `instance` | `describe`, `gatewayInfo`, `application`, `oauthApplications`, `emojiMetadata`, `stickerMetadata`, `resolveEmoji` |
 | `self` | `fetch`, `guilds`, `leaveGuild` e `deleteMyMessages` com verificação sudo |
 | `cache` | `stats`, `sweepMessages`, `sweepMembers`, `sweepUsers`, `sweepChannels`, `sweepGuilds`, `cascadeChannel`, `cascadeGuild` |
-| `webhooks` | `list`, `create`, `send`, `edit`, `delete`, `editMessage`, `deleteMessage` |
+| `webhooks` | `fetch`, `list`, `create`, `send`, `edit`, `delete`, `fetchMessage`, `editMessage`, `deleteMessage` |
 | `expressions` | CRUD de emojis/stickers, `createEmojisBulk`, `createStickersBulk`, `cloneEmoji`, `cloneSticker` |
 | `threads` | `create`, `archive`, `unarchive`, `forumPost`, `addMember`, `removeMember`, `members`, `member`, `edit`, `join`, `leave`, `setLocked`, `editSelf`, `editDefaults`, `search` |
 | `invites` | `get`, `create`, `delete`, `list`, `vanity`, `setVanity` |
@@ -328,7 +328,16 @@ metadados de mute. Adaptadores próprios que implementam os contratos completos
 devem fornecer esses métodos; `mockResources` continua aceitando substituições parciais.
 
 Todas as mutações de `ctx.resources.expressions` exigem `ManageExpressions` do
-autor e do bot no servidor do contexto. O acesso direto por `bot.resources` ou
+autor e do bot no servidor do contexto. `webhooks.send` e `webhooks.editMessage`
+aceitam `embeds` (até 10), `files` (`AttachmentSpec | BinaryAttachmentSpec`, até
+10 arquivos e 10 MB), `allowedMentions` (padrão seguro sem menções) e
+`threadID`, permitindo enviar apenas embeds ou anexos sem `content`.
+`webhooks.edit(id, token, input, reason?)` continua aceitando `string` para
+renomear e também recebe `{ name?, avatar?, channelID? }` (`Uint8Array`, data URI
+de imagem, base64 ou `null`); quando `channelID` muda no contexto, `ManageWebhooks`
+é verificado também no canal de destino. `webhooks.fetchMessage(id, token,
+messageID, { threadID? })` devolve `MessageInfo` normalizado com a mesma guarda.
+O acesso direto por `bot.resources` ou
 `ctx.client` mantém a autoridade do código nativo confiável.
 
 Um bot real cria `FluxerResources` automaticamente. A opção `resources` permite
