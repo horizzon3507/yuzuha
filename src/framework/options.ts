@@ -1,4 +1,4 @@
-import type { Client, ClientOptions } from '@fluxerjs/core';
+import type { Client, ClientOptions, DiscoveryOrigin } from '@fluxerjs/core';
 import type { Yuzuha } from './bot.js';
 import type { Command, CommandContext, HelpRenderContext, HelpRenderer } from '../context.js';
 import type { IncomingMessage, Payload, Store, Transport } from '../contracts.js';
@@ -45,6 +45,7 @@ export type {
   MessageCacheSweeperOptions,
   MemberCacheSweeperOptions,
   UserCacheSweeperOptions,
+  DiscoveryOrigin,
   LocaleMessagesConfig,
   MessageCatalog,
   MessageOverrides,
@@ -128,6 +129,7 @@ export interface YuzuhaOptions {
   gate?: MessageGate;
   client?: Client;
   clientOptions?: ClientOptions;
+  discovery?: DiscoveryOrigin;
   transport?: Transport;
   resources?: Resources;
   store?: Store;
