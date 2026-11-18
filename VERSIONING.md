@@ -1,16 +1,16 @@
 # Versionamento
 
 O Yuzuha aplica o formato Hory ao histórico e usa **SemVer simples** no pacote.
-A versão desta atualização é **0.5.0**.
+A versão desta atualização é **0.6.0**.
 
 ## Pacote e histórico
 
 | Lugar | Formato nesta versão |
 |---|---|
-| `package.json` e entrada raiz de `package-lock.json` | `0.5.0` |
-| Pacote npm e saída de `yuzuha --version` | `0.5.0` |
-| Título do changelog | `## v0.5.0 · 17/11/2026` |
-| Tag Git | `v0.5.0` |
+| `package.json` e entrada raiz de `package-lock.json` | `0.6.0` |
+| Pacote npm e saída de `yuzuha --version` | `0.6.0` |
+| Título do changelog | `## v0.6.0 · 17/11/2026` |
+| Tag Git | `v0.6.0` |
 
 O SDK e a CLI pertencem ao mesmo pacote. Para bibliotecas, a convenção Hory mantém
 SemVer sem `m`, sem seções por superfície e sem sufixos de canal.
@@ -30,7 +30,7 @@ estivermos em `0.x`. Ao chegar a `1.0.0`, mudanças incompatíveis exigem major;
 novas funcionalidades compatíveis, minor; correções compatíveis, patch.
 
 Os exports públicos são `yuzuha`, `yuzuha/functions`, `yuzuha/sdk`,
-`yuzuha/sdk/*`, `yuzuha/testing`, `yuzuha/tooling`, `yuzuha/music`,
+`yuzuha/sdk/*`, `yuzuha/testing`, `yuzuha/tooling`, `yuzuha/metrics`, `yuzuha/music`,
 `yuzuha/images`, `yuzuha/canvas` e `yuzuha/canvas/card`. A organização interna de `src/` não cria
 estabilidade de deep
 imports. Schema persistido,
@@ -41,6 +41,43 @@ A versão do SDK é fixada separadamente. Atualizá-la exige revisar
 gerado por `init` pertence ao consumidor e não precisa acompanhar a biblioteca.
 
 ## Preparar uma atualização
+
+### Migrar para 0.6.0
+
+A 0.6.0 é uma release minor compatível na família `0.x`: o schema persistido do
+`SQLiteStore` permanece em **3** (`State` e `StateBackup` inalterados), o SDK
+permanece em `3.3.0`, todas as mensagens padrão em português (`DEFAULT_MESSAGES`)
+são preservadas sem alterações e o novo subpath `yuzuha/metrics` soma-se aos
+exports públicos. Considere quatro notas de contrato e tipagem:
+
+- **`ArgumentValue` ampliado para tipos ricos e customizados:** para acomodar
+  `arg.custom<T>(...)`, `arg.member()` (`MemberInfo`) e `arg.url()` (`URL`), o
+  alias `ArgumentValue` passou a `unknown`. Comandos definidos com `defineCommand`
+  e schemas `arg.*` continuam com inferência estática exata em `ctx.args` e
+  `ctx.flags`; código externo que consumia `parseArguments` ou `ArgumentBag` sem
+  schema deve usar `bag.string(...)`, `bag.number(...)`, `bag.boolean(...)` ou
+  estreitamento explícito. Parsers assíncronos (`arg.custom` async e `arg.member`)
+  em chamadas manuais fora do despacho do bot exigem `parseArgumentsAsync` e
+  `parseFlagsAsync`.
+- **Ciclo de vida de plugins (`setup` assíncrono e `unregisterAll`):** plugins
+  declarativos ou com `setup` síncrono continuam retornando `this` em
+  `bot.plugin(...)`; quando `plugin.setup` retorna uma `Promise`
+  (`AsyncYuzuhaPlugin`), `bot.plugin(...)` retorna `Promise<this>` — aguarde a
+  instalação com `await bot.plugin(...)`. Motores `ScriptEngine` customizados
+  podem implementar `unregisterAll?(names)` opcional para suportar remoção de
+  funções em `bot.unplugin(name)`.
+- **`RateLimiter.cooldown` com `maxUses` opcional:** o terceiro parâmetro
+  `maxUses?: number` em `RateLimiter.cooldown(key, durationMs, maxUses?)` é
+  opcional; limitadores customizados de 2 argumentos continuam válidos para
+  janelas de uso único e devem honrar `maxUses` se o bot utilizar
+  `cooldown: { duration, uses }`.
+- **Configurações por servidor (`GuildSettings`):** `GuildSettings` persiste sob
+  o namespace padrão `settings:` nas variáveis de servidor do `Store` existente,
+  sem migração de banco de dados.
+
+```sh
+npm install yuzuha@0.6.0
+```
 
 ### Migrar para 0.5.0
 

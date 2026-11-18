@@ -73,6 +73,23 @@ recursos. O runtime de scripts só é registrado quando o function mode é usado
 
 ## Entregas e dependências
 
+A atualização 0.6.0 expande a ergonomia nativa, internacionalização, plugins e
+observabilidade operacional: introduz `MessageCatalog`, `DEFAULT_MESSAGES` e
+resolução multi-idioma síncrona/assíncrona (`messages`, `locale`, `ctx.locale`,
+`ctx.t`) cobrindo argumentos, ajuda, guardas e moderação; adiciona tipos de
+argumento registráveis (`bot.argumentType`, `arg.custom<T>`, `parseArgumentsAsync`,
+`parseFlagsAsync`), builders nativos ricos (`arg.channel`, `arg.role`,
+`arg.member`, `arg.url`, `arg.enum`) e estado local tipado por execução
+(`YuzuhaLocals`, `ctx.locals`, `options.context`); amplia cooldowns com escopos
+(`user`, `channel`, `guild`, `global`), múltiplos usos (`uses`) e `bypass`, além
+de `owners`, `devGuilds`, `ownerOnly`, `devOnly`, `gate`, `helpRenderer`,
+`allowBots` e `mentionPrefix`; entrega container DI tipado (`createServiceKey`,
+`bot.provide`/`get`/`resolve`) e ciclo de vida completo de plugins (`dependsOn`,
+`setup`, `teardown`, rollback atômico e `bot.unplugin`); e completa a operação em
+produção com `MetricsSink`, exportador Prometheus zero-dependency em
+`yuzuha/metrics`, `bot.health()`, `startHealthServer` (`--health-port` /
+`--health-host` na CLI) e `GuildSettings` com cache em memória e `guildPrefix`.
+
 A atualização 0.5.0 reformula a camada de persistência e introduz os ports
 distribuídos: `MemoryStore` passa a usar snapshots estruturais copy-on-write e
 validação incremental restrita às fatias/chaves sujas; `JsonStore` aceita
