@@ -140,17 +140,36 @@ export class CommandRegistry {
       next.set(name, entry);
     }
   }
-  add(command: Command): void {
+  add(command: Command): CompiledCommand {
     const entry = this.compile(command);
     for (const name of [entry.definition.name, ...(entry.definition.aliases ?? [])]) {
       if (this.entries.has(name.toLowerCase())) throw new YuzuhaError('COMMAND_DUPLICATE', `Nome ou alias duplicado: ${name}.`);
     }
     this.insert(this.entries, entry);
+    return entry;
   }
-  prepare(commands: Command[], engine = this.engine()): () => void {
+  prepare(commands: Command[], engine = this.engine()): () => CompiledCommand[] {
     const next = new Map(this.entries);
-    for (const command of commands) this.insert(next, this.compile(command, undefined, engine));
-    return () => { this.entries = next; };
+    const compiled: CompiledCommand[] = [];
+    for (const command of commands) {
+      const entry = this.compile(command, undefined, engine);
+      this.insert(next, entry);
+      compiled.push(entry);
+    }
+    return () => {
+      this.entries = next;
+      return compiled;
+    };
+  }
+  remove(entry: CompiledCommand): boolean {
+    let removed = false;
+    for (const [key, current] of this.entries) {
+      if (current === entry) {
+        this.entries.delete(key);
+        removed = true;
+      }
+    }
+    return removed;
   }
   load(directory: string, mode: 'replace' | 'append' | 'reload'): Promise<void> {
     const path = resolve(directory);

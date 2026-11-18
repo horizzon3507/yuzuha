@@ -36,6 +36,7 @@ export interface ScriptEngine {
   execute(program: unknown, ctx: unknown): Promise<unknown>;
   functions(): ScriptFunctionDefinition[];
   registerAll(definitions: ScriptFunctionDefinition[]): unknown;
+  unregisterAll?(names: readonly string[]): unknown;
   /** Cópia temporária para validar instalações antes de confirmá-las. */
   fork(): ScriptEngine;
   text(value: unknown): string;

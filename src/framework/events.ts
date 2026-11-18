@@ -53,7 +53,7 @@ export class NativeEvents {
     }
   }
 
-  add(event: NativeEvent, identity: unknown = event): void {
+  add(event: NativeEvent, identity: unknown = event): () => void {
     if (this.closed) throw new YuzuhaError('BOT_CLOSED', 'O bot está encerrado.');
     this.validate(event);
     const binding: Binding = { event: event.event, identity, wrapper: (...args) => {
@@ -62,6 +62,7 @@ export class NativeEvents {
     } };
     this.bindings.add(binding);
     this.client.on(event.event, binding.wrapper);
+    return () => this.remove(binding);
   }
 
   off(event: ClientEventName, identity: unknown): void {

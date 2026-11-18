@@ -123,6 +123,9 @@ function assertEngine(engine: unknown): ScriptEngine {
   if (!candidate || (['compile', 'execute', 'functions', 'registerAll', 'fork', 'text'] as const).some(key => typeof candidate[key] !== 'function')) {
     throw new ConfigError('ENGINE_INVALID', 'Engine de function mode inválido: precisa de compile, execute, functions, registerAll, fork e text.');
   }
+  if (candidate.unregisterAll !== undefined && typeof candidate.unregisterAll !== 'function') {
+    throw new ConfigError('ENGINE_INVALID', 'engine.unregisterAll deve ser uma função quando informado.');
+  }
   return engine as ScriptEngine;
 }
 
