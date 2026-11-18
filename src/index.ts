@@ -37,6 +37,7 @@ export type {
 export { CommandContext, defineCommand, parseDuration } from './context.js';
 export type { Command, ArgumentDefinition } from './context.js';
 export { commandUsage, commandHelp } from './commands/help.js';
+export { parseArguments, parseFlags, tokenize } from './commands/arguments.js';
 export { formatDuration, MAX_TIMEOUT_MS } from './domain/values.js';
 export type { ContextOptions } from './context.js';
 export { arg, ArgumentBuilder } from './commands/builders.js';
