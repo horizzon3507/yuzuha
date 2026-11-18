@@ -306,6 +306,7 @@ folha. As regras de herança, parsing e exemplos completos estão em
 | `ctx.client`, `ctx.nativeMessage` | Client e mensagem original opcional do SDK |
 | `ctx.resources` | Recursos nativos de usuários, cargos, canais, mensagens, coletores, webhooks, emojis, threads e convites |
 | `ctx.scheduler`, `ctx.http` | Agendamentos persistentes e cliente HTTP seguro |
+| `ctx.voiceStates` | Rastreador em memória de estados de voz (`VoiceStateTracker`) |
 | `ctx.send/edit/delete/react` | Operações de mensagem pelo transporte |
 | `ctx.get(key)`, `ctx.resolve(key)` | Leitura tipada de serviços registrados via `bot.provide` (`SERVICE_MISSING` ou `undefined`) |
 | `ctx.signal`, `ctx.assert` | Cancelamento cooperativo e recusa de execução |
