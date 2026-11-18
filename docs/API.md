@@ -27,6 +27,8 @@ A fonte das assinaturas completas são as declarações TypeScript distribuídas
 | `limits` | Subconjunto de `calls`, `depth`, `output`, `timeoutMs` |
 | `now` | Função que retorna epoch em ms para cooldown, dados e scheduler; padrão `Date.now` |
 | `emoji` | Mapa nome → emoji exposto em `bot.emoji`/`ctx.emoji`; referência viva |
+| `messages` | `Partial<MessageCatalog>` direto ou `{ defaultLocale?, locales? }` para sobrescrever mensagens de usuário |
+| `locale` | Identificador de idioma ou função sync/async `(ctx) => string \| Promise<string>` resolvida antes do despacho |
 | `memberCache` | `false` (padrão) ou `{ ttlMs, max?, now? }` para cache LRU+TTL em `FluxerTransport` com invalidação via gateway |
 | `rateLimits` | Opções de capacidade e janela do `MemoryRateLimiter` padrão (`maxCooldowns`, `onCooldownCapacity`, `maxDedupe`, `dedupeWindowMs`) |
 | `rateLimiter` | Implementação síncrona ou assíncrona de `RateLimiter` para cooldowns e deduplicação distribuída |
@@ -146,6 +148,7 @@ Nomes/aliases são únicos sem distinção entre maiúsculas e minúsculas.
 | `expire(messageID, ttlMs, channelID?)` | Agenda a exclusão de uma mensagem existente no timer do bot |
 | `purge(count, { of? })` | Apaga as últimas mensagens do canal (1–1000, `of` por autor) com a mensagem do comando fora da contagem; devolve `{ deleted, via }` |
 | `emoji` | Mapa nome → emoji de `YuzuhaOptions.emoji`, compartilhado com `bot.emoji` |
+| `locale`, `t(key, ...args)` | Idioma resolvido (`'pt-BR'` por padrão) e tradutor tipado do catálogo ativo |
 | `client`, `nativeMessage` | Client real e mensagem original opcional do SDK |
 | `mod` | ban/kick/timeout/unban/move/mute/deafen com registro de caso por padrão |
 | `resources` | Contratos nativos de usuários, cargos, canais, mensagens, coletores, webhooks, emojis, threads e convites |
@@ -342,7 +345,7 @@ exceto a comparação, que retorna -1, 0 ou 1. Veja [operações de dados](funct
 | `YuzuhaError` | Erro base com `code` tipado (`YuzuhaErrorCode \| (string & {})`) para diagnóstico |
 | `TransportError` | Subclasse de `YuzuhaError` para falhas do transporte (`ROLES_UNAVAILABLE`, `CHANNEL_GUILD`, `VOICE_CHANNEL`, `MODERATION_ACTION`, `NOT_FOUND`, `API_ERROR`) |
 | `StoreError` | Subclasse de `YuzuhaError` para falhas de persistência (`STORE_NAME`, `STORE_CLOSED`, `STORE_ASYNC`, `STORE_CORRUPT`, `STORE_INVALID`, `STORE_READONLY`) |
-| `ConfigError` | Subclasse de `YuzuhaError` para configuração, opções inválidas e token ausente (`CONFIG_MISSING`, `CONFIG_INVALID`, `MEMBER_CACHE_OPTIONS`, `RATE_LIMIT_OPTIONS`, `LOCK_OPTIONS`, `PREFIX`, `EMOJI_OPTIONS`, `ENGINE_INVALID`, `VARIABLE_SWEEP_OPTIONS`, `OPTIONS`, `TOKEN_MISSING`) |
+| `ConfigError` | Subclasse de `YuzuhaError` para configuração, opções inválidas e token ausente (`CONFIG_MISSING`, `CONFIG_INVALID`, `MEMBER_CACHE_OPTIONS`, `MESSAGES_OPTIONS`, `RATE_LIMIT_OPTIONS`, `LOCK_OPTIONS`, `PREFIX`, `EMOJI_OPTIONS`, `ENGINE_INVALID`, `VARIABLE_SWEEP_OPTIONS`, `OPTIONS`, `TOKEN_MISSING`) |
 | `ScriptError` | Erro com fonte, offset, arquivo, linha, coluna e `format()` |
 | `GuardError` / `GUARD` | Condição de uso recusada; mensagem apropriada ao usuário |
 | `PartialModerationError` / `MODERATION_PARTIAL` | API confirmou ação, mas o caso não foi salvo |
