@@ -1,3 +1,5 @@
+import type { IncomingMessage } from '../../domain/messages.js';
+
 export interface AwaitMessageInput {
   userID?: string;
   contains?: string;
@@ -24,11 +26,16 @@ export interface CollectReactionsInput {
   signal?: AbortSignal;
 }
 
-export interface CollectedMessageInfo {
+export interface CollectedMessageInfo extends IncomingMessage {
   id: string;
   channelID: string;
+  guildID?: string;
   authorID: string;
+  authorName: string;
+  authorBot: boolean;
   content: string;
+  mentions: string[];
+  raw?: unknown;
 }
 
 export interface ReactionVote {

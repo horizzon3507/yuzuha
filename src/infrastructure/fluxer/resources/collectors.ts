@@ -3,11 +3,12 @@ import { MessageCollector, ReactionCollector } from '@fluxerjs/core';
 import type { AwaitMessageInput, CollectedMessageInfo, CollectMessagesInput, CollectReactionsInput, CollectorsResources, ReactionVote } from '../../../ports/resources/collectors.js';
 import { cancellationError } from '../../../services/cancellation.js';
 import { YuzuhaError } from '../../../errors.js';
+import { incoming } from '../messages.js';
 
 type ReactionLike = { emojiIdentifier: string; emoji: { name: string }; messageId: string };
 
 function info(message: Message): CollectedMessageInfo {
-  return { id: message.id, channelID: message.channelId, authorID: message.author.id, content: message.content };
+  return incoming(message);
 }
 
 function targets(emojis: string | string[]): string[] {
