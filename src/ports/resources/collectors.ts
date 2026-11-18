@@ -5,6 +5,19 @@ export interface AwaitMessageInput {
   contains?: string;
   timeMs: number;
   signal?: AbortSignal;
+  filter?: (message: CollectedMessageInfo) => boolean;
+}
+
+export interface AwaitReactionOptions {
+  userID?: string;
+  signal?: AbortSignal;
+  filter?: (vote: ReactionVote) => boolean;
+}
+
+export interface AwaitReactionInput extends AwaitReactionOptions {
+  messageID: string;
+  emojis?: string | string[];
+  timeMs: number;
 }
 
 export interface CollectMessagesInput {
@@ -14,6 +27,7 @@ export interface CollectMessagesInput {
   max?: number;
   maxBuffer?: number;
   signal?: AbortSignal;
+  filter?: (message: CollectedMessageInfo) => boolean;
 }
 
 export interface CollectReactionsInput {
@@ -24,6 +38,7 @@ export interface CollectReactionsInput {
   max?: number;
   maxBuffer?: number;
   signal?: AbortSignal;
+  filter?: (vote: ReactionVote) => boolean;
 }
 
 export interface CollectedMessageInfo extends IncomingMessage {
@@ -46,8 +61,23 @@ export interface ReactionVote {
 
 export interface CollectorsResources {
   awaitMessage(channelID: string, input: AwaitMessageInput): Promise<CollectedMessageInfo | null>;
-  awaitReaction(channelID: string, messageID: string, emojis: string | string[],
-    timeMs: number, userID?: string, signal?: AbortSignal): Promise<ReactionVote | null>;
+  awaitReaction(channelID: string, input: AwaitReactionInput): Promise<ReactionVote | null>;
+  awaitReaction(
+    channelID: string,
+    messageID: string,
+    emojis: string | string[],
+    timeMs: number,
+    options?: AwaitReactionOptions,
+  ): Promise<ReactionVote | null>;
+  awaitReaction(
+    channelID: string,
+    messageID: string,
+    emojis: string | string[],
+    timeMs: number,
+    userID?: string,
+    signal?: AbortSignal,
+    filter?: (vote: ReactionVote) => boolean,
+  ): Promise<ReactionVote | null>;
   collectMessages(channelID: string, input: CollectMessagesInput): AsyncIterable<CollectedMessageInfo>;
   collectReactions(channelID: string, input: CollectReactionsInput): AsyncIterable<ReactionVote>;
 }

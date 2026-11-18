@@ -12,6 +12,7 @@ import type { BotShard } from '../ports/sharding.js';
 import type { Resources } from '../ports/resources.js';
 import { assertServiceKey } from '../ports/services.js';
 import type { ServiceKey, ServiceLookup } from '../ports/services.js';
+import type { AwaitReactionInput, AwaitReactionOptions, CollectorsResources, ReactionVote } from '../ports/resources/collectors.js';
 import type { Scheduler } from '../services/scheduler.js';
 import { sendStreamAttachment } from '../services/attachments.js';
 import type { StreamAttachmentOptions } from '../services/attachments.js';
@@ -276,6 +277,7 @@ export class CommandContext {
       : bindAuthorizedResources(this.nativeResources, this.transport, this.scope, this.memo, this.t);
     const collectors = source.collectors;
     const gateway = source.gateway;
+    const mergeSignal = (signal?: AbortSignal): AbortSignal => signal ? AbortSignal.any([this.signal, signal]) : this.signal;
     return this.scopedResources = { users: source.users, roles: source.roles, channels: source.channels,
       messages: source.messages, webhooks: source.webhooks, expressions: source.expressions,
       threads: source.threads, invites: source.invites, gateway: {
@@ -289,14 +291,32 @@ export class CommandContext {
         send: (shardID, payload) => gateway.send(shardID, payload),
       },
       instance: source.instance, self: source.self, cache: source.cache, collectors: {
-        awaitMessage: (channelID, input) => collectors.awaitMessage(channelID, { ...input,
-          signal: input.signal ? AbortSignal.any([this.signal, input.signal]) : this.signal }),
-        awaitReaction: (channelID, messageID, emojis, timeMs, userID, signal) => collectors.awaitReaction(
-          channelID, messageID, emojis, timeMs, userID, signal ? AbortSignal.any([this.signal, signal]) : this.signal),
-        collectMessages: (channelID, input) => collectors.collectMessages(channelID, { ...input,
-          signal: input.signal ? AbortSignal.any([this.signal, input.signal]) : this.signal }),
-        collectReactions: (channelID, input) => collectors.collectReactions(channelID, { ...input,
-          signal: input.signal ? AbortSignal.any([this.signal, input.signal]) : this.signal }),
+        awaitMessage: (channelID, input) => collectors.awaitMessage(channelID, { ...input, signal: mergeSignal(input.signal) }),
+        awaitReaction: ((
+          channelID: string,
+          messageIDOrInput: string | AwaitReactionInput,
+          emojis?: string | string[],
+          timeMs?: number,
+          userIDOrOptions?: string | AwaitReactionOptions,
+          signal?: AbortSignal,
+          filter?: (vote: ReactionVote) => boolean,
+        ) => {
+          if (typeof messageIDOrInput === 'object' && messageIDOrInput !== null) {
+            return collectors.awaitReaction(channelID, { ...messageIDOrInput, signal: mergeSignal(messageIDOrInput.signal) });
+          }
+          if (typeof userIDOrOptions === 'object' && userIDOrOptions !== null) {
+            const merged = mergeSignal(userIDOrOptions.signal);
+            return userIDOrOptions.filter === undefined
+              ? collectors.awaitReaction(channelID, messageIDOrInput, emojis!, timeMs!, userIDOrOptions.userID, merged)
+              : collectors.awaitReaction(channelID, messageIDOrInput, emojis!, timeMs!, userIDOrOptions.userID, merged, userIDOrOptions.filter);
+          }
+          const merged = mergeSignal(signal);
+          return filter === undefined
+            ? collectors.awaitReaction(channelID, messageIDOrInput, emojis!, timeMs!, userIDOrOptions, merged)
+            : collectors.awaitReaction(channelID, messageIDOrInput, emojis!, timeMs!, userIDOrOptions, merged, filter);
+        }) as CollectorsResources['awaitReaction'],
+        collectMessages: (channelID, input) => collectors.collectMessages(channelID, { ...input, signal: mergeSignal(input.signal) }),
+        collectReactions: (channelID, input) => collectors.collectReactions(channelID, { ...input, signal: mergeSignal(input.signal) }),
       } };
   }
   get scheduler(): Scheduler {
