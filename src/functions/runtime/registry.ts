@@ -32,6 +32,22 @@ export class FunctionRegistry {
     this.resolved = new WeakMap();
   }
 
+  unregisterAll(names: readonly string[]): void {
+    let changed = false;
+    for (const raw of names) {
+      const normalized = raw.replace(/^\$/, '').toLowerCase();
+      const fn = this.entries.get(normalized);
+      if (!fn) continue;
+      for (const [key, entry] of this.entries) {
+        if (entry === fn) {
+          this.entries.delete(key);
+          changed = true;
+        }
+      }
+    }
+    if (changed) this.resolved = new WeakMap();
+  }
+
   functions(): FunctionDefinition[] { return [...new Set(this.entries.values())]; }
 
   resolve(node: CallNode, program: Program, cache = true): FunctionDefinition {

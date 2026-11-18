@@ -229,6 +229,32 @@ bot.command(defineCommand({
   `gate` para não falharem durante janelas de manutenção, mas continuam sujeitas
   aos guards do comando (`ownerOnly`, `devOnly`, `guildOnly`, `permissions`, `checks`).
 
+### Formatação de ajuda (`helpRenderer`), menção (`mentionPrefix`) e mensagens de bots (`allowBots`)
+
+Para substituir a saída textual padrão de `bot.help(query?, prefix?)`, `ctx.help(query?, prefix?)`, `$help` e a resposta de grupos invocados sem subcomando, passe `helpRenderer` (`HelpRenderer`) nas opções do bot:
+
+```ts
+import { Yuzuha, commandUsage } from 'yuzuha';
+
+const bot = new Yuzuha({
+  prefix: '!',
+  mentionPrefix: true,
+  allowBots: false,
+  helpRenderer({ command, commands, prefix, query }) {
+    if (!command) {
+      return commands.map(cmd => `• ${commandUsage(cmd, prefix)}`).join('\n');
+    }
+    return `Ajuda de ${prefix}${command.name} (consulta: ${query ?? command.name})`;
+  },
+});
+```
+
+- Na listagem geral (`bot.help(undefined, prefix)`), `context` contém `{ commands, prefix }`, com comandos e subcomandos `hidden` já filtrados.
+- Quando `query` resolve um comando ou subcomando visível, `context` contém `{ command, commands, prefix, query }` usando cópias isoladas das definições. Consultas inexistentes, com argumentos excedentes ou apontando para comandos `hidden` continuam retornando `''`.
+- `mentionPrefix: true` aceita `<@botID>` e `<@!botID>` (com ou sem espaço após a menção, ex.: `<@999> ping` ou `<@!999>ping`) tanto no pré-filtro do gateway quanto no roteamento estático ou dinâmico, inclusive em `hooks.onUnknownCommand`.
+- `allowBots: true` permite despachar comandos enviados por outras contas bot, mas **sempre** ignora mensagens cujo autor seja `transport.botID` para impedir auto-loop.
+- Valores inválidos em `helpRenderer`, `mentionPrefix` ou `allowBots` lançam `ConfigError` com código `OPTIONS`.
+
 ## Comando nativo
 
 ```ts
@@ -281,6 +307,7 @@ folha. As regras de herança, parsing e exemplos completos estão em
 | `ctx.resources` | Recursos nativos de usuários, cargos, canais, mensagens, coletores, webhooks, emojis, threads e convites |
 | `ctx.scheduler`, `ctx.http` | Agendamentos persistentes e cliente HTTP seguro |
 | `ctx.send/edit/delete/react` | Operações de mensagem pelo transporte |
+| `ctx.get(key)`, `ctx.resolve(key)` | Leitura tipada de serviços registrados via `bot.provide` (`SERVICE_MISSING` ou `undefined`) |
 | `ctx.signal`, `ctx.assert` | Cancelamento cooperativo e recusa de execução |
 
 `moderate` aceita `ban`, `kick`, `timeout`, `unban`; opções: `record`, `duration`
@@ -358,12 +385,60 @@ converte em texto e `call.all()` avalia os argumentos em ordem. Argumentos são
 lazy e memoizados, inclusive promessas. `call.ctx` expõe o contexto e
 `call.wait(promise)` aguarda I/O sem consumir o prazo do script.
 
-Plugins podem incluir `commands`, `events` e `middleware`. A instalação valida
-o lote antes de alterar os registros; funções do próprio plugin já são
+Plugins podem incluir `commands`, `events`, `scriptEvents` e `middleware`, além
+de `dependsOn`, `setup(bot)` e `teardown(bot)`. A instalação valida o lote e as
+dependências antes de aplicar efeitos; funções do próprio plugin já são
 consideradas ao compilar seus scripts. Nomes de plugin, funções e comandos não
-podem colidir nos respectivos registros. Também é
-possível usar `bot.engine.registerAll(...)` diretamente.
-Registre as funções antes de carregar comandos que as utilizam.
+podem colidir nos respectivos registros. Também é possível usar
+`bot.engine.registerAll(...)` diretamente. Registre as funções antes de carregar
+comandos que as utilizam.
+
+### Ciclo de vida de plugins e injeção de serviços (`createServiceKey`)
+
+Para compartilhar clientes externos, caches ou adaptadores entre plugins, comandos e eventos sem globais mutáveis, crie chaves tipadas com `createServiceKey<T>(description)` e registre instâncias em `bot.provide(key, value)`:
+
+```ts
+import { Yuzuha, createServiceKey, defineCommand } from 'yuzuha';
+import type { AsyncYuzuhaPlugin } from 'yuzuha';
+
+interface BancoDados {
+  consultar(chave: string): Promise<string>;
+  fechar(): Promise<void>;
+}
+
+const BancoKey = createServiceKey<BancoDados>('banco-principal');
+
+const pluginBanco: AsyncYuzuhaPlugin = {
+  name: 'banco',
+  async setup(bot) {
+    const cliente = await conectarBanco();
+    bot.provide(BancoKey, cliente);
+  },
+  async teardown(bot) {
+    await bot.get(BancoKey).fechar();
+  },
+};
+
+const bot = new Yuzuha({ prefix: '!' });
+await bot.plugin(pluginBanco);
+
+bot.plugin({
+  name: 'auditoria',
+  dependsOn: ['banco'],
+  commands: [defineCommand({
+    name: 'consulta',
+    async run(ctx) {
+      const valor = await ctx.get(BancoKey).consultar(ctx.authorID);
+      await ctx.reply(valor);
+    },
+  })],
+});
+```
+
+- **Chaves e leitura**: `createServiceKey(description)` exige descrição não vazia (`SERVICE_KEY`) e cria um `Symbol` exclusivo. `bot.provide` rejeita duplicatas com `SERVICE_DUPLICATE`; `bot.hasService(key)` testa presença; `bot.get(key)` e `ctx.get(key)` lançam `SERVICE_MISSING` se ausente; `bot.resolve(key)` e `ctx.resolve(key)` retornam `undefined` quando não registrado (também disponíveis em `EventContext`).
+- **Sobrecargas síncrona e assíncrona**: plugins sem `setup` ou com `setup` síncrono retornam `this` diretamente (`bot.plugin(a).plugin(b)`). Quando `setup` retorna `Promise<void>` (`AsyncYuzuhaPlugin`), `bot.plugin(plugin)` retorna `Promise<this>`. Se `setup` lançar erro ou rejeitar, todos os comandos, funções, middlewares, eventos e serviços providos durante a instalação daquele plugin sofrem rollback atômico.
+- **Dependências e desinstalação (`unplugin`)**: `dependsOn` exige que todos os nomes listados já estejam instalados (`PLUGIN_DEPENDENCY`). `await bot.unplugin(name)` lança `PLUGIN_NOT_FOUND` se ausente ou `PLUGIN_DEPENDENCY` enquanto houver outro plugin ativo dependente de `name`; caso contrário, aguarda `teardown?.(bot)` e remove comandos, middlewares, listeners de eventos, funções de script (quando o engine implementa `unregisterAll`) e serviços daquele plugin.
+- **Encerramento reverso (`LIFO`)**: em `bot.destroy()`, os hooks `teardown` dos plugins ativos executam em ordem inversa de instalação após a drenagem dos comandos/eventos, reportando falhas em `onError` sem interromper o encerramento dos demais plugins e recursos.
 
 ## Middleware
 

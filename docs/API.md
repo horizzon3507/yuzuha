@@ -14,9 +14,12 @@ A fonte das assinaturas completas são as declarações TypeScript distribuídas
 |---|---|
 | `name` | Nome do diretório de dados padrão; letras ASCII, números, `_` e `-` |
 | `prefix` | String, array de strings ou função sync/async de `IncomingMessage` |
+| `mentionPrefix` | Booleano (`false` por padrão); aceita `<@botID>` e `<@!botID>` (com ou sem espaço) como prefixos válidos quando `transport.botID` não é vazio |
+| `allowBots` | Booleano (`false` por padrão); permite mensagens de outros bots continuando a ignorar `transport.botID` |
 | `owners` | Lista de IDs de donos do bot (`bot.isOwner`, `ctx.isOwner`, `ownerOnly`) |
 | `devGuilds` | Lista de IDs de servidores de desenvolvimento aceitos por `devOnly: true` |
 | `gate` | Filtro `(message) => boolean \| Promise<boolean>` executado antes do roteamento/prefixo |
+| `helpRenderer` | Função `(context: HelpRenderContext) => string` para formatar `bot.help`, `ctx.help` e a ajuda de grupos |
 | `client` | Instância de `Client` do Fluxer.js |
 | `clientOptions` | Opções do SDK quando o client não é fornecido |
 | `transport` | Implementação de `Transport`; padrão `FluxerTransport` |
@@ -54,7 +57,11 @@ erro, o resultado continua sendo `success`.
 | `useEngine(engine)` | Instala o engine de function mode (`functions()` de `yuzuha/functions`) |
 | `engine` | Engine de function mode instalado, quando presente |
 | `use(middleware)` | Acrescenta middleware e retorna o bot |
-| `plugin(plugin)` | Instala funções, comandos, eventos e middleware; retorna o bot |
+| `provide(key, value)` | Registra serviço tipado associado a `ServiceKey<T>` (`SERVICE_DUPLICATE` se repetido) e retorna o bot |
+| `hasService(key)` | Informa se `ServiceKey` possui valor registrado |
+| `get(key)`, `resolve(key)` | Lê serviço tipado (`SERVICE_MISSING` se ausente em `get`; `undefined` em `resolve`) |
+| `plugin(plugin)` | Instala funções, comandos, eventos, middleware e `setup`; retorna `this` ou `Promise<this>` para `AsyncYuzuhaPlugin` |
+| `unplugin(name)` | Desinstala um plugin após `teardown`, removendo seus artefatos (`PLUGIN_NOT_FOUND` / `PLUGIN_DEPENDENCY`) |
 | `on(event, listener)`, `once(event, listener)` | Registra callback tipado do SDK, com erros e encerramento rastreados |
 | `off(event, listener)` | Remove as inscrições do callback |
 | `event(defineEvent(...))` | Registra uma definição de evento |
@@ -187,6 +194,7 @@ Nomes/aliases são únicos sem distinção entre maiúsculas e minúsculas.
 | `setVariable(scope, name, value, options?)` | Persiste valor JSON com TTL opcional |
 | `deleteVariable(scope, name)` | Remove valor persistente |
 | `lastCase` | Último caso criado com sucesso na execução |
+| `get(key)`, `resolve(key)` | Lê serviço tipado registrado no bot (`SERVICE_MISSING` ou `undefined`), herdado por `EventContext` |
 | `store`, `transport`, `help()` | Contratos compartilhados e ajuda |
 
 `moderate` aceita `ban`, `kick`, `timeout`, `unban`, `move`, `mute`, `deafen` e
@@ -301,11 +309,16 @@ pendente continuam sujeitos às verificações de prazo.
 retornado por ele. `checkOutput(valor)` verifica saídas intermediárias e lança
 `OUTPUT_LIMIT` quando necessário, inclusive dentro de `$try`.
 
-Plugins podem fornecer arrays `commands`, `events` (com `defineEvent`) e
-`middleware`. Scripts no próprio plugin podem usar funções declaradas nele.
+Plugins podem fornecer arrays `commands`, `events` (com `defineEvent`),
+`scriptEvents`, `middleware`, `dependsOn` (`readonly string[]`) e hooks
+`setup(bot)` / `teardown(bot)` síncronos ou assíncronos. `createServiceKey<T>(description)`
+cria chaves tipadas (`ServiceKey<T>`) para `bot.provide`/`get`/`resolve` e
+`ctx.get`/`resolve`. Scripts no próprio plugin podem usar funções declaradas nele.
 Nomes de plugins, funções e comandos não podem colidir em seus registros.
-O registro valida o lote antes de aplicá-lo. Sobre o engine,
-existem `bot.engine.registerAll(functions)` e o port `ScriptEngine`.
+O registro valida o lote e `dependsOn` antes de aplicá-lo, faz rollback atômico
+se `setup` falhar e remove os artefatos pertencentes ao plugin em `bot.unplugin(name)`.
+Em `bot.destroy()`, os hooks `teardown` executam em ordem reversa (`LIFO`). Sobre o engine,
+existem `bot.engine.registerAll(functions)`, `unregisterAll?(names)` e o port `ScriptEngine`.
 
 `Runtime`, `registerBuiltins`, `parse` e `script` vêm de `yuzuha/functions`,
 não da raiz. `Runtime` expõe `compile(source, file?)`, `execute(program, ctx)` e
@@ -359,7 +372,7 @@ exceto a comparação, que retorna -1, 0 ou 1. Veja [operações de dados](funct
 
 | Classe/código | Significado |
 |---|---|
-| `YuzuhaError` | Erro base com `code` tipado (`YuzuhaErrorCode \| (string & {})`) para diagnóstico |
+| `YuzuhaError` | Erro base com `code` tipado (`YuzuhaErrorCode \| (string & {})`) para diagnóstico (inclui `PLUGIN_DEPENDENCY`, `PLUGIN_NOT_FOUND`, `SERVICE_DUPLICATE`, `SERVICE_KEY`, `SERVICE_MISSING`) |
 | `TransportError` | Subclasse de `YuzuhaError` para falhas do transporte (`ROLES_UNAVAILABLE`, `CHANNEL_GUILD`, `VOICE_CHANNEL`, `MODERATION_ACTION`, `NOT_FOUND`, `API_ERROR`) |
 | `StoreError` | Subclasse de `YuzuhaError` para falhas de persistência (`STORE_NAME`, `STORE_CLOSED`, `STORE_ASYNC`, `STORE_CORRUPT`, `STORE_INVALID`, `STORE_READONLY`) |
 | `ConfigError` | Subclasse de `YuzuhaError` para configuração, opções inválidas e token ausente (`CONFIG_MISSING`, `CONFIG_INVALID`, `MEMBER_CACHE_OPTIONS`, `MESSAGES_OPTIONS`, `RATE_LIMIT_OPTIONS`, `LOCK_OPTIONS`, `PREFIX`, `EMOJI_OPTIONS`, `ENGINE_INVALID`, `VARIABLE_SWEEP_OPTIONS`, `OPTIONS`, `TOKEN_MISSING`) |

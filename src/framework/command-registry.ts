@@ -2,6 +2,7 @@ import { resolve } from 'node:path';
 import { compileFlagLookup, validateArgumentDefinitions, validateFlagDefinitions } from '../commands/arguments.js';
 import { resolveCooldown } from '../commands/definition.js';
 import { commandHelp, commandUsage } from '../commands/help.js';
+import type { HelpRenderer } from '../commands/help.js';
 import { defaultTranslator } from '../domain/i18n.js';
 import type { MessageTranslator } from '../domain/i18n.js';
 import type { ArgumentDefinition, Command } from '../context.js';
@@ -59,6 +60,13 @@ function snapshot(command: Command): Command {
     args: definitions(command.args), flags: definitions(command.flags),
     examples: command.examples && [...command.examples], subcommands: command.subcommands?.map(snapshot),
     checks: command.checks && [...command.checks], middleware: command.middleware && [...command.middleware], http: command.http && structuredClone(command.http) };
+}
+
+function filterVisible(command: Command): Command {
+  return {
+    ...command,
+    subcommands: command.subcommands?.filter(child => !child.hidden).map(filterVisible),
+  };
 }
 
 function inheritedHttp(parent?: HttpPolicy, child?: HttpPolicy): HttpPolicy | undefined {
@@ -132,17 +140,36 @@ export class CommandRegistry {
       next.set(name, entry);
     }
   }
-  add(command: Command): void {
+  add(command: Command): CompiledCommand {
     const entry = this.compile(command);
     for (const name of [entry.definition.name, ...(entry.definition.aliases ?? [])]) {
       if (this.entries.has(name.toLowerCase())) throw new YuzuhaError('COMMAND_DUPLICATE', `Nome ou alias duplicado: ${name}.`);
     }
     this.insert(this.entries, entry);
+    return entry;
   }
-  prepare(commands: Command[], engine = this.engine()): () => void {
+  prepare(commands: Command[], engine = this.engine()): () => CompiledCommand[] {
     const next = new Map(this.entries);
-    for (const command of commands) this.insert(next, this.compile(command, undefined, engine));
-    return () => { this.entries = next; };
+    const compiled: CompiledCommand[] = [];
+    for (const command of commands) {
+      const entry = this.compile(command, undefined, engine);
+      this.insert(next, entry);
+      compiled.push(entry);
+    }
+    return () => {
+      this.entries = next;
+      return compiled;
+    };
+  }
+  remove(entry: CompiledCommand): boolean {
+    let removed = false;
+    for (const [key, current] of this.entries) {
+      if (current === entry) {
+        this.entries.delete(key);
+        removed = true;
+      }
+    }
+    return removed;
   }
   load(directory: string, mode: 'replace' | 'append' | 'reload'): Promise<void> {
     const path = resolve(directory);
@@ -174,10 +201,31 @@ export class CommandRegistry {
     return { compiled, input: cursor < tailEnd ? input.slice(cursor, tailEnd) : '' };
   }
   list(): Command[] { return [...new Set(this.entries.values())].map(item => snapshot(item.definition)); }
-  help(path?: string, prefix = '', t: MessageTranslator = defaultTranslator): string {
-    if (!path) return this.list().filter(command => !command.hidden).map(command => `${commandUsage(command, prefix, t)}${command.description ? `: ${command.description}` : ''}`).join('\n');
+  help(
+    path?: string,
+    prefix = '',
+    t: MessageTranslator = defaultTranslator,
+    renderer?: HelpRenderer,
+  ): string {
+    if (!path) {
+      if (renderer) {
+        const commands = this.list().filter(command => !command.hidden).map(filterVisible);
+        return renderer({ commands, prefix });
+      }
+      return this.list().filter(command => !command.hidden).map(command => `${commandUsage(command, prefix, t)}${command.description ? `: ${command.description}` : ''}`).join('\n');
+    }
     const [name, ...parts] = path.trim().split(/\s+/);
     const resolved = this.resolve(name ?? '', parts.join(' '));
-    return resolved && !resolved.input && !resolved.compiled.command.hidden ? commandHelp(resolved.compiled.command, prefix, t) : '';
+    if (!resolved || resolved.input || resolved.compiled.command.hidden) return '';
+    if (renderer) {
+      const commands = this.list().filter(command => !command.hidden).map(filterVisible);
+      return renderer({
+        command: filterVisible(snapshot(resolved.compiled.command)),
+        commands,
+        prefix,
+        query: path,
+      });
+    }
+    return commandHelp(resolved.compiled.command, prefix, t);
   }
 }

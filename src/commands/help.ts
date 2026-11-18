@@ -2,6 +2,15 @@ import type { ArgumentDefinition, Command } from './definition.js';
 import { defaultTranslator } from '../domain/i18n.js';
 import type { MessageTranslator } from '../domain/i18n.js';
 
+export interface HelpRenderContext {
+  readonly command?: Command;
+  readonly commands: readonly Command[];
+  readonly prefix: string;
+  readonly query?: string;
+}
+
+export type HelpRenderer = (context: HelpRenderContext) => string;
+
 function placeholder(argument: ArgumentDefinition): string {
   const value = `${argument.name}${argument.rest ? '...' : ''}`;
   return argument.required && argument.defaultValue === undefined ? `<${value}>` : `[${value}]`;

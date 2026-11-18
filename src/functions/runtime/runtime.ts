@@ -25,6 +25,11 @@ export class Runtime {
     return this;
   }
 
+  unregisterAll(names: readonly string[]): this {
+    this.registry.unregisterAll(names);
+    return this;
+  }
+
   functions(): FunctionDefinition[] { return this.registry.functions(); }
 
   fork(): Runtime { return new Runtime(this.limits).registerAll(this.functions()); }

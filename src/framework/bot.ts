@@ -1,3 +1,4 @@
+import { AsyncLocalStorage } from 'node:async_hooks';
 import { randomUUID } from 'node:crypto';
 import { setMaxListeners } from 'node:events';
 import { Client, Events, Message } from '@fluxerjs/core';
@@ -22,7 +23,7 @@ import { CommandRegistry, functionsRequired } from './command-registry.js';
 import type { CompiledCommand } from './command-registry.js';
 import { runMiddleware } from './middleware.js';
 import type {
-  DestroyOptions, DispatchResult, Middleware, SignalHandlerOptions, UnknownCommandContext, YuzuhaOptions, YuzuhaPlugin,
+  AsyncYuzuhaPlugin, DestroyOptions, DispatchResult, Middleware, SignalHandlerOptions, UnknownCommandContext, YuzuhaOptions, YuzuhaPlugin,
 } from './options.js';
 import { MemoryRateLimiter, resolveRateLimitOptions } from './rate-limits.js';
 import type { RateLimiter } from '../ports/rate-limiter.js';
@@ -32,6 +33,8 @@ import { route } from './routing.js';
 import { DynamicPrefixCache, ValidatedPrefixCache, prefixCacheKey, validatePrefixCacheOptions } from './prefix-cache.js';
 import { defineEvent, NativeEvents } from './events.js';
 import type { ContextEventDefinition, NativeEvent, NativeListener } from './events.js';
+import { ServiceContainer } from './services.js';
+import type { ServiceKey } from './services.js';
 import { ScheduleExecutionError, Scheduler, validateLock } from '../services/scheduler.js';
 import { StateMaintenance } from '../services/state-maintenance.js';
 import type { CleanupResult } from '../services/state-maintenance.js';
@@ -54,6 +57,18 @@ import { canvasRenderer } from '../infrastructure/canvas/render.js';
 type RoutedCommand = { kind: 'command'; compiled: CompiledCommand; input: string; prefix: string }
   | { kind: 'unknown'; unknown: UnknownCommandContext };
 const ignored: Promise<DispatchResult> = Promise.resolve('ignored');
+
+interface InstalledPlugin {
+  readonly name: string;
+  readonly dependsOn: readonly string[];
+  readonly teardown?: (bot: Yuzuha) => void | Promise<void>;
+  readonly commands: CompiledCommand[];
+  readonly middlewares: Middleware[];
+  readonly eventDisposers: (() => void)[];
+  readonly serviceKeys: ServiceKey<unknown>[];
+  readonly argumentTypeNames: string[];
+  readonly functionNames: string[];
+}
 
 function validateHooks(hooks: YuzuhaOptions['hooks']): void {
   if (hooks === undefined) return;
@@ -120,6 +135,9 @@ function assertEngine(engine: unknown): ScriptEngine {
   const candidate = engine as Partial<Record<keyof ScriptEngine, unknown>> | null | undefined;
   if (!candidate || (['compile', 'execute', 'functions', 'registerAll', 'fork', 'text'] as const).some(key => typeof candidate[key] !== 'function')) {
     throw new ConfigError('ENGINE_INVALID', 'Engine de function mode inválido: precisa de compile, execute, functions, registerAll, fork e text.');
+  }
+  if (candidate.unregisterAll !== undefined && typeof candidate.unregisterAll !== 'function') {
+    throw new ConfigError('ENGINE_INVALID', 'engine.unregisterAll deve ser uma função quando informado.');
   }
   return engine as ScriptEngine;
 }
@@ -195,7 +213,11 @@ export class Yuzuha {
   private readonly registry: CommandRegistry;
   private readonly customArgumentTypes = new Map<string, CustomArgumentType<unknown>>();
   private readonly middleware: Middleware[] = [];
-  private readonly plugins = new Set<string>();
+  private readonly plugins = new Map<string, InstalledPlugin>();
+  private readonly installingPlugins = new Map<string, InstalledPlugin>();
+  private readonly uninstallingPlugins = new Set<string>();
+  private readonly pluginScope = new AsyncLocalStorage<InstalledPlugin | undefined>();
+  private readonly services = new ServiceContainer();
   private readonly limits: RateLimiter;
   private readonly ownsRateLimiter: boolean;
   private lastRateLimitEvictLog?: number;
@@ -249,6 +271,11 @@ export class Yuzuha {
   }
   private readonly validatedPrefixes = new ValidatedPrefixCache();
   private readonly dynamicPrefixCache?: DynamicPrefixCache;
+  private readonly allowBots: boolean;
+  private readonly mentionPrefix: boolean;
+  private lastMentionBase?: string[];
+  private lastMentionBotID?: string;
+  private lastMentionCombined?: string[];
   private readonly ownerIDs: ReadonlySet<string>;
   private readonly devGuildIDs: ReadonlySet<string>;
   private readonly contextCooldown = (key: string, duration: number, maxUses?: number) =>
@@ -270,6 +297,17 @@ export class Yuzuha {
     if (options.errorReply !== undefined && typeof options.errorReply !== 'function') {
       throw new ConfigError('OPTIONS', 'errorReply deve ser uma função.');
     }
+    if (options.helpRenderer !== undefined && typeof options.helpRenderer !== 'function') {
+      throw new ConfigError('OPTIONS', 'helpRenderer deve ser uma função.');
+    }
+    if (options.allowBots !== undefined && typeof options.allowBots !== 'boolean') {
+      throw new ConfigError('OPTIONS', 'allowBots deve ser um booleano.');
+    }
+    if (options.mentionPrefix !== undefined && typeof options.mentionPrefix !== 'boolean') {
+      throw new ConfigError('OPTIONS', 'mentionPrefix deve ser um booleano.');
+    }
+    this.allowBots = options.allowBots === true;
+    this.mentionPrefix = options.mentionPrefix === true;
     validateHooks(options.hooks);
     if (options.locale !== undefined && typeof options.locale !== 'string' && typeof options.locale !== 'function') {
       throw new ConfigError('MESSAGES_OPTIONS', 'locale deve ser texto ou função.');
@@ -366,10 +404,10 @@ export class Yuzuha {
     this.events = new NativeEvents(this.client, (work, event) => this.scheduleEvent(work, event));
     if (typeof options.prefix !== 'function') this.resolvePrefixes(options.prefix ?? '!');
     this.listener = message => {
-      if (this.closing || message.author.bot || message.author.id === this.transport.botID) return;
+      if (this.closing || (!this.allowBots && message.author.bot) || message.author.id === this.transport.botID) return;
       if (typeof this.options.prefix !== 'function') {
         let prefixes: string[];
-        try { prefixes = this.resolvePrefixes(this.options.prefix ?? '!'); }
+        try { prefixes = this.effectivePrefixes(this.options.prefix ?? '!'); }
         catch (error) { void reportError(this.options, error, undefined, { source: 'event', event: 'messageCreate' }); return; }
         if (!prefixes.some(prefix => message.content.startsWith(prefix))) return;
       }
@@ -400,7 +438,15 @@ export class Yuzuha {
 
   use(middleware: Middleware): this {
     if (typeof middleware !== 'function') throw new YuzuhaError('MIDDLEWARE', 'Middleware deve ser uma função.');
-    this.middleware.push(middleware); return this;
+    const activePlugin = this.pluginScope.getStore();
+    if (activePlugin) {
+      const owned: Middleware = (ctx, next) => middleware(ctx, next);
+      this.middleware.push(owned);
+      activePlugin.middlewares.push(owned);
+    } else {
+      this.middleware.push(middleware);
+    }
+    return this;
   }
 
   /** Registra um tipo customizado de argumento disponível para `arg.custom<T>(name)`. */
@@ -420,12 +466,57 @@ export class Yuzuha {
       parse: (raw: string, ctx: CommandContext) => definition.parse(raw, ctx),
       ...(definition.description !== undefined ? { description: definition.description } : {}),
     }));
+    this.pluginScope.getStore()?.argumentTypeNames.push(validatedName);
     return this;
   }
-  plugin(plugin: YuzuhaPlugin): this {
+
+  provide<T>(key: ServiceKey<T>, value: T): this {
     if (this.closing) throw new YuzuhaError('BOT_CLOSED', 'O bot está encerrado.');
-    if (!plugin.name || this.plugins.has(plugin.name)) throw new YuzuhaError('PLUGIN_DUPLICATE', 'Plugin sem nome ou já instalado.');
-    if ((plugin.middleware ?? []).some(item => typeof item !== 'function')) throw new YuzuhaError('PLUGIN_MIDDLEWARE', 'Middleware de plugin inválido.');
+    this.services.provide(key, value);
+    this.pluginScope.getStore()?.serviceKeys.push(key);
+    return this;
+  }
+
+  hasService(key: ServiceKey<unknown>): boolean {
+    return this.services.has(key);
+  }
+
+  get<T>(key: ServiceKey<T>): T {
+    return this.services.get(key);
+  }
+
+  resolve<T>(key: ServiceKey<T>): T | undefined {
+    return this.services.resolve(key);
+  }
+
+  plugin(plugin: AsyncYuzuhaPlugin): Promise<this>;
+  plugin(plugin: YuzuhaPlugin): this;
+  plugin(plugin: YuzuhaPlugin): this | Promise<this> {
+    if (this.closing) throw new YuzuhaError('BOT_CLOSED', 'O bot está encerrado.');
+    if (!plugin || typeof plugin !== 'object' || typeof plugin.name !== 'string' || !plugin.name
+      || this.plugins.has(plugin.name) || this.installingPlugins.has(plugin.name)) {
+      throw new YuzuhaError('PLUGIN_DUPLICATE', 'Plugin sem nome ou já instalado.');
+    }
+    if (plugin.setup !== undefined && typeof plugin.setup !== 'function') {
+      throw new ConfigError('OPTIONS', 'plugin.setup deve ser uma função.');
+    }
+    if (plugin.teardown !== undefined && typeof plugin.teardown !== 'function') {
+      throw new ConfigError('OPTIONS', 'plugin.teardown deve ser uma função.');
+    }
+    const dependsOn = plugin.dependsOn === undefined ? [] : plugin.dependsOn;
+    if (!Array.isArray(dependsOn) || dependsOn.some(dep => typeof dep !== 'string' || !dep)) {
+      throw new YuzuhaError('PLUGIN_DEPENDENCY', `Lista dependsOn inválida no plugin ${plugin.name}.`);
+    }
+    const unmet = dependsOn.filter(dep => !this.plugins.has(dep) || this.uninstallingPlugins.has(dep));
+    if (unmet.length) {
+      throw new YuzuhaError(
+        'PLUGIN_DEPENDENCY',
+        `O plugin ${plugin.name} requer plugins não instalados: ${unmet.join(', ')}.`,
+      );
+    }
+    if ((plugin.middleware ?? []).some(item => typeof item !== 'function')) {
+      throw new YuzuhaError('PLUGIN_MIDDLEWARE', 'Middleware de plugin inválido.');
+    }
     const pending = [...plugin.commands ?? []], inspected = new Set<Command>();
     let hasScript = Boolean(plugin.scriptEvents?.length);
     while (pending.length && !hasScript) {
@@ -443,26 +534,182 @@ export class Yuzuha {
     const commitCommands = this.registry.prepare(plugin.commands ?? [], stagedEngine);
     for (const event of plugin.events ?? []) this.events.validate(event);
     const scriptEvents = (plugin.scriptEvents ?? []).map(event => this.prepareScriptEvent(event, stagedEngine));
-    this.scriptEngine?.registerAll(plugin.functions ?? []);
-    commitCommands();
-    this.middleware.push(...(plugin.middleware ?? []));
-    for (const event of plugin.events ?? []) this.events.add(event);
-    for (const event of scriptEvents) this.events.add(event);
-    this.plugins.add(plugin.name);
-    return this;
+
+    const record: InstalledPlugin = {
+      name: plugin.name,
+      dependsOn: [...new Set(dependsOn)],
+      teardown: plugin.teardown,
+      commands: [],
+      middlewares: [],
+      eventDisposers: [],
+      serviceKeys: [],
+      argumentTypeNames: [],
+      functionNames: [],
+    };
+
+    if (plugin.functions?.length) {
+      this.scriptEngine?.registerAll(plugin.functions);
+      record.functionNames.push(...plugin.functions.map(fn => fn.name));
+    }
+    const committedCommands = commitCommands();
+    if (this.scriptEngine) {
+      const rebind = (entry: CompiledCommand): void => {
+        if (entry.programEngine === stagedEngine) entry.programEngine = this.scriptEngine;
+        for (const child of new Set(entry.children.values())) rebind(child);
+      };
+      for (const entry of committedCommands) rebind(entry);
+    }
+    record.commands.push(...committedCommands);
+    for (const mw of plugin.middleware ?? []) {
+      const owned: Middleware = (ctx, next) => mw(ctx, next);
+      this.middleware.push(owned);
+      record.middlewares.push(owned);
+    }
+    for (const event of plugin.events ?? []) record.eventDisposers.push(this.events.add(event));
+    for (const event of scriptEvents) record.eventDisposers.push(this.events.add(event));
+
+    if (!plugin.setup) {
+      this.plugins.set(record.name, record);
+      return this;
+    }
+
+    const rollback = (): void => {
+      this.installingPlugins.delete(record.name);
+      this.cleanupPluginArtifacts(record);
+    };
+
+    this.installingPlugins.set(record.name, record);
+    let setupResult: void | Promise<void>;
+    try {
+      setupResult = this.pluginScope.run(record, () => plugin.setup!(this));
+    } catch (error) {
+      rollback();
+      throw error;
+    }
+
+    if (!isPromiseLike(setupResult)) {
+      this.installingPlugins.delete(record.name);
+      this.plugins.set(record.name, record);
+      return this;
+    }
+
+    const installTask = Promise.resolve(setupResult).then(
+      () => {
+        if (this.closing) {
+          rollback();
+          throw new YuzuhaError('BOT_CLOSED', 'O bot está encerrado.');
+        }
+        this.installingPlugins.delete(record.name);
+        this.plugins.set(record.name, record);
+        return this;
+      },
+      error => {
+        rollback();
+        throw error;
+      },
+    );
+    const tracked = installTask.then(() => undefined, () => undefined);
+    this.active.add(tracked);
+    void tracked.then(() => this.active.delete(tracked));
+    return installTask;
+  }
+
+  async unplugin(name: string): Promise<void> {
+    if (this.closing) throw new YuzuhaError('BOT_CLOSED', 'O bot está encerrado.');
+    if (typeof name !== 'string' || !name) {
+      throw new YuzuhaError('PLUGIN_NOT_FOUND', 'Plugin não encontrado.');
+    }
+    const record = this.plugins.get(name);
+    if (!record || this.uninstallingPlugins.has(name)) {
+      throw new YuzuhaError('PLUGIN_NOT_FOUND', `Plugin não encontrado: ${name}.`);
+    }
+    const dependents: string[] = [];
+    for (const [otherName, other] of this.plugins) {
+      if (otherName !== name && !this.uninstallingPlugins.has(otherName) && other.dependsOn.includes(name)) {
+        dependents.push(otherName);
+      }
+    }
+    for (const [otherName, other] of this.installingPlugins) {
+      if (otherName !== name && other.dependsOn.includes(name)) {
+        dependents.push(otherName);
+      }
+    }
+    if (dependents.length) {
+      throw new YuzuhaError(
+        'PLUGIN_DEPENDENCY',
+        `Não é possível remover o plugin ${name}; exigido por: ${dependents.join(', ')}.`,
+      );
+    }
+    this.uninstallingPlugins.add(name);
+    const work = (async () => {
+      try {
+        await this.pluginScope.run(undefined, () => record.teardown?.(this));
+      } finally {
+        this.uninstallingPlugins.delete(name);
+        this.plugins.delete(name);
+        this.cleanupPluginArtifacts(record);
+      }
+    })();
+    const tracked = work.then(() => undefined, () => undefined);
+    this.active.add(tracked);
+    try {
+      await work;
+    } finally {
+      this.active.delete(tracked);
+    }
+  }
+
+  private cleanupPluginArtifacts(record: InstalledPlugin): void {
+    for (let index = record.eventDisposers.length - 1; index >= 0; index--) {
+      record.eventDisposers[index]!();
+    }
+    for (let index = record.middlewares.length - 1; index >= 0; index--) {
+      const position = this.middleware.indexOf(record.middlewares[index]!);
+      if (position >= 0) this.middleware.splice(position, 1);
+    }
+    for (let index = record.commands.length - 1; index >= 0; index--) {
+      this.registry.remove(record.commands[index]!);
+    }
+    if (record.functionNames.length) {
+      this.scriptEngine?.unregisterAll?.(record.functionNames);
+    }
+    for (let index = record.argumentTypeNames.length - 1; index >= 0; index--) {
+      this.customArgumentTypes.delete(record.argumentTypeNames[index]!);
+    }
+    for (let index = record.serviceKeys.length - 1; index >= 0; index--) {
+      this.services.delete(record.serviceKeys[index]!);
+    }
+  }
+
+  private async teardownPlugins(): Promise<void> {
+    const installed = [...this.plugins.values()].reverse();
+    for (const record of installed) {
+      try {
+        await this.pluginScope.run(undefined, () => record.teardown?.(this));
+      } catch (error) {
+        await reportError(this.options, error, undefined, {
+          source: 'hook',
+          event: `plugin.teardown:${record.name}`,
+        });
+      } finally {
+        this.plugins.delete(record.name);
+        this.cleanupPluginArtifacts(record);
+      }
+    }
   }
 
   command<const S extends ArgumentSchema = {}, const F extends ArgumentSchema = {}>(command: NativeCommandDefinition<S, F>): this;
   command(command: Command): this;
   command(command: Command | NativeCommandDefinition<ArgumentSchema, ArgumentSchema>): this {
-    this.registry.add(defineCommand(command as NativeCommandDefinition<ArgumentSchema, ArgumentSchema>));
+    const entry = this.registry.add(defineCommand(command as NativeCommandDefinition<ArgumentSchema, ArgumentSchema>));
+    this.pluginScope.getStore()?.commands.push(entry);
     return this;
   }
   load(directory: string, replace = true): Promise<void> { return this.registry.load(directory, replace ? 'replace' : 'append'); }
   reload(directory: string): Promise<void> { return this.registry.load(directory, 'reload'); }
   listCommands(): Command[] { return this.registry.list(); }
   help(command?: string, prefix = '', locale?: string): string {
-    return this.registry.help(command, prefix, this.messagesRuntime.translatorFor(locale));
+    return this.registry.help(command, prefix, this.messagesRuntime.translatorFor(locale), this.options.helpRenderer);
   }
   get signal(): AbortSignal { return this.shutdown.signal; }
   deleteLater(channelID: string, messageID: string, ttlMs: number): void {
@@ -550,16 +797,21 @@ export class Yuzuha {
     catch { throw new YuzuhaError('BOT_NOT_READY', 'O bot ainda não está pronto.'); }
   }
 
+  private addEvent(event: NativeEvent, identity?: unknown): void {
+    const dispose = identity === undefined ? this.events.add(event) : this.events.add(event, identity);
+    this.pluginScope.getStore()?.eventDisposers.push(dispose);
+  }
+
   on<K extends ClientEventName>(event: K, listener: NativeListener<K>): this {
-    this.events.add(defineEvent({ event, run: listener }), listener); return this;
+    this.addEvent(defineEvent({ event, run: listener }), listener); return this;
   }
   once<K extends ClientEventName>(event: K, listener: NativeListener<K>): this {
-    this.events.add(defineEvent({ event, once: true, run: listener }), listener); return this;
+    this.addEvent(defineEvent({ event, once: true, run: listener }), listener); return this;
   }
   off<K extends ClientEventName>(event: K, listener: NativeListener<K>): this {
     this.events.off(event, listener); return this;
   }
-  event(event: NativeEvent): this { this.events.add(event); return this; }
+  event(event: NativeEvent): this { this.addEvent(event); return this; }
 
   contextEvent<K extends import('../domain/events.js').ScriptEventName>(definition: ContextEventDefinition<K>): this {
     if (this.closing) throw new YuzuhaError('BOT_CLOSED', 'O bot está encerrado.');
@@ -569,7 +821,7 @@ export class Yuzuha {
       throw new YuzuhaError('EVENT', 'Evento com contexto ou opções inválidos.');
     }
     if (definition.http) (this.http ?? new HttpService()).withPolicy(definition.http);
-    this.events.add({ event: definition.event, once: definition.once ?? false, invoke: async (args: unknown[]) => {
+    this.addEvent({ event: definition.event, once: definition.once ?? false, invoke: async (args: unknown[]) => {
       const source = adaptScriptEvent(definition.event, args);
       if ((definition.ignoreBots ?? true) && source.event.userBot) return;
       const baseEventOptions: EventContextOptions = { ...source, channelID: definition.channelID, actorID: definition.actorID,
@@ -580,7 +832,7 @@ export class Yuzuha {
         cdn: this.cdnService, disableResourceAuthorization: this.options.unsafeDisableResourceAuthorization === true,
         cooldown: this.contextCooldown, signal: this.shutdown.signal, emoji: this.emojiMap,
         deleteLater: this.contextDeleteLater, isOwner: this.contextIsOwner, isDevGuild: this.contextIsDevGuild,
-        locale: this.messagesRuntime.defaultLocale, translator: this.messagesRuntime.defaultTranslator };
+        services: this.services, locale: this.messagesRuntime.defaultLocale, translator: this.messagesRuntime.defaultTranslator };
       const prelim = new EventContext(baseEventOptions);
       await runInExecution(this, {
         executionID: prelim.executionID,
@@ -597,7 +849,7 @@ export class Yuzuha {
             if (this.closing || this.shutdown.signal.aborted) return;
             ctx = new EventContext({ ...baseEventOptions, executionID: prelim.executionID,
               locale: resolvedLocale.locale, translator: resolvedLocale.translator,
-              help: (cmd, pfx = '') => this.registry.help(cmd, pfx, resolvedLocale.translator) });
+              help: (cmd, pfx = '') => this.registry.help(cmd, pfx, resolvedLocale.translator, this.options.helpRenderer) });
           }
           if (this.options.context) {
             await this.options.context(ctx);
@@ -640,7 +892,7 @@ export class Yuzuha {
   scriptEvent(definition: ScriptEventDefinition): this {
     if (this.closing) throw new YuzuhaError('BOT_CLOSED', 'O bot está encerrado.');
     if (!this.scriptEngine) throw functionsRequired();
-    this.events.add(this.prepareScriptEvent(definition));
+    this.addEvent(this.prepareScriptEvent(definition));
     return this;
   }
   private prepareScriptEvent(definition: ScriptEventDefinition, engine = this.scriptEngine): NativeEvent {
@@ -649,7 +901,7 @@ export class Yuzuha {
     const options = structuredClone(definition);
     if (options.http) (this.http ?? new HttpService()).withPolicy(options.http);
     const program = engine.compile(options.code, `<event:${options.event}>`);
-    return { event: options.event, once: options.once ?? false, invoke: args => this.runScriptEvent(options, program, args, engine) };
+    return { event: options.event, once: options.once ?? false, invoke: args => this.runScriptEvent(options, program, args, this.scriptEngine ?? engine) };
   }
   private async runScriptEvent(definition: ScriptEventDefinition, program: unknown, args: unknown[], engine: ScriptEngine): Promise<void> {
     const source = adaptScriptEvent(definition.event, args);
@@ -662,7 +914,7 @@ export class Yuzuha {
       canvas: this.canvasContext, now: this.options.now, help: this.contextHelp, cooldown: this.contextCooldown, signal,
       cdn: this.cdnService, disableResourceAuthorization: this.options.unsafeDisableResourceAuthorization === true, emoji: this.emojiMap,
       deleteLater: this.contextDeleteLater, isOwner: this.contextIsOwner, isDevGuild: this.contextIsDevGuild,
-      locale: this.messagesRuntime.defaultLocale, translator: this.messagesRuntime.defaultTranslator };
+      services: this.services, locale: this.messagesRuntime.defaultLocale, translator: this.messagesRuntime.defaultTranslator };
     const prelim = new EventContext(baseEventOptions);
     await runInExecution(this, {
       executionID: prelim.executionID,
@@ -681,7 +933,7 @@ export class Yuzuha {
           if (this.closing || signal.aborted) throw cancellationError();
           ctx = new EventContext({ ...baseEventOptions, executionID: prelim.executionID,
             locale: resolvedLocale.locale, translator: resolvedLocale.translator,
-            help: (cmd, pfx = '') => this.registry.help(cmd, pfx, resolvedLocale.translator) });
+            help: (cmd, pfx = '') => this.registry.help(cmd, pfx, resolvedLocale.translator, this.options.helpRenderer) });
         }
         if (this.hasLogSink) await emitLog(this.options, { event: 'event.start', executionID: ctx.executionID, command: ctx.command.name });
         if (this.options.context) {
@@ -879,6 +1131,7 @@ export class Yuzuha {
         await drainWork;
       }
       try {
+        await this.teardownPlugins();
         const results = await Promise.allSettled([this.music?.close(), this.voice?.close()]);
         const failures = results.filter((item): item is PromiseRejectedResult => item.status === 'rejected');
         if (failures.length) throw new AggregateError(failures.map(item => item.reason), 'Falha ao encerrar música ou voz.');
@@ -916,6 +1169,25 @@ export class Yuzuha {
 
   private resolvePrefixes(source: string | string[]): string[] {
     return this.validatedPrefixes.resolve(source);
+  }
+
+  private effectivePrefixes(source: string | string[]): string[] {
+    const base = this.resolvePrefixes(source);
+    if (!this.mentionPrefix) return base;
+    const botID = this.transport.botID;
+    if (!botID || /\s/.test(botID)) return base;
+    if (this.lastMentionBase === base && this.lastMentionBotID === botID && this.lastMentionCombined) {
+      return this.lastMentionCombined;
+    }
+    const combined = [...base];
+    for (const mention of [`<@!${botID}>`, `<@${botID}>`]) {
+      if (!combined.includes(mention)) combined.push(mention);
+    }
+    combined.sort((a, b) => b.length - a.length);
+    this.lastMentionBase = base;
+    this.lastMentionBotID = botID;
+    this.lastMentionCombined = combined;
+    return combined;
   }
 
   private async resolveDynamicPrefixes(
@@ -970,7 +1242,7 @@ export class Yuzuha {
     message: IncomingMessage,
     configured: string | string[],
   ): RoutedCommand | undefined | Promise<RoutedCommand | undefined> {
-    const routed = route(message.content, this.resolvePrefixes(configured));
+    const routed = route(message.content, this.effectivePrefixes(configured));
     if (!routed) return undefined;
     const resolved = this.registry.resolve(routed.name, routed.input);
     if (!resolved && !this.options.hooks?.onUnknownCommand) return undefined;
@@ -983,7 +1255,7 @@ export class Yuzuha {
   }
 
   private handleMessage(message: IncomingMessage, onFailure?: (error: unknown, ctx?: CommandContext) => void, parentSignal?: AbortSignal, executionID?: string, taskExecution = false): Promise<DispatchResult> {
-    if (this.closing || message.authorBot || message.authorID === this.transport.botID) return ignored;
+    if (this.closing || (!this.allowBots && message.authorBot) || message.authorID === this.transport.botID) return ignored;
     let pendingGate: Promise<boolean> | undefined;
     if (!taskExecution && this.options.gate) {
       try {
@@ -1155,7 +1427,7 @@ export class Yuzuha {
             canvas: this.canvasContext, now: this.options.now, signal, executionID,
             cdn: this.cdnService, disableResourceAuthorization: this.options.unsafeDisableResourceAuthorization === true, emoji: this.emojiMap,
             deleteLater: this.contextDeleteLater, isOwner: this.contextIsOwner, isDevGuild: this.contextIsDevGuild,
-            locale: activeLocale, translator: activeTranslator };
+            services: this.services, locale: activeLocale, translator: activeTranslator };
           if (typeof this.options.locale === 'function') {
             const probe = createLocaleProbeContext(baseContextOptions);
             const dynamicLocale = await this.options.locale(probe);
@@ -1165,7 +1437,7 @@ export class Yuzuha {
             activeTranslator = resolvedLocale.translator;
           }
           ctx = new CommandContext({ ...baseContextOptions, locale: activeLocale, translator: activeTranslator,
-            help: (cmd, pfx = '') => this.registry.help(cmd, pfx, activeTranslator) });
+            help: (cmd, pfx = '') => this.registry.help(cmd, pfx, activeTranslator, this.options.helpRenderer) });
           if (this.hasLogSink) await emitLog(this.options, { event: 'command.start', executionID: ctx.executionID, command: ctx.command.name });
           if (signal.aborted) throw cancellationError();
           if (this.options.context) {

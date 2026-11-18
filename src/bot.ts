@@ -1,5 +1,7 @@
 export { Yuzuha, Bot } from './framework/bot.js';
 export { userError } from './framework/reporting.js';
+export { createServiceKey } from './framework/services.js';
+export type { ServiceKey, ServiceLookup } from './framework/services.js';
 export { MemoryRateLimiter } from './framework/rate-limits.js';
 export type { MemoryRateLimiterOptions, RateLimitsOptions } from './framework/rate-limits.js';
 export type { RateLimiter } from './ports/rate-limiter.js';
@@ -8,6 +10,8 @@ export type { MemoryLockOptions } from './framework/locks.js';
 export type { Lock, LockLease } from './ports/lock.js';
 export type {
   YuzuhaOptions,
+  HelpRenderContext,
+  HelpRenderer,
   ErrorReplyResult,
   UnknownCommandContext,
   YuzuhaHooks,
@@ -18,6 +22,7 @@ export type {
   PrefixCacheOptions,
   RateLimitOptions,
   YuzuhaPlugin,
+  AsyncYuzuhaPlugin,
   Middleware,
   MessageGate,
   DispatchResult,

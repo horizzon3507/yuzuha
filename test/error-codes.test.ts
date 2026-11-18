@@ -70,6 +70,11 @@ test('YUZUHA_ERROR_CODES está ordenado alfabeticamente e sem duplicatas', () =>
     'WEBHOOK_CONTENT',
     'EMBED_URL',
     'REGEX_INVALID',
+    'PLUGIN_DEPENDENCY',
+    'PLUGIN_NOT_FOUND',
+    'SERVICE_DUPLICATE',
+    'SERVICE_KEY',
+    'SERVICE_MISSING',
   ];
   for (const code of requiredCodes) {
     assert.ok(YUZUHA_ERROR_CODES.includes(code), `Código ausente em YUZUHA_ERROR_CODES: ${code}`);
