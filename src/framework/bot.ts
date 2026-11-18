@@ -57,6 +57,11 @@ import type { MusicManager } from '../services/music.js';
 import type { NativeVoice } from '../ports/voice.js';
 import { VoiceStateTracker } from '../services/voice-states.js';
 import { attachVoiceStates } from './voice-states.js';
+import { buildPresenceUpdateOptions } from '../infrastructure/fluxer/resources/users.js';
+import type { PresenceInput } from '../ports/resources/common.js';
+import { validatePresenceInput } from '../ports/resources/common.js';
+import { startPresenceRotation, validatePresenceRotationOptions } from './presence.js';
+import type { ActivePresenceRotation, PresenceRotationOptions } from './presence.js';
 import { canvasRenderer } from '../infrastructure/canvas/render.js';
 import {
   attachClientShardIfNeeded,
@@ -241,6 +246,7 @@ export class Yuzuha {
   readonly voice?: NativeVoice;
   readonly voiceStates: VoiceStateTracker;
   private detachVoiceStates?: () => void;
+  private presenceRotation?: ActivePresenceRotation;
   private shardState?: BotShard;
   private readonly shardSchedulerMode: ShardSchedulerMode;
   private readonly explicitShardUtil?: ShardClientUtilLike;
@@ -984,6 +990,47 @@ export class Yuzuha {
     });
   }
 
+  /** Define a presença do bot (status, lista de atividades, custom status e flag AFK). */
+  async setPresence(input: PresenceInput): Promise<void> {
+    if (this.closing) throw new YuzuhaError('BOT_CLOSED', 'O bot está encerrado.');
+    const validated = validatePresenceInput(input);
+    try {
+      await this.resources.users.setPresence(validated);
+    } catch (error) {
+      if (
+        error instanceof YuzuhaError
+        && error.code === 'NATIVE_UNAVAILABLE'
+        && this.options.resources !== undefined
+        && this.client.user
+      ) {
+        this.client.user.setPresence(buildPresenceUpdateOptions(validated));
+        return;
+      }
+      throw error;
+    }
+  }
+
+  /** Rotaciona periodicamente a presença do bot usando `this.timers` e retorna um removedor idempotente. */
+  rotatePresence(options: PresenceRotationOptions): () => void {
+    if (this.closing) throw new YuzuhaError('BOT_CLOSED', 'O bot está encerrado.');
+    const config = validatePresenceRotationOptions(options);
+    this.presenceRotation?.stop();
+    const rotation = startPresenceRotation({
+      bot: this,
+      config,
+      timers: this.timers,
+      isClosing: () => this.closing,
+      applyPresence: input => this.setPresence(input),
+      runScoped: (executionID, fn) => runInExecution(this, { executionID, source: 'scheduler' }, fn),
+      onError: error => reportError(this.options, error, undefined, { source: 'scheduler' }),
+    });
+    this.presenceRotation = rotation;
+    return () => {
+      rotation.stop();
+      if (this.presenceRotation === rotation) this.presenceRotation = undefined;
+    };
+  }
+
   private addEvent(event: NativeEvent, identity?: unknown): void {
     const dispose = identity === undefined ? this.events.add(event) : this.events.add(event, identity);
     this.pluginScope.getStore()?.eventDisposers.push(dispose);
@@ -1311,6 +1358,8 @@ export class Yuzuha {
       this.scheduler?.stop();
       await this.scheduler?.drain();
       await this.stopVariableSweep();
+      await this.presenceRotation?.drain();
+      this.presenceRotation = undefined;
       const needsErrorListener = !this.client.listeners(Events.Error).includes(this.errorListener);
       const needsShardListener = !this.client.listeners(Events.ShardError).includes(this.shardErrorListener);
       const needsGatewayLogs = Boolean(this.gatewayLogConfig && !this.detachGatewayLogs);
@@ -1401,6 +1450,7 @@ export class Yuzuha {
     this.loginAbort?.abort();
     this.scheduler?.stop();
     this.clearVariableSweepTimer();
+    this.presenceRotation?.stop();
     this.concurrencyLimiter?.close();
     this.dynamicPrefixCache?.close();
     this.events.close();
@@ -1409,7 +1459,11 @@ export class Yuzuha {
     this.closeTask = (async () => {
       const drainWork = Promise.allSettled([...this.active])
         .then(() => this.scheduler?.drain())
-        .then(() => Promise.allSettled(this.sweepTask ? [this.sweepTask] : []));
+        .then(() => Promise.allSettled([
+          ...(this.sweepTask ? [this.sweepTask] : []),
+          ...(this.presenceRotation ? [this.presenceRotation.drain()] : []),
+        ]))
+        .then(() => { this.presenceRotation = undefined; });
       if (timeoutMs !== undefined) {
         let deadlineHandle: unknown;
         let timedOut = false;

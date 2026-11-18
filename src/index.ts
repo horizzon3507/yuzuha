@@ -1,6 +1,8 @@
 export { Yuzuha, Bot, userError, MemoryRateLimiter, MemoryLock, VoiceStateTracker, createServiceKey, startHealthServer, shardIdForGuild, YuzuhaCluster, YuzuhaClusterEvents } from './bot.js';
 export type {
   VoiceStateInfo,
+  PresenceRotationEntry,
+  PresenceRotationOptions,
   YuzuhaOptions,
   ServiceKey,
   ServiceLookup,
