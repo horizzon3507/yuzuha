@@ -110,9 +110,9 @@ const bot = new Yuzuha({
   `reason === 'COOLDOWN'` (`error.remainingMs` é preenchido tanto pelo cooldown
   declarativo quanto por `ctx.cooldown`).
 - `onDenied(error, ctx)`: chamado para os demais motivos de `GuardError` quando
-  o contexto já existe (`CHECK_FAILED`, `PERMISSION_MISSING_AUTHOR`,
-  `NOT_IN_GUILD`, etc.). Falhas antes de `ctx` (ex.: aspas abertas) seguem
-  diretamente para `errorReply`.
+  o contexto já existe (`CHECK_FAILED`, `OWNER_ONLY`, `DEV_ONLY`,
+  `PERMISSION_MISSING_AUTHOR`, `NOT_IN_GUILD`, etc.). Falhas antes de `ctx`
+  (ex.: aspas abertas) seguem diretamente para `errorReply`.
 - **Precedência**: `string` ou `Payload` do hook substitui a resposta; `null`
   silencia; hook ausente ou retorno `undefined`/`void` segue para `errorReply` e
   depois para a mensagem padrão. Se o hook lançar erro, a falha é enviada a
@@ -181,6 +181,54 @@ e a ajuda. Consulte os detalhes em [API.md](API.md).
 O [guia nativo JS/TS](NATIVE.md) cobre schemas `arg.*`, handlers com tipos
 inferidos, eventos, checks e middleware por comando.
 
+### Donos, servidores de desenvolvimento e filtro de entrada (`owners`, `devGuilds`, `gate`)
+
+```ts
+import { Yuzuha, defineCommand } from 'yuzuha';
+
+const bloqueados = new Set<string>(['usuario-banido']);
+let manutencao = false;
+
+const bot = new Yuzuha({
+  prefix: '!',
+  owners: ['123456789012345678'],
+  devGuilds: ['987654321098765432'],
+  gate(message) {
+    if (manutencao && !bot.isOwner(message.authorID)) return false;
+    return !bloqueados.has(message.authorID);
+  },
+});
+
+bot.command(defineCommand({
+  name: 'diagnostico',
+  ownerOnly: true,
+  devOnly: true,
+  async run(ctx) {
+    await ctx.reply(`Dono verificado: ${ctx.isOwner()}`);
+  },
+}));
+```
+
+- `owners?: readonly string[]`: lista de IDs não vazios sem espaços nas pontas
+  (validada com `ConfigError` `OPTIONS`). Exposta em `bot.isOwner(userID)` e
+  `ctx.isOwner()` (em comandos e eventos com contexto).
+- `Command.ownerOnly?: boolean`: herdado de grupos pais em subcomandos; avaliado
+  no início de `ctx.prepare()`, antes de consultas de membro, argumentos e
+  cooldowns, lançando `GuardError` com `reason === 'OWNER_ONLY'`.
+- `devGuilds?: readonly string[]` e `Command.devOnly?: boolean`: `devOnly`
+  também é herdado por subcomandos e exige que `ctx.guildID` pertença a
+  `devGuilds` — recusando DMs e servidores fora da lista (inclusive quando
+  `devGuilds` estiver vazio ou omitido) com `GuardError` e `reason === 'DEV_ONLY'`.
+- `gate?: MessageGate` (`(message: IncomingMessage) => boolean | Promise<boolean>`):
+  executado antes da resolução de prefixo, de `rateLimiter.duplicate()` e de
+  `hooks.onUnknownCommand` nas mensagens recebidas (`MessageCreate` e
+  `bot.handle`), retornando `'ignored'` com custo mínimo quando retorna `false`.
+  Erros síncronos ou promessas rejeitadas em `gate` são reportados em `onError`
+  com `{ source: 'hook', event: 'gate' }` e retornam `'ignored'`. Tarefas
+  internas disparadas pelo `Scheduler` (`taskExecution = true`) não passam por
+  `gate` para não falharem durante janelas de manutenção, mas continuam sujeitas
+  aos guards do comando (`ownerOnly`, `devOnly`, `guildOnly`, `permissions`, `checks`).
+
 ## Comando nativo
 
 ```ts
@@ -218,6 +266,7 @@ folha. As regras de herança, parsing e exemplos completos estão em
 | `ctx.vars` | Map de variáveis locais da execução |
 | `ctx.reply(textoOuPayload)` | Resposta sem pings pelo adaptador |
 | `ctx.requireGuild()` | Exige servidor e retorna seu ID |
+| `ctx.isOwner()` | Indica se `ctx.authorID` pertence a `YuzuhaOptions.owners` |
 | `ctx.requirePermission(nome, bot?, mensagem?)` | Exige permissão de servidor |
 | `ctx.cooldown(duraçãoOuOpções, mensagem?)` | Cooldown da execução com escopo, múltiplos usos e `bypass` opcionais (`void \| Promise<void>`) |
 | `ctx.moderate(ação, alvo, motivo, opções)` | Moderação compartilhada com scripts |

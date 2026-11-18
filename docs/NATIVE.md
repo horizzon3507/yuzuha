@@ -838,8 +838,9 @@ roteamento, configure a função `prefix` do bot para ler o store.
 
 Grupos não declaram `args` ou `flags`; cada folha define a entrada que recebe.
 Aliases são únicos entre irmãos, sem distinguir maiúsculas de minúsculas.
-Restrições de servidor, permissões de autor/bot, checks, middleware e cooldown
-dos grupos continuam valendo nos filhos. Políticas HTTP só podem restringir
+Restrições de servidor (`guildOnly`), dono (`ownerOnly`), servidores de
+desenvolvimento (`devOnly`), permissões de autor/bot, checks, middleware e
+cooldown dos grupos continuam valendo nos filhos. Políticas HTTP só podem restringir
 as políticas ancestrais. O registro e a recarga validam a árvore inteira antes
 de substituir comandos.
 
