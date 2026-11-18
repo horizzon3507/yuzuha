@@ -17,9 +17,9 @@ A cobertura é por nome: um método `send` de uma classe conta como coberto se q
 | Status | Exports de runtime | Membros |
 |---|---:|---:|
 | coberto-recurso | 51 | 432 |
-| coberto-nativo | 10 | 133 |
+| coberto-nativo | 10 | 134 |
 | coberto-equivalente | 0 | 55 |
-| só-SDK | 51 | 102 |
+| só-SDK | 51 | 101 |
 | lacuna | 5 | 0 |
 
 Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são listados, mas não contam como lacuna.
@@ -730,7 +730,7 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são
 | `PermissionsBitField` | `any` | método | coberto-nativo |
 | `PermissionsBitField` | `Flags` | propriedade | só-SDK |
 | `PermissionsBitField` | `has` | método | coberto-recurso |
-| `PermissionsBitField` | `missing` | método | só-SDK |
+| `PermissionsBitField` | `missing` | método | coberto-nativo |
 | `ReactionCollector` | `awaitReactions` | método | coberto-equivalente |
 | `ReactionCollector` | `channelId` | propriedade | coberto-recurso |
 | `ReactionCollector` | `client` | propriedade | coberto-recurso |

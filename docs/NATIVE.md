@@ -271,7 +271,7 @@ await ctx.reply(`${membro.displayName}: ${canais.length} canais, ${fixadas.lengt
 | `channels` | `list`, `get`, `create`, `edit`, `delete`, `setSlowmode`, `slowmode`, `sendTyping`, `rtcRegions`, `addRecipient`/`removeRecipient` em grupos de DM, `editThreadDefaults`, `setDefaultForumLayout`, `overwrite`, `permissionsFor`, `move`, `setCategory` |
 | `messages` | Histórico com cursores, `pinnedPage`, `reactionUsersPage`, `dm`, `forward`, `search`/`searchAll` com filtros avançados, `bulkFetch`, `bulkDelete`, `purge`, `bulkDeleteOwn`, `acknowledgePins`, `clearReadState`, `purgeDM`, `deleteAttachment`, `sendTo`, `sendFiles`, `sendBytes`, `sendAttachments` |
 | `collectors` | `awaitMessage`, `awaitReaction`, streams `collectMessages`/`collectReactions` (AsyncIterable) |
-| `gateway` | `requestMembers`, `requestGuildCounts`, `requestChannelCounts`, `requestForumUnreads`, `subscribeThreads`, `send` (fire-and-forget) |
+| `gateway` | `fetchMembers` (aguardável por chunks), `requestMembers`, `requestGuildCounts`, `requestChannelCounts`, `requestForumUnreads`, `subscribeThreads`, `send` |
 | `instance` | `describe`, `gatewayInfo`, `application`, `oauthApplications`, `emojiMetadata`, `stickerMetadata`, `resolveEmoji` |
 | `self` | `fetch`, `guilds`, `leaveGuild` e `deleteMyMessages` com verificação sudo |
 | `cache` | `stats`, `sweepMessages`, `sweepMembers`, `sweepUsers`, `sweepChannels`, `sweepGuilds`, `cascadeChannel`, `cascadeGuild` |
@@ -356,9 +356,14 @@ SDK é por mensagem. Iteradores são de uso único; cada chamada cria um novo st
 por padrão; `hydrate: false` devolve os payloads brutos da API. `searchAll` é a
 busca global do client com os mesmos filtros e paginação de `search`.
 
-`gateway` envia pedidos brutos ao gateway sem aguardar resposta — os resultados
-chegam pelos eventos do client. `users.guildCounts` e `users.channelCounts`
-continuam sendo o caminho quando se espera o valor de volta.
+`gateway.fetchMembers({ guildID, query?, limit?, userIDs?, presences?, nonce?, timeoutMs?, signal? })`
+envia o pedido opcode 8 com `nonce` único por chamada e aguarda todos os chunks
+`guildMembersChunk` daquele `(guildID, nonce)`, devolvendo `{ guildID, members,
+notFound, chunkCount, nonce }` com timeout padrão de `15_000` ms
+(`GATEWAY_TIMEOUT`) e suporte a `AbortSignal` (`ABORTED`; `ctx.resources.gateway`
+combina `ctx.signal` automaticamente). Os demais métodos de `gateway` enviam
+pedidos brutos sem aguardar resposta — os resultados chegam pelos eventos do
+client — e `users.guildCounts` / `users.channelCounts` aguardam contagens ao vivo.
 
 Implementações próprias dos contratos `Resources` devem fornecer as áreas
 `gateway`, `instance`, `self` e `cache` além das anteriores; `CollectorsResources`
