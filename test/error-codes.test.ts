@@ -82,6 +82,8 @@ test('YUZUHA_ERROR_CODES está ordenado alfabeticamente e sem duplicatas', () =>
     'SERVICE_MISSING',
     'GATEWAY_TIMEOUT',
     'PRESENCE_OPTIONS',
+    'CACHE_SWEEPER_OPTIONS',
+    'DISCOVERY_OPTIONS',
   ];
   for (const code of requiredCodes) {
     assert.ok(YUZUHA_ERROR_CODES.includes(code), `Código ausente em YUZUHA_ERROR_CODES: ${code}`);

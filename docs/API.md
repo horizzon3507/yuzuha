@@ -23,6 +23,7 @@ A fonte das assinaturas completas são as declarações TypeScript distribuídas
 | `helpRenderer` | Função `(context: HelpRenderContext) => string` para formatar `bot.help`, `ctx.help` e a ajuda de grupos |
 | `client` | Instância de `Client` do Fluxer.js |
 | `clientOptions` | Opções do SDK quando o client não é fornecido |
+| `discovery` | URL HTTP(S) ou `{ api, version? }` resolvida em `login()` via `Client.fromDiscovery` (sem `client` nem `clientOptions.instance`) |
 | `transport` | Implementação de `Transport`; padrão `FluxerTransport` |
 | `resources` | Implementação de `Resources`; padrão `FluxerResources` sobre o client |
 | `store` | Implementação de `Store`; padrão `JsonStore` |
@@ -37,6 +38,7 @@ A fonte das assinaturas completas são as declarações TypeScript distribuídas
 | `messages` | `Partial<MessageCatalog>` direto ou `{ defaultLocale?, locales? }` para sobrescrever mensagens de usuário |
 | `locale` | Identificador de idioma ou função sync/async `(ctx) => string \| Promise<string>` resolvida antes do despacho |
 | `memberCache` | `false` (padrão) ou `{ ttlMs, max?, now? }` para cache LRU+TTL em `FluxerTransport` com invalidação via gateway |
+| `cacheSweepers` | `false` ou `{ messages?, members?, users? }` (`intervalMs` 100–86400000 ms) para limpeza periódica de caches do client |
 | `rateLimits` | Opções de capacidade e janela do `MemoryRateLimiter` padrão (`maxCooldowns`, `onCooldownCapacity`, `maxDedupe`, `dedupeWindowMs`) |
 | `rateLimiter` | Implementação síncrona ou assíncrona de `RateLimiter` para cooldowns e deduplicação distribuída |
 | `sharding` | `boolean` ou `{ leaderShardID?, schedulerMode?: 'leader' \| 'all' \| 'disabled', ids?, count?, shardUtil? }` para expor `bot.shard`/`ctx.shard` e coordenar o scheduler entre shards |
@@ -56,6 +58,7 @@ erro, o resultado continua sendo `success`.
 
 | Método | Resultado e uso |
 |---|---|
+| `Yuzuha.fromDiscovery(origin, options?, connectOptions?)` | Resolve endpoints via `Client.fromDiscovery` e retorna instância pronta para `login()` |
 | `command(command)` | Registra um comando validado e retorna o bot |
 | `argumentType(name, definition)` | Registra um `CustomArgumentType<T>` para `arg.custom<T>(name)` e retorna o bot |
 | `isOwner(userID)` | Retorna `true` se `userID` consta em `options.owners` |
@@ -78,6 +81,7 @@ erro, o resultado continua sendo `success`.
 | `handle(message)` | Despacho manual; retorna `Promise<DispatchResult>` |
 | `health()` | Snapshot imutável `HealthReport` (`'starting' \| 'ok' \| 'closed'`) |
 | `sweepVariables()` | Executa um lote incremental de limpeza de variáveis expiradas |
+| `startCacheSweepers()`, `stopCacheSweepers()` | Inicia (retornando removedor idempotente) ou para/drena os sweepers periódicos de `cacheSweepers` |
 | `login(token?)` | Usa o argumento ou `FLUXER_BOT_TOKEN`; só aqui conecta |
 | `destroy()` | Aguarda handlers, encerra client e store próprio; idempotente |
 
@@ -408,7 +412,7 @@ exceto a comparação, que retorna -1, 0 ou 1. Veja [operações de dados](funct
 | `YuzuhaError` | Erro base com `code` tipado (`YuzuhaErrorCode \| (string & {})`) para diagnóstico (inclui `PLUGIN_DEPENDENCY`, `PLUGIN_NOT_FOUND`, `SERVICE_DUPLICATE`, `SERVICE_KEY`, `SERVICE_MISSING`) |
 | `TransportError` | Subclasse de `YuzuhaError` para falhas do transporte (`ROLES_UNAVAILABLE`, `CHANNEL_GUILD`, `VOICE_CHANNEL`, `MODERATION_ACTION`, `NOT_FOUND`, `API_ERROR`) |
 | `StoreError` | Subclasse de `YuzuhaError` para falhas de persistência (`STORE_NAME`, `STORE_CLOSED`, `STORE_ASYNC`, `STORE_CORRUPT`, `STORE_INVALID`, `STORE_READONLY`) |
-| `ConfigError` | Subclasse de `YuzuhaError` para configuração, opções inválidas e token ausente (`CONFIG_MISSING`, `CONFIG_INVALID`, `CLUSTER_OPTIONS`, `MEMBER_CACHE_OPTIONS`, `MESSAGES_OPTIONS`, `RATE_LIMIT_OPTIONS`, `LOCK_OPTIONS`, `SHARDING_OPTIONS`, `SHARDING_UNAVAILABLE`, `PREFIX`, `EMOJI_OPTIONS`, `ENGINE_INVALID`, `VARIABLE_SWEEP_OPTIONS`, `OPTIONS`, `TOKEN_MISSING`) |
+| `ConfigError` | Subclasse de `YuzuhaError` para configuração, opções inválidas e token ausente (`CONFIG_MISSING`, `CONFIG_INVALID`, `CLUSTER_OPTIONS`, `MEMBER_CACHE_OPTIONS`, `CACHE_SWEEPER_OPTIONS`, `DISCOVERY_OPTIONS`, `MESSAGES_OPTIONS`, `RATE_LIMIT_OPTIONS`, `LOCK_OPTIONS`, `SHARDING_OPTIONS`, `SHARDING_UNAVAILABLE`, `PREFIX`, `EMOJI_OPTIONS`, `ENGINE_INVALID`, `VARIABLE_SWEEP_OPTIONS`, `OPTIONS`, `TOKEN_MISSING`) |
 | `CLUSTER_CLOSED` | Operação (`add`, `addAll`, `restart` ou `handleSignals`) chamada após `cluster.destroy()` |
 | `SHARDING_UNAVAILABLE` | Operação exige `@fluxerjs/sharding` instalado ou processo supervisionado por `ShardingManager` |
 | `ScriptError` | Erro com fonte, offset, arquivo, linha, coluna e `format()` |
