@@ -464,3 +464,79 @@ ordenação do snapshot. Os métodos `readVariable`, `queryVariables`,
 `claimDueSchedules` e `recoverSchedules` em `Store` são opcionais; implementá-los
 exige preservar TTL, ordem, escopos, limite, isolamento dos retornos e garantias
 de concorrência.
+
+## Configurações tipadas por servidor (`GuildSettings` e `guildPrefix`)
+
+`GuildSettings<T>` encapsula configurações JSON por servidor sobre qualquer `Store`
+(`MemoryStore`, `JsonStore`, `SQLiteStore`), combinando leitura pontual via
+`store.readVariable`, cache LRU+TTL em memória, mesclagem com `defaults`,
+atualização parcial atômica (`patch`) e validação síncrona:
+
+```ts
+import { GuildSettings, guildPrefix, SQLiteStore, Yuzuha } from 'yuzuha';
+
+const store = new SQLiteStore('./bot.sqlite');
+let bot: Yuzuha;
+
+const settings = new GuildSettings({
+  store,
+  defaults: {
+    prefix: '!',
+    modLogChannel: null as string | null,
+    maxWarnings: 3,
+  },
+  namespace: 'settings',
+  maxCacheEntries: 1_000,
+  ttlMs: 300_000,
+  validate(candidate) {
+    if (!candidate.prefix || /\s/.test(candidate.prefix)) return 'Prefixo inválido.';
+    if (candidate.maxWarnings < 1 || candidate.maxWarnings > 20) return false;
+  },
+  onChange(guildID) {
+    bot?.invalidatePrefix(guildID);
+  },
+});
+
+bot = new Yuzuha({
+  store,
+  prefix: guildPrefix(settings, '!'),
+  prefixCache: { ttlMs: 300_000, max: 5_000 },
+});
+```
+
+Opções de `GuildSettingsOptions<T>` (validadas com `ConfigError` de código
+`GUILD_SETTINGS_OPTIONS`):
+
+- `store`: instância de `Store`.
+- `defaults`: objeto JSON plano clonado na construção e mesclado como base em
+  todas as leituras (permitindo adicionar novas chaves padrão sem migrar registros
+  existentes).
+- `namespace` (padrão `'settings'`): compõe a chave dedicada
+  `guild:<guildID>:__settings__:<namespace>`, isolada das consultas de
+  `ctx.data.guild.query()`.
+- `maxCacheEntries` (padrão `1_000`) e `ttlMs` (padrão `300_000` ms): controlam o
+  cache LRU+TTL protegido por épocas; `0` em qualquer um deles desativa o cache.
+- `now`: relógio opcional compartilhado pelo cache e por `store.readVariable`.
+- `validate(candidate)`: função síncrona executada dentro da transação antes de
+  confirmar `set` ou `patch`. Retornar `false`, uma mensagem `string` ou lançar
+  exceção aborta a escrita com `YuzuhaError('GUILD_SETTINGS_INVALID', ...)` sem
+  alterar o store nem o cache.
+- `onChange(guildID, next)`: chamado após `set`, `patch` ou `reset` confirmados,
+  recebendo `next` congelado (`Readonly<T>`).
+
+Métodos de `GuildSettings<T>`:
+
+| Método | Comportamento |
+|---|---|
+| `get(guildID)` | Retorna cópia isolada mesclando `defaults` + persistido via `store.readVariable` (ou `store.read`) e alimenta o cache LRU+TTL |
+| `set(guildID, value)` | Valida e grava a configuração completa do servidor, atualiza o cache e dispara `onChange` |
+| `patch(guildID, partial)` | Aplica atualização parcial **atômica** dentro de `store.update`, impedindo perda de campos em escritas concorrentes |
+| `reset(guildID)` | Remove a chave customizada do servidor, restaura `defaults`, atualiza o cache e dispara `onChange` |
+| `invalidate(guildID?)` | Descarta a entrada em cache de um servidor específico ou limpa todo o cache quando omitido |
+
+`guildPrefix(settings, fallback = '!')` adapta `GuildSettings` diretamente para
+`YuzuhaOptions.prefix`: em mensagens diretas (`!message.guildID`) devolve
+`fallback` sincronamente sem tocar no store, e em servidores lê
+`(await settings.get(message.guildID)).prefix ?? fallback`. Ao conectar
+`onChange: guildID => bot.invalidatePrefix(guildID)`, alterações feitas com
+`set`, `patch` ou `reset` refletem imediatamente no próximo comando do servidor.
