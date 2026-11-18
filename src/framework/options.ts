@@ -3,6 +3,7 @@ import type { CommandContext } from '../context.js';
 import type { IncomingMessage, Payload, Store, Transport } from '../contracts.js';
 import type { GuardError } from '../errors.js';
 import type { ScriptEngine, ScriptFunctionDefinition } from '../ports/script-engine.js';
+import type { RateLimiter } from '../ports/rate-limiter.js';
 import type { Command } from '../context.js';
 import type { Resources } from '../ports/resources.js';
 import type { HttpService } from '../services/http.js';
@@ -104,5 +105,6 @@ export interface YuzuhaOptions {
   variables?: false | VariableSweepOptions;
   concurrency?: ConcurrencyOptions;
   rateLimits?: RateLimitOptions;
+  rateLimiter?: RateLimiter;
   unsafeDisableResourceAuthorization?: boolean;
 }

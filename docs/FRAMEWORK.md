@@ -167,7 +167,7 @@ folha. As regras de herança, parsing e exemplos completos estão em
 | `ctx.reply(textoOuPayload)` | Resposta sem pings pelo adaptador |
 | `ctx.requireGuild()` | Exige servidor e retorna seu ID |
 | `ctx.requirePermission(nome, bot?, mensagem?)` | Exige permissão de servidor |
-| `ctx.cooldown(duração, mensagem?)` | Cooldown da execução |
+| `ctx.cooldown(duração, mensagem?)` | Cooldown da execução (`void \| Promise<void>`; use `await` com `rateLimiter` assíncrono) |
 | `ctx.moderate(ação, alvo, motivo, opções)` | Moderação compartilhada com scripts |
 | `ctx.store`, `ctx.transport` | Persistência e operações de transporte |
 | `ctx.variable`, `ctx.setVariable` | Variáveis JSON por escopo |
@@ -390,6 +390,51 @@ const bot = new Yuzuha({
 
 Quando `onLog` está definido, cada repetição emite `transport.retry` com
 `attempt` e `delayMs`.
+
+### Rate limiter e deduplicação (`rateLimiter`)
+
+Por padrão, o bot cria um `MemoryRateLimiter` por instância usando `rateLimits`
+(`maxCooldowns`, `onCooldownCapacity`, `maxDedupe`, `dedupeWindowMs`) e o
+relógio `now`. Para compartilhar cooldowns e deduplicação de mensagens entre
+vários processos (por exemplo, sobre Redis com `SET PX NX` ou script Lua),
+injete uma implementação do port `RateLimiter` em `YuzuhaOptions.rateLimiter`:
+
+```ts
+import { Yuzuha } from 'yuzuha';
+import type { RateLimiter } from 'yuzuha';
+
+const rateLimiter: RateLimiter = {
+  async cooldown(key, durationMs) {
+    // Retorne 0 se concedido ou os milissegundos restantes (> 0) se bloqueado.
+    return 0;
+  },
+  async duplicate(channelID, messageID) {
+    // Retorne true se (channelID, messageID) já foi visto dentro da janela.
+    return false;
+  },
+  async close() {
+    // Opcional: encerramento de clientes/conexões externos.
+  },
+};
+
+const bot = new Yuzuha({ prefix: '!', rateLimiter });
+```
+
+- **Modo síncrono e assíncrono**: `cooldown` retorna `number | Promise<number>`
+  e `duplicate` retorna `boolean | Promise<boolean>`. Limitadores síncronos
+  (como `MemoryRateLimiter`) preservam o caminho rápido síncrono e o lançamento
+  síncrono de `GuardError` em `ctx.cooldown(...)`. Quando `rateLimiter.cooldown`
+  retorna uma `Promise`, `ctx.cooldown(...)` também retorna `Promise<void>` —
+  prefira `await ctx.cooldown(...)` ao escrever comandos portáveis; `cooldown`
+  declarativo e `$cooldown` aguardam automaticamente.
+- **Deduplicação assíncrona**: se `duplicate` retornar `Promise<boolean>`, o
+  bot aguarda a resolução dentro do despacho rastreado (inclusive sob
+  `prefixCache` quente e `hooks.onUnknownCommand`) antes de cancelar ou seguir.
+- **Validação e propriedade**: um `rateLimiter` sem métodos `cooldown` e
+  `duplicate` válidos (ou `close` não-função) lança `ConfigError` com código
+  `RATE_LIMIT_OPTIONS`. Como ocorre com `store`, `bot.destroy()` chama
+  `close?.()` apenas quando o limitador foi criado pelo próprio bot; um
+  `rateLimiter` injetado continua sob responsabilidade do chamador.
 
 ## Testes sem rede
 

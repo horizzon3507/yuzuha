@@ -1,4 +1,4 @@
-export { Yuzuha, Bot } from './bot.js';
+export { Yuzuha, Bot, MemoryRateLimiter } from './bot.js';
 export type {
   YuzuhaOptions,
   ErrorReplyResult,
@@ -10,6 +10,9 @@ export type {
   ConcurrencyOptions,
   PrefixCacheOptions,
   RateLimitOptions,
+  MemoryRateLimiterOptions,
+  RateLimitsOptions,
+  RateLimiter,
   YuzuhaPlugin,
   Middleware,
   DispatchResult,

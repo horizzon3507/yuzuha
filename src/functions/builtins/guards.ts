@@ -20,7 +20,7 @@ export const guardFunctions = defineFunctions(fn => {
     return '';
   }, ['requireBotPermission']);
   fn('cooldown', 'guards', 1, 2, '[duração;erro?]', 'Cooldown por autor/canal/servidor/comando; erro aceita {remaining}.', async c => {
-    c.ctx.cooldown(await c.text(0), c.count > 1 ? await c.text(1) : undefined);
+    await c.ctx.cooldown(await c.text(0), c.count > 1 ? await c.text(1) : undefined);
     return '';
   });
 });

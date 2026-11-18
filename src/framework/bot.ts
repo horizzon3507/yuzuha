@@ -19,7 +19,8 @@ import { runMiddleware } from './middleware.js';
 import type {
   DestroyOptions, DispatchResult, Middleware, SignalHandlerOptions, UnknownCommandContext, YuzuhaOptions, YuzuhaPlugin,
 } from './options.js';
-import { RateLimits, resolveRateLimitOptions } from './rate-limits.js';
+import { MemoryRateLimiter, resolveRateLimitOptions } from './rate-limits.js';
+import type { RateLimiter } from '../ports/rate-limiter.js';
 import { ConcurrencyLimiter } from './concurrency.js';
 import { reportError, resolveErrorReply } from './reporting.js';
 import { route } from './routing.js';
@@ -127,6 +128,29 @@ function assertLogger(logger: YuzuhaOptions['logger']): void {
   }
 }
 
+function assertRateLimiter(limiter: YuzuhaOptions['rateLimiter']): RateLimiter | undefined {
+  if (limiter === undefined) return undefined;
+  if (!limiter || typeof limiter !== 'object' || Array.isArray(limiter)) {
+    throw new ConfigError('RATE_LIMIT_OPTIONS', 'rateLimiter deve ser um objeto com os métodos cooldown e duplicate.');
+  }
+  const candidate = limiter as unknown as Record<string, unknown>;
+  for (const method of ['cooldown', 'duplicate'] as const) {
+    if (typeof candidate[method] !== 'function') {
+      throw new ConfigError('RATE_LIMIT_OPTIONS', `rateLimiter precisa do método ${method} como função.`);
+    }
+  }
+  if (candidate.close !== undefined && typeof candidate.close !== 'function') {
+    throw new ConfigError('RATE_LIMIT_OPTIONS', 'rateLimiter.close deve ser uma função quando informado.');
+  }
+  return limiter;
+}
+
+function isPromiseLike<T>(value: T | PromiseLike<T>): value is PromiseLike<T> {
+  return (typeof value === 'object' || typeof value === 'function')
+    && value !== null
+    && typeof (value as PromiseLike<T>).then === 'function';
+}
+
 const MAX_SHUTDOWN_TIMEOUT_MS = 600_000;
 
 function resolveDestroyTimeout(options?: DestroyOptions): number | undefined {
@@ -156,7 +180,8 @@ export class Yuzuha {
   private readonly registry: CommandRegistry;
   private readonly middleware: Middleware[] = [];
   private readonly plugins = new Set<string>();
-  private readonly limits: RateLimits;
+  private readonly limits: RateLimiter;
+  private readonly ownsRateLimiter: boolean;
   private lastRateLimitEvictLog?: number;
   private readonly active = new Set<Promise<unknown>>();
   private readonly shutdown = new AbortController();
@@ -222,7 +247,9 @@ export class Yuzuha {
     }
     validateHooks(options.hooks);
     const rateLimitOptions = resolveRateLimitOptions(options.rateLimits);
-    this.limits = new RateLimits({
+    const customRateLimiter = assertRateLimiter(options.rateLimiter);
+    this.ownsRateLimiter = customRateLimiter === undefined;
+    this.limits = customRateLimiter ?? new MemoryRateLimiter({
       ...rateLimitOptions,
       now: options.now,
       onEvict: () => {
@@ -745,7 +772,11 @@ export class Yuzuha {
           this.detachMemberCache = undefined;
           this.memberCache?.clear();
           await Promise.allSettled([...this.gatewayReports]);
-          if (!this.options.store) await this.store.close?.();
+          try {
+            if (!this.options.store) await this.store.close?.();
+          } finally {
+            if (this.ownsRateLimiter) await this.limits.close?.();
+          }
         }
       }
     })();
@@ -790,36 +821,54 @@ export class Yuzuha {
     }
   }
 
-  private resolveRoute(message: IncomingMessage, configured: string | string[]): RoutedCommand | undefined {
-    const routed = route(message.content, this.resolvePrefixes(configured));
-    if (!routed) return;
-    const resolved = this.registry.resolve(routed.name, routed.input);
+  private finishRoute(
+    routed: { name: string; input: string; prefix: string },
+    resolved: ReturnType<CommandRegistry['resolve']>,
+    message: IncomingMessage,
+    duplicated: boolean,
+  ): RoutedCommand | undefined {
+    if (duplicated) return undefined;
     if (!resolved) {
-      if (!this.options.hooks?.onUnknownCommand || this.limits.duplicate(message.channelID, message.id)) return;
       return { kind: 'unknown', unknown: Object.freeze({ name: routed.name, input: routed.input, prefix: routed.prefix, message }) };
     }
-    if (this.limits.duplicate(message.channelID, message.id)) return;
     return { kind: 'command', ...resolved, prefix: routed.prefix };
+  }
+
+  private resolveRoute(
+    message: IncomingMessage,
+    configured: string | string[],
+  ): RoutedCommand | undefined | Promise<RoutedCommand | undefined> {
+    const routed = route(message.content, this.resolvePrefixes(configured));
+    if (!routed) return undefined;
+    const resolved = this.registry.resolve(routed.name, routed.input);
+    if (!resolved && !this.options.hooks?.onUnknownCommand) return undefined;
+    const duplicated = this.limits.duplicate(message.channelID, message.id);
+    if (typeof duplicated === 'boolean') return this.finishRoute(routed, resolved, message, duplicated);
+    if (isPromiseLike(duplicated)) {
+      return Promise.resolve(duplicated).then(flag => this.finishRoute(routed, resolved, message, Boolean(flag)));
+    }
+    return this.finishRoute(routed, resolved, message, Boolean(duplicated));
   }
 
   private handleMessage(message: IncomingMessage, onFailure?: (error: unknown, ctx?: CommandContext) => void, parentSignal?: AbortSignal, executionID?: string, taskExecution = false): Promise<DispatchResult> {
     if (this.closing || message.authorBot || message.authorID === this.transport.botID) return ignored;
     let routed: RoutedCommand | undefined;
-    if (typeof this.options.prefix !== 'function') {
-      try { routed = this.resolveRoute(message, this.options.prefix ?? '!'); }
+    let pendingRoute: Promise<RoutedCommand | undefined> | undefined;
+    const prefixes = typeof this.options.prefix !== 'function'
+      ? (this.options.prefix ?? '!')
+      : this.dynamicPrefixCache?.get(prefixCacheKey(message));
+    if (prefixes !== undefined) {
+      let candidate: RoutedCommand | undefined | Promise<RoutedCommand | undefined>;
+      try { candidate = this.resolveRoute(message, prefixes); }
       catch (error) { return Promise.reject(error); }
-      if (!routed) return ignored;
-    } else if (this.dynamicPrefixCache) {
-      const cached = this.dynamicPrefixCache.get(prefixCacheKey(message));
-      if (cached) {
-        routed = this.resolveRoute(message, cached);
-        if (!routed) return ignored;
-      }
+      if (!candidate) return ignored;
+      if (isPromiseLike(candidate)) pendingRoute = candidate;
+      else routed = candidate;
     }
     const signal = parentSignal ? AbortSignal.any([this.shutdown.signal, parentSignal]) : this.shutdown.signal;
     const resolvedExecutionID = executionID ?? randomUUID();
     const source = taskExecution ? 'scheduler' : 'command';
-    const run = () => this.dispatch(message, signal, onFailure, resolvedExecutionID, source, routed);
+    const run = () => this.dispatch(message, signal, onFailure, resolvedExecutionID, source, routed, pendingRoute);
     const task = routed
       ? run()
       : runInExecution(this, {
@@ -852,13 +901,21 @@ export class Yuzuha {
     executionID: string,
     source: 'command' | 'scheduler',
     resolved?: RoutedCommand,
+    pendingRoute?: Promise<RoutedCommand | undefined>,
   ): Promise<DispatchResult> {
     if (!resolved) {
-      const prefixes = typeof this.options.prefix === 'function'
-        ? await this.resolveDynamicPrefixes(message, this.options.prefix, signal)
-        : this.resolvePrefixes(this.options.prefix ?? '!');
-      if (!prefixes || this.closing || signal.aborted) return 'ignored';
-      resolved = this.resolveRoute(message, prefixes);
+      if (pendingRoute) {
+        resolved = await pendingRoute;
+        if (this.closing || signal.aborted) return 'ignored';
+      } else {
+        const prefixes = typeof this.options.prefix === 'function'
+          ? await this.resolveDynamicPrefixes(message, this.options.prefix, signal)
+          : this.resolvePrefixes(this.options.prefix ?? '!');
+        if (!prefixes || this.closing || signal.aborted) return 'ignored';
+        const candidate = this.resolveRoute(message, prefixes);
+        resolved = isPromiseLike(candidate) ? await candidate : candidate;
+        if (this.closing || signal.aborted) return 'ignored';
+      }
     }
     if (!resolved) return 'ignored';
     if (resolved.kind === 'unknown') {

@@ -1,10 +1,12 @@
 import { ConfigError, YuzuhaError } from '../errors.js';
+import type { RateLimiter } from '../ports/rate-limiter.js';
 import type { RateLimitOptions } from './options.js';
 
 export type RateLimitsOptions = RateLimitOptions & {
   now?: () => number;
   onEvict?: () => void;
 };
+export type MemoryRateLimiterOptions = RateLimitsOptions;
 
 const DEFAULT_MAX_COOLDOWNS = 100_000;
 const DEFAULT_ON_COOLDOWN_CAPACITY = 'evict' as const;
@@ -42,7 +44,8 @@ export function resolveRateLimitOptions(input: unknown): Required<RateLimitOptio
   return { maxCooldowns, onCooldownCapacity, maxDedupe, dedupeWindowMs };
 }
 
-export class RateLimits {
+/** In-memory cooldown and two-generation message deduplication implementation of {@link RateLimiter}. */
+export class MemoryRateLimiter implements RateLimiter {
   private readonly now: () => number;
   private readonly onEvict?: () => void;
   private readonly maxCooldowns: number;
@@ -159,4 +162,15 @@ export class RateLimits {
     if (until < this.nextExpiration) this.nextExpiration = until;
     return 0;
   }
+
+  async close(): Promise<void> {
+    this.cooldowns.clear();
+    this.currentBucket.clear();
+    this.previousBucket.clear();
+    this.nextBucketRotation = undefined;
+    this.nextSweep = 0;
+    this.nextExpiration = Infinity;
+  }
 }
+
+export { MemoryRateLimiter as RateLimits };
