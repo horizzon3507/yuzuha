@@ -1,8 +1,10 @@
 import { GuardError, YuzuhaError } from '../shared/errors.js';
+import { defaultTranslator } from './i18n.js';
+import type { MessageTranslator } from './i18n.js';
 
-export function userID(value: string): string {
+export function userID(value: string, t: MessageTranslator = defaultTranslator): string {
   const id = /^(?:<@!?(\d+)>|(\d+))$/.exec(value.trim());
-  if (!id) throw new GuardError('Mencione um usuário ou informe um ID válido.', 'INVALID_ARGUMENT');
+  if (!id) throw new GuardError(t('argUser'), 'INVALID_ARGUMENT');
   return (id[1] ?? id[2])!;
 }
 

@@ -144,9 +144,11 @@ export class CommandContext {
     if (skipTokenize) {
       this.tokens = [];
     } else {
-      try { this.tokens = tokenize(this.input); }
+      try { this.tokens = tokenize(this.input, this.t); }
       catch (error) {
-        if (error instanceof GuardError) throw new GuardError(`${error.message}\nUso: ${commandUsage(this.command, this.prefix)}`, error.reason);
+        if (error instanceof GuardError) {
+          throw new GuardError(`${error.message}\n${this.t('usageLine', commandUsage(this.command, this.prefix, this.t))}`, error.reason);
+        }
         throw error;
       }
     }
@@ -174,8 +176,8 @@ export class CommandContext {
   private get variables(): VariableService { return this.variableService ??= new VariableService(this.store, this.scope, this.now); }
   get members(): MemberService { return this.memberService ??= new MemberService(this.transport, this.scope, () => this.resources.users); }
   get vars(): Map<string, unknown> { return this.localVars ??= new Map(); }
-  get args(): ArgumentBag { return this.argumentsBag ??= new ArgumentBag(); }
-  get flags(): ArgumentBag { return this.flagsBag ??= new ArgumentBag(); }
+  get args(): ArgumentBag { return this.argumentsBag ??= new ArgumentBag(this.t); }
+  get flags(): ArgumentBag { return this.flagsBag ??= new ArgumentBag(this.t); }
   async guildFeatures(): Promise<string[]> {
     const info = await this.resources.users.guild(this.requireGuild());
     if (!info.features) throw new YuzuhaError('NATIVE_UNAVAILABLE', 'O recurso de servidor não fornece features.');
@@ -206,7 +208,7 @@ export class CommandContext {
   }
 
   get message(): IncomingMessage {
-    if (!this.messageAvailable) throw new GuardError('Este evento não fornece uma mensagem completa. Use os campos de evento e um canal explícito.', 'GENERIC');
+    if (!this.messageAvailable) throw new GuardError(this.t('eventMessageUnavailable'), 'GENERIC');
     return this.sourceMessage;
   }
   get authorID(): string { return this.actor?.authorID ?? this.sourceMessage.authorID; }
@@ -271,13 +273,13 @@ export class CommandContext {
 
   reply(payload: string | Payload, options?: SendOptions): Promise<string> {
     if (this.commandMessageDeleted) return this.send(payload, undefined, options);
-    validateTtl(options);
+    validateTtl(options, this.t);
     return this.sendVia(this.transport.reply(this.message, typeof payload === 'string' ? { content: payload } : payload),
       this.message.channelID, options);
   }
 
   send(payload: string | Payload, channelID = this.message.channelID, options?: SendOptions): Promise<string> {
-    validateTtl(options);
+    validateTtl(options, this.t);
     return this.sendVia(this.transport.send(channelID, typeof payload === 'string' ? { content: payload } : payload), channelID, options);
   }
   private commandMessageDeleted = false;
@@ -313,14 +315,14 @@ export class CommandContext {
 
   /** Agenda a exclusão de uma mensagem após `ttlMs`; par agendado de {@link delete}. */
   expire(messageID: string, ttlMs: number, channelID = this.message.channelID): void {
-    assertTtl(ttlMs);
+    assertTtl(ttlMs, this.t);
     this.deleteLater(channelID, messageID, ttlMs);
   }
 
   /** Apaga as últimas `count` mensagens do canal (1 a 1000), incluindo a mensagem do comando fora da contagem. */
   async purge(count: number, options?: { of?: string }): Promise<{ deleted: number; via: 'bulk' | 'each' }> {
     if (!Number.isInteger(count) || count < 1 || count > 1000) {
-      throw new GuardError('Informe uma quantidade inteira entre 1 e 1000.', 'INVALID_ARGUMENT');
+      throw new GuardError(this.t('purgeInvalidCount'), 'INVALID_ARGUMENT');
     }
     if (!this.resources.messages.purge) {
       throw new YuzuhaError('NATIVE_UNAVAILABLE', 'O recurso de mensagens não implementa purge.');
@@ -371,13 +373,17 @@ export class CommandContext {
     }
     try {
       if (this.command.flags !== undefined) {
-        const parsed = parseFlags(this.command.flags, this.tokens, this.flagLookup);
+        const parsed = parseFlags(this.command.flags, this.tokens, this.flagLookup, this.t);
         for (const [name, value] of parsed.flags) this.flags.set(name, value);
         this.tokens.splice(0, this.tokens.length, ...parsed.tokens);
       }
-      if (this.command.args?.length) for (const [name, value] of parseArguments(this.command.args, this.tokens)) this.args.set(name, value);
+      if (this.command.args?.length) {
+        for (const [name, value] of parseArguments(this.command.args, this.tokens, this.t)) this.args.set(name, value);
+      }
     } catch (error) {
-      if (error instanceof GuardError) throw new GuardError(`${error.message}\nUso: ${commandUsage(this.command, this.prefix)}`, error.reason);
+      if (error instanceof GuardError) {
+        throw new GuardError(`${error.message}\n${this.t('usageLine', commandUsage(this.command, this.prefix, this.t))}`, error.reason);
+      }
       throw error;
     }
     for (const command of this.lineage) {
@@ -424,12 +430,12 @@ export function createLocaleProbeContext(options: ContextOptions): CommandContex
   finally { skipNextTokenize = false; }
 }
 
-function assertTtl(ttlMs: number): void {
+function assertTtl(ttlMs: number, t: MessageTranslator = defaultTranslator): void {
   if (!Number.isInteger(ttlMs) || ttlMs < 1_000 || ttlMs > 86_400_000) {
-    throw new GuardError('ttlMs deve ser um inteiro entre 1000 e 86400000.', 'INVALID_ARGUMENT');
+    throw new GuardError(t('invalidTtlMs'), 'INVALID_ARGUMENT');
   }
 }
 
-function validateTtl(options?: SendOptions): void {
-  if (options?.ttlMs !== undefined) assertTtl(options.ttlMs);
+function validateTtl(options: SendOptions | undefined, t: MessageTranslator = defaultTranslator): void {
+  if (options?.ttlMs !== undefined) assertTtl(options.ttlMs, t);
 }

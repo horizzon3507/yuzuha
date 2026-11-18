@@ -1,17 +1,33 @@
 import type { ArgumentDefinition } from './definition.js';
+import { defaultTranslator } from '../domain/i18n.js';
+import type { MessageTranslator } from '../domain/i18n.js';
 import { parseDuration, userID } from '../domain/values.js';
 import { GuardError, YuzuhaError } from '../shared/errors.js';
 
 export type ArgumentValue = string | number | boolean;
 
-function validateValue(definition: ArgumentDefinition, value: ArgumentValue): void {
+function validateValue(definition: ArgumentDefinition, value: ArgumentValue, t: MessageTranslator = defaultTranslator): void {
   if (definition.choices && !definition.choices.some(choice => String(choice) === String(value))) {
-    throw new GuardError(`${definition.name}: escolha ${definition.choices.join(', ')}.`, 'INVALID_ARGUMENT');
+    throw new GuardError(t('argChoices', definition.name, definition.choices), 'INVALID_ARGUMENT');
   }
   const size = typeof value === 'string' ? value.length : value;
   if (typeof size === 'number') {
-    if (definition.min !== undefined && size < definition.min) throw new GuardError(`${definition.name}: mínimo ${definition.min}${typeof value === 'string' ? ' caracteres' : ''}.`, 'INVALID_ARGUMENT');
-    if (definition.max !== undefined && size > definition.max) throw new GuardError(`${definition.name}: máximo ${definition.max}${typeof value === 'string' ? ' caracteres' : ''}.`, 'INVALID_ARGUMENT');
+    if (definition.min !== undefined && size < definition.min) {
+      throw new GuardError(
+        typeof value === 'string'
+          ? t('argMinLength', definition.name, definition.min)
+          : t('argMin', definition.name, definition.min),
+        'INVALID_ARGUMENT',
+      );
+    }
+    if (definition.max !== undefined && size > definition.max) {
+      throw new GuardError(
+        typeof value === 'string'
+          ? t('argMaxLength', definition.name, definition.max)
+          : t('argMax', definition.name, definition.max),
+        'INVALID_ARGUMENT',
+      );
+    }
   }
   for (const validator of definition.validators ?? []) {
     const accepted: unknown = validator.check(value);
@@ -68,40 +84,52 @@ export function validateArgumentDefinitions(definitions: readonly ArgumentDefini
   }
 }
 
-function parseValue(definition: ArgumentDefinition, input: string | undefined, required = definition.required): ArgumentValue | undefined {
+function parseValue(
+  definition: ArgumentDefinition,
+  input: string | undefined,
+  required = definition.required,
+  t: MessageTranslator = defaultTranslator,
+): ArgumentValue | undefined {
   if (input === undefined || input.length === 0) {
     if (definition.defaultValue !== undefined) {
-      const value = definition.type === 'user' ? userID(String(definition.defaultValue)) : definition.defaultValue;
-      validateValue(definition, value);
+      const value = definition.type === 'user' ? userID(String(definition.defaultValue), t) : definition.defaultValue;
+      validateValue(definition, value, t);
       return value;
-    } else if (required) throw new GuardError(`Informe o argumento ${definition.name}.`, 'INVALID_ARGUMENT');
+    } else if (required) throw new GuardError(t('argRequired', definition.name), 'INVALID_ARGUMENT');
     return undefined;
   }
   let value: ArgumentValue = input;
   if (definition.type === 'number' || definition.type === 'integer') {
     value = Number(input);
     if (!input.trim() || !Number.isFinite(value) || (definition.type === 'integer' && !Number.isSafeInteger(value))) {
-      throw new GuardError(`${definition.name} deve ser um número${definition.type === 'integer' ? ' inteiro' : ''}.`, 'INVALID_ARGUMENT');
+      throw new GuardError(
+        definition.type === 'integer' ? t('argInteger', definition.name) : t('argNumber', definition.name),
+        'INVALID_ARGUMENT',
+      );
     }
   } else if (definition.type === 'boolean') {
     const normalized = input.toLowerCase();
     if (!['true', 'false', 'yes', 'no', 'sim', 'não', 'nao', '1', '0'].includes(normalized)) {
-      throw new GuardError(`${definition.name} deve ser true ou false.`, 'INVALID_ARGUMENT');
+      throw new GuardError(t('argBoolean', definition.name), 'INVALID_ARGUMENT');
     }
     value = ['true', 'yes', 'sim', '1'].includes(normalized);
-  } else if (definition.type === 'user') value = userID(input);
+  } else if (definition.type === 'user') value = userID(input, t);
   else if (definition.type === 'duration') {
     try { value = parseDuration(input); }
     catch (error) {
       if (!(error instanceof YuzuhaError) || error.code !== 'DURATION') throw error;
-      throw new GuardError(`${definition.name}: ${error.message}`, 'INVALID_ARGUMENT');
+      throw new GuardError(t('argDuration', definition.name), 'INVALID_ARGUMENT');
     }
   }
-  validateValue(definition, value);
+  validateValue(definition, value, t);
   return value;
 }
 
-export function parseArguments(definitions: readonly ArgumentDefinition[], tokens: readonly string[]): Map<string, ArgumentValue> {
+export function parseArguments(
+  definitions: readonly ArgumentDefinition[],
+  tokens: readonly string[],
+  t: MessageTranslator = defaultTranslator,
+): Map<string, ArgumentValue> {
   const args = new Map<string, ArgumentValue>();
   const positional = [...tokens];
   const matched = new Map<string, string>();
@@ -121,13 +149,13 @@ export function parseArguments(definitions: readonly ArgumentDefinition[], token
     const input = definition.rest ? positional.slice(position).join(' ')
       : definition.anywhere ? matched.get(definition.name)
       : positional[position++];
-    const value = parseValue(definition, input);
+    const value = parseValue(definition, input, definition.required, t);
     if (value !== undefined) args.set(definition.name, value);
   }
   return args;
 }
 
-export function tokenize(input: string): string[] {
+export function tokenize(input: string, t: MessageTranslator = defaultTranslator): string[] {
   if (!/[\\"']/.test(input)) return input.match(/\S+/g) ?? [];
   const result: string[] = [];
   let token = '', quote = '', last = '', started = false;
@@ -141,7 +169,7 @@ export function tokenize(input: string): string[] {
       token = ''; last = ''; started = false;
     } else { token += character; last = character; started = true; }
   }
-  if (quote) throw new GuardError('Feche as aspas do argumento.', 'INVALID_ARGUMENT');
+  if (quote) throw new GuardError(t('quoteUnclosed'), 'INVALID_ARGUMENT');
   if (started) result.push(token);
   return result;
 }
@@ -176,6 +204,7 @@ export function parseFlags(
   definitions: readonly ArgumentDefinition[] | undefined,
   tokens: readonly string[],
   lookup?: ReadonlyMap<string, ArgumentDefinition>,
+  t: MessageTranslator = defaultTranslator,
 ): {
   tokens: string[]; flags: Map<string, ArgumentValue>;
 } {
@@ -190,23 +219,23 @@ export function parseFlags(
     if (!(token.startsWith('--') || /^-[^\d.]/u.test(token)) || token === '-') { positional.push(token); continue; }
     const match = /^--?([^=]+)(?:=([\s\S]*))?$/.exec(token);
     const definition = match && resolvedLookup.get(match[1]!);
-    if (!match || !definition) throw new GuardError(`Flag desconhecida: ${token.split('=')[0]}.`, 'INVALID_ARGUMENT');
-    if (values.has(definition.name)) throw new GuardError(`Flag repetida: --${definition.name}.`, 'INVALID_ARGUMENT');
+    if (!match || !definition) throw new GuardError(t('flagUnknown', token.split('=')[0]!), 'INVALID_ARGUMENT');
+    if (values.has(definition.name)) throw new GuardError(t('flagDuplicate', definition.name), 'INVALID_ARGUMENT');
     let input = match[2];
     if (input === undefined) {
       if (definition.type === 'boolean') input = 'true';
       else {
         input = tokens[index + 1];
-        if (input === undefined || input.startsWith('--') || /^-[^\d.]/u.test(input)) throw new GuardError(`Informe o valor de --${definition.name}.`, 'INVALID_ARGUMENT');
+        if (input === undefined || input.startsWith('--') || /^-[^\d.]/u.test(input)) throw new GuardError(t('flagValueRequired', definition.name), 'INVALID_ARGUMENT');
         index++;
       }
     }
-    const value = parseValue(definition, input, true);
+    const value = parseValue(definition, input, true, t);
     if (value !== undefined) values.set(definition.name, value);
   }
   for (const definition of definitions) {
     if (values.has(definition.name)) continue;
-    const value = parseValue(definition, undefined);
+    const value = parseValue(definition, undefined, definition.required, t);
     if (value !== undefined) values.set(definition.name, value);
   }
   return { tokens: positional, flags: values };
