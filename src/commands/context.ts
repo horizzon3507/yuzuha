@@ -325,9 +325,10 @@ export class CommandContext {
       this.message.channelID, options);
   }
 
-  send(payload: string | Payload, channelID = this.message.channelID, options?: SendOptions): Promise<string> {
+  send(payload: string | Payload, channelID = this.channelID, options?: SendOptions): Promise<string> {
     validateTtl(options, this.t);
-    return this.sendVia(this.transport.send(channelID, typeof payload === 'string' ? { content: payload } : payload), channelID, options);
+    const target = requireChannel(channelID, this.t);
+    return this.sendVia(this.transport.send(target, typeof payload === 'string' ? { content: payload } : payload), target, options);
   }
   private commandMessageDeleted = false;
   async deleteCommandMessage(): Promise<void> {
@@ -348,22 +349,22 @@ export class CommandContext {
     this.deleteLaterFn?.(channelID, messageID, ttlMs);
   }
 
-  sendStream(source: ReadableStream<Uint8Array>, options: StreamAttachmentOptions, channelID = this.message.channelID): Promise<string> {
-    return sendStreamAttachment(this.resources.messages, channelID, source, options, this.signal);
+  sendStream(source: ReadableStream<Uint8Array>, options: StreamAttachmentOptions, channelID = this.channelID): Promise<string> {
+    return sendStreamAttachment(this.resources.messages, requireChannel(channelID, this.t), source, options, this.signal);
   }
 
-  edit(messageID: string, payload: string | Payload, channelID = this.message.channelID): Promise<void> {
-    return this.transport.edit(channelID, messageID, typeof payload === 'string' ? { content: payload } : payload);
+  edit(messageID: string, payload: string | Payload, channelID = this.channelID): Promise<void> {
+    return this.transport.edit(requireChannel(channelID, this.t), messageID, typeof payload === 'string' ? { content: payload } : payload);
   }
 
-  delete(messageID: string, channelID = this.message.channelID): Promise<void> {
-    return this.transport.delete(channelID, messageID);
+  delete(messageID: string, channelID = this.channelID): Promise<void> {
+    return this.transport.delete(requireChannel(channelID, this.t), messageID);
   }
 
   /** Agenda a exclusão de uma mensagem após `ttlMs`; par agendado de {@link delete}. */
-  expire(messageID: string, ttlMs: number, channelID = this.message.channelID): void {
+  expire(messageID: string, ttlMs: number, channelID = this.channelID): void {
     assertTtl(ttlMs, this.t);
-    this.deleteLater(channelID, messageID, ttlMs);
+    this.deleteLater(requireChannel(channelID, this.t), messageID, ttlMs);
   }
 
   /** Apaga as últimas `count` mensagens do canal (1 a 1000), incluindo a mensagem do comando fora da contagem. */
@@ -379,8 +380,8 @@ export class CommandContext {
     return { deleted: result.deleted, via: result.via };
   }
 
-  react(emoji: string, messageID = this.message.id, channelID = this.message.channelID): Promise<void> {
-    return this.transport.react(channelID, messageID, emoji);
+  react(emoji: string, messageID = this.message.id, channelID = this.channelID): Promise<void> {
+    return this.transport.react(requireChannel(channelID, this.t), messageID, emoji);
   }
 
   requirePermission(name: string, bot = false, message?: string): Promise<void> {
@@ -542,6 +543,11 @@ export function createLocaleProbeContext(options: ContextOptions): CommandContex
   skipNextTokenize = true;
   try { return new CommandContext(options); }
   finally { skipNextTokenize = false; }
+}
+
+function requireChannel(channelID: string, t: MessageTranslator = defaultTranslator): string {
+  if (!channelID) throw new GuardError(t('eventChannelRequired'), 'INVALID_ARGUMENT');
+  return channelID;
 }
 
 function assertTtl(ttlMs: number, t: MessageTranslator = defaultTranslator): void {
