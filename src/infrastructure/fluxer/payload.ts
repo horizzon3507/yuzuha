@@ -3,7 +3,7 @@ import type { MessageSendOptions } from '@fluxerjs/core';
 import type { AllowedMentionsPolicy, Embed, Payload, ReplyTarget } from '../../contracts.js';
 import { assertEmbedCount } from '../../domain/embeds.js';
 
-function embedBuilder(embed: Embed): EmbedBuilder {
+export function embedBuilder(embed: Embed): EmbedBuilder {
   const builder = new EmbedBuilder();
   if (embed.url !== undefined) builder.setURL(embed.url);
   if (embed.title !== undefined) builder.setTitle(embed.title);
@@ -30,13 +30,23 @@ function mediaOptions(media: { url: string; description?: string }): string | { 
 }
 
 /** Padrão seguro: nenhuma menção e sem ping ao autor respondido. Relaxar exige política explícita já autorizada. */
-function allowedMentions(policy: AllowedMentionsPolicy | undefined): MessageSendOptions['allowedMentions'] {
+export function allowedMentions(policy: AllowedMentionsPolicy | undefined): MessageSendOptions['allowedMentions'] {
   if (!policy) return { ...AllowedMentions.none, repliedUser: false };
   return {
     parse: policy.parse ?? [],
     ...(policy.users === undefined ? {} : { users: policy.users }),
     ...(policy.roles === undefined ? {} : { roles: policy.roles }),
     repliedUser: policy.repliedUser ?? false,
+  };
+}
+
+export function wireAllowedMentions(policy: AllowedMentionsPolicy | undefined): Record<string, unknown> {
+  const mentions = allowedMentions(policy)!;
+  return {
+    ...(mentions.parse === undefined ? {} : { parse: mentions.parse }),
+    ...(mentions.users?.length ? { users: mentions.users } : {}),
+    ...(mentions.roles?.length ? { roles: mentions.roles } : {}),
+    ...(mentions.repliedUser === undefined ? {} : { replied_user: mentions.repliedUser }),
   };
 }
 

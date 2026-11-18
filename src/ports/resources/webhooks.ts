@@ -1,3 +1,10 @@
+import type { AllowedMentionsPolicy, Embed } from '../../domain/messages.js';
+import type { WebhookEditInput, WebhookMessageOptions } from '../../domain/webhooks.js';
+import type { AttachmentSpec, BinaryAttachmentSpec } from './common.js';
+import type { MessageInfo } from './messages.js';
+
+export type { WebhookEditInput, WebhookMessageOptions } from '../../domain/webhooks.js';
+
 export interface WebhookInfo {
   id: string;
   name: string;
@@ -7,13 +14,21 @@ export interface WebhookInfo {
 }
 
 export interface WebhookSendInput {
-  content: string;
+  content?: string;
   username?: string;
   avatarURL?: string;
+  embeds?: Embed[];
+  files?: (AttachmentSpec | BinaryAttachmentSpec)[];
+  allowedMentions?: AllowedMentionsPolicy;
+  threadID?: string;
 }
 
 export interface WebhookMessageEditInput {
-  content?: string;
+  content?: string | null;
+  embeds?: Embed[];
+  files?: (AttachmentSpec | BinaryAttachmentSpec)[];
+  allowedMentions?: AllowedMentionsPolicy;
+  threadID?: string;
 }
 
 export interface WebhooksResources {
@@ -21,8 +36,9 @@ export interface WebhooksResources {
   create(channelID: string, name: string, reason?: string): Promise<WebhookInfo>;
   list(channelID: string): Promise<WebhookInfo[]>;
   send(webhookID: string, token: string, input: WebhookSendInput): Promise<string | null>;
-  edit(webhookID: string, token: string | null, name: string): Promise<void>;
+  edit(webhookID: string, token: string | null, input: string | WebhookEditInput, reason?: string): Promise<void>;
   delete(webhookID: string, token: string | null): Promise<void>;
+  fetchMessage(webhookID: string, token: string, messageID: string, options?: WebhookMessageOptions): Promise<MessageInfo>;
   editMessage(webhookID: string, token: string, messageID: string, input: WebhookMessageEditInput): Promise<string>;
-  deleteMessage(webhookID: string, token: string, messageID: string): Promise<void>;
+  deleteMessage(webhookID: string, token: string, messageID: string, options?: WebhookMessageOptions): Promise<void>;
 }

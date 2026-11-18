@@ -93,8 +93,10 @@ em categoria verifica as permissões dessa categoria. Overwrites exigem
 `ManageRoles` local, resolução do alvo no servidor e hierarquia. Permissões
 locais vêm de `transport.member(guildID, userID, channelID)`.
 
-Criação, listagem, consulta, envio, edição e exclusão de webhooks exigem
-`ManageWebhooks` efetivo para autor e bot no canal do webhook. Mesmo com token,
+Criação, listagem, consulta, envio, leitura de mensagem (`fetchMessage`), edição e exclusão de webhooks exigem
+`ManageWebhooks` efetivo para autor e bot no canal do webhook; quando `webhooks.edit`
+move o webhook para outro `channelID`, ambos também precisam de `ManageWebhooks`
+efetivo no canal de destino do mesmo servidor. Mesmo com token,
 o webhook precisa ser consultável pela autenticação do bot e pertencer ao
 servidor atual. `users.auditLogs` exige `ViewAuditLog` de autor e bot no
 servidor atual e valida filtros/cursores antes de consultar o port. Criação, edição, exclusão e clonagem de emojis/stickers exigem

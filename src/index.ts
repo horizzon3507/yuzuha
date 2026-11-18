@@ -115,7 +115,7 @@ export type { AttachmentInfo, MessageInfo, MessagesResources, MessageCursor, Mes
   PinnedMessagesInput, PinnedMessagesPage, ReactionUsersPage,
   BulkFetchRequest, BulkFetchInput, BulkFetchRawChannel, BulkDeleteOptions, PurgeInput, PurgeResult } from './ports/resources/messages.js';
 export type { AwaitMessageInput, CollectedMessageInfo, CollectMessagesInput, CollectReactionsInput, CollectorsResources, ReactionVote } from './ports/resources/collectors.js';
-export type { WebhookInfo, WebhookSendInput, WebhooksResources } from './ports/resources/webhooks.js';
+export type { WebhookEditInput, WebhookInfo, WebhookMessageEditInput, WebhookMessageOptions, WebhookSendInput, WebhooksResources } from './ports/resources/webhooks.js';
 export type { EmojiInfo, EmojiCreateInput, EmojiBulkResult, StickerInfo, StickerCreateInput, StickerEditInput, ExpressionsResources } from './ports/resources/expressions.js';
 export type { ThreadInfo, ThreadMemberInfo, ThreadMemberDetails, ThreadCreateInput, ForumPostInput, ThreadsResources, ThreadEditInput, ThreadSearchInput, ThreadSearchPage, ArchivedThreadsInput, ThreadListPage } from './ports/resources/threads.js';
 export type { InviteInfo, InviteCreateInput, InvitesResources } from './ports/resources/invites.js';
