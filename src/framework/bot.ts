@@ -18,8 +18,10 @@ import type { CompiledCommand } from './command-registry.js';
 import { runMiddleware } from './middleware.js';
 import type { DispatchResult, Middleware, YuzuhaOptions, YuzuhaPlugin } from './options.js';
 import { RateLimits } from './rate-limits.js';
+import { ConcurrencyLimiter } from './concurrency.js';
 import { reportError, userError } from './reporting.js';
-import { route, validatePrefixes } from './routing.js';
+import { route } from './routing.js';
+import { DynamicPrefixCache, ValidatedPrefixCache, prefixCacheKey, validatePrefixCacheOptions } from './prefix-cache.js';
 import { defineEvent, NativeEvents } from './events.js';
 import type { ContextEventDefinition, NativeEvent, NativeListener } from './events.js';
 import { ScheduleExecutionError, Scheduler } from '../services/scheduler.js';
@@ -112,6 +114,7 @@ export class Yuzuha {
   private readonly emojiMap: Record<string, string>;
   private readonly memberCache?: MemberCache;
   private detachMemberCache?: () => void;
+  private readonly concurrencyLimiter?: ConcurrencyLimiter;
   private readonly maintenance: StateMaintenance;
   private readonly sweepIntervalMs: number | false;
   private readonly sweepBatch: number;
@@ -145,8 +148,8 @@ export class Yuzuha {
     this.gatewayReports.add(task);
     void task.then(() => this.gatewayReports.delete(task), () => this.gatewayReports.delete(task));
   }
-  private prefixSource?: string | string[];
-  private prefixes: string[] = [];
+  private readonly validatedPrefixes = new ValidatedPrefixCache();
+  private readonly dynamicPrefixCache?: DynamicPrefixCache;
   private readonly contextCooldown = (key: string, duration: number) => this.limits.cooldown(key, duration);
   private readonly contextHelp = () => this.help();
 
@@ -169,6 +172,13 @@ export class Yuzuha {
     this.resources = options.resources ?? new FluxerResources(this.client, this.cdnService, this.reliability);
     this.cdnService = createCdn(options.cdn?.mediaBase);
     this.emojiMap = emojiRegistry(options.emoji);
+    if (options.concurrency !== undefined) {
+      this.concurrencyLimiter = new ConcurrencyLimiter(options.concurrency);
+    }
+    const prefixCacheOptions = validatePrefixCacheOptions(options.prefixCache);
+    if (prefixCacheOptions && typeof options.prefix === 'function') {
+      this.dynamicPrefixCache = new DynamicPrefixCache(prefixCacheOptions, options.now);
+    }
     const sweepOptions = resolveVariableSweepOptions(options.variables);
     this.sweepIntervalMs = sweepOptions.intervalMs;
     this.sweepBatch = sweepOptions.batch;
@@ -422,11 +432,11 @@ export class Yuzuha {
 
   private async runScheduled(task: ScheduleRecord, signal: AbortSignal): Promise<void> {
     if (this.closing || signal.aborted) throw cancellationError();
-    const configured = typeof this.options.prefix === 'function'
-      ? await this.options.prefix({ channelID: task.channelID, guildID: task.guildID } as IncomingMessage)
-      : this.options.prefix ?? '!';
-    const prefixes = this.resolvePrefixes(configured);
-    const prefix = (Array.isArray(prefixes) ? prefixes[0] : prefixes) ?? '!';
+    const prefixes = typeof this.options.prefix === 'function'
+      ? await this.resolveDynamicPrefixes({ channelID: task.channelID, guildID: task.guildID } as IncomingMessage, this.options.prefix, signal)
+      : this.resolvePrefixes(this.options.prefix ?? '!');
+    if (!prefixes) throw cancellationError();
+    const prefix = prefixes[0] ?? '!';
     const suffix = task.input ? ` ${task.input}` : '';
     let retryable = true, cause: unknown;
     const outcome = await this.handleMessage({ id: `schedule-${task.id}-${task.claimID ?? Date.now()}`, content: `${prefix}${task.command}${suffix}`,
@@ -485,6 +495,8 @@ export class Yuzuha {
     this.loginAbort?.abort();
     this.scheduler?.stop();
     this.clearVariableSweepTimer();
+    this.concurrencyLimiter?.close();
+    this.dynamicPrefixCache?.close();
     this.events.close();
     if (this.listening) this.client.off(Events.MessageCreate, this.listener);
     this.listening = false;
@@ -515,21 +527,42 @@ export class Yuzuha {
     return this.execution.getStore() ? Promise.resolve() : this.closeTask;
   }
 
+  /** Limpa o cache de prefixos dinâmicos para um servidor ou para todo o bot. */
+  invalidatePrefix(guildID?: string): void {
+    this.dynamicPrefixCache?.invalidate(guildID);
+  }
+
   handle(message: IncomingMessage): Promise<DispatchResult> {
     return this.handleMessage(message);
   }
 
   private resolvePrefixes(source: string | string[]): string[] {
-    const previous = this.prefixSource;
-    if (typeof source === 'string' && source === previous) return this.prefixes;
-    if (Array.isArray(source) && Array.isArray(previous) && source.length === previous.length) {
-      let same = true;
-      for (let index = 0; index < source.length; index++) if (source[index] !== previous[index]) { same = false; break; }
-      if (same) return this.prefixes;
+    return this.validatedPrefixes.resolve(source);
+  }
+
+  private async resolveDynamicPrefixes(
+    message: IncomingMessage,
+    resolver: (message: IncomingMessage) => string | string[] | Promise<string | string[]>,
+    signal: AbortSignal,
+  ): Promise<string[] | undefined> {
+    if (!this.dynamicPrefixCache) {
+      const configured = await resolver(message);
+      if (this.closing || signal.aborted) return undefined;
+      return this.resolvePrefixes(configured);
     }
-    const prefixes = validatePrefixes(source);
-    this.prefixSource = Array.isArray(source) ? [...source] : source;
-    return this.prefixes = prefixes;
+    const cacheKey = prefixCacheKey(message);
+    const cached = this.dynamicPrefixCache.get(cacheKey);
+    if (cached) return cached;
+    const token = this.dynamicPrefixCache.captureToken(cacheKey);
+    try {
+      const configured = await resolver(message);
+      if (this.closing || signal.aborted) return undefined;
+      const validated = this.resolvePrefixes(configured);
+      this.dynamicPrefixCache.setIfCurrent(token, validated);
+      return validated;
+    } finally {
+      this.dynamicPrefixCache.releaseToken(token);
+    }
   }
 
   private resolveCommand(message: IncomingMessage, configured: string | string[]): RoutedCommand | undefined {
@@ -547,6 +580,12 @@ export class Yuzuha {
       try { routed = this.resolveCommand(message, this.options.prefix ?? '!'); }
       catch (error) { return Promise.reject(error); }
       if (!routed) return ignored;
+    } else if (this.dynamicPrefixCache) {
+      const cached = this.dynamicPrefixCache.get(prefixCacheKey(message));
+      if (cached) {
+        routed = this.resolveCommand(message, cached);
+        if (!routed) return ignored;
+      }
     }
     const signal = parentSignal ? AbortSignal.any([this.shutdown.signal, parentSignal]) : this.shutdown.signal;
     const task = this.execution.run(true, () => this.dispatch(message, signal, onFailure, executionID, routed));
@@ -557,58 +596,81 @@ export class Yuzuha {
 
   private async dispatch(message: IncomingMessage, signal: AbortSignal, onFailure?: (error: unknown, ctx?: CommandContext) => void, executionID?: string, resolved?: RoutedCommand): Promise<DispatchResult> {
     if (!resolved) {
-      const configured = typeof this.options.prefix === 'function' ? await this.options.prefix(message) : this.options.prefix ?? '!';
-      if (this.closing || signal.aborted) return 'ignored';
-      resolved = this.resolveCommand(message, configured);
+      const prefixes = typeof this.options.prefix === 'function'
+        ? await this.resolveDynamicPrefixes(message, this.options.prefix, signal)
+        : this.resolvePrefixes(this.options.prefix ?? '!');
+      if (!prefixes || this.closing || signal.aborted) return 'ignored';
+      resolved = this.resolveCommand(message, prefixes);
     }
     if (!resolved) return 'ignored';
-    const { compiled, prefix } = resolved;
-    let ctx: CommandContext | undefined;
-    let outcome: DispatchResult = 'success';
-    const started = this.options.onLog ? performance.now() : 0;
+    let releaseSlot: (() => void) | undefined;
     try {
-      ctx = new CommandContext({ message, transport: this.transport, store: this.store, command: compiled.command,
-        input: resolved.input, prefix, lineage: compiled.lineage,
-        help: this.contextHelp, cooldown: this.contextCooldown,
-        native: { client: this.client, message: message.raw instanceof Message ? message.raw : undefined },
-        resources: this.resources, scheduler: this.scheduler, http: this.http, music: this.music, voice: this.voice,
-        canvas: { renderer: canvasRenderer, config: this.options.canvas }, now: this.options.now, signal, executionID,
-        cdn: this.cdnService, disableResourceAuthorization: this.options.unsafeDisableResourceAuthorization === true, emoji: this.emojiMap,
-        deleteLater: (channelID, messageID, ttlMs) => this.deleteLater(channelID, messageID, ttlMs) });
-      if (this.options.onLog) await emitLog(this.options, { event: 'command.start', executionID: ctx.executionID, command: ctx.command.name });
-      if (signal.aborted) throw cancellationError();
-      await ctx.prepare();
-      const current = ctx;
-      for (const check of compiled.command.checks ?? []) {
-        const result = await check(current);
-        if (result === false || typeof result === 'string') throw new GuardError(typeof result === 'string' ? result : 'Você não pode executar este comando.', 'GENERIC');
+      if (this.concurrencyLimiter) {
+        const acquired = await this.concurrencyLimiter.acquire(message.guildID, signal);
+        if (!acquired) {
+          if (!this.closing && !signal.aborted && this.options.onLog) {
+            await emitLog(this.options, {
+              event: 'dispatch.dropped',
+              reason: 'concurrency',
+              guildID: message.guildID,
+              channelID: message.channelID,
+            });
+          }
+          return 'ignored';
+        }
+        releaseSlot = acquired;
+        if (this.closing || signal.aborted) return 'ignored';
       }
-      const execute = async () => {
-        if (compiled.program) {
-          const programEngine = (compiled as { programEngine?: ScriptEngine }).programEngine ?? this.scriptEngine!;
-          const output = programEngine.text(await programEngine.execute(compiled.program, current)).trim();
-          if (output) await current.reply(output);
-        } else if (compiled.command.run) await compiled.command.run(current);
-        else throw new GuardError(`${resolved.input ? 'Subcomando desconhecido.\n' : ''}${this.help(compiled.command.name, prefix)}`, 'INVALID_ARGUMENT');
-      };
-      const local = compiled.command.middleware ?? [];
-      if (this.middleware.length) await runMiddleware(local.length ? [...this.middleware, ...local] : this.middleware, current, execute);
-      else if (local.length) await runMiddleware(local, current, execute);
-      else await execute();
-    } catch (error) {
-      onFailure?.(error, ctx);
-      outcome = error instanceof GuardError ? 'guarded' : 'error';
-      try { if (!signal.aborted) await (ctx ? ctx.reply(userError(error, ctx)) : this.transport.reply(message, { content: userError(error, ctx) })); }
-      catch (replyError) { await reportError(this.options, replyError, ctx); }
-      if (!(error instanceof GuardError)) await reportError(this.options, error, ctx);
+      const { compiled, prefix } = resolved;
+      let ctx: CommandContext | undefined;
+      let outcome: DispatchResult = 'success';
+      const started = this.options.onLog ? performance.now() : 0;
+      try {
+        ctx = new CommandContext({ message, transport: this.transport, store: this.store, command: compiled.command,
+          input: resolved.input, prefix, lineage: compiled.lineage,
+          help: this.contextHelp, cooldown: this.contextCooldown,
+          native: { client: this.client, message: message.raw instanceof Message ? message.raw : undefined },
+          resources: this.resources, scheduler: this.scheduler, http: this.http, music: this.music, voice: this.voice,
+          canvas: { renderer: canvasRenderer, config: this.options.canvas }, now: this.options.now, signal, executionID,
+          cdn: this.cdnService, disableResourceAuthorization: this.options.unsafeDisableResourceAuthorization === true, emoji: this.emojiMap,
+          deleteLater: (channelID, messageID, ttlMs) => this.deleteLater(channelID, messageID, ttlMs) });
+        if (this.options.onLog) await emitLog(this.options, { event: 'command.start', executionID: ctx.executionID, command: ctx.command.name });
+        if (signal.aborted) throw cancellationError();
+        await ctx.prepare();
+        const current = ctx;
+        for (const check of compiled.command.checks ?? []) {
+          const result = await check(current);
+          if (result === false || typeof result === 'string') throw new GuardError(typeof result === 'string' ? result : 'Você não pode executar este comando.', 'GENERIC');
+        }
+        const execute = async () => {
+          if (compiled.program) {
+            const programEngine = (compiled as { programEngine?: ScriptEngine }).programEngine ?? this.scriptEngine!;
+            const output = programEngine.text(await programEngine.execute(compiled.program, current)).trim();
+            if (output) await current.reply(output);
+          } else if (compiled.command.run) await compiled.command.run(current);
+          else throw new GuardError(`${resolved.input ? 'Subcomando desconhecido.\n' : ''}${this.help(compiled.command.name, prefix)}`, 'INVALID_ARGUMENT');
+        };
+        const local = compiled.command.middleware ?? [];
+        if (this.middleware.length) await runMiddleware(local.length ? [...this.middleware, ...local] : this.middleware, current, execute);
+        else if (local.length) await runMiddleware(local, current, execute);
+        else await execute();
+      } catch (error) {
+        onFailure?.(error, ctx);
+        outcome = error instanceof GuardError ? 'guarded' : 'error';
+        try { if (!signal.aborted) await (ctx ? ctx.reply(userError(error, ctx)) : this.transport.reply(message, { content: userError(error, ctx) })); }
+        catch (replyError) { await reportError(this.options, replyError, ctx); }
+        if (!(error instanceof GuardError)) await reportError(this.options, error, ctx);
+      }
+      if (ctx && this.options.onCommand) {
+        try { await this.options.onCommand(ctx, outcome); }
+        catch (error) { await reportError(this.options, error, ctx); }
+      }
+      if (ctx && this.options.onLog) await emitLog(this.options, { event: 'command.finish', executionID: ctx.executionID,
+        command: ctx.command.name, outcome, durationMs: performance.now() - started });
+      return outcome;
+    } finally {
+      releaseSlot?.();
     }
-    if (ctx && this.options.onCommand) {
-      try { await this.options.onCommand(ctx, outcome); }
-      catch (error) { await reportError(this.options, error, ctx); }
-    }
-    if (ctx && this.options.onLog) await emitLog(this.options, { event: 'command.finish', executionID: ctx.executionID,
-      command: ctx.command.name, outcome, durationMs: performance.now() - started });
-    return outcome;
   }
 }
 

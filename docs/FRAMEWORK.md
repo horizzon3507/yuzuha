@@ -220,6 +220,56 @@ removidas automaticamente, e eventos do gateway (`GuildMemberUpdate`,
 `GuildDelete`, `ChannelUpdate` e `ChannelDelete`) invalidam o escopo afetado.
 `destroy()` remove os listeners anexados e limpa o cache.
 
+### Limites de concorrência
+
+Para limitar execuções simultâneas de comandos, configure `concurrency` nas
+opções de `Yuzuha`:
+
+```ts
+const bot = new Yuzuha({
+  name: 'meu-bot',
+  concurrency: { max: 32, perGuild: 4, maxPending: 128 },
+});
+```
+
+- `max`: inteiro seguro `>= 1` com o teto global de comandos em execução.
+- `perGuild`: inteiro seguro `>= 1` por `guildID`. Mensagens diretas (sem
+  `guildID`) ignoram o limite por servidor e obedecem apenas a `max`.
+- `maxPending`: inteiro seguro `>= 0` para a fila de espera. Quando a fila está
+  cheia, despachos excedentes retornam `'ignored'` e registram em `onLog` o
+  evento `dispatch.dropped` (`reason: 'concurrency'`, `guildID`, `channelID`).
+
+Ao liberar uma vaga, o limitador acorda o item mais antigo da fila cujo servidor
+tenha cota disponível, evitando que picos em um servidor bloqueiem os demais.
+Opções inválidas lançam `CONCURRENCY_OPTIONS`. Em `destroy()`, os itens em
+espera são liberados imediatamente como `'ignored'`, sem emitir
+`dispatch.dropped`.
+
+### Cache de prefixos dinâmicos
+
+Quando `prefix` é uma função que consulta banco ou configuração externa,
+habilite `prefixCache: { ttlMs, max? }` nas opções de `Yuzuha` (desligado por
+padrão):
+
+```ts
+const bot = new Yuzuha({
+  name: 'meu-bot',
+  prefix: async message => carregarPrefixos(message.guildID),
+  prefixCache: { ttlMs: 60_000, max: 5_000 },
+});
+```
+
+- `ttlMs`: inteiro seguro entre `1` e `3_600_000` (usa `now`, ou `Date.now`).
+- `max`: inteiro seguro entre `1` e `100_000` (padrão `5_000`) com remoção LRU.
+- Opções inválidas lançam `PREFIX_CACHE_OPTIONS`.
+
+Com a entrada quente no cache por servidor (`guildID`) ou DM (`channelID`),
+mensagens que não acionam comandos retornam `'ignored'` sincronamente sem chamar
+`prefix`. Chame `bot.invalidatePrefix(guildID)` ao alterar o prefixo de um
+servidor ou `bot.invalidatePrefix()` para limpar todo o cache; resoluções em
+andamento antes da invalidação ou de `destroy()` não populam o cache. Arrays de
+prefixos validados também reutilizam um cache LRU interno de até 256 entradas.
+
 ## Testes sem rede
 
 ```ts
