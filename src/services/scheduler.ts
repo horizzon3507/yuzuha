@@ -3,6 +3,7 @@ import type { ScheduleExecutionRecord, ScheduleRecord } from '../domain/state.js
 import { assertTimezone, nextCron, parseCron } from '../domain/cron.js';
 import type { MissedRunPolicy } from '../domain/cron.js';
 import type { Store } from '../ports/store.js';
+import { cloneValue } from '../shared/clone.js';
 import { GuardError, PartialModerationError, YuzuhaError } from '../shared/errors.js';
 
 export interface RetryPolicy { maxAttempts?: number; retryDelayMs?: number; retryBackoff?: number; retryJitter?: number }
@@ -245,7 +246,7 @@ export class Scheduler {
       const entry = (state.scheduleHistory ?? []).find(item => item.id === executionID && item.status === 'failed' && accessible(item.task, access));
       if (!entry) return null;
       if (!entry.retryable) throw new YuzuhaError('SCHEDULE_UNSAFE_RETRY', 'Esta execução terminou com guard ou possível efeito de moderação e não permite reexecução.');
-      const task = { ...structuredClone(entry.task), id: randomUUID(), due, attempts: 0, runningAt: null, claimID: null, paused: false };
+      const task = { ...cloneValue(entry.task), id: randomUUID(), due, attempts: 0, runningAt: null, claimID: null, paused: false };
       state.schedules.push(task);
       nextDue = nextDueFrom(state.schedules);
       return task.id;

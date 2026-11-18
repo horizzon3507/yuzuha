@@ -94,6 +94,17 @@ A validação do estado e a cópia do retorno acontecem antes do commit. Um reto
 impossível de clonar também recusa a atualização, sem confirmar os dados.
 `read` entrega um snapshot isolado; modificá-lo não altera o store.
 
+Em `MemoryStore` (e na camada em memória do `JsonStore`), `read` utiliza
+snapshots estruturais copy-on-write (COW): leituras pontuais evitam clonar o
+estado inteiro quando não há mutação, e objetos/fatias retornados são
+materializados e isolados antes de deixar o store, permitindo inclusive mutação
+pelo chamador sem corromper o estado interno. Da mesma forma, `update` rastreia
+as chaves e fatias modificadas no rascunho da transação, valida apenas o que foi
+tocado (ou a fatia inteira quando substituída) e aplica o patch somente após a
+validação, cópia do retorno e confirmação do `commit`, preservando rollback
+integral sem revalidar chaves intactas. `SQLiteStore` continua decodificando,
+validando e serializando o snapshot completo por transação.
+
 `STORE_ASYNC` identifica callbacks que retornam promise/thenable; `STORE_INVALID`
 identifica estado produzido fora do schema. Esses erros não gravam a transação.
 
@@ -318,8 +329,10 @@ apaga valores vencidos e metadados órfãos e devolve `scanned`, `removed`,
 ordem lexical; passe-o sem alterar, inclusive quando for uma string vazia.
 `null` encerra a passagem. Chaves inseridas antes de um cursor já avançado e
 valores que vencerem depois de sua passagem precisam de uma nova passagem.
-A quantidade de mutações e entradas examinadas é limitada; o contrato atual dos
-stores ainda carrega/clona/valida o estado completo e ordena suas chaves de TTL.
+A quantidade de mutações e entradas examinadas é limitada; `MemoryStore` e
+`JsonStore` usam snapshots COW e validação incremental nas chaves alteradas,
+enquanto `SQLiteStore` ainda carrega e serializa o estado completo, e a limpeza
+em todos os stores continua ordenando as chaves de TTL disponíveis.
 A limpeza não é um índice SQL ou uma operação de custo constante.
 
 Em `Yuzuha`, `bot.sweepVariables()` reutiliza `StateMaintenance.cleanupExpired`

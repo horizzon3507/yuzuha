@@ -1,6 +1,7 @@
 import type { State } from '../domain/state.js';
 import { isState } from '../domain/state-validation.js';
 import type { Store } from '../ports/store.js';
+import { cloneValue } from '../shared/clone.js';
 import { YuzuhaError } from '../shared/errors.js';
 
 export interface StoreStatistics {
@@ -111,7 +112,7 @@ function mergeByID<T extends { id: string }>(target: readonly T[], source: reado
 }
 
 function merge(target: State, source: State): State {
-  const result = structuredClone(target);
+  const result = cloneValue(target);
   for (const [key, value] of Object.entries(source.variables)) {
     Object.defineProperty(result.variables, key, { value: structuredClone(value), writable: true, enumerable: true, configurable: true });
     if (Object.hasOwn(source.variableExpirations ?? {}, key)) {
