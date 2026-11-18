@@ -77,6 +77,26 @@ JIT e GC também afetam a série. Repita as medições e conserve o JSON origina
 Não há um limiar de desempenho obrigatório no CI nem medição de latência da
 API/gateway do Fluxer.
 
+## Contagem de chamadas REST
+
+`benchmarks/rest-calls.mjs` mede de forma determinística e offline quantas
+operações de transporte e REST são disparadas nos fluxos principais:
+
+```sh
+npm run build
+node benchmarks/rest-calls.mjs
+node benchmarks/rest-calls.mjs --rounds 10 --json > rest-calls.json
+```
+
+O runner usa `MockTransport.calls` (com contadores separados para `reply` e
+`send`) e `FluxerTransport` + `MemberCache` sobre um `Client` simulado sem rede:
+
+| Cenário | Consultas de membro | Ações / respostas |
+|---|---|---|
+| Comando com 3 permissões de autor + 3 do bot e `requirePermission` | `2` (`author` e `bot` em paralelo no `MemberMemo`) | `1` `reply` |
+| Comando `ban` com permissões declarativas e `ctx.mod.ban` | `3` (`author` e `bot` reaproveitados; `target` atualizado) | `1` `moderate`, `1` `reply` |
+| 10 execuções seguidas com `memberCache` | `6` chamadas REST frias na 1ª execução; `0` nas 9 seguintes | `10` envios (`54` chamadas REST economizadas) |
+
 ## Cooldowns e deduplicação após a 0.1.7
 
 `benchmarks/rate-limits.mjs` compara o build atual com a implementação congelada

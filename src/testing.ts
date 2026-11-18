@@ -1,3 +1,4 @@
+import { AsyncLocalStorage } from 'node:async_hooks';
 import type { IncomingMessage, ModerationAction, ModerationMember, Payload, Transport } from './contracts.js';
 import type { Resources } from './ports/resources.js';
 import { PermissionFlags } from '@fluxerjs/core';
@@ -45,43 +46,66 @@ export function mockResources(overrides: MockResourceOverrides = {}): Resources 
 
 export class MockTransport implements Transport {
   private messageSequence = 0;
+  private readonly replyScope = new AsyncLocalStorage<boolean>();
   botID = '999';
   ping = 12;
   readonly messages: { id: string; channelID: string; replyTo?: string; payload: Payload }[] = [];
   readonly actions: ({ guildID: string; action: ModerationAction; targetID: string; reason: string; duration?: number } & VoiceModerationOptions)[] = [];
   readonly members = new Map<string, ModerationMember>();
   readonly reactions: { channelID: string; messageID: string; emoji: string }[] = [];
+  readonly calls = { send: 0, reply: 0, edit: 0, delete: 0, react: 0, member: 0, moderate: 0 };
   failAction = false;
   constructor() {
     this.setMember('100', { id: '1', owner: true, permissions: PermissionFlags.Administrator, rank: 100 });
     this.setMember('100', { id: this.botID, owner: false, permissions: PermissionFlags.Administrator, rank: 90 });
     this.setMember('100', { id: '2', owner: false, permissions: 0n, rank: 1 });
   }
+  resetCalls(): void {
+    this.calls.send = 0;
+    this.calls.reply = 0;
+    this.calls.edit = 0;
+    this.calls.delete = 0;
+    this.calls.react = 0;
+    this.calls.member = 0;
+    this.calls.moderate = 0;
+  }
   setMember(guildID: string, member: ModerationMember): void { this.members.set(JSON.stringify([guildID, member.id]), member); }
   async reply(message: IncomingMessage, payload: Payload): Promise<string> {
-    const id = await this.send(message.channelID, payload); this.messages.find(item => item.id === id)!.replyTo = message.id; return id;
+    this.calls.reply++;
+    const id = await this.replyScope.run(true, () => this.send(message.channelID, payload));
+    this.messages.find(item => item.id === id)!.replyTo = message.id;
+    return id;
   }
   async send(channelID: string, payload: Payload): Promise<string> {
+    if (!this.replyScope.getStore()) this.calls.send++;
     const id = String(++this.messageSequence);
-    this.messages.push({ id, channelID, payload: structuredClone(payload) }); return id;
+    this.messages.push({ id, channelID, payload: structuredClone(payload) });
+    return id;
   }
   async edit(channelID: string, messageID: string, payload: Payload): Promise<void> {
+    this.calls.edit++;
     const message = this.messages.find(m => m.id === messageID && m.channelID === channelID);
     if (!message) throw new YuzuhaError('NOT_FOUND', 'Mensagem não encontrada.');
     message.payload = structuredClone(payload);
   }
   async delete(channelID: string, messageID: string): Promise<void> {
+    this.calls.delete++;
     const i = this.messages.findIndex(m => m.id === messageID && m.channelID === channelID);
     if (i < 0) throw new YuzuhaError('NOT_FOUND', 'Mensagem não encontrada.');
     this.messages.splice(i, 1);
   }
-  async react(channelID: string, messageID: string, emoji: string): Promise<void> { this.reactions.push({ channelID, messageID, emoji }); }
+  async react(channelID: string, messageID: string, emoji: string): Promise<void> {
+    this.calls.react++;
+    this.reactions.push({ channelID, messageID, emoji });
+  }
   async member(guildID: string, userID: string): Promise<ModerationMember> {
+    this.calls.member++;
     const member = this.members.get(JSON.stringify([guildID, userID]));
     if (!member) throw new GuardError('Membro não encontrado.', 'MEMBER_NOT_FOUND');
     return structuredClone(member);
   }
   async moderate(guildID: string, action: ModerationAction, targetID: string, reason: string, duration?: number, voice?: VoiceModerationOptions): Promise<void> {
+    this.calls.moderate++;
     if (this.failAction) throw new YuzuhaError('API_ERROR', 'Falha simulada.');
     this.actions.push({ guildID, action, targetID, reason, duration, ...voice });
   }

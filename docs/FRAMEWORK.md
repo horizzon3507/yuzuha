@@ -200,6 +200,26 @@ para o handler poder terminar. O login pendente recebe um sinal de cancelamento.
 O bot fecha seu store padrão, mas não um store fornecido pelo chamador. Veja
 [STORAGE.md](STORAGE.md) para propriedade e fechamento.
 
+### Cache de membros
+
+Por padrão, `FluxerTransport.member` consulta o servidor, cargos e membro via REST
+a cada resolução. Para reduzir chamadas repetidas entre comandos, habilite
+`memberCache: { ttlMs, max? }` nas opções de `Yuzuha`:
+
+```ts
+const bot = new Yuzuha({
+  name: 'meu-bot',
+  memberCache: { ttlMs: 30_000, max: 5_000 },
+});
+```
+
+`ttlMs` aceita inteiros entre `1` e `3_600_000`; `max` aceita inteiros entre `1`
+e `1_000_000` (padrão `10_000`). Entradas expiradas ou mais antigas (LRU) são
+removidas automaticamente, e eventos do gateway (`GuildMemberUpdate`,
+`GuildMemberRemove`, `GuildRoleCreate`, `GuildRoleUpdate`, `GuildRoleDelete`,
+`GuildDelete`, `ChannelUpdate` e `ChannelDelete`) invalidam o escopo afetado.
+`destroy()` remove os listeners anexados e limpa o cache.
+
 ## Testes sem rede
 
 ```ts

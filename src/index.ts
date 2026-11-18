@@ -61,7 +61,8 @@ export type { ScheduleRecord, ScheduleExecutionRecord } from './domain/state.js'
 export { defineConfig } from './config.js';
 export type { YuzuhaConfig } from './config.js';
 export type * from './contracts.js';
-export { FluxerTransport, incoming } from './adapter.js';
+export { FluxerTransport, MemberCache, incoming } from './adapter.js';
+export type { MemberCacheOptions } from './adapter.js';
 export { FluxerResources } from './infrastructure/fluxer/resources.js';
 export { JsonStore, MemoryStore, defaultDataPath } from './store.js';
 export { SQLiteStore } from './sqlite.js';

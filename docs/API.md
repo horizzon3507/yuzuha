@@ -26,6 +26,7 @@ A fonte das assinaturas completas são as declarações TypeScript distribuídas
 | `limits` | Subconjunto de `calls`, `depth`, `output`, `timeoutMs` |
 | `now` | Função que retorna epoch em ms para cooldown, dados e scheduler; padrão `Date.now` |
 | `emoji` | Mapa nome → emoji exposto em `bot.emoji`/`ctx.emoji`; referência viva |
+| `memberCache` | `false` (padrão) ou `{ ttlMs, max?, now? }` para cache LRU+TTL em `FluxerTransport` com invalidação via gateway |
 | `onError(error, ctx?)` | Observação de falhas internas e operacionais |
 | `onCommand(ctx, outcome)` | Observação do resultado de comandos encontrados |
 | `onLog(record)` | Eventos estruturados opcionais, sem conteúdo/segredos automáticos |
