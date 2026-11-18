@@ -214,6 +214,7 @@ folha. As regras de herança, parsing e exemplos completos estão em
 | `ctx.locale`, `ctx.t(chave, ...args)` | Idioma ativo e tradutor tipado sobre `MessageCatalog` |
 | `ctx.args` | Map de argumentos declarativos convertidos |
 | `ctx.flags` | Map de flags declaradas convertidas |
+| `ctx.locals` | Objeto tipado por execução (`YuzuhaLocals`), extensível via declaration merging |
 | `ctx.vars` | Map de variáveis locais da execução |
 | `ctx.reply(textoOuPayload)` | Resposta sem pings pelo adaptador |
 | `ctx.requireGuild()` | Exige servidor e retorna seu ID |
@@ -237,6 +238,45 @@ folha. As regras de herança, parsing e exemplos completos estão em
 (ms) e `deleteMessageDays`. Com `record: true` retorna o caso. As permissões
 consultadas por guards são de servidor, adequadas à moderação; para permissões
 específicas de canal, use `GuildMember.permissionsIn` pelo client original.
+
+### Estado local tipado (`ctx.locals` e `options.context`)
+
+Cada `CommandContext` (e `EventContext`) expõe um objeto isolado `ctx.locals`
+tipado por `YuzuhaLocals`. Em projetos TypeScript, estenda `YuzuhaLocals` via
+declaration merging e use `YuzuhaOptions.context` para popular valores antes da
+preparação do comando:
+
+```ts
+import { Yuzuha, defineCommand } from 'yuzuha';
+
+declare module 'yuzuha' {
+  interface YuzuhaLocals {
+    idioma: 'pt-BR' | 'en-US';
+    requestID: string;
+  }
+}
+
+const bot = new Yuzuha({
+  prefix: '!',
+  async context(ctx) {
+    ctx.locals.requestID = ctx.executionID;
+    ctx.locals.idioma = ctx.guildID ? 'pt-BR' : 'en-US';
+  },
+});
+
+bot.command(defineCommand({
+  name: 'status',
+  async run(ctx) {
+    await ctx.reply(`[${ctx.locals.idioma}] ${ctx.locals.requestID}`);
+  },
+}));
+```
+
+`options.context(ctx)` aceita retorno síncrono ou `Promise<void>` e roda no
+despacho **antes** de `ctx.prepare()`, tipos customizados de argumento, `checks`,
+`hooks` (`onDenied`, `onCooldown`), `errorReply` e `middleware` — e também antes
+de handlers de `contextEvent` e `scriptEvent`. Valores não funcionais em
+`options.context` lançam `ConfigError('OPTIONS', 'context deve ser uma função.')`.
 
 ## Plugins e funções personalizadas (function mode)
 
