@@ -411,7 +411,19 @@ export function assert(condition: unknown, message: string): asserts condition {
 export class StopExecution extends Error {}
 
 export class PartialModerationError extends YuzuhaError {
-  constructor(public readonly action: string, public readonly targetID: string, cause: unknown) {
-    super('MODERATION_PARTIAL', `A ação ${action} foi realizada, mas o caso não foi salvo. Não repita a ação.`, { cause });
+  readonly hasCustomMessage: boolean;
+
+  constructor(
+    public readonly action: string,
+    public readonly targetID: string,
+    cause: unknown,
+    message?: string,
+  ) {
+    super(
+      'MODERATION_PARTIAL',
+      message ?? `A ação ${action} foi realizada, mas o caso não foi salvo. Não repita a ação.`,
+      { cause },
+    );
+    this.hasCustomMessage = message !== undefined;
   }
 }

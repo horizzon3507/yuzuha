@@ -1,3 +1,5 @@
+import { defaultTranslator } from '../domain/i18n.js';
+import type { MessageTranslator } from '../domain/i18n.js';
 import type { CaseRecord, ModerationAction, ModerationOptions } from '../domain/moderation.js';
 import { MAX_TIMEOUT_MS, userID } from '../domain/values.js';
 import type { Store } from '../ports/store.js';
@@ -11,31 +13,37 @@ export class ModerationService {
   private readonly authorization: AuthorizationService;
   private readonly cases: CaseService;
 
-  constructor(private readonly transport: Transport, store: Store, private readonly scope: ActorScope, memo?: MemberMemo) {
-    this.authorization = new AuthorizationService(transport, scope, memo);
+  constructor(
+    private readonly transport: Transport,
+    store: Store,
+    private readonly scope: ActorScope,
+    memo?: MemberMemo,
+    private readonly t: MessageTranslator = defaultTranslator,
+  ) {
+    this.authorization = new AuthorizationService(transport, scope, memo, t);
     this.cases = new CaseService(store);
   }
 
   async execute(action: ModerationAction, target: string, reason: string, options: ModerationOptions = {}): Promise<CaseRecord | undefined> {
-    const guildID = requireGuild(this.scope.guildID);
+    const guildID = requireGuild(this.scope.guildID, this.t);
     if (!['ban', 'kick', 'timeout', 'unban', 'move', 'mute', 'deafen'].includes(action)) throw new YuzuhaError('MODERATION_ACTION', 'Ação de moderação inválida.');
-    const targetID = userID(target);
-    if (!reason.trim()) throw new GuardError('Informe o motivo.', 'INVALID_REASON');
-    if (reason.length > 512) throw new GuardError('O motivo deve ter até 512 caracteres.', 'INVALID_REASON');
+    const targetID = userID(target, this.t);
+    if (!reason.trim()) throw new GuardError(this.t('moderationReasonRequired'), 'INVALID_REASON');
+    if (reason.length > 512) throw new GuardError(this.t('moderationReasonTooLong'), 'INVALID_REASON');
     if (action === 'timeout' && (!Number.isSafeInteger(options.duration) || !options.duration
       || options.duration < 0 || options.duration > MAX_TIMEOUT_MS)) {
-      throw new GuardError('Informe uma duração de até 28 dias.', 'INVALID_DURATION');
+      throw new GuardError(this.t('moderationTimeoutDuration'), 'INVALID_DURATION');
     }
     if (options.duration !== undefined && (!Number.isSafeInteger(options.duration) || options.duration <= 0)) {
-      throw new GuardError('Informe uma duração válida em milissegundos inteiros.', 'INVALID_DURATION');
+      throw new GuardError(this.t('moderationDurationInvalid'), 'INVALID_DURATION');
     }
     const days = options.deleteMessageDays ?? 0;
-    if (!Number.isInteger(days) || days < 0 || days > 7) throw new GuardError('O histórico a remover deve ser de 0 a 7 dias.', 'INVALID_ARGUMENT');
+    if (!Number.isInteger(days) || days < 0 || days > 7) throw new GuardError(this.t('moderationDeleteDaysInvalid'), 'INVALID_ARGUMENT');
     if (action === 'move' && options.channelID !== null && (typeof options.channelID !== 'string' || !/^\d+$/.test(options.channelID))) {
-      throw new GuardError('Informe o ID do canal de voz ou null para desconectar.', 'INVALID_ARGUMENT');
+      throw new GuardError(this.t('moderationVoiceChannelInvalid'), 'INVALID_ARGUMENT');
     }
     if ((action === 'mute' || action === 'deafen') && typeof options.enabled !== 'boolean') {
-      throw new GuardError('Informe true ou false para o estado de voz.', 'INVALID_ARGUMENT');
+      throw new GuardError(this.t('moderationVoiceStateInvalid'), 'INVALID_ARGUMENT');
     }
     await this.authorization.requireModeratable(action, targetID, options.channelID);
     if (options.record) await this.cases.ready();
@@ -47,7 +55,14 @@ export class ModerationService {
     try {
       return await this.cases.create({ guildID, action, targetID, moderatorID: this.scope.authorID, reason,
         ...(options.duration === undefined ? {} : { duration: options.duration }), ...voice });
-    } catch (cause) { throw new PartialModerationError(action, targetID, cause); }
+    } catch (cause) {
+      throw new PartialModerationError(
+        action,
+        targetID,
+        cause,
+        this.t === defaultTranslator ? undefined : this.t('moderationPartial', action, targetID),
+      );
+    }
   }
   async canModerate(action: ModerationAction, targetID: string, channelID?: string | null): Promise<boolean> {
     try { await this.authorization.requireModeratable(action, targetID, channelID); return true; }

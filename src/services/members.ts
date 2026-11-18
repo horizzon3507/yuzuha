@@ -8,20 +8,23 @@ import type { ResolvedBan, ResolvedMember, ResolvedUser } from '../domain/resolv
 import { GuardError } from '../shared/errors.js';
 import { requireActor, requireGuild } from './authorization.js';
 import type { ActorScope } from './authorization.js';
+import { defaultTranslator } from '../domain/i18n.js';
+import type { MessageTranslator } from '../domain/i18n.js';
 
 export class MemberService {
   constructor(private readonly transport: Transport, private readonly scope: ActorScope,
-    private readonly users: () => UsersResources) {}
+    private readonly users: () => UsersResources,
+    private readonly t: MessageTranslator = defaultTranslator) {}
 
   search(query: string, limit = 25, offset = 0) {
-    const guildID = requireGuild(this.scope.guildID);
+    const guildID = requireGuild(this.scope.guildID, this.t);
     return this.users().searchMembers(guildID, query, limit, offset);
   }
 
   async setNickname(target: string | { id: string }, nickname: string | null, reason: string) {
-    const guildID = requireGuild(this.scope.guildID);
-    const authorID = requireActor(this.scope.authorID);
-    const targetID = userID(typeof target === 'string' ? target : target.id);
+    const guildID = requireGuild(this.scope.guildID, this.t);
+    const authorID = requireActor(this.scope.authorID, this.t);
+    const targetID = userID(typeof target === 'string' ? target : target.id, this.t);
     if (nickname !== null && (typeof nickname !== 'string' || nickname.length > 32)) throw new GuardError('Apelido deve ter até 32 caracteres.', 'INVALID_ARGUMENT');
     if (!reason.trim() || reason.length > 512) throw new GuardError('Informe um motivo de até 512 caracteres.', 'INVALID_REASON');
     const [author, bot, member] = await Promise.all([
@@ -42,7 +45,7 @@ export class MemberService {
   }
 
   async resolve(query: string): Promise<ResolvedMember> {
-    const guildID = requireGuild(this.scope.guildID);
+    const guildID = requireGuild(this.scope.guildID, this.t);
     const text = query.trim();
     const id = mentionID(text);
     if (id) {
@@ -85,7 +88,7 @@ export class MemberService {
   async resolveUser(query?: string, options?: { default?: 'author' | string }): Promise<ResolvedUser> {
     let text = query?.trim() ?? '';
     if (!text) {
-      const fallback = options?.default === 'author' ? requireActor(this.scope.authorID) : options?.default?.trim() ?? '';
+      const fallback = options?.default === 'author' ? requireActor(this.scope.authorID, this.t) : options?.default?.trim() ?? '';
       if (!fallback) return { status: 'missing', query: '' };
       text = fallback;
     }
@@ -98,7 +101,7 @@ export class MemberService {
   }
 
   async resolveBan(query: string): Promise<ResolvedBan> {
-    const guildID = requireGuild(this.scope.guildID);
+    const guildID = requireGuild(this.scope.guildID, this.t);
     return this.users().resolveBan(guildID, query);
   }
 }
