@@ -20,8 +20,8 @@ e execute `node dist/cli.js` na raiz do repositório.
 | `yuzuha data <stats/cleanup/backup/restore> <store> [opções]` | Manutenção e backup sem config |
 | `yuzuha doctor [config] [--json]` | Diagnóstico offline, sem exibir token |
 | `yuzuha editor` | Caminho da extensão VS Code incluída no pacote |
-| `yuzuha run [config]` | Carrega ambiente, config e comandos e conecta |
-| `yuzuha dev [config]` | Executa com recarga dos arquivos de comando |
+| `yuzuha run [config] [--health-port porta] [--health-host host]` | Carrega ambiente, config e comandos e conecta |
+| `yuzuha dev [config] [--health-port porta] [--health-host host]` | Executa com recarga dos arquivos de comando |
 
 Opções desconhecidas, repetidas, argumentos extras ou `--js --ts` juntos
 são erros. `--functions` acrescenta um comando de exemplo em `yuzuha/functions`;
@@ -149,11 +149,20 @@ ESM. Reimporte módulos sem efeitos de inicialização desnecessários.
 
 `SIGINT` e `SIGTERM` fecham o watcher, aguardam comandos em execução (com limite
 padrão de `10_000` ms na CLI, ou `timeoutMs` configurado em `runBot`), encerram o
-client e fecham o store da config. `unhandledRejection` e `uncaughtException`
+client, fecham o servidor HTTP de healthcheck (quando ativo) e fecham o store da
+config. `unhandledRejection` e `uncaughtException`
 reportam a falha via `onError`/`logger`, definem `process.exitCode = 1`,
 iniciam o mesmo encerramento limitado e removem os listeners instalados. O
 encerramento usa o mesmo contrato de propriedade descrito em
 [STORAGE.md](STORAGE.md).
+
+Quando `--health-port <porta>` (`1..65535`) é informado em `yuzuha run` ou
+`yuzuha dev` (com `--health-host <host>` opcional, padrão `127.0.0.1`), a CLI
+inicia `startHealthServer` antes do login expondo `/health` e `/healthz` (`200`
+quando `ok`, `503` durante `starting` ou `closed`). Se `bot.options.metrics`
+implementar `render()` (como `createPrometheusMetrics()`), a rota `GET /metrics`
+também é publicada automaticamente na mesma porta. Veja
+[OBSERVABILITY.md](OBSERVABILITY.md).
 
 ## Gerar JavaScript ou TypeScript
 

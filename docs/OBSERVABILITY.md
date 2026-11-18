@@ -174,3 +174,55 @@ Séries emitidas com o prefixo padrão `yuzuha`:
 - `yuzuha_transport_retries_total{attempt}` e `yuzuha_transport_retry_delay_milliseconds_total`
 - `yuzuha_scheduler_executions_total{outcome}` e `yuzuha_scheduler_duration_milliseconds`
 - `yuzuha_active_executions`
+
+## Healthcheck (`bot.health()` e `startHealthServer`)
+
+`bot.health()` retorna um `HealthReport` congelado sem fazer I/O de rede:
+
+```ts
+import { startHealthServer, Yuzuha } from 'yuzuha';
+import { createPrometheusMetrics } from 'yuzuha/metrics';
+
+const metrics = createPrometheusMetrics();
+const bot = new Yuzuha({ metrics });
+const health = await startHealthServer(bot, {
+  port: 8080,
+  host: '127.0.0.1',
+  metrics,
+});
+
+console.log(bot.health());
+// { status: 'starting', ready: false, closing: false, uptimeMs: null, activeExecutions: 0, schedulerRunning: false, timestamp: ... }
+
+// No encerramento:
+await bot.destroy();
+await health.close();
+```
+
+Campos de `HealthReport`:
+
+| Campo | Descrição |
+|---|---|
+| `status` | `'starting'` antes do `Ready`, `'ok'` quando conectado e pronto, `'closed'` a partir de `destroy()` |
+| `ready` | `true` somente quando o client está pronto e o bot não está encerrando |
+| `closing` | `true` após o início de `destroy()` |
+| `uptimeMs` | Tempo ativo em ms quando `status === 'ok'`, ou `null` nos demais estados |
+| `activeExecutions` | Quantidade instantânea de comandos, eventos e varreduras em andamento |
+| `schedulerRunning` | `true` enquanto o ciclo automático do `Scheduler` está ativo |
+| `timestamp` | Instante em ms segundo `options.now ?? Date.now` |
+
+`startHealthServer(bot, options?)` sobe um servidor `node:http` vinculado por
+padrão a `127.0.0.1` (`port` inteiro `0..65535`, `path` padrão `'/health'`,
+aceitando também `'/healthz'`). Opções inválidas lançam `ConfigError` com código
+`HEALTH_OPTIONS`.
+
+- `GET` e `HEAD` em `/health` ou `/healthz`: respondem `200` com
+  `application/json; charset=utf-8` quando `status === 'ok'` e `503` quando
+  `'starting'` ou `'closed'`.
+- `GET` e `HEAD` em `/metrics` (somente quando `options.metrics` é fornecido):
+  respondem `200` com `metrics.render()` e `metrics.contentType` (padrão
+  `text/plain; version=0.0.4; charset=utf-8`).
+- Outros métodos HTTP retornam `405` (`Allow: GET, HEAD`); outras rotas retornam `404`.
+- Na CLI, `yuzuha run --health-port <porta>` e `yuzuha dev --health-port <porta>`
+  gerenciam a abertura, a publicação automática de `/metrics` (se `bot.options.metrics`
+  expor `render()`) e o fechamento determinístico durante sinais ou falhas. Veja [CLI.md](CLI.md).

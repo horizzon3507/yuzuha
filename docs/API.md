@@ -72,6 +72,7 @@ erro, o resultado continua sendo `success`.
 | `listCommands()` | Snapshot das definições, sem duplicar aliases |
 | `help(path?, prefix?)` | Catálogo visível ou ajuda detalhada de um comando/subcomando |
 | `handle(message)` | Despacho manual; retorna `Promise<DispatchResult>` |
+| `health()` | Snapshot imutável `HealthReport` (`'starting' \| 'ok' \| 'closed'`) |
 | `sweepVariables()` | Executa um lote incremental de limpeza de variáveis expiradas |
 | `login(token?)` | Usa o argumento ou `FLUXER_BOT_TOKEN`; só aqui conecta |
 | `destroy()` | Aguarda handlers, encerra client e store próprio; idempotente |
