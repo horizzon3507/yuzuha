@@ -271,9 +271,19 @@ export class CommandContext {
     const source = this.disableResourceAuthorization ? this.nativeResources
       : bindAuthorizedResources(this.nativeResources, this.transport, this.scope, this.memo, this.t);
     const collectors = source.collectors;
+    const gateway = source.gateway;
     return this.scopedResources = { users: source.users, roles: source.roles, channels: source.channels,
       messages: source.messages, webhooks: source.webhooks, expressions: source.expressions,
-      threads: source.threads, invites: source.invites, gateway: source.gateway,
+      threads: source.threads, invites: source.invites, gateway: {
+        requestMembers: input => gateway.requestMembers(input),
+        fetchMembers: input => gateway.fetchMembers({ ...input,
+          signal: input.signal ? AbortSignal.any([this.signal, input.signal]) : this.signal }),
+        requestGuildCounts: (guildIDs, nonce) => gateway.requestGuildCounts(guildIDs, nonce),
+        requestChannelCounts: input => gateway.requestChannelCounts(input),
+        requestForumUnreads: input => gateway.requestForumUnreads(input),
+        subscribeThreads: input => gateway.subscribeThreads(input),
+        send: (shardID, payload) => gateway.send(shardID, payload),
+      },
       instance: source.instance, self: source.self, cache: source.cache, collectors: {
         awaitMessage: (channelID, input) => collectors.awaitMessage(channelID, { ...input,
           signal: input.signal ? AbortSignal.any([this.signal, input.signal]) : this.signal }),

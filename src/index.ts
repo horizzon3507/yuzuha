@@ -117,7 +117,15 @@ export type { WebhookInfo, WebhookSendInput, WebhooksResources } from './ports/r
 export type { EmojiInfo, EmojiCreateInput, EmojiBulkResult, StickerInfo, StickerCreateInput, StickerEditInput, ExpressionsResources } from './ports/resources/expressions.js';
 export type { ThreadInfo, ThreadMemberInfo, ThreadMemberDetails, ThreadCreateInput, ForumPostInput, ThreadsResources, ThreadEditInput, ThreadSearchInput, ThreadSearchPage, ArchivedThreadsInput, ThreadListPage } from './ports/resources/threads.js';
 export type { InviteInfo, InviteCreateInput, InvitesResources } from './ports/resources/invites.js';
-export type { GatewayMembersRequest, ChannelCountsRequest, ForumUnreadsRequest, ThreadSubscriptionInput, GatewayResources } from './ports/resources/gateway.js';
+export type {
+  GatewayMembersRequest,
+  GatewayFetchMembersInput,
+  GatewayFetchedMembers,
+  ChannelCountsRequest,
+  ForumUnreadsRequest,
+  ThreadSubscriptionInput,
+  GatewayResources,
+} from './ports/resources/gateway.js';
 export type { InstanceEndpointsInfo, InstanceFeaturesInfo, InstanceServicesInfo, InstanceInfo, GatewayInfo, ApplicationInfo,
   EmojiMetadataInfo, StickerMetadataInfo, EmojiReference, InstanceResources } from './ports/resources/instance.js';
 export type { SudoVerification, SelfGuildInfo, SelfResources } from './ports/resources/self.js';

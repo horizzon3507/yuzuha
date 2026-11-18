@@ -74,7 +74,7 @@ test('FluxerResources agrega as novas áreas de recursos', async t => {
   t.after(() => client.destroy());
   const resources = new FluxerResources(client);
   const methods: [object, string[]][] = [
-    [resources.gateway, ['requestMembers', 'requestGuildCounts', 'requestChannelCounts', 'requestForumUnreads', 'subscribeThreads', 'send']],
+    [resources.gateway, ['requestMembers', 'fetchMembers', 'requestGuildCounts', 'requestChannelCounts', 'requestForumUnreads', 'subscribeThreads', 'send']],
     [resources.instance, ['describe', 'gatewayInfo', 'application', 'oauthApplications', 'emojiMetadata', 'stickerMetadata', 'resolveEmoji']],
     [resources.self, ['fetch', 'guilds', 'leaveGuild', 'deleteMyMessages']],
     [resources.cache, ['stats', 'sweepMessages', 'sweepMembers']],
