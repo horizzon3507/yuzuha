@@ -875,7 +875,7 @@ export const aviso = defineCommand({
 
 `bot.help()` mantém o catálogo de comandos visíveis.
 `bot.help('aviso', '!')` e `bot.help('config prefixo', '!')` mostram uso,
-argumentos, flags, escolhas, padrões, exemplos e subcomandos disponíveis.
+argumentos, flags, escolhas, padrões, exemplos e subcomandos disponíveis; `helpRenderer` em `YuzuhaOptions` permite personalizar essa formatação preservando a filtragem de itens `hidden`.
 Erros de entrada acrescentam o uso esperado. `hidden` omite comandos da ajuda;
 isso não substitui autorização. Os metadados também estão no JSON de
 `yuzuha check`; veja [CLI.md](CLI.md).

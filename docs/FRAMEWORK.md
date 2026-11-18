@@ -229,6 +229,32 @@ bot.command(defineCommand({
   `gate` para não falharem durante janelas de manutenção, mas continuam sujeitas
   aos guards do comando (`ownerOnly`, `devOnly`, `guildOnly`, `permissions`, `checks`).
 
+### Formatação de ajuda (`helpRenderer`), menção (`mentionPrefix`) e mensagens de bots (`allowBots`)
+
+Para substituir a saída textual padrão de `bot.help(query?, prefix?)`, `ctx.help(query?, prefix?)`, `$help` e a resposta de grupos invocados sem subcomando, passe `helpRenderer` (`HelpRenderer`) nas opções do bot:
+
+```ts
+import { Yuzuha, commandUsage } from 'yuzuha';
+
+const bot = new Yuzuha({
+  prefix: '!',
+  mentionPrefix: true,
+  allowBots: false,
+  helpRenderer({ command, commands, prefix, query }) {
+    if (!command) {
+      return commands.map(cmd => `• ${commandUsage(cmd, prefix)}`).join('\n');
+    }
+    return `Ajuda de ${prefix}${command.name} (consulta: ${query ?? command.name})`;
+  },
+});
+```
+
+- Na listagem geral (`bot.help(undefined, prefix)`), `context` contém `{ commands, prefix }`, com comandos e subcomandos `hidden` já filtrados.
+- Quando `query` resolve um comando ou subcomando visível, `context` contém `{ command, commands, prefix, query }` usando cópias isoladas das definições. Consultas inexistentes, com argumentos excedentes ou apontando para comandos `hidden` continuam retornando `''`.
+- `mentionPrefix: true` aceita `<@botID>` e `<@!botID>` (com ou sem espaço após a menção, ex.: `<@999> ping` ou `<@!999>ping`) tanto no pré-filtro do gateway quanto no roteamento estático ou dinâmico, inclusive em `hooks.onUnknownCommand`.
+- `allowBots: true` permite despachar comandos enviados por outras contas bot, mas **sempre** ignora mensagens cujo autor seja `transport.botID` para impedir auto-loop.
+- Valores inválidos em `helpRenderer`, `mentionPrefix` ou `allowBots` lançam `ConfigError` com código `OPTIONS`.
+
 ## Comando nativo
 
 ```ts

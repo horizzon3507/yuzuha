@@ -14,9 +14,12 @@ A fonte das assinaturas completas são as declarações TypeScript distribuídas
 |---|---|
 | `name` | Nome do diretório de dados padrão; letras ASCII, números, `_` e `-` |
 | `prefix` | String, array de strings ou função sync/async de `IncomingMessage` |
+| `mentionPrefix` | Booleano (`false` por padrão); aceita `<@botID>` e `<@!botID>` (com ou sem espaço) como prefixos válidos quando `transport.botID` não é vazio |
+| `allowBots` | Booleano (`false` por padrão); permite mensagens de outros bots continuando a ignorar `transport.botID` |
 | `owners` | Lista de IDs de donos do bot (`bot.isOwner`, `ctx.isOwner`, `ownerOnly`) |
 | `devGuilds` | Lista de IDs de servidores de desenvolvimento aceitos por `devOnly: true` |
 | `gate` | Filtro `(message) => boolean \| Promise<boolean>` executado antes do roteamento/prefixo |
+| `helpRenderer` | Função `(context: HelpRenderContext) => string` para formatar `bot.help`, `ctx.help` e a ajuda de grupos |
 | `client` | Instância de `Client` do Fluxer.js |
 | `clientOptions` | Opções do SDK quando o client não é fornecido |
 | `transport` | Implementação de `Transport`; padrão `FluxerTransport` |
