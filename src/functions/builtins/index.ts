@@ -29,6 +29,8 @@ import { pureFlagFunctions } from './pure-flags.js';
 import { pureUtilFunctions } from './pure-utils.js';
 import { pureErrorFunctions } from './pure-errors.js';
 import { pureCollectionFunctions } from './pure-collections.js';
+import { resourceOperations } from './resource-operations.js';
+import { resourceDiagnostics } from './resource-diagnostics.js';
 
 export const builtinFunctions: FunctionDefinition[] = [
   ...contextFunctions, ...flowFunctions, ...guardFunctions, ...valueFunctions,
@@ -41,6 +43,8 @@ export const builtinFunctions: FunctionDefinition[] = [
   ...eventFunctions,
   ...pureCdnFunctions, ...pureFlagFunctions,
   ...pureUtilFunctions, ...pureErrorFunctions, ...pureCollectionFunctions,
+  ...resourceOperations,
+  ...resourceDiagnostics,
 ];
 
 export function registerBuiltins(runtime: Runtime): Runtime {

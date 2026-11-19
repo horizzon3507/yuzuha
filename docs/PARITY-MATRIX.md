@@ -11,7 +11,7 @@ Paridade significa toda operação segura do SDK alcançável por scripts, com e
 - **excluded**: fora da linguagem por segurança ou por não representar operação; categoria e motivo visíveis.
 - **pending**: operação segura reservada à área indicada; permitida durante desenvolvimento, não no gate de release.
 
-**Function-mode safe coverage: 52.08%** (501/962). Denominador = function + equivalent + pending; excluded não entra. Cada linha é uma unidade, inclusive reexports em pacotes distintos; não é uma medição de testes ou completude de parâmetros.
+**Function-mode safe coverage: 64.07%** (608/949). Denominador = function + equivalent + pending; excluded não entra. Cada linha é uma unidade, inclusive reexports em pacotes distintos; não é uma medição de testes ou completude de parâmetros.
 
 Inventário: todos os exports (inclusive tipos), membros próprios não privados de classes, construtores e eventos dos contratos exportados *Events. Membros herdados aparecem no export de origem. Enums/constantes de runtime precisam de classificação operacional; interfaces e aliases são data-only. APIs novas exigem revisão explícita.
 
@@ -19,17 +19,17 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types, @fluxerjs/voice, @
 
 | Status | Itens |
 |---|---:|
-| function | 248 |
-| equivalent | 253 |
-| excluded | 843 |
-| pending | 461 |
+| function | 307 |
+| equivalent | 301 |
+| excluded | 856 |
+| pending | 341 |
 
 ## Pendências por área
 
 | Área | Itens pending |
 |---|---:|
 | pure | 0 |
-| resources | 120 |
+| resources | 0 |
 | entities | 238 |
 | events | 59 |
 | voice | 44 |
@@ -732,23 +732,23 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types, @fluxerjs/voice, @
 | ID | Tipo | Status | Funções / exclusão | Justificativa |
 |---|---|---|---|---|
 | `@fluxerjs/core#CacheController` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
-| `@fluxerjs/core#CacheController.cascadeChannel` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
-| `@fluxerjs/core#CacheController.cascadeGuild` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
-| `@fluxerjs/core#CacheController.cascading` | accessor | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/core#CacheController.cascadeChannel` | method | function | $cascadeCache | Cascata no cache local por ID; exige dono do bot. |
+| `@fluxerjs/core#CacheController.cascadeGuild` | method | function | $cascadeCache | Cascata no cache local por ID; exige dono do bot. |
+| `@fluxerjs/core#CacheController.cascading` | accessor | equivalent | $cacheStats | Campos retornados em limits do snapshot do cache. |
 | `@fluxerjs/core#CacheController.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
-| `@fluxerjs/core#CacheController.limits` | property | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
-| `@fluxerjs/core#CacheController.stats` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
-| `@fluxerjs/core#CacheController.sweepChannels` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
-| `@fluxerjs/core#CacheController.sweepGuilds` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
-| `@fluxerjs/core#CacheController.sweepMembers` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
-| `@fluxerjs/core#CacheController.sweepMessages` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
-| `@fluxerjs/core#CacheController.sweepUsers` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
-| `@fluxerjs/core#Channel.awaitMessages` | method | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
-| `@fluxerjs/core#Channel.createMessageCollector` | method | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
-| `@fluxerjs/core#Channel.fetchRtcRegions` | method | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
-| `@fluxerjs/core#Channel.fetchSlowmode` | method | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
-| `@fluxerjs/core#Channel.sendTyping` | method | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
-| `@fluxerjs/core#ChannelManager.delete` | method | pending |  | Remove só do cache; deleteChannel apagaria via API e não é equivalente. Falta wrapper de cache. |
+| `@fluxerjs/core#CacheController.limits` | property | equivalent | $cacheStats | Campos retornados em limits do snapshot do cache. |
+| `@fluxerjs/core#CacheController.stats` | method | function | $cacheStats | Snapshot normalizado do cache local; exige dono do bot. |
+| `@fluxerjs/core#CacheController.sweepChannels` | method | function | $sweepCache | Limpeza no bucket selecionado, por escopo/idade quando aplicável; sem callbacks do script. |
+| `@fluxerjs/core#CacheController.sweepGuilds` | method | function | $sweepCache | Limpeza no bucket selecionado, por escopo/idade quando aplicável; sem callbacks do script. |
+| `@fluxerjs/core#CacheController.sweepMembers` | method | function | $sweepCache | Limpeza no bucket selecionado, por escopo/idade quando aplicável; sem callbacks do script. |
+| `@fluxerjs/core#CacheController.sweepMessages` | method | function | $sweepCache | Limpeza no bucket selecionado, por escopo/idade quando aplicável; sem callbacks do script. |
+| `@fluxerjs/core#CacheController.sweepUsers` | method | function | $sweepCache | Limpeza no bucket selecionado, por escopo/idade quando aplicável; sem callbacks do script. |
+| `@fluxerjs/core#Channel.awaitMessages` | method | equivalent | $collectMessages | Janela finita com filtros declarativos e resultado normalizado; sem instância SDK. |
+| `@fluxerjs/core#Channel.createMessageCollector` | method | equivalent | $collectMessages | Janela finita com filtros declarativos e resultado normalizado; sem instância SDK. |
+| `@fluxerjs/core#Channel.fetchRtcRegions` | method | function | $channelRtcRegions | Consulta regiões de canal visível do servidor atual. |
+| `@fluxerjs/core#Channel.fetchSlowmode` | method | function | $channelSlowmode | Consulta modo lento de canal visível do servidor atual. |
+| `@fluxerjs/core#Channel.sendTyping` | method | function | $sendTyping | Indica digitação no servidor atual com SendMessages de autor e bot. |
+| `@fluxerjs/core#ChannelManager.delete` | method | equivalent | $evictCachedChannel | Remove ID do cache local; não apaga canal na API. |
 | `@fluxerjs/core#Client` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
 | `@fluxerjs/core#Client._addMessageToCache` | method | excluded | internal | Helper interno, backing state ou patch de sessão; usar a operação pública autorizada. |
 | `@fluxerjs/core#Client._clearMessageCache` | method | excluded | internal | Helper interno, backing state ou patch de sessão; usar a operação pública autorizada. |
@@ -763,117 +763,117 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types, @fluxerjs/voice, @
 | `@fluxerjs/core#Client._removeMessageFromCache` | method | excluded | internal | Helper interno, backing state ou patch de sessão; usar a operação pública autorizada. |
 | `@fluxerjs/core#Client._sendToAllShards` | method | excluded | internal | Helper interno, backing state ou patch de sessão; usar a operação pública autorizada. |
 | `@fluxerjs/core#Client._ws` | property | excluded | internal | Helper interno, backing state ou patch de sessão; usar a operação pública autorizada. |
-| `@fluxerjs/core#Client.assertReady` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
-| `@fluxerjs/core#Client.bulkFetchMessages` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
-| `@fluxerjs/core#Client.cache` | property | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
-| `@fluxerjs/core#Client.channels` | property | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/core#Client.assertReady` | method | function | $requireBotReady | Guard não capturável por $try quando o runtime não está pronto. |
+| `@fluxerjs/core#Client.bulkFetchMessages` | method | equivalent | $bulkFetchMessages | Compõe listagens autorizadas por canal; a rota de lote do SDK é restrita a contas de usuário. |
+| `@fluxerjs/core#Client.cache` | property | equivalent | $cacheStats, $sweepCache, $cascadeCache | Fachada com leituras, limpezas e cascatas autorizadas; não expõe CacheController. |
+| `@fluxerjs/core#Client.channels` | property | equivalent | $channel, $channels | Consultas normalizadas, sem expor o gerenciador SDK. |
 | `@fluxerjs/core#Client.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
 | `@fluxerjs/core#Client.destroy` | method | excluded | lifecycle | Ciclo de vida, emissão ou coordenação de processos é controlado pela configuração nativa, não por scripts. |
 | `@fluxerjs/core#Client.emit` | method | excluded | lifecycle | Ciclo de vida, emissão ou coordenação de processos é controlado pela configuração nativa, não por scripts. |
 | `@fluxerjs/core#Client.events` | property | excluded | raw-transport | Objeto/transporte cru ou introspecção arbitrária pode contornar guards ou revelar estado da sessão. |
-| `@fluxerjs/core#Client.fetchApplication` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
-| `@fluxerjs/core#Client.fetchEmojiMetadata` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
-| `@fluxerjs/core#Client.fetchGatewayInfo` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
-| `@fluxerjs/core#Client.fetchInstance` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
-| `@fluxerjs/core#Client.fetchOAuthApplications` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
-| `@fluxerjs/core#Client.fetchStickerMetadata` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/core#Client.fetchApplication` | method | function | $applicationInfo | Retorna a aplicação autenticada sem clientSecret, com guarda de dono. |
+| `@fluxerjs/core#Client.fetchEmojiMetadata` | method | function | $emojiMetadata | Retorna metadados normalizados pelo ID do emoji. |
+| `@fluxerjs/core#Client.fetchGatewayInfo` | method | function | $gatewayInfo | Consulta informações normalizadas do gateway, com guarda de dono. |
+| `@fluxerjs/core#Client.fetchInstance` | method | function | $instanceInfo | Consulta a descoberta da instância configurada, com guarda de dono. |
+| `@fluxerjs/core#Client.fetchOAuthApplications` | method | function | $oauthApplications | Consulta aplicações sob guarda de dono e remove clientSecret de cada item. |
+| `@fluxerjs/core#Client.fetchStickerMetadata` | method | function | $stickerMetadata | Retorna metadados normalizados pelo ID do sticker. |
 | `@fluxerjs/core#Client.getOrCreateUser` | method | excluded | internal | Helper interno, backing state ou patch de sessão; usar a operação pública autorizada. |
-| `@fluxerjs/core#Client.guilds` | property | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
-| `@fluxerjs/core#Client.instance` | property | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
-| `@fluxerjs/core#Client.isReady` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/core#Client.guilds` | property | equivalent | $guild, $selfGuilds | Leitura normalizada do servidor atual ou dos servidores do bot sob guarda de dono. |
+| `@fluxerjs/core#Client.instance` | property | equivalent | $instanceInfo | Descrição normalizada da instância resolvida, com descoberta e endpoints. |
+| `@fluxerjs/core#Client.isReady` | method | function | $botReadiness | Retorna ready, readyAt e uptimeMs do runtime atual. |
 | `@fluxerjs/core#Client.logger` | property | excluded | raw-transport | Objeto/transporte cru ou introspecção arbitrária pode contornar guards ou revelar estado da sessão. |
 | `@fluxerjs/core#Client.login` | method | excluded | lifecycle | Ciclo de vida, emissão ou coordenação de processos é controlado pela configuração nativa, não por scripts. |
-| `@fluxerjs/core#Client.off` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
-| `@fluxerjs/core#Client.on` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
-| `@fluxerjs/core#Client.once` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/core#Client.off` | method | excluded | lifecycle | Listeners arbitrários do objeto SDK ficam no lifecycle nativo; os scripts usam eventos declarativos mapeados na área events. |
+| `@fluxerjs/core#Client.on` | method | excluded | lifecycle | Listeners arbitrários do objeto SDK ficam no lifecycle nativo; os scripts usam eventos declarativos mapeados na área events. |
+| `@fluxerjs/core#Client.once` | method | excluded | lifecycle | Listeners arbitrários do objeto SDK ficam no lifecycle nativo; os scripts usam eventos declarativos mapeados na área events. |
 | `@fluxerjs/core#Client.options` | property | excluded | credentials | Configuração do client pode conter token e estado de autenticação; não expor ao script. |
 | `@fluxerjs/core#Client.preloadMessages` | method | function | $preloadMessages | Operação por builtin e recurso/serviço compartilhado; ver contrato de argumentos na referência. |
 | `@fluxerjs/core#Client.preloadMessagesAlt` | method | excluded | internal | Helper interno, backing state ou patch de sessão; usar a operação pública autorizada. |
-| `@fluxerjs/core#Client.readyAt` | property | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/core#Client.readyAt` | property | function | $botReadiness | Retorna ready, readyAt e uptimeMs do runtime atual. |
 | `@fluxerjs/core#Client.requestChannelMemberCounts` | method | function | $channelCounts | Operação por builtin e recurso/serviço compartilhado; ver contrato de argumentos na referência. |
-| `@fluxerjs/core#Client.requestForumUnreads` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
-| `@fluxerjs/core#Client.requestGuildCounts` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
-| `@fluxerjs/core#Client.requestGuildMembers` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
-| `@fluxerjs/core#Client.resolveEmoji` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/core#Client.requestForumUnreads` | method | function | $requestForumUnreads | Pedido validado por fórum/post e leitura autorizada no servidor atual. |
+| `@fluxerjs/core#Client.requestGuildCounts` | method | function | $requestGuildCounts | Pedido para o servidor atual com ManageGuild de autor e bot. |
+| `@fluxerjs/core#Client.requestGuildMembers` | method | function | $requestGatewayMembers, $fetchGatewayMembers | Pedido validado e limitado, com ManageGuild de autor e bot; inclui versão aguardável. |
+| `@fluxerjs/core#Client.resolveEmoji` | method | function | $resolveEmoji | Resolve emoji textual e considera o servidor quando disponível. |
 | `@fluxerjs/core#Client.rest` | property | excluded | raw-transport | Referência ao client/transporte SDK não é valor de script; usar recursos autorizados. |
 | `@fluxerjs/core#Client.searchMessages` | method | equivalent | $searchMessagesAdvanced | Acesso por builtin ao recurso autorizado correspondente; resolve/fetch usa busca normalizada, não instância SDK. |
 | `@fluxerjs/core#Client.sendToGateway` | method | excluded | raw-transport | Objeto/transporte cru ou introspecção arbitrária pode contornar guards ou revelar estado da sessão. |
 | `@fluxerjs/core#Client.static:fromDiscovery` | method | excluded | internal | Fábrica de instâncias/configuração nativa; script usa operações e valores normalizados. |
 | `@fluxerjs/core#Client.static:Routes` | accessor | excluded | raw-transport | Rotas REST autenticadas arbitrárias contornariam os ports e guards; usar operações tipadas. |
-| `@fluxerjs/core#Client.subscribeThreads` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
-| `@fluxerjs/core#Client.sweepMembers` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
-| `@fluxerjs/core#Client.sweepMessages` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
-| `@fluxerjs/core#Client.uptime` | accessor | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
-| `@fluxerjs/core#Client.user` | property | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
-| `@fluxerjs/core#Client.users` | property | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/core#Client.subscribeThreads` | method | function | $subscribeThreads | Assinatura declarativa no servidor atual, autorizada por dono do bot e ManageGuild de autor e bot. |
+| `@fluxerjs/core#Client.sweepMembers` | method | function | $sweepCache | Limpeza local com filtros declarativos de escopo/idade conforme o bucket. |
+| `@fluxerjs/core#Client.sweepMessages` | method | function | $sweepCache | Limpeza local com filtros declarativos de escopo/idade conforme o bucket. |
+| `@fluxerjs/core#Client.uptime` | accessor | function | $botReadiness | Retorna ready, readyAt e uptimeMs do runtime atual. |
+| `@fluxerjs/core#Client.user` | property | equivalent | $selfUser | Consulta normalizada do usuário autenticado; não retorna ClientUser. |
+| `@fluxerjs/core#Client.users` | property | equivalent | $user, $userProfile | Consultas normalizadas, sem expor o gerenciador SDK. |
 | `@fluxerjs/core#Client.ws` | accessor | excluded | raw-transport | Referência ao client/transporte SDK não é valor de script; usar recursos autorizados. |
 | `@fluxerjs/core#ClientCluster` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
-| `@fluxerjs/core#ClientCluster.add` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
-| `@fluxerjs/core#ClientCluster.addAll` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/core#ClientCluster.add` | method | excluded | lifecycle | Inicializar ou desligar runtimes requer credenciais e coordenação do processo; exclusivamente nativo. |
+| `@fluxerjs/core#ClientCluster.addAll` | method | excluded | lifecycle | Inicializar ou desligar runtimes requer credenciais e coordenação do processo; exclusivamente nativo. |
 | `@fluxerjs/core#ClientCluster.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
 | `@fluxerjs/core#ClientCluster.destroy` | method | excluded | lifecycle | Ciclo de vida, emissão ou coordenação de processos é controlado pela configuração nativa, não por scripts. |
 | `@fluxerjs/core#ClientCluster.emit` | method | excluded | lifecycle | Ciclo de vida, emissão ou coordenação de processos é controlado pela configuração nativa, não por scripts. |
-| `@fluxerjs/core#ClientCluster.get` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
-| `@fluxerjs/core#ClientCluster.has` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
-| `@fluxerjs/core#ClientCluster.off` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
-| `@fluxerjs/core#ClientCluster.on` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
-| `@fluxerjs/core#ClientCluster.once` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
-| `@fluxerjs/core#ClientCluster.remove` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/core#ClientCluster.get` | method | equivalent | $clusterInfo | Filtra o snapshot por ID; a presença de um resultado equivale a has, sem retornar bot, client ou erros. |
+| `@fluxerjs/core#ClientCluster.has` | method | equivalent | $clusterInfo | Filtra o snapshot por ID; a presença de um resultado equivale a has, sem retornar bot, client ou erros. |
+| `@fluxerjs/core#ClientCluster.off` | method | excluded | lifecycle | Listeners arbitrários do supervisor pertencem ao lifecycle nativo. |
+| `@fluxerjs/core#ClientCluster.on` | method | excluded | lifecycle | Listeners arbitrários do supervisor pertencem ao lifecycle nativo. |
+| `@fluxerjs/core#ClientCluster.once` | method | excluded | lifecycle | Listeners arbitrários do supervisor pertencem ao lifecycle nativo. |
+| `@fluxerjs/core#ClientCluster.remove` | method | excluded | lifecycle | Inicializar ou desligar runtimes requer credenciais e coordenação do processo; exclusivamente nativo. |
 | `@fluxerjs/core#ClientCluster.restart` | method | excluded | lifecycle | Ciclo de vida, emissão ou coordenação de processos é controlado pela configuração nativa, não por scripts. |
-| `@fluxerjs/core#ClientCluster.runtimeValues` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
-| `@fluxerjs/core#ClientCluster.size` | accessor | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
-| `@fluxerjs/core#ClientCluster.values` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/core#ClientCluster.runtimeValues` | method | equivalent | $clusterInfo | Snapshot limitado de IDs e status; não cria iteradores nem expõe runtimes SDK. |
+| `@fluxerjs/core#ClientCluster.size` | accessor | function | $clusterInfo | Total no snapshot sanitizado, com guarda de dono. |
+| `@fluxerjs/core#ClientCluster.values` | method | equivalent | $clusterInfo | Snapshot limitado de IDs e status; não cria iteradores nem expõe runtimes SDK. |
 | `@fluxerjs/core#ClientUser` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
-| `@fluxerjs/core#ClientUser.bulkDeleteMyMessagesInGuild` | method | excluded | credentials | Operação de conta autenticada com verificação sudo; segredos sudo não entram em scripts. |
+| `@fluxerjs/core#ClientUser.bulkDeleteMyMessagesInGuild` | method | function | $deleteMyMessages | Pedido sem senha/MFA/WebAuthn; exige dono do bot e ManageMessages de autor e bot no servidor atual. Se o servidor exigir sudo, a operação falha. |
 | `@fluxerjs/core#ClientUser.client` | property | excluded | raw-transport | Referência ao client/transporte SDK não é valor de script; usar recursos autorizados. |
-| `@fluxerjs/core#ClientUser.fetch` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
-| `@fluxerjs/core#ClientUser.fetchGuilds` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
-| `@fluxerjs/core#ClientUser.leaveGuild` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/core#ClientUser.fetch` | method | function | $selfUser | Usuário autenticado normalizado, com guarda de dono do bot. |
+| `@fluxerjs/core#ClientUser.fetchGuilds` | method | function | $selfGuilds | Servidores autenticados com contagens opcionais sob guarda de dono do bot. |
+| `@fluxerjs/core#ClientUser.leaveGuild` | method | function | $selfLeaveGuild | Saída do servidor atual sem credenciais sudo; exige dono do servidor e do bot. |
 | `@fluxerjs/core#ClientUser.setPresence` | method | function | $setPresence | Operação por builtin e recurso/serviço compartilhado; ver contrato de argumentos na referência. |
-| `@fluxerjs/core#Message.awaitReactions` | method | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
-| `@fluxerjs/core#Message.createReactionCollector` | method | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Message.awaitReactions` | method | equivalent | $collectReactions | Janela finita com filtros declarativos e resultado normalizado; sem instância SDK. |
+| `@fluxerjs/core#Message.createReactionCollector` | method | equivalent | $collectReactions | Janela finita com filtros declarativos e resultado normalizado; sem instância SDK. |
 | `@fluxerjs/core#MessageCollector` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
-| `@fluxerjs/core#MessageCollector.channelId` | property | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/core#MessageCollector.channelId` | property | equivalent | $collectMessages | Canal atual, filtros declarativos e resultado final; encerra por prazo, máximo ou cancelamento do contexto. |
 | `@fluxerjs/core#MessageCollector.client` | property | excluded | raw-transport | Referência ao client/transporte SDK não é valor de script; usar recursos autorizados. |
-| `@fluxerjs/core#MessageCollector.collected` | property | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/core#MessageCollector.collected` | property | equivalent | $collectMessages | Canal atual, filtros declarativos e resultado final; encerra por prazo, máximo ou cancelamento do contexto. |
 | `@fluxerjs/core#MessageCollector.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
 | `@fluxerjs/core#MessageCollector.emit` | method | excluded | lifecycle | Ciclo de vida, emissão ou coordenação de processos é controlado pela configuração nativa, não por scripts. |
-| `@fluxerjs/core#MessageCollector.on` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
-| `@fluxerjs/core#MessageCollector.options` | property | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
-| `@fluxerjs/core#MessageCollector.static:awaitMessages` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
-| `@fluxerjs/core#MessageCollector.stop` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
-| `@fluxerjs/core#MessageManager.get` | method | pending |  | Consulta apenas cache e pode retornar undefined; fetchMessage faz rede e não preserva essa semântica. |
+| `@fluxerjs/core#MessageCollector.on` | method | excluded | lifecycle | Não executa listeners arbitrários da instância SDK; a coleta delimitada retorna itens sem callbacks. |
+| `@fluxerjs/core#MessageCollector.options` | property | equivalent | $collectMessages | Canal atual, filtros declarativos e resultado final; encerra por prazo, máximo ou cancelamento do contexto. |
+| `@fluxerjs/core#MessageCollector.static:awaitMessages` | method | equivalent | $collectMessages | Canal atual, filtros declarativos e resultado final; encerra por prazo, máximo ou cancelamento do contexto. |
+| `@fluxerjs/core#MessageCollector.stop` | method | equivalent | $collectMessages | Canal atual, filtros declarativos e resultado final; encerra por prazo, máximo ou cancelamento do contexto. |
+| `@fluxerjs/core#MessageManager.get` | method | function | $cachedMessage | Consulta mensagem normalizada no cache do canal atual, com controle de leitura. |
 | `@fluxerjs/core#ReactionCollector` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
-| `@fluxerjs/core#ReactionCollector.channelId` | property | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/core#ReactionCollector.channelId` | property | equivalent | $collectReactions | Canal atual, filtros declarativos e resultado final; encerra por prazo, máximo ou cancelamento do contexto. |
 | `@fluxerjs/core#ReactionCollector.client` | property | excluded | raw-transport | Referência ao client/transporte SDK não é valor de script; usar recursos autorizados. |
-| `@fluxerjs/core#ReactionCollector.collected` | property | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/core#ReactionCollector.collected` | property | equivalent | $collectReactions | Canal atual, filtros declarativos e resultado final; encerra por prazo, máximo ou cancelamento do contexto. |
 | `@fluxerjs/core#ReactionCollector.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
 | `@fluxerjs/core#ReactionCollector.emit` | method | excluded | lifecycle | Ciclo de vida, emissão ou coordenação de processos é controlado pela configuração nativa, não por scripts. |
-| `@fluxerjs/core#ReactionCollector.messageId` | property | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
-| `@fluxerjs/core#ReactionCollector.on` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
-| `@fluxerjs/core#ReactionCollector.options` | property | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
-| `@fluxerjs/core#ReactionCollector.static:awaitReactions` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
-| `@fluxerjs/core#ReactionCollector.stop` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
-| `@fluxerjs/core#Webhook.deleteMessage` | method | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
-| `@fluxerjs/core#Webhook.editMessage` | method | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
-| `@fluxerjs/core#Webhook.fetchMessage` | method | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#ReactionCollector.messageId` | property | equivalent | $collectReactions | Canal atual, filtros declarativos e resultado final; encerra por prazo, máximo ou cancelamento do contexto. |
+| `@fluxerjs/core#ReactionCollector.on` | method | excluded | lifecycle | Não executa listeners arbitrários da instância SDK; a coleta delimitada retorna itens sem callbacks. |
+| `@fluxerjs/core#ReactionCollector.options` | property | equivalent | $collectReactions | Canal atual, filtros declarativos e resultado final; encerra por prazo, máximo ou cancelamento do contexto. |
+| `@fluxerjs/core#ReactionCollector.static:awaitReactions` | method | equivalent | $collectReactions | Canal atual, filtros declarativos e resultado final; encerra por prazo, máximo ou cancelamento do contexto. |
+| `@fluxerjs/core#ReactionCollector.stop` | method | equivalent | $collectReactions | Canal atual, filtros declarativos e resultado final; encerra por prazo, máximo ou cancelamento do contexto. |
+| `@fluxerjs/core#Webhook.deleteMessage` | method | function | $deleteWebhookMessage | Mensagem de webhook sob ManageWebhooks de autor e bot, sem expor o token ao script. |
+| `@fluxerjs/core#Webhook.editMessage` | method | function | $editWebhookMessage | Mensagem de webhook sob ManageWebhooks de autor e bot, sem expor o token ao script. |
+| `@fluxerjs/core#Webhook.fetchMessage` | method | function | $fetchWebhookMessage | Mensagem de webhook sob ManageWebhooks de autor e bot, sem expor o token ao script. |
 | `@fluxerjs/rest#AttachmentData` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/rest#AttachmentPayload` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/rest#buildFormData` | function | excluded | raw-transport | Helper de transporte HTTP cru; usar operações tipadas e políticas de anexos/HTTP. |
 | `@fluxerjs/rest#closeSharedFetch` | function | excluded | lifecycle | Ciclo de vida, emissão ou coordenação de processos é controlado pela configuração nativa, não por scripts. |
-| `@fluxerjs/rest#DEFAULT_API` | variable | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
-| `@fluxerjs/rest#DEFAULT_LOCALE` | variable | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
-| `@fluxerjs/rest#DEFAULT_USER_AGENT` | variable | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
-| `@fluxerjs/rest#DEFAULT_VERSION` | variable | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/rest#DEFAULT_API` | variable | function | $restDefaults | Snapshot dos padrões do SDK sem acesso ao transporte REST. |
+| `@fluxerjs/rest#DEFAULT_LOCALE` | variable | function | $restDefaults | Snapshot dos padrões do SDK sem acesso ao transporte REST. |
+| `@fluxerjs/rest#DEFAULT_USER_AGENT` | variable | function | $restDefaults | Snapshot dos padrões do SDK sem acesso ao transporte REST. |
+| `@fluxerjs/rest#DEFAULT_VERSION` | variable | function | $restDefaults | Snapshot dos padrões do SDK sem acesso ao transporte REST. |
 | `@fluxerjs/rest#RateLimitManager` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
-| `@fluxerjs/rest#RateLimitManager.getBucket` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
-| `@fluxerjs/rest#RateLimitManager.getGlobalReset` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
-| `@fluxerjs/rest#RateLimitManager.getWaitTime` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
-| `@fluxerjs/rest#RateLimitManager.prune` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
-| `@fluxerjs/rest#RateLimitManager.setBucket` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
-| `@fluxerjs/rest#RateLimitManager.setGlobalReset` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
-| `@fluxerjs/rest#RateLimitManager.size` | accessor | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
-| `@fluxerjs/rest#RateLimitManager.updateFromHeaders` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/rest#RateLimitManager.getBucket` | method | equivalent | $restRateLimits | Simulação isolada e limitada; não lê nem altera os limites do transporte do bot. |
+| `@fluxerjs/rest#RateLimitManager.getGlobalReset` | method | equivalent | $restRateLimits | Simulação isolada e limitada; não lê nem altera os limites do transporte do bot. |
+| `@fluxerjs/rest#RateLimitManager.getWaitTime` | method | equivalent | $restRateLimits | Simulação isolada e limitada; não lê nem altera os limites do transporte do bot. |
+| `@fluxerjs/rest#RateLimitManager.prune` | method | equivalent | $restRateLimits | Simulação isolada e limitada; não lê nem altera os limites do transporte do bot. |
+| `@fluxerjs/rest#RateLimitManager.setBucket` | method | equivalent | $restRateLimits | Simulação isolada e limitada; não lê nem altera os limites do transporte do bot. |
+| `@fluxerjs/rest#RateLimitManager.setGlobalReset` | method | equivalent | $restRateLimits | Simulação isolada e limitada; não lê nem altera os limites do transporte do bot. |
+| `@fluxerjs/rest#RateLimitManager.size` | accessor | equivalent | $restRateLimits | Simulação isolada e limitada; não lê nem altera os limites do transporte do bot. |
+| `@fluxerjs/rest#RateLimitManager.updateFromHeaders` | method | equivalent | $restRateLimits | Simulação isolada e limitada; não lê nem altera os limites do transporte do bot. |
 | `@fluxerjs/rest#RateLimitState` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/rest#RequestManager` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
 | `@fluxerjs/rest#RequestManager.baseUrl` | accessor | excluded | raw-transport | Requisição autenticada genérica contorna guards; scripts usam ports de operações autorizadas. |
@@ -917,26 +917,26 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types, @fluxerjs/voice, @
 | `@fluxerjs/sharding#ShardClientUtil` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
 | `@fluxerjs/sharding#ShardClientUtil.broadcastEval` | method | excluded | eval | Executa JavaScript arbitrário; viola a linguagem sem eval. |
 | `@fluxerjs/sharding#ShardClientUtil.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
-| `@fluxerjs/sharding#ShardClientUtil.count` | property | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/sharding#ShardClientUtil.count` | property | function | $shardInfo | Snapshot dos shards do runtime atual, sem utilitário IPC. |
 | `@fluxerjs/sharding#ShardClientUtil.fetchClientValues` | method | excluded | raw-transport | Objeto/transporte cru ou introspecção arbitrária pode contornar guards ou revelar estado da sessão. |
-| `@fluxerjs/sharding#ShardClientUtil.id` | accessor | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
-| `@fluxerjs/sharding#ShardClientUtil.ids` | property | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/sharding#ShardClientUtil.id` | accessor | function | $shardInfo | Snapshot dos shards do runtime atual, sem utilitário IPC. |
+| `@fluxerjs/sharding#ShardClientUtil.ids` | property | function | $shardInfo | Snapshot dos shards do runtime atual, sem utilitário IPC. |
 | `@fluxerjs/sharding#ShardClientUtil.notifyReady` | method | excluded | lifecycle | Ciclo de vida, emissão ou coordenação de processos é controlado pela configuração nativa, não por scripts. |
 | `@fluxerjs/sharding#ShardClientUtil.requestSpawnToken` | method | excluded | credentials | Credenciais, segredo ou sessão autenticada não são expostos a scripts. |
 | `@fluxerjs/sharding#ShardClientUtil.respawn` | method | excluded | lifecycle | Ciclo de vida, emissão ou coordenação de processos é controlado pela configuração nativa, não por scripts. |
 | `@fluxerjs/sharding#ShardClientUtil.send` | method | excluded | raw-transport | Objeto/transporte cru ou introspecção arbitrária pode contornar guards ou revelar estado da sessão. |
-| `@fluxerjs/sharding#ShardClientUtil.shardIdForGuildId` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/sharding#ShardClientUtil.shardIdForGuildId` | method | function | $shardIdForGuild | Roteamento por snowflake e total dos shards. |
 | `@fluxerjs/sharding#ShardClientUtilOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/sharding#ShardingManager` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
 | `@fluxerjs/sharding#ShardingManager.broadcastEval` | method | excluded | eval | Executa JavaScript arbitrário; viola a linguagem sem eval. |
 | `@fluxerjs/sharding#ShardingManager.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
 | `@fluxerjs/sharding#ShardingManager.destroy` | method | excluded | lifecycle | Ciclo de vida, emissão ou coordenação de processos é controlado pela configuração nativa, não por scripts. |
 | `@fluxerjs/sharding#ShardingManager.fetchClientValues` | method | excluded | raw-transport | Objeto/transporte cru ou introspecção arbitrária pode contornar guards ou revelar estado da sessão. |
-| `@fluxerjs/sharding#ShardingManager.file` | property | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/sharding#ShardingManager.file` | property | excluded | internal | Caminho de entrada do supervisor, potencialmente sensível e desnecessário ao roteamento. |
 | `@fluxerjs/sharding#ShardingManager.respawnAll` | method | excluded | lifecycle | Ciclo de vida, emissão ou coordenação de processos é controlado pela configuração nativa, não por scripts. |
 | `@fluxerjs/sharding#ShardingManager.respawnShard` | method | excluded | lifecycle | Ciclo de vida, emissão ou coordenação de processos é controlado pela configuração nativa, não por scripts. |
-| `@fluxerjs/sharding#ShardingManager.shardCount` | accessor | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
-| `@fluxerjs/sharding#ShardingManager.shards` | property | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/sharding#ShardingManager.shardCount` | accessor | equivalent | $shardInfo | Total lógico publicado no contexto, sem expor o supervisor. |
+| `@fluxerjs/sharding#ShardingManager.shards` | property | excluded | raw-transport | Tabela do supervisor contém objetos de processo e controle IPC; scripts veem IDs locais via $shardInfo. |
 | `@fluxerjs/sharding#ShardingManager.spawn` | method | excluded | lifecycle | Ciclo de vida, emissão ou coordenação de processos é controlado pela configuração nativa, não por scripts. |
 | `@fluxerjs/sharding#ShardingManager.token` | property | excluded | credentials | Credenciais, segredo ou sessão autenticada não são expostos a scripts. |
 | `@fluxerjs/sharding#ShardingManagerOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
@@ -946,39 +946,39 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types, @fluxerjs/voice, @
 | `@fluxerjs/sharding#ShardProcess.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
 | `@fluxerjs/sharding#ShardProcess.eval` | method | excluded | eval | Executa JavaScript arbitrário; viola a linguagem sem eval. |
 | `@fluxerjs/sharding#ShardProcess.fetchClientValue` | method | excluded | raw-transport | Objeto/transporte cru ou introspecção arbitrária pode contornar guards ou revelar estado da sessão. |
-| `@fluxerjs/sharding#ShardProcess.id` | property | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/sharding#ShardProcess.id` | property | equivalent | $shardInfo | ID e shards publicados para o processo atual, sem enumerar objetos de processos irmãos. |
 | `@fluxerjs/sharding#ShardProcess.kill` | method | excluded | lifecycle | Ciclo de vida, emissão ou coordenação de processos é controlado pela configuração nativa, não por scripts. |
-| `@fluxerjs/sharding#ShardProcess.readyAt` | accessor | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/sharding#ShardProcess.readyAt` | accessor | excluded | internal | Timestamp do supervisor não é publicado ao worker; $botReadiness expõe somente o timestamp local. |
 | `@fluxerjs/sharding#ShardProcess.respawn` | method | excluded | lifecycle | Ciclo de vida, emissão ou coordenação de processos é controlado pela configuração nativa, não por scripts. |
 | `@fluxerjs/sharding#ShardProcess.send` | method | excluded | raw-transport | Objeto/transporte cru ou introspecção arbitrária pode contornar guards ou revelar estado da sessão. |
-| `@fluxerjs/sharding#ShardProcess.shardIds` | accessor | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/sharding#ShardProcess.shardIds` | accessor | equivalent | $shardInfo | ID e shards publicados para o processo atual, sem enumerar objetos de processos irmãos. |
 | `@fluxerjs/sharding#ShardProcess.spawn` | method | excluded | lifecycle | Ciclo de vida, emissão ou coordenação de processos é controlado pela configuração nativa, não por scripts. |
 | `@fluxerjs/sharding#ShardProcessOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/ws#BuildShardingStrategy` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/ws#BuildShardingStrategyFn` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
-| `@fluxerjs/ws#DEFAULT_GUILDS_PER_SHARD` | variable | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
-| `@fluxerjs/ws#DEFAULT_RESUME_TTL_MS` | variable | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
-| `@fluxerjs/ws#GatewayCloseCodes` | variable | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/ws#DEFAULT_GUILDS_PER_SHARD` | variable | function | $gatewayConstants | Constantes públicas do SDK sem acesso ao gateway ativo. |
+| `@fluxerjs/ws#DEFAULT_RESUME_TTL_MS` | variable | function | $gatewayConstants | Constantes públicas do SDK sem acesso ao gateway ativo. |
+| `@fluxerjs/ws#GatewayCloseCodes` | variable | function | $gatewayConstants | Constantes públicas do SDK sem acesso ao gateway ativo. |
 | `@fluxerjs/ws#getDefaultWebSocket` | function | excluded | raw-transport | Objeto/transporte cru ou introspecção arbitrária pode contornar guards ou revelar estado da sessão. |
 | `@fluxerjs/ws#getDefaultWebSocketSync` | function | excluded | raw-transport | Objeto/transporte cru ou introspecção arbitrária pode contornar guards ou revelar estado da sessão. |
-| `@fluxerjs/ws#guildMatchesShard` | function | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/ws#guildMatchesShard` | function | function | $guildMatchesShard | Compara roteamento para servidor e shard usando números. |
 | `@fluxerjs/ws#IIdentifyThrottler` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/ws#ISessionStore` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/ws#IShardingStrategy` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
-| `@fluxerjs/ws#isSessionInfoFresh` | function | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
-| `@fluxerjs/ws#MAX_GUILDS_PER_SHARD` | variable | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
-| `@fluxerjs/ws#MAX_SHARD_COUNT` | variable | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/ws#isSessionInfoFresh` | function | equivalent | $gatewaySessionFresh | Janela de resume calculada com timestamps, sem ler sessão ou credenciais. |
+| `@fluxerjs/ws#MAX_GUILDS_PER_SHARD` | variable | function | $gatewayConstants | Constantes públicas do SDK sem acesso ao gateway ativo. |
+| `@fluxerjs/ws#MAX_SHARD_COUNT` | variable | function | $gatewayConstants | Constantes públicas do SDK sem acesso ao gateway ativo. |
 | `@fluxerjs/ws#MemorySessionStore` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
 | `@fluxerjs/ws#MemorySessionStore.clear` | method | excluded | credentials | Armazenamento de sessão/resume pertence ao gateway nativo e não ao script. |
 | `@fluxerjs/ws#MemorySessionStore.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
 | `@fluxerjs/ws#MemorySessionStore.retrieveSessionInfo` | method | excluded | credentials | Armazenamento de sessão/resume pertence ao gateway nativo e não ao script. |
 | `@fluxerjs/ws#MemorySessionStore.updateSessionInfo` | method | excluded | credentials | Armazenamento de sessão/resume pertence ao gateway nativo e não ao script. |
-| `@fluxerjs/ws#narrowGatewayPayload` | function | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
-| `@fluxerjs/ws#recommendedShardCount` | function | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/ws#narrowGatewayPayload` | function | function | $normalizeGatewayPayload | Normaliza somente valores do próprio script; não recebe nem envia tráfego do gateway. |
+| `@fluxerjs/ws#recommendedShardCount` | function | function | $recommendedShardCount | Calcula a quantidade recomendada de shards com argumentos limitados. |
 | `@fluxerjs/ws#SessionInfo` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
-| `@fluxerjs/ws#shardIdForGuild` | function | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/ws#shardIdForGuild` | function | function | $shardIdForGuild | Roteamento por snowflake e total dos shards. |
 | `@fluxerjs/ws#ShardStatus` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
-| `@fluxerjs/ws#shouldReconnectOnClose` | function | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/ws#shouldReconnectOnClose` | function | function | $gatewayShouldReconnect | Classifica código de fechamento sem reconectar. |
 | `@fluxerjs/ws#SimpleIdentifyThrottler` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
 | `@fluxerjs/ws#SimpleIdentifyThrottler.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
 | `@fluxerjs/ws#SimpleIdentifyThrottler.destroy` | method | excluded | lifecycle | Ciclo de vida, emissão ou coordenação de processos é controlado pela configuração nativa, não por scripts. |
@@ -988,8 +988,8 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types, @fluxerjs/voice, @
 | `@fluxerjs/ws#SimpleShardingStrategy.connect` | method | excluded | lifecycle | Ciclo de vida, emissão ou coordenação de processos é controlado pela configuração nativa, não por scripts. |
 | `@fluxerjs/ws#SimpleShardingStrategy.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
 | `@fluxerjs/ws#SimpleShardingStrategy.destroy` | method | excluded | lifecycle | Ciclo de vida, emissão ou coordenação de processos é controlado pela configuração nativa, não por scripts. |
-| `@fluxerjs/ws#SimpleShardingStrategy.fetchStatus` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
-| `@fluxerjs/ws#SimpleShardingStrategy.getPing` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/ws#SimpleShardingStrategy.fetchStatus` | method | equivalent | $gatewayStatus | Snapshot de IDs, status e latência disponível da estratégia ativa, sem sockets nem processos. |
+| `@fluxerjs/ws#SimpleShardingStrategy.getPing` | method | equivalent | $gatewayStatus | Snapshot de IDs, status e latência disponível da estratégia ativa, sem sockets nem processos. |
 | `@fluxerjs/ws#SimpleShardingStrategy.getShard` | method | excluded | raw-transport | Objeto/transporte cru ou introspecção arbitrária pode contornar guards ou revelar estado da sessão. |
 | `@fluxerjs/ws#SimpleShardingStrategy.getShards` | method | excluded | raw-transport | Objeto/transporte cru ou introspecção arbitrária pode contornar guards ou revelar estado da sessão. |
 | `@fluxerjs/ws#SimpleShardingStrategy.send` | method | excluded | raw-transport | Objeto/transporte cru ou introspecção arbitrária pode contornar guards ou revelar estado da sessão. |
@@ -1001,15 +1001,15 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types, @fluxerjs/voice, @
 | `@fluxerjs/ws#WebSocketManager.connect` | method | excluded | lifecycle | Ciclo de vida, emissão ou coordenação de processos é controlado pela configuração nativa, não por scripts. |
 | `@fluxerjs/ws#WebSocketManager.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
 | `@fluxerjs/ws#WebSocketManager.destroy` | method | excluded | lifecycle | Ciclo de vida, emissão ou coordenação de processos é controlado pela configuração nativa, não por scripts. |
-| `@fluxerjs/ws#WebSocketManager.fetchStatus` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
-| `@fluxerjs/ws#WebSocketManager.getGatewayUrl` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/ws#WebSocketManager.fetchStatus` | method | function | $gatewayStatus | Snapshot autorizado de status, URL, total e latência sem expor WebSocketManager. |
+| `@fluxerjs/ws#WebSocketManager.getGatewayUrl` | method | function | $gatewayStatus | Snapshot autorizado de status, URL, total e latência sem expor WebSocketManager. |
 | `@fluxerjs/ws#WebSocketManager.getIdentifyThrottler` | method | excluded | raw-transport | Objeto/transporte cru ou introspecção arbitrária pode contornar guards ou revelar estado da sessão. |
 | `@fluxerjs/ws#WebSocketManager.getOptions` | method | excluded | raw-transport | Objeto/transporte cru ou introspecção arbitrária pode contornar guards ou revelar estado da sessão. |
 | `@fluxerjs/ws#WebSocketManager.getSessionStore` | method | excluded | raw-transport | Objeto/transporte cru ou introspecção arbitrária pode contornar guards ou revelar estado da sessão. |
 | `@fluxerjs/ws#WebSocketManager.getShard` | method | excluded | raw-transport | Objeto/transporte cru ou introspecção arbitrária pode contornar guards ou revelar estado da sessão. |
-| `@fluxerjs/ws#WebSocketManager.getShardCount` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/ws#WebSocketManager.getShardCount` | method | function | $gatewayStatus | Snapshot autorizado de status, URL, total e latência sem expor WebSocketManager. |
 | `@fluxerjs/ws#WebSocketManager.getShards` | method | excluded | raw-transport | Objeto/transporte cru ou introspecção arbitrária pode contornar guards ou revelar estado da sessão. |
-| `@fluxerjs/ws#WebSocketManager.ping` | accessor | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/ws#WebSocketManager.ping` | accessor | function | $gatewayStatus | Snapshot autorizado de status, URL, total e latência sem expor WebSocketManager. |
 | `@fluxerjs/ws#WebSocketManager.send` | method | excluded | raw-transport | Objeto/transporte cru ou introspecção arbitrária pode contornar guards ou revelar estado da sessão. |
 | `@fluxerjs/ws#WebSocketManagerOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/ws#WebSocketManagerRest` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
@@ -1018,19 +1018,19 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types, @fluxerjs/voice, @
 | `@fluxerjs/ws#WebSocketShard.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
 | `@fluxerjs/ws#WebSocketShard.destroy` | method | excluded | lifecycle | Ciclo de vida, emissão ou coordenação de processos é controlado pela configuração nativa, não por scripts. |
 | `@fluxerjs/ws#WebSocketShard.handlePayload` | method | excluded | raw-transport | Objeto/transporte cru ou introspecção arbitrária pode contornar guards ou revelar estado da sessão. |
-| `@fluxerjs/ws#WebSocketShard.id` | accessor | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
-| `@fluxerjs/ws#WebSocketShard.ping` | accessor | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/ws#WebSocketShard.id` | accessor | equivalent | $gatewayStatus | Snapshot de IDs, status e latência disponível da estratégia ativa, sem sockets nem processos. |
+| `@fluxerjs/ws#WebSocketShard.ping` | accessor | equivalent | $gatewayStatus | Snapshot de IDs, status e latência disponível da estratégia ativa, sem sockets nem processos. |
 | `@fluxerjs/ws#WebSocketShard.send` | method | excluded | raw-transport | Objeto/transporte cru ou introspecção arbitrária pode contornar guards ou revelar estado da sessão. |
 | `@fluxerjs/ws#WebSocketShard.sequence` | accessor | excluded | internal | Sequência de resume do protocolo é mantida pelo gateway. |
 | `@fluxerjs/ws#WebSocketShard.session` | accessor | excluded | raw-transport | Objeto/transporte cru ou introspecção arbitrária pode contornar guards ou revelar estado da sessão. |
-| `@fluxerjs/ws#WebSocketShard.status` | accessor | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/ws#WebSocketShard.status` | accessor | equivalent | $gatewayStatus | Snapshot de IDs, status e latência disponível da estratégia ativa, sem sockets nem processos. |
 | `@fluxerjs/ws#WebSocketShardOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/ws#WorkerShardingStrategy` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
 | `@fluxerjs/ws#WorkerShardingStrategy.connect` | method | excluded | lifecycle | Ciclo de vida, emissão ou coordenação de processos é controlado pela configuração nativa, não por scripts. |
 | `@fluxerjs/ws#WorkerShardingStrategy.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
 | `@fluxerjs/ws#WorkerShardingStrategy.destroy` | method | excluded | lifecycle | Ciclo de vida, emissão ou coordenação de processos é controlado pela configuração nativa, não por scripts. |
-| `@fluxerjs/ws#WorkerShardingStrategy.fetchStatus` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
-| `@fluxerjs/ws#WorkerShardingStrategy.getPing` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/ws#WorkerShardingStrategy.fetchStatus` | method | equivalent | $gatewayStatus | Snapshot de IDs, status e latência disponível da estratégia ativa, sem sockets nem processos. |
+| `@fluxerjs/ws#WorkerShardingStrategy.getPing` | method | equivalent | $gatewayStatus | Snapshot de IDs, status e latência disponível da estratégia ativa, sem sockets nem processos. |
 | `@fluxerjs/ws#WorkerShardingStrategy.send` | method | excluded | raw-transport | Objeto/transporte cru ou introspecção arbitrária pode contornar guards ou revelar estado da sessão. |
 | `@fluxerjs/ws#WorkerShardingStrategy.spawn` | method | excluded | lifecycle | Ciclo de vida, emissão ou coordenação de processos é controlado pela configuração nativa, não por scripts. |
 | `@fluxerjs/ws#WorkerShardingStrategyOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |

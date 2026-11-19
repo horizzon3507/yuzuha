@@ -9,7 +9,7 @@ import { fileURLToPath } from 'node:url';
 import { botTemplates } from '../src/cli/bot-template-catalog.js';
 import { parseArguments } from '../src/cli/arguments.js';
 import { packageRoot, VERSION } from '../src/cli/version.js';
-import { registerBuiltins, Runtime } from '../src/functions.js';
+import { builtinFunctions } from '../src/functions.js';
 
 const exec = promisify(execFile);
 const cli = fileURLToPath(new URL('../src/cli.ts', import.meta.url));
@@ -47,7 +47,7 @@ test('CLI search arguments normalize terms and reject missing, empty or repeated
 
 test('CLI searches names, aliases and descriptions while preserving order and metadata', async () => {
   const all = JSON.parse((await invoke(['functions', '--json'])).stdout) as { name: string; category: string; usage: string; description: string }[];
-  assert.equal(all.length, registerBuiltins(new Runtime()).functions().length);
+  assert.equal(all.length, builtinFunctions.length);
   const named = JSON.parse((await invoke(['functions', '--search', '  $NiCkNaMe ', '--json'])).stdout);
   assert.deepEqual(named, all.filter(fn => fn.name === 'nickname'));
   assert.equal(named.length, 1);

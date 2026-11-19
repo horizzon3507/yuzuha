@@ -2786,5 +2786,365 @@
     "maxArgs": 5,
     "usage": "$sdkCollection[operação;pares;arg1?;arg2?;arg3?]",
     "description": "Coleção local de até 1000 pares únicos [chave, valor], sem acesso ao cache real. Operações: clone, concat (outros pares), first/last/random (quantidade?), values, text, describe (capacidade?), set (chave;valor;capacidade?), partition (predicado), sweep (predicado?). Predicados usam $loopValue (par) e $loopIndex. set retorna entries/evicted (par removido em FIFO ou null); sweep retorna entries/removed."
+  },
+  {
+    "name": "instanceInfo",
+    "category": "instance",
+    "minArgs": 0,
+    "maxArgs": 0,
+    "usage": "$instanceInfo",
+    "description": "Retorna a descoberta da instância configurada; somente donos do bot."
+  },
+  {
+    "name": "gatewayInfo",
+    "category": "instance",
+    "minArgs": 0,
+    "maxArgs": 0,
+    "usage": "$gatewayInfo",
+    "description": "Retorna URL, shards e limites de sessão do gateway; somente donos do bot."
+  },
+  {
+    "name": "applicationInfo",
+    "category": "instance",
+    "minArgs": 0,
+    "maxArgs": 0,
+    "usage": "$applicationInfo",
+    "description": "Retorna a aplicação autenticada sem clientSecret; somente donos do bot."
+  },
+  {
+    "name": "oauthApplications",
+    "category": "instance",
+    "minArgs": 0,
+    "maxArgs": 0,
+    "usage": "$oauthApplications",
+    "description": "Lista aplicações OAuth sem clientSecret; somente donos do bot."
+  },
+  {
+    "name": "emojiMetadata",
+    "category": "instance",
+    "minArgs": 1,
+    "maxArgs": 1,
+    "usage": "$emojiMetadata[emoji]",
+    "description": "Retorna metadados do emoji pelo ID."
+  },
+  {
+    "name": "stickerMetadata",
+    "category": "instance",
+    "minArgs": 1,
+    "maxArgs": 1,
+    "usage": "$stickerMetadata[sticker]",
+    "description": "Retorna metadados do sticker pelo ID."
+  },
+  {
+    "name": "resolveEmoji",
+    "category": "instance",
+    "minArgs": 1,
+    "maxArgs": 1,
+    "usage": "$resolveEmoji[emoji]",
+    "description": "Resolve emoji por texto, ID ou menção no servidor atual (quando disponível)."
+  },
+  {
+    "name": "cacheStats",
+    "category": "cache",
+    "minArgs": 0,
+    "maxArgs": 0,
+    "usage": "$cacheStats",
+    "description": "Retorna estatísticas, limites e configuração de cascata do cache local; somente donos do bot."
+  },
+  {
+    "name": "sweepCache",
+    "category": "cache",
+    "minArgs": 1,
+    "maxArgs": 3,
+    "usage": "$sweepCache[messages|members|users|channels|guilds;escopo?;idadeMs?]",
+    "description": "Limpa cache local e retorna quantidade removida; somente donos do bot. Escopo opcional: canal para messages ou servidor para members. Idade só para messages."
+  },
+  {
+    "name": "cascadeCache",
+    "category": "cache",
+    "minArgs": 2,
+    "maxArgs": 2,
+    "usage": "$cascadeCache[channel|guild;id]",
+    "description": "Limpa dependências do ID no cache local sem apagar entidades no Fluxer; somente donos do bot."
+  },
+  {
+    "name": "evictCachedChannel",
+    "category": "cache",
+    "minArgs": 1,
+    "maxArgs": 1,
+    "usage": "$evictCachedChannel[canal]",
+    "description": "Remove apenas o canal indicado do cache local e retorna se existia; somente donos do bot."
+  },
+  {
+    "name": "selfUser",
+    "category": "users",
+    "minArgs": 0,
+    "maxArgs": 0,
+    "usage": "$selfUser",
+    "description": "Busca dados normalizados do usuário autenticado; somente donos do bot."
+  },
+  {
+    "name": "selfGuilds",
+    "category": "users",
+    "minArgs": 0,
+    "maxArgs": 1,
+    "usage": "$selfGuilds[contagens?]",
+    "description": "Lista servidores do bot, opcionalmente com contagens; somente donos do bot."
+  },
+  {
+    "name": "selfLeaveGuild",
+    "category": "users",
+    "minArgs": 0,
+    "maxArgs": 0,
+    "usage": "$selfLeaveGuild",
+    "description": "Remove o bot do servidor atual sem credenciais sudo; exige dono do bot e do servidor."
+  },
+  {
+    "name": "deleteMyMessages",
+    "category": "users",
+    "minArgs": 0,
+    "maxArgs": 0,
+    "usage": "$deleteMyMessages",
+    "description": "Pede a exclusão de todas as mensagens do bot no servidor atual, sem credenciais sudo; exige dono do bot e ManageMessages de autor e bot."
+  },
+  {
+    "name": "fetchGatewayMembers",
+    "category": "gateway",
+    "minArgs": 0,
+    "maxArgs": 1,
+    "usage": "$fetchGatewayMembers[opções?]",
+    "description": "Busca membros do servidor atual com ManageGuild de autor e bot; até 100 por query/limit ou userIDs, presences e timeoutMs de até 30000."
+  },
+  {
+    "name": "requestGatewayMembers",
+    "category": "gateway",
+    "minArgs": 0,
+    "maxArgs": 1,
+    "usage": "$requestGatewayMembers[opções?]",
+    "description": "Solicita membros no servidor atual com ManageGuild de autor e bot; até 100 por query/limit ou userIDs, com presences opcional."
+  },
+  {
+    "name": "requestGuildCounts",
+    "category": "gateway",
+    "minArgs": 0,
+    "maxArgs": 0,
+    "usage": "$requestGuildCounts",
+    "description": "Solicita contagens no servidor atual sem aguardar o evento; exige ManageGuild de autor e bot."
+  },
+  {
+    "name": "requestChannelCounts",
+    "category": "gateway",
+    "minArgs": 1,
+    "maxArgs": 1,
+    "usage": "$requestChannelCounts[canais]",
+    "description": "Solicita contagens de até 20 canais visíveis do servidor atual, sem aguardar os eventos."
+  },
+  {
+    "name": "requestForumUnreads",
+    "category": "gateway",
+    "minArgs": 2,
+    "maxArgs": 2,
+    "usage": "$requestForumUnreads[canal;threads]",
+    "description": "Solicita não lidos de até 20 posts visíveis do fórum atual; objetos com threadID e ackMessageID opcional."
+  },
+  {
+    "name": "subscribeThreads",
+    "category": "gateway",
+    "minArgs": 1,
+    "maxArgs": 2,
+    "usage": "$subscribeThreads[habilitar;threads?]",
+    "description": "Ativa ou desativa a assinatura de threads do servidor atual; somente donos do bot com ManageGuild de autor e bot, até 20 IDs."
+  },
+  {
+    "name": "collectMessages",
+    "category": "collectors",
+    "minArgs": 1,
+    "maxArgs": 4,
+    "usage": "$collectMessages[tempoMs;máximo?;usuário?;contém?]",
+    "description": "Coleta até 20 mensagens no canal atual em até 30000 ms; somente dados normalizados e filtros declarativos."
+  },
+  {
+    "name": "collectReactions",
+    "category": "collectors",
+    "minArgs": 2,
+    "maxArgs": 5,
+    "usage": "$collectReactions[mensagem;tempoMs;máximo?;usuário?;emojis?]",
+    "description": "Coleta até 20 reações no canal atual em até 30000 ms; emojis opcional é um array de até 10 textos."
+  },
+  {
+    "name": "fetchWebhookMessage",
+    "category": "webhooks",
+    "minArgs": 2,
+    "maxArgs": 3,
+    "usage": "$fetchWebhookMessage[webhook;mensagem;thread?]",
+    "description": "Busca uma mensagem do webhook com ManageWebhooks de autor e bot; o script não recebe o token."
+  },
+  {
+    "name": "editWebhookMessage",
+    "category": "webhooks",
+    "minArgs": 3,
+    "maxArgs": 4,
+    "usage": "$editWebhookMessage[webhook;mensagem;texto;thread?]",
+    "description": "Edita até 2000 caracteres de uma mensagem do webhook, sem menções automáticas; exige ManageWebhooks de autor e bot."
+  },
+  {
+    "name": "deleteWebhookMessage",
+    "category": "webhooks",
+    "minArgs": 2,
+    "maxArgs": 3,
+    "usage": "$deleteWebhookMessage[webhook;mensagem;thread?]",
+    "description": "Apaga uma mensagem do webhook com ManageWebhooks de autor e bot, sem passar o token no script."
+  },
+  {
+    "name": "bulkFetchMessages",
+    "category": "messages",
+    "minArgs": 1,
+    "maxArgs": 1,
+    "usage": "$bulkFetchMessages[janelas]",
+    "description": "Busca mensagens normalizadas em até 10 canais visíveis (até 100 mensagens no total); cada janela tem channelID, limit e um cursor opcional."
+  },
+  {
+    "name": "cachedMessage",
+    "category": "messages",
+    "minArgs": 1,
+    "maxArgs": 1,
+    "usage": "$cachedMessage[mensagem]",
+    "description": "Consulta uma mensagem no cache do canal atual, sem busca de mensagem no Fluxer; retorna null se ausente."
+  },
+  {
+    "name": "channelSlowmode",
+    "category": "channels",
+    "minArgs": 1,
+    "maxArgs": 1,
+    "usage": "$channelSlowmode[canal]",
+    "description": "Consulta o modo lento de um canal visível no servidor atual."
+  },
+  {
+    "name": "channelRtcRegions",
+    "category": "channels",
+    "minArgs": 1,
+    "maxArgs": 1,
+    "usage": "$channelRtcRegions[canal]",
+    "description": "Consulta as regiões RTC de um canal visível no servidor atual."
+  },
+  {
+    "name": "sendTyping",
+    "category": "channels",
+    "minArgs": 0,
+    "maxArgs": 1,
+    "usage": "$sendTyping[canal?]",
+    "description": "Envia indicação de digitação no servidor atual; exige SendMessages de autor e bot."
+  },
+  {
+    "name": "botReadiness",
+    "category": "instance",
+    "minArgs": 0,
+    "maxArgs": 0,
+    "usage": "$botReadiness",
+    "description": "Retorna ready, readyAt e uptimeMs; datas em milissegundos, ausentes antes de conectar."
+  },
+  {
+    "name": "requireBotReady",
+    "category": "guards",
+    "minArgs": 0,
+    "maxArgs": 0,
+    "usage": "$requireBotReady",
+    "description": "Encerra a execução se o bot ainda não estiver pronto."
+  },
+  {
+    "name": "shardInfo",
+    "category": "gateway",
+    "minArgs": 0,
+    "maxArgs": 0,
+    "usage": "$shardInfo",
+    "description": "Retorna id, ids locais, count e isLeader; vazio sem contexto de shard."
+  },
+  {
+    "name": "shardIdForGuild",
+    "category": "gateway",
+    "minArgs": 0,
+    "maxArgs": 2,
+    "usage": "$shardIdForGuild[servidor?;shards?]",
+    "description": "Calcula o shard de um servidor; usa o servidor atual e o total do contexto se omitidos."
+  },
+  {
+    "name": "guildMatchesShard",
+    "category": "gateway",
+    "minArgs": 3,
+    "maxArgs": 3,
+    "usage": "$guildMatchesShard[servidor;shard;total]",
+    "description": "Verifica se o servidor pertence ao shard informado, sem acessar o gateway."
+  },
+  {
+    "name": "recommendedShardCount",
+    "category": "gateway",
+    "minArgs": 1,
+    "maxArgs": 2,
+    "usage": "$recommendedShardCount[servidores;servidoresPorShard?]",
+    "description": "Calcula o total recomendado de shards a partir do número de servidores."
+  },
+  {
+    "name": "gatewayConstants",
+    "category": "gateway",
+    "minArgs": 0,
+    "maxArgs": 0,
+    "usage": "$gatewayConstants",
+    "description": "Retorna constantes públicas de sharding, janela de resume e códigos de fechamento."
+  },
+  {
+    "name": "gatewayShouldReconnect",
+    "category": "gateway",
+    "minArgs": 1,
+    "maxArgs": 1,
+    "usage": "$gatewayShouldReconnect[código]",
+    "description": "Classifica um código de fechamento; nunca reconecta o bot."
+  },
+  {
+    "name": "gatewaySessionFresh",
+    "category": "gateway",
+    "minArgs": 1,
+    "maxArgs": 3,
+    "usage": "$gatewaySessionFresh[atualizadoMs;ttlMs?;agoraMs?]",
+    "description": "Compara apenas timestamps com a janela de resume; não acessa credenciais ou sessão ativa."
+  },
+  {
+    "name": "normalizeGatewayPayload",
+    "category": "gateway",
+    "minArgs": 1,
+    "maxArgs": 1,
+    "usage": "$normalizeGatewayPayload[objeto]",
+    "description": "Normaliza o envelope JSON fornecido pelo próprio script; não lê nem envia payloads do gateway."
+  },
+  {
+    "name": "gatewayStatus",
+    "category": "gateway",
+    "minArgs": 0,
+    "maxArgs": 0,
+    "usage": "$gatewayStatus",
+    "description": "Retorna URL, quantidade, status e latência dos shards; somente donos do bot. Vazio se desconectado."
+  },
+  {
+    "name": "clusterInfo",
+    "category": "gateway",
+    "minArgs": 0,
+    "maxArgs": 1,
+    "usage": "$clusterInfo[id?]",
+    "description": "Retorna total e até 100 runtimes com ID e status, ou filtra por ID; somente donos do bot."
+  },
+  {
+    "name": "restDefaults",
+    "category": "gateway",
+    "minArgs": 0,
+    "maxArgs": 0,
+    "usage": "$restDefaults",
+    "description": "Retorna API, versão, locale e user agent padrão do SDK; não envia requisições."
+  },
+  {
+    "name": "restRateLimits",
+    "category": "gateway",
+    "minArgs": 1,
+    "maxArgs": 1,
+    "usage": "$restRateLimits[operações]",
+    "description": "Simula até 20 operações setBucket/getBucket/setGlobalReset/getGlobalReset/getWaitTime/updateFromHeaders/prune/size; não acessa os limites do bot."
   }
 ]

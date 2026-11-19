@@ -125,6 +125,11 @@ export function createMessagesResources(client: Client, reliability: Reliability
       const result = await client.preloadMessages(ids);
       return Object.fromEntries(ids.map(id => [id, result[id] ? toMessageInfo(new Message(client, result[id])) : null]));
     },
+    async cached(channelID, messageID) {
+      const channel = client.channels.get(channelID);
+      const message = channel?.isTextBased() ? channel.messages.get(messageID) : undefined;
+      return message ? toMessageInfo(message) : null;
+    },
     async fetch(channelID: string, messageID: string): Promise<MessageInfo> {
       return toMessageInfo(await client.channels.fetchMessage(channelID, messageID));
     },

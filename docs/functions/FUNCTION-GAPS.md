@@ -1,8 +1,8 @@
 # Funções que ainda faltam
 
 Contrato para a meta v0.8.0, sobre o SDK fixado no lockfile; não é uma declaração
-de paridade já concluída. O registro atual tem **336 funções canônicas**;
-aliases não aumentam esse número.
+de paridade já concluída. As funções canônicas e seus aliases estão na
+[referência gerada](FUNCTIONS.md).
 
 A fonte de verdade é a [matriz semântica](../PARITY-MATRIX.md), gerada dos
 JSONL por área em `scripts/parity/`. Ela inclui core/builders/types e os
@@ -14,7 +14,7 @@ atualizadas estão na matriz, não duplicadas neste documento.
 | Área / arquivo JSONL | Escopo seguro ainda a implementar | Base existente |
 |---|---|---|
 | pure | CDN, inviteUrl, constantes/flags/bitfields, parsing/guards, erros, helpers de instância e operações declarativas de coleção | ctx.cdn, helpers SDK e funções de arrays/texto; não é acesso JS arbitrário |
-| resources | Instância/aplicação, cache, self sem segredos sudo, gateway validado, mensagens de webhook, collectors completos e informação limitada de shard | ctx.resources.instance/cache/self/gateway/webhooks/collectors, bot.shard/ctx.shard; suporte nativo de sharding e cluster já existe |
+| resources | Sem entradas pendentes; operações administrativas usam guardas de dono e retornos normalizados | ctx.resources.instance/cache/self/gateway/webhooks/collectors e snapshots de shard/cluster |
 | entities | Campos normalizados e operações de guild/canal/thread/membro/mensagem: discovery, transferência de dono, role hoist, grupo de DM, acks/read-state, self settings de thread, stickers em lote | Ports users/channels/threads/messages/roles/expressions; autorização e mocks compartilhados |
 | events | Eventos ClientEvents ainda sem scriptEvent, com ator, contexto parcial e redação de dados sensíveis | Eventos contextuais nativos já abrangem o SDK; script-events.ts adapta seis eventos |
 | voice | Estados de voz, participantes e controle declarativo de áudio/música | VoiceStateTracker, ports voice/music, FluxerVoice, plugin Lavalink e filas |
@@ -34,8 +34,9 @@ a composição e as diferenças de normalização.
 A existência de um método em `ctx.resources`, um nome parecido em um builtin,
 ou um reexport em `yuzuha/sdk` **não** comprova acesso por function mode.
 Por exemplo, coletores nativos oferecem streams e resultados completos;
-`$awaitMessage` retorna só conteúdo e `$awaitReaction` só usuário. As operações
-de coletor mais amplas permanecem pending até terem contrato declarativo.
+`$awaitMessage` retorna só conteúdo e `$awaitReaction` só usuário.
+`$collectMessages` e `$collectReactions` retornam resultados normalizados de uma
+janela limitada no canal atual, sem listeners arbitrários.
 
 ## Exclusões documentadas
 

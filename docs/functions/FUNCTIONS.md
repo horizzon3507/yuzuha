@@ -1,9 +1,18 @@
 # Referência das funções
 
 Function mode opcional, importado de `yuzuha/functions`.
-Gerada do registro executável: **347 funções**. Atualize com `npm run docs:generate`.
+Gerada do registro executável: **392 funções**. Atualize com `npm run docs:generate`.
 
 Aliases não contam como funções adicionais. Índices e semântica estão em [LANGUAGE.md](LANGUAGE.md).
+
+## cache
+
+| Função | Descrição | Aliases |
+|---|---|---|
+| `$cacheStats` | Retorna estatísticas, limites e configuração de cascata do cache local; somente donos do bot. |  |
+| `$cascadeCache[channel\|guild;id]` | Limpa dependências do ID no cache local sem apagar entidades no Fluxer; somente donos do bot. |  |
+| `$evictCachedChannel[canal]` | Remove apenas o canal indicado do cache local e retorna se existia; somente donos do bot. |  |
+| `$sweepCache[messages\|members\|users\|channels\|guilds;escopo?;idadeMs?]` | Limpa cache local e retorna quantidade removida; somente donos do bot. Escopo opcional: canal para messages ou servidor para members. Idade só para messages. |  |
 
 ## canvas
 
@@ -29,13 +38,16 @@ Aliases não contam como funções adicionais. Índices e semântica estão em [
 | `$channel[canal;propriedade?]` | Mostra um canal; com propriedade, mostra só ela. |  |
 | `$channelPerms[canal;alvo;permitir?;negar?]` | Define permissões locais; listas separadas por vírgula. |  |
 | `$channelPermsOf[canal;usuario]` | Permissões efetivas do usuário no canal. |  |
+| `$channelRtcRegions[canal]` | Consulta as regiões RTC de um canal visível no servidor atual. |  |
 | `$channels` | Lista os canais do servidor atual por posição. |  |
+| `$channelSlowmode[canal]` | Consulta o modo lento de um canal visível no servidor atual. |  |
 | `$createChannel[nome;tipo?;categoria?]` | Cria um canal e mostra os dados. |  |
 | `$createLinkChannel[nome;url;categoria?]` | Cria um canal de link com autorização do autor e do bot. |  |
 | `$deleteChannel[canal]` | Apaga um canal. |  |
 | `$editChannel[canal;nome?;topico?;slowmode?]` | Edita um canal; vazio mantém. |  |
 | `$editLinkChannel[canal;url;motivo?]` | Altera a URL de um canal de link do servidor atual. |  |
 | `$moveChannel[canal;posição]` | Move um canal para a posição indicada, a partir de 0. |  |
+| `$sendTyping[canal?]` | Envia indicação de digitação no servidor atual; exige SendMessages de autor e bot. |  |
 | `$setCategory[canal;categoria;motivo?]` | Define a categoria do canal; categoria vazia remove o vínculo. |  |
 | `$setContentWarning[canal;nível;texto?;motivo?]` | Define aviso de conteúdo: 0 herda, 1 ativa, vazio remove o override. |  |
 | `$slowmode[segundos;canal?]` | Define o modo lento (0 a 21600s). |  |
@@ -46,6 +58,8 @@ Aliases não contam como funções adicionais. Índices e semântica estão em [
 |---|---|---|
 | `$awaitMessage[segundos;usuario?;canal?]` | Aguarda mensagem e retorna o conteúdo ou vazio em timeout. |  |
 | `$awaitReaction[segundos;emoji?;mensagem?]` | Aguarda reação e retorna o userID ou vazio em timeout. |  |
+| `$collectMessages[tempoMs;máximo?;usuário?;contém?]` | Coleta até 20 mensagens no canal atual em até 30000 ms; somente dados normalizados e filtros declarativos. |  |
+| `$collectReactions[mensagem;tempoMs;máximo?;usuário?;emojis?]` | Coleta até 20 reações no canal atual em até 30000 ms; emojis opcional é um array de até 10 textos. |  |
 | `$confirm[segundos;texto?]` | Pede confirmação com ✅/❌ e retorna boolean. |  |
 
 ## context
@@ -135,6 +149,29 @@ Aliases não contam como funções adicionais. Índices e semântica estão em [
 | `$throw[mensagem]` | Emite erro explícito. |  |
 | `$try[operação;fallback]` | Captura erros de operações; guards, limites e ações parciais continuam sendo erros. |  |
 
+## gateway
+
+| Função | Descrição | Aliases |
+|---|---|---|
+| `$clusterInfo[id?]` | Retorna total e até 100 runtimes com ID e status, ou filtra por ID; somente donos do bot. |  |
+| `$fetchGatewayMembers[opções?]` | Busca membros do servidor atual com ManageGuild de autor e bot; até 100 por query/limit ou userIDs, presences e timeoutMs de até 30000. |  |
+| `$gatewayConstants` | Retorna constantes públicas de sharding, janela de resume e códigos de fechamento. |  |
+| `$gatewaySessionFresh[atualizadoMs;ttlMs?;agoraMs?]` | Compara apenas timestamps com a janela de resume; não acessa credenciais ou sessão ativa. |  |
+| `$gatewayShouldReconnect[código]` | Classifica um código de fechamento; nunca reconecta o bot. |  |
+| `$gatewayStatus` | Retorna URL, quantidade, status e latência dos shards; somente donos do bot. Vazio se desconectado. |  |
+| `$guildMatchesShard[servidor;shard;total]` | Verifica se o servidor pertence ao shard informado, sem acessar o gateway. |  |
+| `$normalizeGatewayPayload[objeto]` | Normaliza o envelope JSON fornecido pelo próprio script; não lê nem envia payloads do gateway. |  |
+| `$recommendedShardCount[servidores;servidoresPorShard?]` | Calcula o total recomendado de shards a partir do número de servidores. |  |
+| `$requestChannelCounts[canais]` | Solicita contagens de até 20 canais visíveis do servidor atual, sem aguardar os eventos. |  |
+| `$requestForumUnreads[canal;threads]` | Solicita não lidos de até 20 posts visíveis do fórum atual; objetos com threadID e ackMessageID opcional. |  |
+| `$requestGatewayMembers[opções?]` | Solicita membros no servidor atual com ManageGuild de autor e bot; até 100 por query/limit ou userIDs, com presences opcional. |  |
+| `$requestGuildCounts` | Solicita contagens no servidor atual sem aguardar o evento; exige ManageGuild de autor e bot. |  |
+| `$restDefaults` | Retorna API, versão, locale e user agent padrão do SDK; não envia requisições. |  |
+| `$restRateLimits[operações]` | Simula até 20 operações setBucket/getBucket/setGlobalReset/getGlobalReset/getWaitTime/updateFromHeaders/prune/size; não acessa os limites do bot. |  |
+| `$shardIdForGuild[servidor?;shards?]` | Calcula o shard de um servidor; usa o servidor atual e o total do contexto se omitidos. |  |
+| `$shardInfo` | Retorna id, ids locais, count e isLeader; vazio sem contexto de shard. |  |
+| `$subscribeThreads[habilitar;threads?]` | Ativa ou desativa a assinatura de threads do servidor atual; somente donos do bot com ManageGuild de autor e bot, até 20 IDs. |  |
+
 ## guards
 
 | Função | Descrição | Aliases |
@@ -143,7 +180,21 @@ Aliases não contam como funções adicionais. Índices e semântica estão em [
 | `$onlyBotPerms[permissão;erro?]` | Exige permissão do bot no servidor. | `$requireBotPermission` |
 | `$onlyIf[condição;erro]` | Encerra se a condição for falsa; aceita ==, !=, >, <, >= e <=. | `$require` |
 | `$onlyPerms[permissão;erro?]` | Exige permissão do autor no servidor. | `$requirePermission` |
+| `$requireBotReady` | Encerra a execução se o bot ainda não estiver pronto. |  |
 | `$requireGuild[erro?]` | Exige execução em servidor. | `$onlyGuild` |
+
+## instance
+
+| Função | Descrição | Aliases |
+|---|---|---|
+| `$applicationInfo` | Retorna a aplicação autenticada sem clientSecret; somente donos do bot. |  |
+| `$botReadiness` | Retorna ready, readyAt e uptimeMs; datas em milissegundos, ausentes antes de conectar. |  |
+| `$emojiMetadata[emoji]` | Retorna metadados do emoji pelo ID. |  |
+| `$gatewayInfo` | Retorna URL, shards e limites de sessão do gateway; somente donos do bot. |  |
+| `$instanceInfo` | Retorna a descoberta da instância configurada; somente donos do bot. |  |
+| `$oauthApplications` | Lista aplicações OAuth sem clientSecret; somente donos do bot. |  |
+| `$resolveEmoji[emoji]` | Resolve emoji por texto, ID ou menção no servidor atual (quando disponível). |  |
+| `$stickerMetadata[sticker]` | Retorna metadados do sticker pelo ID. |  |
 
 ## invites
 
@@ -259,6 +310,8 @@ Aliases não contam como funções adicionais. Índices e semântica estão em [
 | Função | Descrição | Aliases |
 |---|---|---|
 | `$attachment[url;nome?]` | Monta especificação de anexo sem enviar. |  |
+| `$bulkFetchMessages[janelas]` | Busca mensagens normalizadas em até 10 canais visíveis (até 100 mensagens no total); cada janela tem channelID, limit e um cursor opcional. |  |
+| `$cachedMessage[mensagem]` | Consulta uma mensagem no cache do canal atual, sem busca de mensagem no Fluxer; retorna null se ausente. |  |
 | `$clearReactions[mensagem;emoji?;canal?]` | Remove todas as reações ou somente as de um emoji. |  |
 | `$deleteMessage[canalID;mensagemID]` | Apaga mensagem. |  |
 | `$dm[usuário;conteúdo]` | Envia mensagem direta e retorna o ID; não menciona usuários automaticamente. |  |
@@ -411,6 +464,7 @@ Aliases não contam como funções adicionais. Índices e semântica estão em [
 | `$avatar[id;tamanho?]` | URL do avatar; tamanho de 16 a 4096; vazio se ausente. |  |
 | `$bans[limite?]` | Banimentos do servidor atual; padrão 50, máximo 1000. |  |
 | `$channelCounts[canal?;timeout?]` | Solicita contagens ao vivo do canal ao gateway, aguardando o evento correspondente. |  |
+| `$deleteMyMessages` | Pede a exclusão de todas as mensagens do bot no servidor atual, sem credenciais sudo; exige dono do bot e ManageMessages de autor e bot. |  |
 | `$displayName[id]` | Nome de exibição do usuário; vazio se não existir. |  |
 | `$editGuild[opções]` | Edita nome, ícone, banner, canal de sistema/AFK e timeout AFK; exige ManageGuild de autor e bot. |  |
 | `$guild[propriedade?]` | Servidor atual, ou uma propriedade própria. |  |
@@ -424,6 +478,9 @@ Aliases não contam como funções adicionais. Índices e semântica estão em [
 | `$members[limite?]` | Membros do servidor atual; padrão 50, máximo 1000. |  |
 | `$nickname[usuário;apelido;motivo]` | Altera apelido com permissões e hierarquia; vazio remove. Retorna o membro. |  |
 | `$searchMembers[nome;limite?;offset?]` | Busca membros por nome; retorna members, total, hasMore e indexing. |  |
+| `$selfGuilds[contagens?]` | Lista servidores do bot, opcionalmente com contagens; somente donos do bot. |  |
+| `$selfLeaveGuild` | Remove o bot do servidor atual sem credenciais sudo; exige dono do bot e do servidor. |  |
+| `$selfUser` | Busca dados normalizados do usuário autenticado; somente donos do bot. |  |
 | `$setActivity[atividade;tipo?]` | Define a atividade com status online. |  |
 | `$setPresence[status;atividade?;tipo?]` | Define presença: status e atividade opcional (playing por padrão). |  |
 | `$setStatus[status]` | Define o status da presença; limpa a atividade. |  |
@@ -458,6 +515,9 @@ Aliases não contam como funções adicionais. Índices e semântica estão em [
 |---|---|---|
 | `$createWebhook[canal;nome]` | Cria webhook no canal e retorna suas informações. |  |
 | `$deleteWebhook[id;token?]` | Apaga webhook do servidor atual com ManageWebhooks; token não contorna autorização. |  |
+| `$deleteWebhookMessage[webhook;mensagem;thread?]` | Apaga uma mensagem do webhook com ManageWebhooks de autor e bot, sem passar o token no script. |  |
 | `$editWebhook[id;nome;token?]` | Renomeia webhook do servidor atual com ManageWebhooks; sem token usa a autenticação do bot. |  |
+| `$editWebhookMessage[webhook;mensagem;texto;thread?]` | Edita até 2000 caracteres de uma mensagem do webhook, sem menções automáticas; exige ManageWebhooks de autor e bot. |  |
+| `$fetchWebhookMessage[webhook;mensagem;thread?]` | Busca uma mensagem do webhook com ManageWebhooks de autor e bot; o script não recebe o token. |  |
 | `$sendWebhook[id;token;texto]` | Envia via webhook do servidor atual com ManageWebhooks do autor e bot; token não contorna autorização. |  |
 | `$webhooks[canal?]` | Lista webhooks do canal (padrão: canal atual). |  |
