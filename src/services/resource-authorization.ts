@@ -4,7 +4,9 @@ import { auditLogQueryInput } from '../domain/audit-log.js';
 import type { AuditLogQueryInput } from '../domain/audit-log.js';
 import { normalizeWebhookEditInput, normalizeWebhookMessageOptions } from '../domain/webhooks.js';
 import { hasPermission, permission } from '../domain/permissions.js';
-import { emojiBatch } from '../domain/resource-batches.js';
+import { emojiBatch, stickerBatch } from '../domain/resource-batches.js';
+import { discoveryInput, memberEditInput, positionBatch } from '../domain/entity-operations.js';
+import type { MemberEditInput } from '../ports/resources/users.js';
 import type { Resources } from '../ports/resources.js';
 import type { RoleInfo } from '../ports/resources/roles.js';
 import type { ThreadDefaultsInput, ThreadSelfEditInput } from '../ports/resources/threads.js';
@@ -84,6 +86,11 @@ export function bindAuthorizedResources(
       }
       return target;
     };
+    const readable = async (id: string, flag: string) => {
+      const target = await source.channels.get(id);
+      if (target.guildID === null) return dm(id);
+      return channel(id, flag);
+    };
     const parent = async (id: string) => {
       const target = await channel(id);
       if (target.type !== 4) throw new GuardError('O canal pai deve ser uma categoria.', 'INVALID_ARGUMENT');
@@ -110,7 +117,7 @@ export function bindAuthorizedResources(
     };
     return {
       authorization, guild, allowed, actors, permissions, roleHierarchy, memberHierarchy,
-      role, channel, dm, parent, webhook, expressions, permissionsFromRole,
+      role, channel, dm, readable, parent, webhook, expressions, permissionsFromRole,
     };
   };
   const sharedGuards = sharedMemo ? createGuards(sharedMemo) : undefined;
@@ -121,11 +128,52 @@ export function bindAuthorizedResources(
   };
 
   return { users: Object.assign(Object.create(source.users), {
+    async editMember(guildID: string, userID: string, input: MemberEditInput) {
+      const g = guards(); g.guild(guildID);
+      const value = memberEditInput(input);
+      if (value.nickname !== undefined) await g.allowed('ManageNicknames');
+      if (value.roles !== undefined) await g.allowed('ManageRoles');
+      await g.memberHierarchy(userID);
+      if (value.roles !== undefined) {
+        const current = await source.users.member(guildID, userID);
+        const old = new Set(current.roles), next = new Set(value.roles);
+        for (const id of new Set([...old, ...next])) {
+          if (id === guildID) throw new GuardError('@everyone não pode ser definido como cargo do membro.', 'HIERARCHY');
+          const role = await source.roles.resolve(guildID, id);
+          if (old.has(id) === next.has(id)) continue;
+          await g.roleHierarchy(role);
+          if (next.has(id)) await g.permissionsFromRole(role);
+        }
+      }
+      return mutate(() => source.users.editMember(guildID, userID, value));
+    },
+    async discoveryStatus(guildID: string) {
+      const g = guards(); g.guild(guildID); await g.allowed('ManageGuild');
+      return source.users.discoveryStatus(guildID);
+    },
+    async applyForDiscovery(guildID: string, input: import('../ports/resources/users.js').DiscoveryApplicationInput) {
+      const g = guards(); g.guild(guildID); await g.allowed('ManageGuild');
+      return source.users.applyForDiscovery(guildID, discoveryInput(input));
+    },
+    async editDiscoveryApplication(guildID: string, input: import('../ports/resources/users.js').DiscoveryApplicationInput) {
+      const g = guards(); g.guild(guildID); await g.allowed('ManageGuild');
+      return source.users.editDiscoveryApplication(guildID, discoveryInput(input));
+    },
+    async withdrawDiscoveryApplication(guildID: string) {
+      const g = guards(); g.guild(guildID); await g.allowed('ManageGuild');
+      return source.users.withdrawDiscoveryApplication(guildID);
+    },
+    async getBan(guildID: string, userID: string) {
+      const g = guards(); g.guild(guildID); await g.allowed('BanMembers');
+      return source.users.getBan(guildID, userID);
+    },
     async transferOwnership(guildID: string, userID: string) {
       const g = guards();
-      requireGuild(guildID, t);
-      const [author] = await g.actors();
+      g.guild(guildID);
+      const [author, bot] = await g.actors();
       if (!author.owner) throw new GuardError('Apenas o dono do servidor pode transferir a propriedade.', 'PERMISSION_MISSING_AUTHOR');
+      if (!bot.owner) throw new GuardError('O bot precisa ser dono do servidor para transferir a propriedade.', 'PERMISSION_MISSING_BOT');
+      if (userID === transport.botID) throw new GuardError('O destino não pode ser o próprio bot.', 'BOT_TARGET');
       const target = await source.users.member(guildID, userID);
       if (target.bot) throw new GuardError('A propriedade não pode ser transferida para um bot.', 'BOT_TARGET');
       return mutate(() => source.users.transferOwnership(guildID, userID));
@@ -170,8 +218,8 @@ export function bindAuthorizedResources(
       return source.messages.purge!(channelID, input);
     },
     async bulkDeleteOwn(channelID: string) { const g = guards(); await g.channel(channelID, 'SendMessages'); return source.messages.bulkDeleteOwn(channelID); },
-    async acknowledgePins(channelID: string) { const g = guards(); await g.channel(channelID, 'ReadMessageHistory'); return source.messages.acknowledgePins(channelID); },
-    async clearReadState(channelID: string) { const g = guards(); await g.channel(channelID, 'ReadMessageHistory'); return source.messages.clearReadState(channelID); },
+    async acknowledgePins(channelID: string) { const g = guards(); await g.readable(channelID, 'ReadMessageHistory'); return source.messages.acknowledgePins(channelID); },
+    async clearReadState(channelID: string) { const g = guards(); await g.readable(channelID, 'ReadMessageHistory'); return source.messages.clearReadState(channelID); },
     async purgeDM(channelID: string) {
       const g = guards();
       const channel = await source.channels.get(channelID);
@@ -214,10 +262,10 @@ export function bindAuthorizedResources(
       await g.expressions(args[0]);
       return source.expressions.createSticker(...args);
     },
-    async createStickersBulk(...args) {
+    async createStickersBulk(guildID, inputs) {
       const g = guards();
-      await g.expressions(args[0]);
-      return source.expressions.createStickersBulk(...args);
+      await g.expressions(guildID);
+      return source.expressions.createStickersBulk(guildID, stickerBatch(inputs));
     },
     async editSticker(...args) {
       const g = guards();
@@ -283,14 +331,27 @@ export function bindAuthorizedResources(
       const g = guards();
       g.guild(guildID);
       await g.allowed('ManageRoles');
-      for (const update of updates) await g.roleHierarchy(await g.role(guildID, update.id));
-      return mutate(() => source.roles.setRoleHoistPositions(guildID, updates));
+      const batch = positionBatch(updates, true);
+      for (const update of batch) await g.role(guildID, update.id);
+      return mutate(() => source.roles.setRoleHoistPositions(guildID, batch));
     },
     async resetRoleHoistPositions(guildID: string) {
       const g = guards();
       g.guild(guildID);
       await g.allowed('ManageRoles');
+      for (const role of await source.roles.list(guildID)) {
+        if (role.hoistPosition) await g.roleHierarchy(role);
+      }
       return mutate(() => source.roles.resetRoleHoistPositions(guildID));
+    },
+    async setRolePositions(guildID, updates) {
+      const g = guards(); g.guild(guildID); await g.allowed('ManageRoles');
+      const batch = positionBatch(updates);
+      for (const update of batch) {
+        const role = await g.role(guildID, update.id);
+        await g.roleHierarchy({ ...role, position: update.position });
+      }
+      return mutate(() => source.roles.setRolePositions(guildID, batch));
     },
     async move(guildID, query, position) {
       const g = guards();
@@ -300,8 +361,24 @@ export function bindAuthorizedResources(
       return mutate(() => source.roles.move(guildID, target.id, position));
     },
   }, channels: {
+    async setChannelPositions(guildID, updates) {
+      const g = guards(); g.guild(guildID); await g.allowed('ManageChannels');
+      const batch = positionBatch(updates);
+      for (const update of batch) await g.channel(update.id);
+      return source.channels.setChannelPositions(guildID, batch);
+    },
     get: source.channels.get.bind(source.channels), list: source.channels.list.bind(source.channels),
-    permissionsFor: source.channels.permissionsFor.bind(source.channels),
+    async permissionsFor(guildID, channelID, userID) {
+      const g = guards(); g.guild(guildID);
+      const channel = await source.channels.get(channelID); g.guild(channel.guildID ?? '');
+      return source.channels.permissionsFor(guildID, channelID, userID);
+    },
+    async deleteOverwrite(id, targetID, reason) {
+      const g = guards(); await g.channel(id, 'ManageRoles');
+      const role = (await source.roles.list(requireGuild(scope.guildID, t))).find(role => role.id === targetID);
+      if (role) await g.roleHierarchy(role, true); else await g.memberHierarchy(targetID);
+      return mutate(() => source.channels.deleteOverwrite(id, targetID, reason));
+    },
     async create(guildID, input) {
       const g = guards();
       g.guild(guildID);
@@ -333,9 +410,9 @@ export function bindAuthorizedResources(
       return source.channels.removeRecipient(id, userID, options);
     },
     async setSlowmode(id, seconds, reason) { const g = guards(); await g.channel(id); return source.channels.setSlowmode(id, seconds, reason); },
-    slowmode: source.channels.slowmode.bind(source.channels),
-    async sendTyping(id) { const g = guards(); await g.channel(id, 'SendMessages'); return source.channels.sendTyping(id); },
-    rtcRegions: source.channels.rtcRegions.bind(source.channels),
+    async slowmode(id) { const g = guards(); await g.channel(id, 'ViewChannel'); return source.channels.slowmode(id); },
+    async sendTyping(id) { const g = guards(); await g.readable(id, 'SendMessages'); return source.channels.sendTyping(id); },
+    async rtcRegions(id) { const g = guards(); await g.channel(id, 'ViewChannel'); return source.channels.rtcRegions(id); },
     async move(id, position) { const g = guards(); await g.channel(id); return source.channels.move(id, position); },
     async editThreadDefaults(id, input) { const g = guards(); await g.channel(id); return source.channels.editThreadDefaults(id, input); },
     async setDefaultForumLayout(id, layout, reason) { const g = guards(); await g.channel(id); return source.channels.setDefaultForumLayout(id, layout, reason); },

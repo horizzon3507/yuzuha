@@ -5,6 +5,15 @@ import type { ChannelCreateInput, ChannelEditInput, ChannelInfo, ChannelOverwrit
 import { GuardError, YuzuhaError } from '../../../errors.js';
 
 type ChannelExtras = {
+  lastMessageId?: string | null;
+  nsfwOverride?: boolean | null;
+  bitrate?: number;
+  userLimit?: number;
+  voiceConnectionLimit?: number;
+  rtcRegion?: string | null;
+  defaultAutoArchiveDuration?: number | null;
+  defaultThreadRateLimitPerUser?: number | null;
+  defaultForumLayout?: number | null;
   topic?: string | null;
   rateLimitPerUser?: number | null;
   nsfw?: boolean | null;
@@ -16,6 +25,23 @@ type ChannelExtras = {
 export function toChannelInfo(channel: GuildChannel): ChannelInfo {
   const extras = channel as GuildChannel & ChannelExtras;
   return {
+    createdTimestamp: channel.createdTimestamp,
+    createdAt: channel.createdAt?.toISOString(),
+    icon: channel.icon,
+    lastPinTimestamp: channel.lastPinTimestamp,
+    lastMessageId: extras.lastMessageId ?? null,
+    nsfwOverride: extras.nsfwOverride ?? null,
+    bitrate: extras.bitrate ?? null,
+    userLimit: extras.userLimit ?? null,
+    voiceConnectionLimit: extras.voiceConnectionLimit ?? null,
+    rtcRegion: extras.rtcRegion ?? null,
+    defaultAutoArchiveDuration: extras.defaultAutoArchiveDuration ?? null,
+    defaultThreadRateLimitPerUser: extras.defaultThreadRateLimitPerUser ?? null,
+    defaultForumLayout: extras.defaultForumLayout ?? null,
+    permissionOverwrites: [...channel.permissionOverwrites?.cache.values() ?? []].map(overwrite => ({
+      id: overwrite.id, type: overwrite.type,
+      allow: overwrite.allow.bitfield.toString(), deny: overwrite.deny.bitfield.toString(),
+    })),
     id: channel.id,
     name: channel.name ?? '',
     type: Number(channel.type),
@@ -79,10 +105,24 @@ async function overwriteKind(client: Client, channel: GuildChannel, targetID: st
 
 export function createChannelsResources(client: Client): ChannelsResources {
   return {
+    async deleteOverwrite(channelID, targetID, reason) {
+      const channel = await guildChannel(client, channelID);
+      if (reason === undefined) await channel.permissionOverwrites.delete(targetID);
+      else {
+        await client.rest.delete(Routes.channelPermission(channelID, targetID), { auth: true, headers: { 'X-Audit-Log-Reason': reason } });
+        channel.permissionOverwrites.cache.delete(targetID);
+      }
+    },
+    async setChannelPositions(guildID, updates) {
+      await (await client.guilds.resolve(guildID)).setChannelPositions(updates);
+    },
     async get(channelID): Promise<ChannelInfo> {
       const channel = await client.channels.fetch(channelID);
       if (channel.isDM()) {
         return { id: channel.id, name: channel.name ?? '', type: Number(channel.type), guildID: null,
+          createdTimestamp: channel.createdTimestamp, icon: channel.icon, lastPinTimestamp: channel.lastPinTimestamp,
+          createdAt: channel.createdAt?.toISOString(),
+          lastMessageId: channel.lastMessageId ?? null, nicks: { ...channel.nicks },
           parentID: null, position: 0, topic: null, slowmode: 0, nsfw: false,
           recipientIDs: channel.recipients.map(user => user.id), ownerID: channel.ownerId };
       }

@@ -225,7 +225,8 @@ test('adaptador lista convites, lê/altera vanity e clona expressões', async t 
   const client = new Client(); t.after(() => client.destroy());
   const calls: unknown[][] = [];
   Reflect.set(client.guilds, 'resolve', async () => ({
-    async fetchInvites() { return [{ code: 'a', url: 'https://fluxer.gg/a', guildSnapshot: { id: '100' }, channelSnapshot: { id: '200' }, inviter: { id: '1' }, uses: 1, maxUses: 0, expiresAt: null }]; },
+    async fetchInvites() { return [{ code: 'a', url: 'https://fluxer.gg/a', guildSnapshot: { id: '100', features: [] }, channelSnapshot: { id: '200' }, inviter: { id: '1' }, uses: 1, maxUses: 0, expiresAt: null,
+      isGuild: () => true, isGroupDM: () => false }]; },
     async fetchVanityURL() { return { code: 'nome', uses: 1 }; },
     async editVanityURL(code: string | null) { calls.push(['vanity', code]); return { code, uses: 0 }; },
     async cloneEmoji(id: string) { calls.push(['emoji', id]); return { id: '4', name: 'clonado', animated: false, url: null }; },

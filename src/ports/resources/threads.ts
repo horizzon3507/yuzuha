@@ -1,4 +1,15 @@
 export interface ThreadInfo {
+  guildID?: string | null;
+  archiveTimestamp?: string | null;
+  autoArchiveDuration?: number;
+  memberCount?: number;
+  totalMessageSent?: number;
+  appliedTags?: string[];
+  rateLimitPerUser?: number;
+  invitable?: boolean | null;
+  flags?: number;
+  lastMessageId?: string | null;
+  member?: ThreadMemberInfo | null;
   id: string;
   name: string;
   parentID: string | null;
@@ -37,6 +48,7 @@ export interface ForumPostInput {
 }
 
 export interface ThreadsResources {
+  get(threadID: string): Promise<ThreadInfo>;
   create(channelID: string, input: ThreadCreateInput): Promise<ThreadInfo>;
   archive(threadID: string, locked?: boolean, reason?: string): Promise<void>;
   unarchive(threadID: string, reason?: string): Promise<void>;

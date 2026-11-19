@@ -334,6 +334,8 @@ test('webhooks.fetchMessage e deleteMessage retornam MessageInfo normalizado e s
       url: 'https://cdn.exemplo.com/relatorio.txt',
       size: 12,
       contentType: 'text/plain',
+      description: null,
+      spoiler: false,
     },
   ]);
   assert.equal(message.embeds.length, 1);

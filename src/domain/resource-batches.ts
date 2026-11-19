@@ -52,11 +52,11 @@ export function stickerBatch(input: unknown): { name: string; image: string; des
       || image.length % 4 !== 0 || !/^[A-Za-z0-9+/]+={0,2}$/.test(image)) {
       throw new YuzuhaError('STICKER_IMAGE', 'Imagem deve ser base64 válido, sem prefixo data:.');
     }
-    if (description !== undefined && typeof description !== 'string') {
-      throw new YuzuhaError('STICKER_BATCH', 'description deve ser texto.');
+    if (description !== undefined && (typeof description !== 'string' || description.length > 100)) {
+      throw new YuzuhaError('STICKER_BATCH', 'description deve ser texto de até 100 caracteres.');
     }
-    if (tags !== undefined && (!Array.isArray(tags) || tags.some(tag => typeof tag !== 'string'))) {
-      throw new YuzuhaError('STICKER_BATCH', 'tags deve ser uma lista de textos.');
+    if (tags !== undefined && (!Array.isArray(tags) || tags.length > 10 || tags.some(tag => typeof tag !== 'string' || tag.length > 100))) {
+      throw new YuzuhaError('STICKER_BATCH', 'tags deve ser uma lista de até 10 textos de até 100 caracteres.');
     }
     bytes += image.length / 4 * 3 - (image.endsWith('==') ? 2 : image.endsWith('=') ? 1 : 0);
     if (bytes > 10_000_000) throw new YuzuhaError('STICKER_BATCH', 'Imagens devem somar até 10 MB.');

@@ -31,6 +31,11 @@ import { pureErrorFunctions } from './pure-errors.js';
 import { pureCollectionFunctions } from './pure-collections.js';
 import { resourceOperations } from './resource-operations.js';
 import { resourceDiagnostics } from './resource-diagnostics.js';
+import { entityInfoFunctions } from './entities-info.js';
+import { entityGuildFunctions } from './entities-guild.js';
+import { entityChannelFunctions } from './entities-channels.js';
+import { entityMessageFunctions } from './entities-messages.js';
+import { entityMemberFunctions } from './entities-members.js';
 
 export const builtinFunctions: FunctionDefinition[] = [
   ...contextFunctions, ...flowFunctions, ...guardFunctions, ...valueFunctions,
@@ -45,6 +50,11 @@ export const builtinFunctions: FunctionDefinition[] = [
   ...pureUtilFunctions, ...pureErrorFunctions, ...pureCollectionFunctions,
   ...resourceOperations,
   ...resourceDiagnostics,
+  ...entityInfoFunctions,
+  ...entityGuildFunctions,
+  ...entityChannelFunctions,
+  ...entityMessageFunctions,
+  ...entityMemberFunctions,
 ];
 
 export function registerBuiltins(runtime: Runtime): Runtime {

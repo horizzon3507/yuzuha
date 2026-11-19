@@ -5,11 +5,15 @@ import { emojiBatch, stickerBatch } from '../../../domain/resource-batches.js';
 import type { EmojiInfo, ExpressionsResources, StickerInfo } from '../../../ports/resources/expressions.js';
 
 function toEmojiInfo(emoji: GuildEmoji): EmojiInfo {
-  return { id: emoji.id, name: emoji.name, animated: emoji.animated, url: fixAnimatedAssetUrl(emoji.url) };
+  return { id: emoji.id, name: emoji.name, animated: emoji.animated, url: fixAnimatedAssetUrl(emoji.url),
+    guildID: emoji.guildId, identifier: emoji.identifier, createdTimestamp: emoji.createdTimestamp,
+    createdAt: emoji.createdAt?.toISOString() };
 }
 
 function toStickerInfo(sticker: GuildSticker): StickerInfo {
   return {
+    guildID: sticker.guildId, animated: sticker.animated, nsfw: sticker.nsfw, url: sticker.url,
+    createdTimestamp: sticker.createdTimestamp, createdAt: sticker.createdAt?.toISOString(),
     id: sticker.id,
     name: sticker.name,
     description: sticker.description || null,

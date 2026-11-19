@@ -1,5 +1,20 @@
 import type { ThreadDefaultsInput } from './threads.js';
 export interface ChannelInfo {
+  createdTimestamp?: number;
+  createdAt?: string;
+  icon?: string | null;
+  lastPinTimestamp?: string | null;
+  lastMessageId?: string | null;
+  nsfwOverride?: boolean | null;
+  bitrate?: number | null;
+  userLimit?: number | null;
+  voiceConnectionLimit?: number | null;
+  rtcRegion?: string | null;
+  defaultAutoArchiveDuration?: number | null;
+  defaultThreadRateLimitPerUser?: number | null;
+  defaultForumLayout?: number | null;
+  nicks?: Record<string, string>;
+  permissionOverwrites?: { id: string; type: number; allow: string; deny: string }[];
   id: string;
   name: string;
   type: number;
@@ -76,6 +91,8 @@ export interface ChannelsResources {
   setDefaultForumLayout(channelID: string, layout: 'default' | 'list' | 'grid' | null, reason?: string): Promise<void>;
   move(channelID: string, position: number): Promise<void>;
   setCategory(channelID: string, parentID: string | null, reason?: string): Promise<ChannelInfo>;
+  setChannelPositions(guildID: string, updates: { id: string; position: number }[]): Promise<void>;
+  deleteOverwrite(channelID: string, targetID: string, reason?: string): Promise<void>;
 }
 
 export interface RtcRegionInfo { id: string; name: string; emoji: string }

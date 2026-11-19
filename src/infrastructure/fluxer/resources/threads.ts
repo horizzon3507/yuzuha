@@ -5,8 +5,20 @@ import { userID as parseUserID } from '../../../domain/values.js';
 
 type FetchedChannel = Awaited<ReturnType<Client['channels']['fetch']>>;
 
-function toInfo(thread: ThreadChannel): ThreadInfo {
+export function toThreadInfo(thread: ThreadChannel): ThreadInfo {
   return {
+    guildID: thread.guildId,
+    archiveTimestamp: thread.archiveTimestamp,
+    autoArchiveDuration: thread.autoArchiveDuration,
+    memberCount: thread.memberCount,
+    totalMessageSent: thread.totalMessageSent,
+    appliedTags: [...thread.appliedTags ?? []],
+    rateLimitPerUser: thread.rateLimitPerUser,
+    invitable: thread.invitable,
+    flags: thread.flags,
+    lastMessageId: thread.lastMessageId,
+    member: thread.member ? { threadID: thread.member.id, userID: thread.member.userId,
+      joinedTimestamp: thread.member.joinedAt.getTime(), flags: thread.member.flags } : null,
     id: thread.id,
     name: thread.name ?? '',
     parentID: thread.parentId,
@@ -16,6 +28,8 @@ function toInfo(thread: ThreadChannel): ThreadInfo {
     ownerID: thread.ownerId,
   };
 }
+
+const toInfo = toThreadInfo;
 
 function asThread(channel: FetchedChannel): ThreadChannel {
   if (!channel.isThread()) throw new YuzuhaError('THREAD_NOT_FOUND', 'O canal informado não é uma thread.');
@@ -44,6 +58,7 @@ function listPage(page: FetchedThreads, joined = false) {
 
 export function createThreadsResources(client: Client): ThreadsResources {
   return {
+    async get(threadID) { return toInfo(asThread(await client.channels.fetch(threadID))); },
     async active(guildID) {
       return { ...listPage(await (await client.guilds.resolve(guildID)).fetchActiveThreads()), nextBefore: null };
     },

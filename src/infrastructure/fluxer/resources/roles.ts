@@ -4,6 +4,7 @@ import { YuzuhaError } from '../../../errors.js';
 
 function toInfo(role: Role): RoleInfo {
   return {
+    guildID: role.guildId, createdTimestamp: role.createdTimestamp, createdAt: role.createdAt?.toISOString(),
     id: role.id,
     name: role.name,
     color: role.color,
@@ -106,10 +107,13 @@ export function createRolesResources(client: Client): RolesResources {
     },
     async setRoleHoistPositions(guildID, updates) {
       const guild = await client.guilds.resolve(guildID);
-      return (await guild.setRoleHoistPositions(updates)).map(toInfo);
+      return (await guild.setRoleHoistPositions(updates.map(update => ({ id: update.id, hoistPosition: update.position ?? 0 })))).map(toInfo);
     },
     async resetRoleHoistPositions(guildID) {
       return (await (await client.guilds.resolve(guildID)).resetRoleHoistPositions()).map(toInfo);
+    },
+    async setRolePositions(guildID, updates) {
+      return (await (await client.guilds.resolve(guildID)).setRolePositions(updates)).map(toInfo);
     },
     async move(guildID, role, position): Promise<void> {
       if (!Number.isSafeInteger(position) || position < 0) throw new YuzuhaError('POSITION', 'Posição deve ser um inteiro a partir de 0.');

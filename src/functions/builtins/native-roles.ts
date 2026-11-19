@@ -4,7 +4,7 @@ import type { FunctionCall } from '../runtime/types.js';
 import { defineFunctions } from './definition.js';
 import { integer } from './language/common.js';
 
-const ROLE_PROPERTIES = ['id', 'name', 'color', 'position', 'permissions', 'hoist', 'mentionable', 'unicodeEmoji', 'managed'] as const;
+const ROLE_PROPERTIES = ['id', 'name', 'color', 'position', 'permissions', 'hoist', 'mentionable', 'unicodeEmoji', 'managed', 'guildID', 'createdTimestamp', 'createdAt'] as const;
 type RoleProperty = (typeof ROLE_PROPERTIES)[number];
 
 function isRoleProperty(value: string): value is RoleProperty {
@@ -39,7 +39,7 @@ function pickProperty(role: RoleInfo, raw: string, fallback = false): unknown {
   }
   if (!isRoleProperty(property)) throw new YuzuhaError('ROLE_PROPERTY', `Propriedade inválida. Use: ${ROLE_PROPERTIES.join(', ')}.`);
   const value = role[property];
-  return value === null ? '' : value;
+  return value ?? '';
 }
 
 function checkName(name: string): string {

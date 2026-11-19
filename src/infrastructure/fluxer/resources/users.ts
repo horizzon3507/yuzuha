@@ -16,7 +16,7 @@ import type {
 } from '../../../ports/resources/users.js';
 import type { DiscoveryApplicationInfo } from '../../../ports/resources/users.js';
 import type { ChannelInfo } from '../../../ports/resources/channels.js';
-import { YuzuhaError } from '../../../errors.js';
+import { PartialModerationError, YuzuhaError } from '../../../errors.js';
 
 /** Época Fluxer (01/01/2015 UTC) para derivar timestamps de snowflakes. */
 const FLUXER_EPOCH = 1420070400000n;
@@ -149,12 +149,19 @@ function snowflakeTimestamp(id: string): number {
 
 export function toUserInfo(user: User): UserInfo {
   return {
+    avatar: user.avatar,
+    banner: user.banner,
+    avatarColor: user.avatarColor,
+    discriminator: user.discriminator,
+    flags: user.flags,
+    globalName: user.globalName,
+    system: user.system,
     id: user.id,
     username: user.username,
     displayName: user.globalName ?? user.username,
     bot: user.bot,
-    avatarURL: fixAnimatedAssetUrl(user.avatarURL()),
-    bannerURL: fixAnimatedAssetUrl(user.bannerURL()),
+    avatarURL: fixAnimatedAssetUrl(user.avatarURL?.() ?? null),
+    bannerURL: fixAnimatedAssetUrl(user.bannerURL?.() ?? null),
     createdTimestamp: user.createdTimestamp,
   };
 }
@@ -162,6 +169,19 @@ export function toUserInfo(user: User): UserInfo {
 export function toMemberInfo(member: GuildMember): MemberInfo {
   const user = member.user;
   return {
+    avatarColor: user.avatarColor,
+    discriminator: user.discriminator,
+    flags: user.flags,
+    globalName: user.globalName,
+    system: user.system,
+    avatar: member.avatar,
+    banner: member.banner,
+    guildID: member.guild?.id,
+    partial: member.partial,
+    deaf: member.deaf,
+    mute: member.mute,
+    profileFlags: member.profileFlags,
+    mentionFlags: member.mentionFlags,
     id: member.id,
     username: user.username,
     displayName: member.displayName,
@@ -179,6 +199,34 @@ export function toMemberInfo(member: GuildMember): MemberInfo {
 
 export function toGuildInfo(guild: Guild): GuildInfo {
   return {
+    available: guild.available,
+    afkChannelId: guild.afkChannelId,
+    afkTimeout: guild.afkTimeout,
+    banner: guild.banner,
+    bannerHeight: guild.bannerHeight ?? null,
+    bannerWidth: guild.bannerWidth ?? null,
+    icon: guild.icon,
+    splash: guild.splash,
+    splashURL: fixAnimatedAssetUrl(guild.splashURL?.() ?? null),
+    splashHeight: guild.splashHeight ?? null,
+    splashWidth: guild.splashWidth ?? null,
+    splashCardAlignment: guild.splashCardAlignment,
+    embedSplash: guild.embedSplash,
+    verificationLevel: guild.verificationLevel,
+    mfaLevel: guild.mfaLevel,
+    nsfwLevel: guild.nsfwLevel,
+    nsfw: guild.nsfw,
+    contentWarningLevel: guild.contentWarningLevel,
+    contentWarningText: guild.contentWarningText,
+    disabledOperations: guild.disabledOperations,
+    defaultMessageNotifications: guild.defaultMessageNotifications,
+    explicitContentFilter: guild.explicitContentFilter,
+    messageHistoryCutoff: guild.messageHistoryCutoff,
+    systemChannelFlags: guild.systemChannelFlags,
+    systemChannelId: guild.systemChannelId,
+    rulesChannelId: guild.rulesChannelId,
+    vanityURLCode: guild.vanityURLCode,
+    onlineCount: guild.onlineCount,
     id: guild.id,
     name: guild.name,
     ownerID: guild.ownerId,
@@ -266,11 +314,18 @@ export function createUsersResources(client: Client, cdn: import('../../../domai
       }
       return { status: 'ambiguous' as const, candidates: rankCandidates(match.items.map(ban => ({ id: ban.id, label: ban.label }))) };
     },
+    async getBan(guildID, userID) {
+      const guild = await client.guilds.fetch(guildID, { force: true });
+      const ban = (await guild.fetchBans()).find(item => item.user.id === userID);
+      return ban ? { userID: ban.user.id, username: ban.user.username, reason: ban.reason,
+        guildID: ban.guildId, expiresAt: ban.expiresAt?.toISOString() ?? null, user: toUserInfo(ban.user) } : null;
+    },
     async bans(guildID: string, limit?: number): Promise<BanInfo[]> {
       const guild = await client.guilds.fetch(guildID, { force: true });
       const capped = limitOf(limit, 50, 1000);
       return (await guild.fetchBans()).slice(0, capped)
-        .map(ban => ({ userID: ban.user.id, username: ban.user.username, reason: ban.reason }));
+        .map(ban => ({ userID: ban.user.id, username: ban.user.username, reason: ban.reason,
+          guildID: ban.guildId, expiresAt: ban.expiresAt?.toISOString() ?? null, user: toUserInfo(ban.user) }));
     },
     async auditLogs(guildID: string, input?: number | AuditLogQueryInput): Promise<AuditLogInfo[]> {
       const query = auditLogQueryInput(input);
@@ -304,6 +359,14 @@ export function createUsersResources(client: Client, cdn: import('../../../domai
       return { members: result.members.map(hit => ({ userID: hit.userId, username: hit.username,
         displayName: hit.nickname ?? hit.globalName ?? hit.username, nickname: hit.nickname })),
         total: result.total ?? null, hasMore: result.hasMore ?? false, indexing: result.indexing ?? false };
+    },
+    async editMember(guildID, userID, input) {
+      const guild = await client.guilds.resolve(guildID);
+      const member = await guild.members.fetch(userID, { force: true });
+      const edited = await member.edit({ ...(input.nickname === undefined ? {} : { nick: input.nickname }),
+        ...(input.roles === undefined ? {} : { roles: [...input.roles] }), reason: input.reason });
+      try { return toMemberInfo(edited); }
+      catch (error) { throw new PartialModerationError('editMember', userID, error); }
     },
     async setNickname(guildID, userID, nickname, reason) {
       const guild = await client.guilds.resolve(guildID);

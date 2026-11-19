@@ -1,7 +1,7 @@
 # Referência das funções
 
 Function mode opcional, importado de `yuzuha/functions`.
-Gerada do registro executável: **392 funções**. Atualize com `npm run docs:generate`.
+Gerada do registro executável: **429 funções**. Atualize com `npm run docs:generate`.
 
 Aliases não contam como funções adicionais. Índices e semântica estão em [LANGUAGE.md](LANGUAGE.md).
 
@@ -35,6 +35,8 @@ Aliases não contam como funções adicionais. Índices e semântica estão em [
 
 | Função | Descrição | Aliases |
 |---|---|---|
+| `$addRecipient[usuário]` | Altera destinatário somente no grupo DM atual; adicionar exige dono, remover terceiros também. Não altera o bot. |  |
+| `$canSend[canal?;usuário?]` | Verifica ViewChannel e SendMessages efetivos do bot ou autor em canal do servidor atual. |  |
 | `$channel[canal;propriedade?]` | Mostra um canal; com propriedade, mostra só ela. |  |
 | `$channelPerms[canal;alvo;permitir?;negar?]` | Define permissões locais; listas separadas por vírgula. |  |
 | `$channelPermsOf[canal;usuario]` | Permissões efetivas do usuário no canal. |  |
@@ -44,13 +46,20 @@ Aliases não contam como funções adicionais. Índices e semântica estão em [
 | `$createChannel[nome;tipo?;categoria?]` | Cria um canal e mostra os dados. |  |
 | `$createLinkChannel[nome;url;categoria?]` | Cria um canal de link com autorização do autor e do bot. |  |
 | `$deleteChannel[canal]` | Apaga um canal. |  |
+| `$deleteChannelOverwrite[canal;alvo;motivo?]` | Remove overwrite local com ManageRoles de autor e bot e hierarquia do alvo. |  |
 | `$editChannel[canal;nome?;topico?;slowmode?]` | Edita um canal; vazio mantém. |  |
 | `$editLinkChannel[canal;url;motivo?]` | Altera a URL de um canal de link do servidor atual. |  |
+| `$fetchSlowmode[canal?]` | Consulta modo lento atualizado do canal do servidor atual. |  |
 | `$moveChannel[canal;posição]` | Move um canal para a posição indicada, a partir de 0. |  |
+| `$removeRecipient[usuário]` | Altera destinatário somente no grupo DM atual; adicionar exige dono, remover terceiros também. Não altera o bot. |  |
+| `$rtcRegions[canal?]` | Lista regiões RTC do canal de voz do servidor atual. |  |
 | `$sendTyping[canal?]` | Envia indicação de digitação no servidor atual; exige SendMessages de autor e bot. |  |
 | `$setCategory[canal;categoria;motivo?]` | Define a categoria do canal; categoria vazia remove o vínculo. |  |
+| `$setChannelPositions[posições]` | Reposiciona de 1 a 100 canais por id/position; valida todos no servidor atual com ManageChannels de autor e bot. |  |
 | `$setContentWarning[canal;nível;texto?;motivo?]` | Define aviso de conteúdo: 0 herda, 1 ativa, vazio remove o override. |  |
+| `$setDefaultForumLayout[canal;layout]` | Define layout default/list/grid do fórum; vazio remove override. Exige ManageChannels de autor e bot. |  |
 | `$slowmode[segundos;canal?]` | Define o modo lento (0 a 21600s). |  |
+| `$typing` | Envia indicador de digitação no canal atual; exige SendMessages de autor e bot. |  |
 
 ## collectors
 
@@ -129,6 +138,7 @@ Aliases não contam como funções adicionais. Índices e semântica estão em [
 | `$createEmoji[nome;url]` | Exige ManageExpressions de autor e bot antes de baixar a imagem por HTTP, converter para base64 e criar emoji no servidor. |  |
 | `$createEmojisBulk[emojis]` | Cria de 1 a 50 emojis com name e image em base64; retorna success e failed sem ocultar falhas parciais. |  |
 | `$createSticker[nome;imagemBase64;descrição?;tags?;motivo?]` | Cria sticker com imagem em base64; tags separadas por vírgula. |  |
+| `$createStickersBulk[figurinhas]` | Cria de 1 a 50 figurinhas base64, até 10 MB; valida o lote inteiro, exige ManageExpressions e preserva success/failed. |  |
 | `$deleteEmoji[nomeOuID]` | Apaga emoji do servidor. |  |
 | `$deleteSticker[nomeOuID;motivo?]` | Apaga um sticker do servidor. |  |
 | `$editEmoji[nomeOuID;novoNome;motivo?]` | Renomeia um emoji do servidor e retorna suas informações. |  |
@@ -203,6 +213,7 @@ Aliases não contam como funções adicionais. Índices e semântica estão em [
 | `$createInvite[canal;maxUsos?;duracao?]` | Cria um convite; duração como 1h, 0 nunca expira. |  |
 | `$deleteInvite[codigo]` | Apaga um convite por código ou URL. |  |
 | `$invite[codigo]` | Mostra um convite por código ou URL. |  |
+| `$inviteInfo[propriedade;código]` | Lê campo público de convite do servidor atual; objetos são JSON e null é vazio. |  |
 | `$invites` | Lista convites do servidor; exige ManageGuild de autor e bot. |  |
 | `$setVanity[código]` | Define convite personalizado; vazio remove. Exige ManageGuild. |  |
 | `$vanity` | Obtém código e usos do convite personalizado do servidor. |  |
@@ -309,15 +320,21 @@ Aliases não contam como funções adicionais. Índices e semântica estão em [
 
 | Função | Descrição | Aliases |
 |---|---|---|
+| `$acknowledgePins` | Atualiza o estado de leitura somente do canal atual; exige ReadMessageHistory de autor e bot. |  |
 | `$attachment[url;nome?]` | Monta especificação de anexo sem enviar. |  |
+| `$bulkDelete[mensagens;canal?]` | Apaga de 1 a 100 IDs com ManageMessages de autor e bot; preserva resultado parcial sem repetir a API. |  |
+| `$bulkDeleteMyMessages[limite?;canal?]` | Apaga somente mensagens do bot em janela de até 100 mensagens; exige ManageMessages de autor e bot, sem rota global de sessão. |  |
 | `$bulkFetchMessages[janelas]` | Busca mensagens normalizadas em até 10 canais visíveis (até 100 mensagens no total); cada janela tem channelID, limit e um cursor opcional. |  |
 | `$cachedMessage[mensagem]` | Consulta uma mensagem no cache do canal atual, sem busca de mensagem no Fluxer; retorna null se ausente. |  |
 | `$clearReactions[mensagem;emoji?;canal?]` | Remove todas as reações ou somente as de um emoji. |  |
+| `$clearReadState` | Atualiza o estado de leitura somente do canal atual; exige ReadMessageHistory de autor e bot. |  |
+| `$createDM[usuário]` | Abre DM com usuário por ID, sem enviar mensagem; retorna canal normalizado. |  |
+| `$deleteAttachment[mensagem;anexo;canal?]` | Remove anexo de mensagem; autor próprio ou ManageMessages, sempre com autoridade do bot. |  |
 | `$deleteMessage[canalID;mensagemID]` | Apaga mensagem. |  |
 | `$dm[usuário;conteúdo]` | Envia mensagem direta e retorna o ID; não menciona usuários automaticamente. |  |
 | `$editMessage[canalID;mensagemID;texto ou embed]` | Edita mensagem. |  |
 | `$fetchMessage[canal;mensagem;propriedade?]` | Busca uma mensagem e retorna objeto ou propriedade. |  |
-| `$fileBase64[base64;nome;descrição?]` | Monta um anexo base64 para $sendAttachments, sem enviá-lo. |  |
+| `$fileBase64[base64;nome;descrição?;spoiler?]` | Monta anexo base64 para $sendAttachments; spoiler aceita true/false, sem enviar. |  |
 | `$forward[destino;canalOrigem;mensagem]` | Encaminha uma mensagem para outro canal e retorna o novo ID. |  |
 | `$messageOptions[tts?;stickerIds?;flags?]` | Opções de envio para mesclar com $jsonMerge e um payload com conteúdo ou embeds. TTS exige SendTtsMessages; menções, MentionEveryone. |  |
 | `$messages[canal;limite?;before?;after?;around?]` | Lista mensagens, da mais recente para a mais antiga; aceita somente um cursor por chamada. |  |
@@ -325,7 +342,9 @@ Aliases não contam como funções adicionais. Índices e semântica estão em [
 | `$pinnedMessages[canal?;limite?]` | Lista mensagens fixadas, da mais recente para a mais antiga. |  |
 | `$pinnedMessagesPage[canal?;limite?;before?]` | Pagina mensagens por data de fixação; retorna messages, pinnedAt, hasMore e nextBefore. Cursor ISO da página anterior. |  |
 | `$preloadMessages[canais]` | Busca a última mensagem de até 100 canais; recebe array de IDs e retorna objeto por canal. |  |
+| `$purgeMessages[limite;autor?;canal?]` | Apaga até 100 mensagens recentes com filtro opcional; exige ManageMessages de autor e bot. |  |
 | `$react[emoji]` | Reage à mensagem que executou o comando. |  |
+| `$reactionInfo[propriedade;emoji;mensagem;canal?]` | Lê agregado de reação de uma mensagem; vazio se ausente, objetos são JSON. |  |
 | `$reactionUsers[mensagem;emoji;limite?;após?;canal?]` | Lista IDs de usuários que reagiram; limite de 1 a 100 e cursor por usuário. |  |
 | `$reactionUsersPage[mensagem;emoji;limite?;após?;canal?]` | Retorna users com IDs, hasMore e nextAfter; limite de 1 a 100 e cursor por usuário. |  |
 | `$removeReaction[mensagem;emoji;usuário?;canal?]` | Remove a reação do bot ou de um usuário da mensagem. |  |
@@ -379,8 +398,13 @@ Aliases não contam como funções adicionais. Índices e semântica estão em [
 | `$hasRole[usuário;cargo]` | Verifica se o usuário possui o cargo. |  |
 | `$moveRole[cargo;posição]` | Move cargo com autorização e hierarquia do autor e do bot; posição a partir de 1. |  |
 | `$removeRole[usuário;cargo]` | Remove cargo do usuário. |  |
+| `$resetRoleHoistPositions` | Zera separadores de cargos; exige ManageRoles e hierarquia em todos os cargos afetados. |  |
 | `$role[cargo;propriedade?]` | Resolve cargo do servidor atual; retorna o cargo ou uma propriedade. |  |
+| `$roleHasPermission[cargo;permissão]` | Verifica uma permissão do cargo no servidor atual, respeitando Administrator. |  |
 | `$roles` | Lista cargos do servidor ordenados por posição. |  |
+| `$setMemberRoles[usuário;cargos;motivo]` | Substitui cargos do membro de forma atômica; até 100 IDs como textos, array vazio limpa. Exige ManageRoles e hierarquia. |  |
+| `$setRoleHoistPositions[posições]` | Define separadores de 1 a 100 cargos por id/position; null equivale a zero. Exige ManageRoles e hierarquia. |  |
+| `$setRolePositions[posições]` | Reposiciona de 1 a 100 cargos por id/position; valida lote, permissões e hierarquia inteira antes da API. |  |
 
 ## schedule
 
@@ -447,11 +471,15 @@ Aliases não contam como funções adicionais. Índices e semântica estão em [
 | `$archiveThread[thread;bloquear?]` | Arquiva thread; bloquear aceita true/false. |  |
 | `$createThread[nome;canal?;mensagem?;arquivamento?]` | Cria thread no canal atual ou informado. |  |
 | `$editThread[thread;opções]` | Edita nome, arquivamento, bloqueio, duração, slowmode e tags; exige ManageChannels. |  |
+| `$editThreadDefaults[canal;opções]` | Define autoArchiveDuration e slowmode padrão, null limpa; exige ManageChannels de autor e bot. |  |
+| `$editThreadSelf[thread;opções]` | Edita apenas a associação do bot: flags, muted e muteConfig. Exige ViewChannel de autor e bot. |  |
 | `$forumPost[canal;título;conteúdo;tags?]` | Cria post em fórum/mídia; tags separadas por vírgula. |  |
 | `$joinThread[thread]` | Faz o bot entrar na thread. |  |
 | `$leaveThread[thread]` | Faz o bot sair da thread. |  |
+| `$lockThread[thread;bloquear]` | Bloqueia ou desbloqueia thread com true/false e ManageChannels de autor e bot. |  |
 | `$removeThreadMember[thread;usuário]` | Adiciona ou remove um membro da thread. |  |
 | `$searchThreads[canal;nome?;limite?;offset?]` | Busca threads; retorna threads, total, hasMore, indexing e retryAfter. |  |
+| `$threadInfo[propriedade;thread]` | Lê campo público da thread no servidor atual; associações e tags são JSON. |  |
 | `$threadMember[thread;usuário?]` | Busca um membro da thread com flags e estado de mute; usuário padrão é o autor. |  |
 | `$threadMembers[thread;limite?;após?]` | Lista membros da thread com limite de 1 a 100 e cursor por usuário. |  |
 | `$unarchiveThread[thread]` | Desarquiva thread. |  |
@@ -460,18 +488,24 @@ Aliases não contam como funções adicionais. Índices e semântica estão em [
 
 | Função | Descrição | Aliases |
 |---|---|---|
+| `$applyForDiscovery[opções]` | Envia candidatura à descoberta; description, primaryCategoryId, keywords e primaryLanguage. Exige ManageGuild de autor e bot. |  |
 | `$auditLogs[limite?]` | Logs de auditoria do servidor atual; padrão 50, máximo 100. |  |
 | `$avatar[id;tamanho?]` | URL do avatar; tamanho de 16 a 4096; vazio se ausente. |  |
+| `$banInfo[propriedade;usuário]` | Busca banimento no servidor atual com BanMembers de autor e bot; vazio quando ausente. |  |
 | `$bans[limite?]` | Banimentos do servidor atual; padrão 50, máximo 1000. |  |
 | `$channelCounts[canal?;timeout?]` | Solicita contagens ao vivo do canal ao gateway, aguardando o evento correspondente. |  |
 | `$deleteMyMessages` | Pede a exclusão de todas as mensagens do bot no servidor atual, sem credenciais sudo; exige dono do bot e ManageMessages de autor e bot. |  |
+| `$discoveryStatus` | Consulta candidatura, elegibilidade e mínimo de membros; exige ManageGuild de autor e bot. |  |
 | `$displayName[id]` | Nome de exibição do usuário; vazio se não existir. |  |
+| `$editDiscoveryApplication[opções]` | Edita candidatura à descoberta com validação completa e ManageGuild de autor e bot. |  |
 | `$editGuild[opções]` | Edita nome, ícone, banner, canal de sistema/AFK e timeout AFK; exige ManageGuild de autor e bot. |  |
+| `$editMember[usuário;opções]` | Edita apelido e/ou cargos em uma chamada com motivo obrigatório; valida permissões, hierarquia e cargos de todo o lote. |  |
 | `$guild[propriedade?]` | Servidor atual, ou uma propriedade própria. |  |
 | `$guildBanner[tamanho?]` | URL do banner do servidor atual; vazio se ausente. |  |
 | `$guildCounts[timeout?]` | Solicita contagens ao vivo de membros e online ao gateway; timeout em milissegundos. |  |
 | `$guildFeatures` | Retorna as features do servidor atual como array; exige suporte do recurso. |  |
 | `$guildIcon[tamanho?]` | URL do ícone do servidor atual; vazio se ausente. |  |
+| `$guildMe[propriedade?]` | Busca o membro do bot no servidor atual; campo opcional segue whitelist de membro, sem cache nativo. |  |
 | `$leaveGuild` | Remove o bot do servidor atual; somente o dono do servidor pode executar. |  |
 | `$member[id;propriedade?]` | Membro do servidor atual, ou propriedade; vazio se não existir. |  |
 | `$memberCount` | Total de membros do servidor atual. |  |
@@ -484,10 +518,12 @@ Aliases não contam como funções adicionais. Índices e semântica estão em [
 | `$setActivity[atividade;tipo?]` | Define a atividade com status online. |  |
 | `$setPresence[status;atividade?;tipo?]` | Define presença: status e atividade opcional (playing por padrão). |  |
 | `$setStatus[status]` | Define o status da presença; limpa a atividade. |  |
+| `$transferOwnership[usuário;confirmação]` | Transfere propriedade com confirmação TRANSFERIR; autor e bot devem ser donos, destino deve ser membro humano. |  |
 | `$user[id;propriedade?]` | Usuário por ID, ou uma propriedade própria; vazio se não existir. |  |
 | `$userBanner[id;tamanho?]` | URL do banner do usuário; tamanho de 16 a 4096; vazio se ausente. |  |
 | `$userCreated[id]` | Criação da conta em milissegundos; vazio se não existir. |  |
 | `$userProfile[usuário]` | Busca usuário, perfil global e perfil/membro do servidor atual quando disponível. |  |
+| `$withdrawDiscoveryApplication` | Retira candidatura do servidor atual; exige ManageGuild de autor e bot. |  |
 
 ## values
 
@@ -520,4 +556,5 @@ Aliases não contam como funções adicionais. Índices e semântica estão em [
 | `$editWebhookMessage[webhook;mensagem;texto;thread?]` | Edita até 2000 caracteres de uma mensagem do webhook, sem menções automáticas; exige ManageWebhooks de autor e bot. |  |
 | `$fetchWebhookMessage[webhook;mensagem;thread?]` | Busca uma mensagem do webhook com ManageWebhooks de autor e bot; o script não recebe o token. |  |
 | `$sendWebhook[id;token;texto]` | Envia via webhook do servidor atual com ManageWebhooks do autor e bot; token não contorna autorização. |  |
+| `$webhookInfo[propriedade;id]` | Lê webhook do servidor atual com ManageWebhooks de autor e bot; nunca expõe token. |  |
 | `$webhooks[canal?]` | Lista webhooks do canal (padrão: canal atual). |  |

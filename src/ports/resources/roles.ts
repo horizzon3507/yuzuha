@@ -1,4 +1,7 @@
 export interface RoleInfo {
+  guildID?: string;
+  createdTimestamp?: number;
+  createdAt?: string;
   id: string;
   name: string;
   color: number;
@@ -41,4 +44,5 @@ export interface RolesResources {
   move(guildID: string, role: string, position: number): Promise<void>;
   setRoleHoistPositions(guildID: string, updates: { id: string; position: number | null }[]): Promise<RoleInfo[]>;
   resetRoleHoistPositions(guildID: string): Promise<RoleInfo[]>;
+  setRolePositions(guildID: string, updates: { id: string; position: number }[]): Promise<RoleInfo[]>;
 }

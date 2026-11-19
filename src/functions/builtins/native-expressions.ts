@@ -3,22 +3,22 @@ import { YuzuhaError } from '../../errors.js';
 import { defineFunctions } from './definition.js';
 import { emojiBatch } from '../../domain/resource-batches.js';
 
-const EMOJI_PROPERTIES = new Set(['id', 'name', 'animated', 'url', 'mention']);
-const STICKER_PROPERTIES = new Set(['id', 'name', 'description', 'tags']);
+const EMOJI_PROPERTIES = ['id', 'name', 'animated', 'url', 'mention', 'guildID', 'identifier', 'createdTimestamp', 'createdAt'];
+const STICKER_PROPERTIES = ['id', 'name', 'description', 'tags', 'guildID', 'animated', 'nsfw', 'url', 'createdTimestamp', 'createdAt'];
 
 function emojiProperty(emoji: EmojiInfo, property?: string): unknown {
   if (property === undefined || property === '') return emoji;
-  const key = property.toLowerCase();
-  if (!EMOJI_PROPERTIES.has(key)) throw new YuzuhaError('EMOJI_PROPERTY', `Propriedade de emoji inválida: ${property}.`);
+  const key = EMOJI_PROPERTIES.find(key => key.toLowerCase() === property.toLowerCase());
+  if (!key) throw new YuzuhaError('EMOJI_PROPERTY', `Propriedade inválida. Use: ${EMOJI_PROPERTIES.join(', ')}.`);
   if (key === 'mention') return `<${emoji.animated ? 'a' : ''}:${emoji.name}:${emoji.id}>`;
-  return emoji[key as 'id' | 'name' | 'animated' | 'url'];
+  return emoji[key as keyof EmojiInfo] ?? '';
 }
 
 function stickerProperty(sticker: StickerInfo, property?: string): unknown {
   if (property === undefined || property === '') return sticker;
-  const key = property.toLowerCase();
-  if (!STICKER_PROPERTIES.has(key)) throw new YuzuhaError('STICKER_PROPERTY', `Propriedade de sticker inválida: ${property}.`);
-  return sticker[key as 'id' | 'name' | 'description' | 'tags'];
+  const key = STICKER_PROPERTIES.find(key => key.toLowerCase() === property.toLowerCase());
+  if (!key) throw new YuzuhaError('STICKER_PROPERTY', `Propriedade inválida. Use: ${STICKER_PROPERTIES.join(', ')}.`);
+  return sticker[key as keyof StickerInfo] ?? '';
 }
 
 function validEmojiName(name: string): string {

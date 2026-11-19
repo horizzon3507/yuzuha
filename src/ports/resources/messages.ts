@@ -2,9 +2,12 @@ import type { AttachmentSpec, BinaryAttachmentSpec } from './common.js';
 import type { APIMessage } from '@fluxerjs/types';
 import type { MessageSearchInput, PinnedMessagesInput, PurgeInput } from '../../domain/message-query.js';
 import type { ReceivedEmbed } from '../../domain/messages.js';
+import type { UserInfo } from './users.js';
 export type { MessageSearchInput, PinnedMessagesInput, PurgeInput } from '../../domain/message-query.js';
 
 export interface AttachmentInfo {
+  description?: string | null;
+  spoiler?: boolean;
   id: string;
   name: string;
   url: string;
@@ -13,6 +16,26 @@ export interface AttachmentInfo {
 }
 
 export interface MessageInfo {
+  guildID?: string | null;
+  author?: UserInfo;
+  partial?: boolean;
+  flags?: string;
+  type?: number;
+  tts?: boolean;
+  nonce?: string | null;
+  webhookId?: string | null;
+  editedAt?: string | null;
+  mentionEveryone?: boolean;
+  mentionRoles?: string[];
+  mentions?: UserInfo[];
+  nsfwEmojis?: string[];
+  messageReference?: { channelId: string; messageId: string; guildId: string | null; type?: number } | null;
+  messageSnapshots?: MessageSnapshotInfo[];
+  stickers?: MessageStickerInfo[];
+  reactions?: ReactionInfo[];
+  call?: { participants: string[]; endedAt: string | null } | null;
+  thread?: import('./threads.js').ThreadInfo | null;
+  referencedMessage?: Pick<MessageInfo, 'id' | 'channelID' | 'authorID' | 'content'> | null;
   id: string;
   channelID: string;
   authorID: string;
@@ -23,6 +46,20 @@ export interface MessageInfo {
   attachments: AttachmentInfo[];
   /** Embeds recebidos, normalizados em camelCase e somente leitura. */
   embeds: ReceivedEmbed[];
+}
+
+export interface MessageStickerInfo {
+  id: string; name: string; description: string; tags: string[]; animated: boolean;
+  url: string; createdTimestamp: number; createdAt: string;
+}
+export interface MessageSnapshotInfo {
+  content: string | null; createdAt: string; editedAt: string | null;
+  mentionUserIds: string[]; mentionRoles: string[]; type?: number;
+  embeds: ReceivedEmbed[]; attachments: AttachmentInfo[]; stickers: MessageStickerInfo[];
+}
+export interface ReactionInfo {
+  messageID: string; channelID: string; guildID: string | null;
+  count: number; me: boolean; emoji: { id?: string; name: string; animated?: boolean }; emojiIdentifier: string;
 }
 
 export interface MessagesResources {

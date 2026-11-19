@@ -155,7 +155,8 @@ test('wrappers SDK validam lotes antes da rede e preservam falha parcial', async
   for (const ids of [[], ['x'], Array.from({ length: 101 }, () => '1')]) await assert.rejects(resources.messages.preload(ids));
   assert.equal(preloadCalls, 1);
   assert.deepEqual(await resources.expressions.createEmojisBulk('100', [{ name: 'ok', image: 'aGk=' }]), {
-    success: [{ id: '10', name: 'ok', animated: false, url: 'https://cdn/ok' }], failed: [{ name: 'bad', error: 'full' }],
+    success: [{ id: '10', name: 'ok', animated: false, url: 'https://cdn/ok',
+      guildID: undefined, identifier: undefined, createdTimestamp: undefined, createdAt: undefined }], failed: [{ name: 'bad', error: 'full' }],
   });
   for (const input of [[], [{ name: 'x', image: 'aGk=' }], [{ name: 'ok', image: '??' }],
     [{ name: 'ok', image: 'aGk=' }, { name: 'ok', image: 'aGk=' }], [{ name: 'ok', image: 'a'.repeat(13_333_336) }]]) {

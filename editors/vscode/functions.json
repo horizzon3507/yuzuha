@@ -2423,9 +2423,9 @@
     "name": "fileBase64",
     "category": "messages",
     "minArgs": 2,
-    "maxArgs": 3,
-    "usage": "$fileBase64[base64;nome;descrição?]",
-    "description": "Monta um anexo base64 para $sendAttachments, sem enviá-lo."
+    "maxArgs": 4,
+    "usage": "$fileBase64[base64;nome;descrição?;spoiler?]",
+    "description": "Monta anexo base64 para $sendAttachments; spoiler aceita true/false, sem enviar."
   },
   {
     "name": "sendFileBase64",
@@ -3146,5 +3146,301 @@
     "maxArgs": 1,
     "usage": "$restRateLimits[operações]",
     "description": "Simula até 20 operações setBucket/getBucket/setGlobalReset/getGlobalReset/getWaitTime/updateFromHeaders/prune/size; não acessa os limites do bot."
+  },
+  {
+    "name": "threadInfo",
+    "category": "threads",
+    "minArgs": 2,
+    "maxArgs": 2,
+    "usage": "$threadInfo[propriedade;thread]",
+    "description": "Lê campo público da thread no servidor atual; associações e tags são JSON."
+  },
+  {
+    "name": "inviteInfo",
+    "category": "invites",
+    "minArgs": 2,
+    "maxArgs": 2,
+    "usage": "$inviteInfo[propriedade;código]",
+    "description": "Lê campo público de convite do servidor atual; objetos são JSON e null é vazio."
+  },
+  {
+    "name": "webhookInfo",
+    "category": "webhooks",
+    "minArgs": 2,
+    "maxArgs": 2,
+    "usage": "$webhookInfo[propriedade;id]",
+    "description": "Lê webhook do servidor atual com ManageWebhooks de autor e bot; nunca expõe token."
+  },
+  {
+    "name": "banInfo",
+    "category": "users",
+    "minArgs": 2,
+    "maxArgs": 2,
+    "usage": "$banInfo[propriedade;usuário]",
+    "description": "Busca banimento no servidor atual com BanMembers de autor e bot; vazio quando ausente."
+  },
+  {
+    "name": "reactionInfo",
+    "category": "messages",
+    "minArgs": 3,
+    "maxArgs": 4,
+    "usage": "$reactionInfo[propriedade;emoji;mensagem;canal?]",
+    "description": "Lê agregado de reação de uma mensagem; vazio se ausente, objetos são JSON."
+  },
+  {
+    "name": "canSend",
+    "category": "channels",
+    "minArgs": 0,
+    "maxArgs": 2,
+    "usage": "$canSend[canal?;usuário?]",
+    "description": "Verifica ViewChannel e SendMessages efetivos do bot ou autor em canal do servidor atual."
+  },
+  {
+    "name": "roleHasPermission",
+    "category": "roles",
+    "minArgs": 2,
+    "maxArgs": 2,
+    "usage": "$roleHasPermission[cargo;permissão]",
+    "description": "Verifica uma permissão do cargo no servidor atual, respeitando Administrator."
+  },
+  {
+    "name": "applyForDiscovery",
+    "category": "users",
+    "minArgs": 1,
+    "maxArgs": 1,
+    "usage": "$applyForDiscovery[opções]",
+    "description": "Envia candidatura à descoberta; description, primaryCategoryId, keywords e primaryLanguage. Exige ManageGuild de autor e bot."
+  },
+  {
+    "name": "editDiscoveryApplication",
+    "category": "users",
+    "minArgs": 1,
+    "maxArgs": 1,
+    "usage": "$editDiscoveryApplication[opções]",
+    "description": "Edita candidatura à descoberta com validação completa e ManageGuild de autor e bot."
+  },
+  {
+    "name": "discoveryStatus",
+    "category": "users",
+    "minArgs": 0,
+    "maxArgs": 0,
+    "usage": "$discoveryStatus",
+    "description": "Consulta candidatura, elegibilidade e mínimo de membros; exige ManageGuild de autor e bot."
+  },
+  {
+    "name": "withdrawDiscoveryApplication",
+    "category": "users",
+    "minArgs": 0,
+    "maxArgs": 0,
+    "usage": "$withdrawDiscoveryApplication",
+    "description": "Retira candidatura do servidor atual; exige ManageGuild de autor e bot."
+  },
+  {
+    "name": "transferOwnership",
+    "category": "users",
+    "minArgs": 2,
+    "maxArgs": 2,
+    "usage": "$transferOwnership[usuário;confirmação]",
+    "description": "Transfere propriedade com confirmação TRANSFERIR; autor e bot devem ser donos, destino deve ser membro humano."
+  },
+  {
+    "name": "setRolePositions",
+    "category": "roles",
+    "minArgs": 1,
+    "maxArgs": 1,
+    "usage": "$setRolePositions[posições]",
+    "description": "Reposiciona de 1 a 100 cargos por id/position; valida lote, permissões e hierarquia inteira antes da API."
+  },
+  {
+    "name": "setRoleHoistPositions",
+    "category": "roles",
+    "minArgs": 1,
+    "maxArgs": 1,
+    "usage": "$setRoleHoistPositions[posições]",
+    "description": "Define separadores de 1 a 100 cargos por id/position; null equivale a zero. Exige ManageRoles e hierarquia."
+  },
+  {
+    "name": "resetRoleHoistPositions",
+    "category": "roles",
+    "minArgs": 0,
+    "maxArgs": 0,
+    "usage": "$resetRoleHoistPositions",
+    "description": "Zera separadores de cargos; exige ManageRoles e hierarquia em todos os cargos afetados."
+  },
+  {
+    "name": "setChannelPositions",
+    "category": "channels",
+    "minArgs": 1,
+    "maxArgs": 1,
+    "usage": "$setChannelPositions[posições]",
+    "description": "Reposiciona de 1 a 100 canais por id/position; valida todos no servidor atual com ManageChannels de autor e bot."
+  },
+  {
+    "name": "createStickersBulk",
+    "category": "expressions",
+    "minArgs": 1,
+    "maxArgs": 1,
+    "usage": "$createStickersBulk[figurinhas]",
+    "description": "Cria de 1 a 50 figurinhas base64, até 10 MB; valida o lote inteiro, exige ManageExpressions e preserva success/failed."
+  },
+  {
+    "name": "addRecipient",
+    "category": "channels",
+    "minArgs": 1,
+    "maxArgs": 1,
+    "usage": "$addRecipient[usuário]",
+    "description": "Altera destinatário somente no grupo DM atual; adicionar exige dono, remover terceiros também. Não altera o bot."
+  },
+  {
+    "name": "removeRecipient",
+    "category": "channels",
+    "minArgs": 1,
+    "maxArgs": 1,
+    "usage": "$removeRecipient[usuário]",
+    "description": "Altera destinatário somente no grupo DM atual; adicionar exige dono, remover terceiros também. Não altera o bot."
+  },
+  {
+    "name": "acknowledgePins",
+    "category": "messages",
+    "minArgs": 0,
+    "maxArgs": 0,
+    "usage": "$acknowledgePins",
+    "description": "Atualiza o estado de leitura somente do canal atual; exige ReadMessageHistory de autor e bot."
+  },
+  {
+    "name": "clearReadState",
+    "category": "messages",
+    "minArgs": 0,
+    "maxArgs": 0,
+    "usage": "$clearReadState",
+    "description": "Atualiza o estado de leitura somente do canal atual; exige ReadMessageHistory de autor e bot."
+  },
+  {
+    "name": "typing",
+    "category": "channels",
+    "minArgs": 0,
+    "maxArgs": 0,
+    "usage": "$typing",
+    "description": "Envia indicador de digitação no canal atual; exige SendMessages de autor e bot."
+  },
+  {
+    "name": "rtcRegions",
+    "category": "channels",
+    "minArgs": 0,
+    "maxArgs": 1,
+    "usage": "$rtcRegions[canal?]",
+    "description": "Lista regiões RTC do canal de voz do servidor atual."
+  },
+  {
+    "name": "fetchSlowmode",
+    "category": "channels",
+    "minArgs": 0,
+    "maxArgs": 1,
+    "usage": "$fetchSlowmode[canal?]",
+    "description": "Consulta modo lento atualizado do canal do servidor atual."
+  },
+  {
+    "name": "setDefaultForumLayout",
+    "category": "channels",
+    "minArgs": 2,
+    "maxArgs": 2,
+    "usage": "$setDefaultForumLayout[canal;layout]",
+    "description": "Define layout default/list/grid do fórum; vazio remove override. Exige ManageChannels de autor e bot."
+  },
+  {
+    "name": "editThreadDefaults",
+    "category": "threads",
+    "minArgs": 2,
+    "maxArgs": 2,
+    "usage": "$editThreadDefaults[canal;opções]",
+    "description": "Define autoArchiveDuration e slowmode padrão, null limpa; exige ManageChannels de autor e bot."
+  },
+  {
+    "name": "editThreadSelf",
+    "category": "threads",
+    "minArgs": 2,
+    "maxArgs": 2,
+    "usage": "$editThreadSelf[thread;opções]",
+    "description": "Edita apenas a associação do bot: flags, muted e muteConfig. Exige ViewChannel de autor e bot."
+  },
+  {
+    "name": "lockThread",
+    "category": "threads",
+    "minArgs": 2,
+    "maxArgs": 2,
+    "usage": "$lockThread[thread;bloquear]",
+    "description": "Bloqueia ou desbloqueia thread com true/false e ManageChannels de autor e bot."
+  },
+  {
+    "name": "deleteChannelOverwrite",
+    "category": "channels",
+    "minArgs": 2,
+    "maxArgs": 3,
+    "usage": "$deleteChannelOverwrite[canal;alvo;motivo?]",
+    "description": "Remove overwrite local com ManageRoles de autor e bot e hierarquia do alvo."
+  },
+  {
+    "name": "createDM",
+    "category": "messages",
+    "minArgs": 1,
+    "maxArgs": 1,
+    "usage": "$createDM[usuário]",
+    "description": "Abre DM com usuário por ID, sem enviar mensagem; retorna canal normalizado."
+  },
+  {
+    "name": "deleteAttachment",
+    "category": "messages",
+    "minArgs": 2,
+    "maxArgs": 3,
+    "usage": "$deleteAttachment[mensagem;anexo;canal?]",
+    "description": "Remove anexo de mensagem; autor próprio ou ManageMessages, sempre com autoridade do bot."
+  },
+  {
+    "name": "bulkDelete",
+    "category": "messages",
+    "minArgs": 1,
+    "maxArgs": 2,
+    "usage": "$bulkDelete[mensagens;canal?]",
+    "description": "Apaga de 1 a 100 IDs com ManageMessages de autor e bot; preserva resultado parcial sem repetir a API."
+  },
+  {
+    "name": "purgeMessages",
+    "category": "messages",
+    "minArgs": 1,
+    "maxArgs": 3,
+    "usage": "$purgeMessages[limite;autor?;canal?]",
+    "description": "Apaga até 100 mensagens recentes com filtro opcional; exige ManageMessages de autor e bot."
+  },
+  {
+    "name": "bulkDeleteMyMessages",
+    "category": "messages",
+    "minArgs": 0,
+    "maxArgs": 2,
+    "usage": "$bulkDeleteMyMessages[limite?;canal?]",
+    "description": "Apaga somente mensagens do bot em janela de até 100 mensagens; exige ManageMessages de autor e bot, sem rota global de sessão."
+  },
+  {
+    "name": "editMember",
+    "category": "users",
+    "minArgs": 2,
+    "maxArgs": 2,
+    "usage": "$editMember[usuário;opções]",
+    "description": "Edita apelido e/ou cargos em uma chamada com motivo obrigatório; valida permissões, hierarquia e cargos de todo o lote."
+  },
+  {
+    "name": "setMemberRoles",
+    "category": "roles",
+    "minArgs": 3,
+    "maxArgs": 3,
+    "usage": "$setMemberRoles[usuário;cargos;motivo]",
+    "description": "Substitui cargos do membro de forma atômica; até 100 IDs como textos, array vazio limpa. Exige ManageRoles e hierarquia."
+  },
+  {
+    "name": "guildMe",
+    "category": "users",
+    "minArgs": 0,
+    "maxArgs": 1,
+    "usage": "$guildMe[propriedade?]",
+    "description": "Busca o membro do bot no servidor atual; campo opcional segue whitelist de membro, sem cache nativo."
   }
 ]

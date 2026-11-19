@@ -6,6 +6,12 @@ import type { MessageInfo } from './messages.js';
 export type { WebhookEditInput, WebhookMessageOptions } from '../../domain/webhooks.js';
 
 export interface WebhookInfo {
+  avatar?: string | null;
+  avatarURL?: string | null;
+  createdTimestamp?: number;
+  createdAt?: string;
+  type?: number;
+  user?: import('./users.js').UserInfo;
   id: string;
   name: string;
   channelID: string;

@@ -5,6 +5,13 @@ import type { AuditLogChangeInfo, AuditLogOptionsInfo, AuditLogQueryInput } from
 export type { AuditLogChangeInfo, AuditLogOptionsInfo, AuditLogQueryInput } from '../../domain/audit-log.js';
 
 export interface UserInfo {
+  avatar?: string | null;
+  banner?: string | null;
+  avatarColor?: number | null;
+  discriminator?: string;
+  flags?: number | null;
+  globalName?: string | null;
+  system?: boolean;
   id: string;
   username: string;
   displayName: string;
@@ -15,6 +22,15 @@ export interface UserInfo {
 }
 
 export interface MemberInfo extends UserInfo {
+  bannable?: boolean;
+  kickable?: boolean;
+  moderatable?: boolean;
+  guildID?: string;
+  partial?: boolean;
+  deaf?: boolean;
+  mute?: boolean;
+  profileFlags?: number | null;
+  mentionFlags?: number | null;
   nickname: string | null;
   joinedTimestamp: number;
   roles: string[];
@@ -23,6 +39,35 @@ export interface MemberInfo extends UserInfo {
 }
 
 export interface GuildInfo {
+  permissions?: string;
+  available?: boolean;
+  afkChannelId?: string | null;
+  afkTimeout?: number;
+  banner?: string | null;
+  bannerHeight?: number | null;
+  bannerWidth?: number | null;
+  icon?: string | null;
+  splash?: string | null;
+  splashURL?: string | null;
+  splashHeight?: number | null;
+  splashWidth?: number | null;
+  splashCardAlignment?: number;
+  embedSplash?: string | null;
+  verificationLevel?: number;
+  mfaLevel?: number;
+  nsfwLevel?: number;
+  nsfw?: boolean;
+  contentWarningLevel?: number;
+  contentWarningText?: string | null;
+  disabledOperations?: number;
+  defaultMessageNotifications?: number;
+  explicitContentFilter?: number;
+  messageHistoryCutoff?: string | null;
+  systemChannelFlags?: number;
+  systemChannelId?: string | null;
+  rulesChannelId?: string | null;
+  vanityURLCode?: string | null;
+  onlineCount?: number | null;
   id: string;
   name: string;
   ownerID: string;
@@ -34,6 +79,9 @@ export interface GuildInfo {
 }
 
 export interface BanInfo {
+  guildID?: string;
+  expiresAt?: string | null;
+  user?: UserInfo;
   userID: string;
   username: string;
   reason: string | null;
@@ -51,6 +99,7 @@ export interface AuditLogInfo {
 }
 
 export interface UsersResources {
+  editMember(guildID: string, userID: string, input: MemberEditInput): Promise<MemberInfo>;
   profile(userID: string, guildID?: string): Promise<UserProfileInfo>;
   bannerURL(userID: string, guildID?: string, options?: { size?: number }): Promise<string | null>;
   guildCounts(guildID: string, input?: LiveCountsInput): Promise<GuildCountsInfo>;
@@ -61,6 +110,7 @@ export interface UsersResources {
   memberCount(guildID: string): Promise<number>;
   guild(guildID: string): Promise<GuildInfo>;
   bans(guildID: string, limit?: number): Promise<BanInfo[]>;
+  getBan(guildID: string, userID: string): Promise<BanInfo | null>;
   resolveBan(guildID: string, query: string): Promise<import('../../domain/resolvers.js').ResolvedBan>;
   auditLogs(guildID: string, input?: number | AuditLogQueryInput): Promise<AuditLogInfo[]>;
   setPresence(status: PresenceStatus, activity?: ActivityInfo): Promise<void>;
@@ -151,4 +201,10 @@ export interface GuildEditInput {
   systemChannelID?: string | null;
   afkChannelID?: string | null;
   afkTimeout?: number;
+}
+
+export interface MemberEditInput {
+  nickname?: string | null;
+  roles?: string[];
+  reason: string;
 }
