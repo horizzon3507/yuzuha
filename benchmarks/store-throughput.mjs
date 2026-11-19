@@ -190,7 +190,12 @@ async function benchmarkSingleStore({ kind, createStore, filePath, entries, iter
     for (const [operation, step] of [
       ['updateValue', () => service.update('guild', names[0], value => Number(value) + 1)],
       ['createCase', async () => {
-        const { CaseService } = await import('../dist/services/cases.js');
+        let CaseService;
+        try { ({ CaseService } = await import('../dist/services/cases.js')); }
+        catch (error) {
+          if (error?.code !== 'ERR_MODULE_NOT_FOUND') throw error;
+          ({ CaseService } = await import('../src/services/cases.ts'));
+        }
         await new CaseService(store).create({ guildID: GUILD_ID, action: 'ban', targetID: '2', moderatorID: ACTOR_ID, reason: 'benchmark' });
       }],
     ]) {
