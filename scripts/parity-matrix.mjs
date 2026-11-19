@@ -78,9 +78,13 @@ export async function loadMappings(directory = join(ROOT, 'scripts/parity')) {
   return entries;
 }
 
-export async function functionModeEvents() {
+async function scriptEventDeclarations() {
   const source = await readFile(join(ROOT, 'src/framework/script-events.ts'), 'utf8');
-  const file = ts.createSourceFile('script-events.ts', source, ts.ScriptTarget.Latest, true);
+  return ts.createSourceFile('script-events.ts', source, ts.ScriptTarget.Latest, true);
+}
+
+export async function functionModeEvents() {
+  const file = await scriptEventDeclarations();
   for (const statement of file.statements) {
     if (!ts.isVariableStatement(statement)) continue;
     for (const declaration of statement.declarationList.declarations) {
@@ -92,7 +96,24 @@ export async function functionModeEvents() {
   throw new Error('scriptEventNames ausente.');
 }
 
-export function validateMappings(items, entries, functions, events = []) {
+export async function voiceFunctionModeEvents() {
+  const source = await readFile(join(ROOT, 'src/domain/events.ts'), 'utf8');
+  const file = ts.createSourceFile('events.ts', source, ts.ScriptTarget.Latest, true);
+  for (const statement of file.statements) {
+    if (!ts.isVariableStatement(statement)) continue;
+    for (const declaration of statement.declarationList.declarations) {
+      if (declaration.name.getText(file) !== 'voiceSDKEvents') continue;
+      const object = ts.isAsExpression(declaration.initializer) ? declaration.initializer.expression : declaration.initializer;
+      if (!ts.isObjectLiteralExpression(object)) break;
+      return Object.fromEntries(object.properties.filter(ts.isPropertyAssignment)
+        .filter(property => ts.isStringLiteral(property.initializer))
+        .map(property => [property.name.getText(file), property.initializer.text]));
+    }
+  }
+  throw new Error('voiceSDKEvents ausente.');
+}
+
+export function validateMappings(items, entries, functions, events = [], voiceEvents = {}) {
   const known = new Map(items.map(item => [item.id, item])), mapped = new Map(), errors = [];
   for (const entry of entries) {
     const label = entry.id ?? '<sem id>';
@@ -106,7 +127,10 @@ export function validateMappings(items, entries, functions, events = []) {
       if (!Array.isArray(entry.functions) || !entry.functions.length) errors.push('Sem funções: ' + label);
       else for (const name of entry.functions) if (!functions.has(name)) errors.push('Função desconhecida ' + name + ': ' + label);
       const item = known.get(entry.id);
-      if (item?.scope === 'event' && (item.name !== 'ClientEvents' || !events.includes(item.event))) {
+      const adaptedEvent = item?.package === '@fluxerjs/voice' && ['VoiceConnectionEvents', 'LiveKitRtcConnectionEvents'].includes(item.name)
+        ? Object.hasOwn(voiceEvents, item.event) ? voiceEvents[item.event] : undefined
+        : item?.name === 'ClientEvents' ? item.event : undefined;
+      if (item?.scope === 'event' && (!adaptedEvent || !events.includes(adaptedEvent))) {
         errors.push('Evento sem adaptação de script: ' + label);
       }
     } else if (entry.functions !== undefined) errors.push('Funções em status ' + entry.status + ': ' + label);
@@ -140,11 +164,12 @@ export async function buildParityMatrix() {
   const metadata = JSON.parse(await readFile(join(ROOT, 'editors/vscode/functions.json'), 'utf8'));
   const functions = new Set(metadata.flatMap(fn => [fn.name, ...(fn.aliases ?? [])]).map(name => '$' + name));
   const modeEvents = await functionModeEvents();
-  const validation = validateMappings(inventory, entries, functions, modeEvents);
+  const voiceEvents = await voiceFunctionModeEvents();
+  const validation = validateMappings(inventory, entries, functions, modeEvents, voiceEvents);
   const items = inventory.map(item => ({ ...item, ...validation.mapped.get(item.id) }));
   return { ...validation, items, rows: items.filter(item => item.scope === 'export'),
     sdkEvents: inventory.filter(item => item.name === 'ClientEvents' && item.scope === 'event').map(item => item.event),
-    modeEvents, summary: summarize(items) };
+    voiceEvents, modeEvents, summary: summarize(items) };
 }
 
 function cell(value) { return String(value ?? '').replaceAll('|', '\\|').replaceAll('\n', ' '); }

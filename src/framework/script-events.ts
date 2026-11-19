@@ -1,5 +1,6 @@
 import type { ClientEvents } from '@fluxerjs/core';
-import type { EventData, ScriptEventData, ScriptEventName } from '../domain/events.js';
+import type { EventData, ScriptEventData, ScriptEventName, VoiceEvent, VoiceEventName } from '../domain/events.js';
+import { isVoiceEventName } from '../domain/events.js';
 import type { IncomingMessage } from '../domain/messages.js';
 import type { HttpPolicy } from '../services/http.js';
 import { adaptClientEvent } from './events.js';
@@ -14,7 +15,8 @@ export interface ScriptEventDefinition {
   ignoreBots?: boolean;
   http?: HttpPolicy;
 }
-export const scriptEventNames: readonly ScriptEventName[] = ['guildMemberAdd', 'guildMemberRemove', 'messageUpdate', 'messageDelete', 'messageReactionAdd', 'messageReactionRemove'];
+export const scriptEventNames: readonly ScriptEventName[] = ['guildMemberAdd', 'guildMemberRemove', 'messageUpdate', 'messageDelete', 'messageReactionAdd', 'messageReactionRemove',
+  'voiceReady', 'voiceDisconnect', 'voiceError', 'voiceServerLeave', 'voiceSpeakerStart', 'voiceSpeakerStop'];
 
 export function validateScriptEvent(value: ScriptEventDefinition): void {
   if (!scriptEventNames.includes(value.event) || typeof value.code !== 'string'
@@ -26,5 +28,11 @@ export function validateScriptEvent(value: ScriptEventDefinition): void {
 }
 
 export function adaptScriptEvent<K extends ScriptEventName>(name: K, args: unknown[]): { event: EventData<K> & ScriptEventData; message?: IncomingMessage } {
-  return adaptClientEvent(name, args as ClientEvents[K]);
+  if (isVoiceEventName(name)) {
+    const value = args[0] as Readonly<VoiceEvent>;
+    return { event: { name, guildID: value.guildID, channelID: value.channelID, userID: value.userID,
+      userName: null, userBot: false, messageID: null, content: null, oldContent: null, emoji: null,
+      errorCode: value.errorCode, errorMessage: value.errorMessage } };
+  }
+  return adaptClientEvent(name as Exclude<K, VoiceEventName>, args as ClientEvents[Exclude<K, VoiceEventName>]) as { event: EventData<K> & ScriptEventData; message?: IncomingMessage };
 }

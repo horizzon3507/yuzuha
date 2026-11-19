@@ -1,7 +1,9 @@
 import { Events } from '@fluxerjs/core';
 import type { Client, ClientEventName, ClientEvents, Message, PartialMessage, ReactionEmojiPayload } from '@fluxerjs/core';
 import { YuzuhaError } from '../errors.js';
-import type { EventData } from '../domain/events.js';
+import type { EventData, FrameworkEventName } from '../domain/events.js';
+import type { NativeVoice } from '../ports/voice.js';
+import { isVoiceEventName } from '../domain/events.js';
 import type { IncomingMessage } from '../domain/messages.js';
 import type { EventContext } from '../commands/event-context.js';
 import { incoming } from '../infrastructure/fluxer/messages.js';
@@ -14,7 +16,7 @@ export interface EventDefinition<K extends ClientEventName> {
   run: NativeListener<K>;
 }
 export interface NativeEvent {
-  readonly event: ClientEventName;
+  readonly event: FrameworkEventName;
   readonly once: boolean;
   readonly invoke: (args: unknown[]) => unknown | Promise<unknown>;
 }
@@ -523,17 +525,24 @@ export function defineEvent<K extends ClientEventName>(definition: EventDefiniti
   });
 }
 
-interface Binding { event: ClientEventName; identity: unknown; wrapper: (...args: unknown[]) => void }
+interface Binding { event: FrameworkEventName; identity: unknown; wrapper: (...args: unknown[]) => void }
 
 export class NativeEvents {
   private readonly bindings = new Set<Binding>();
   private closed = false;
+  private readonly unsubscribeVoice?: () => void;
 
-  constructor(private client: Client, private readonly schedule: (work: () => unknown | Promise<unknown>, event: ClientEventName) => void) {}
+  constructor(private client: Client, private readonly schedule: (work: () => unknown | Promise<unknown>, event: FrameworkEventName) => void, voice?: NativeVoice) {
+    this.unsubscribeVoice = voice?.subscribe(event => {
+      if (this.closed) return;
+      for (const binding of [...this.bindings]) if (binding.event === event.name) binding.wrapper(event);
+    });
+  }
 
   rebind(nextClient: Client): void {
     if (this.client === nextClient) return;
     for (const binding of this.bindings) {
+      if (isVoiceEventName(binding.event)) continue;
       this.client.off(binding.event, binding.wrapper);
       if (!this.closed) nextClient.on(binding.event, binding.wrapper);
     }
@@ -541,7 +550,7 @@ export class NativeEvents {
   }
 
   validate(event: NativeEvent): void {
-    if (!knownEvents.has(event.event) || typeof event.invoke !== 'function' || typeof event.once !== 'boolean') {
+    if ((!knownEvents.has(event.event) && !isVoiceEventName(event.event)) || typeof event.invoke !== 'function' || typeof event.once !== 'boolean') {
       throw new YuzuhaError('EVENT', 'Use defineEvent para registrar eventos de um plugin.');
     }
   }
@@ -554,7 +563,7 @@ export class NativeEvents {
       this.schedule(() => event.invoke(args), event.event);
     } };
     this.bindings.add(binding);
-    this.client.on(event.event, binding.wrapper);
+    if (!isVoiceEventName(event.event)) this.client.on(event.event, binding.wrapper);
     return () => this.remove(binding);
   }
 
@@ -563,9 +572,9 @@ export class NativeEvents {
   }
 
   private remove(binding: Binding): void {
-    this.client.off(binding.event, binding.wrapper);
+    if (!isVoiceEventName(binding.event)) this.client.off(binding.event, binding.wrapper);
     this.bindings.delete(binding);
   }
 
-  close(): void { this.closed = true; for (const binding of this.bindings) this.remove(binding); }
+  close(): void { this.closed = true; this.unsubscribeVoice?.(); for (const binding of this.bindings) this.remove(binding); }
 }

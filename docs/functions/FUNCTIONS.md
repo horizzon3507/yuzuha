@@ -1,7 +1,7 @@
 # Referência das funções
 
 Function mode opcional, importado de `yuzuha/functions`.
-Gerada do registro executável: **336 funções**. Atualize com `npm run docs:generate`.
+Gerada do registro executável: **365 funções**. Atualize com `npm run docs:generate`.
 
 Aliases não contam como funções adicionais. Índices e semântica estão em [LANGUAGE.md](LANGUAGE.md).
 
@@ -100,6 +100,8 @@ Aliases não contam como funções adicionais. Índices e semântica estão em [
 | `$eventChannelID` | Consulta o campo do evento; requer contexto de evento e preserva ausências como null. |  |
 | `$eventContent` | Consulta o campo do evento; requer contexto de evento e preserva ausências como null. |  |
 | `$eventEmoji` | Consulta o campo do evento; requer contexto de evento e preserva ausências como null. |  |
+| `$eventErrorCode` | Consulta o campo do evento; requer contexto de evento e preserva ausências como null. |  |
+| `$eventErrorMessage` | Consulta o campo do evento; requer contexto de evento e preserva ausências como null. |  |
 | `$eventGuildID` | Consulta o campo do evento; requer contexto de evento e preserva ausências como null. |  |
 | `$eventMessageID` | Consulta o campo do evento; requer contexto de evento e preserva ausências como null. |  |
 | `$eventName` | Consulta o campo do evento; requer contexto de evento e preserva ausências como null. |  |
@@ -304,6 +306,27 @@ Aliases não contam como funções adicionais. Índices e semântica estão em [
 | `$timeout[usuário;duração;motivo]` | Modera com guards e hierarquia, sem criar caso. |  |
 | `$unban[usuário;motivo]` | Modera com guards e hierarquia, sem criar caso. |  |
 
+## music
+
+| Função | Descrição | Aliases |
+|---|---|---|
+| `$musicClear` | Controla o player; exige mesmo canal de voz ou MoveMembers. |  |
+| `$musicFilters[json?]` | Consulta ou substitui filtros padrão via JSON estrito (até 5000 caracteres); exige mesmo canal ou MoveMembers. |  |
+| `$musicLoop[off\|track\|queue?]` | Consulta ou define loop; exige mesmo canal ou MoveMembers. |  |
+| `$musicMove[de;para]` | Move faixa na fila; índices desde 1. Exige mesmo canal ou MoveMembers. |  |
+| `$musicNowPlaying` | Retorna faixa atual, posição em ms, pausa, volume e loop, sem encoded. |  |
+| `$musicPause` | Controla o player; exige mesmo canal de voz ou MoveMembers. |  |
+| `$musicPlay[busca;índice?]` | Enfileira uma faixa da busca/playlist (índice desde 1), conecta à voz do autor e inicia se ocioso. |  |
+| `$musicQueue[página?]` | Lista até 25 faixas da fila; páginas começam em 1. |  |
+| `$musicRemove[índice;quantidade?]` | Remove até 25 faixas da fila (índice desde 1); exige mesmo canal ou MoveMembers. |  |
+| `$musicResume` | Controla o player; exige mesmo canal de voz ou MoveMembers. |  |
+| `$musicSearch[busca;limite?]` | Busca até 25 faixas; busca de até 500 caracteres, sem blobs encoded. |  |
+| `$musicSeek[ms]` | Busca posição em milissegundos; exige faixa com seek e mesmo canal ou MoveMembers. |  |
+| `$musicShuffle` | Controla o player; exige mesmo canal de voz ou MoveMembers. |  |
+| `$musicSkip` | Controla o player; exige mesmo canal de voz ou MoveMembers. |  |
+| `$musicStop[limparFila?]` | Para reprodução; limpa fila por padrão. Exige mesmo canal ou MoveMembers. |  |
+| `$musicVolume[volume?]` | Consulta ou define volume inteiro de 0 a 200; exige mesmo canal ou MoveMembers. |  |
+
 ## network
 
 | Função | Descrição | Aliases |
@@ -435,6 +458,22 @@ Aliases não contam como funções adicionais. Índices e semântica estão em [
 | `$timestamp` | Timestamp Unix em milissegundos. |  |
 | `$trim[texto]` | Transformação de texto. |  |
 | `$uppercase[texto]` | Transformação de texto. |  |
+
+## voice
+
+| Função | Descrição | Aliases |
+|---|---|---|
+| `$botVoiceChannel` | Retorna o canal da conexão do bot ou texto vazio. |  |
+| `$botVoiceState[selfMute?;selfDeaf?]` | Atualiza mute/deaf do bot; exige mesmo canal do bot ou MoveMembers. |  |
+| `$voiceChannelOf[usuário?]` | Consulta voz do usuário no servidor; não expõe sessão autenticada. |  |
+| `$voiceJoin[canal?]` | Conecta ao canal do autor ou informado; exige Connect do autor e Connect/Speak do bot. |  |
+| `$voiceLeave[canal?]` | Sai da voz; exige mesmo canal do bot ou MoveMembers, inclusive sem conexão. |  |
+| `$voiceMembers[canal?]` | Lista até 100 participantes; padrão: canal de voz do autor. |  |
+| `$voiceState[usuário?]` | Consulta voz do usuário no servidor; não expõe sessão autenticada. |  |
+| `$voiceStates` | Lista até 100 estados de voz do servidor, sem sessões. |  |
+| `$voiceStatus` | Retorna conexão, canal, servidor, reprodução e volume; não expõe endpoint/token. |  |
+| `$voiceStop` | Para áudio e vídeo; exige mesmo canal do bot ou MoveMembers. |  |
+| `$voiceVolume[volume?]` | Lê ou define volume inteiro de 0 a 200; exige mesmo canal do bot ou MoveMembers. |  |
 
 ## webhooks
 

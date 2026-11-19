@@ -105,7 +105,7 @@ export type { ExecutionStore } from './framework/execution.js';
 export { EventContext } from './commands/event-context.js';
 export type { EventContextOptions } from './commands/event-context.js';
 export type { ScriptEventDefinition } from './framework/script-events.js';
-export type { EventData, ScriptEventData, ScriptEventName } from './domain/events.js';
+export type { EventData, ScriptEventData, ScriptEventName, VoiceEvent, VoiceEventName } from './domain/events.js';
 export type { NativeAccess } from './ports/native.js';
 export type { ScriptEngine, ScriptFunctionDefinition, ScriptLimits } from './ports/script-engine.js';
 export type { NativeVoice, FluxerVoiceConnection, FluxerVoiceDriver } from './ports/voice.js';

@@ -2698,5 +2698,237 @@
     "maxArgs": 0,
     "usage": "$eventEmoji",
     "description": "Consulta o campo do evento; requer contexto de evento e preserva ausências como null."
+  },
+  {
+    "name": "eventErrorCode",
+    "category": "events",
+    "minArgs": 0,
+    "maxArgs": 0,
+    "usage": "$eventErrorCode",
+    "description": "Consulta o campo do evento; requer contexto de evento e preserva ausências como null."
+  },
+  {
+    "name": "eventErrorMessage",
+    "category": "events",
+    "minArgs": 0,
+    "maxArgs": 0,
+    "usage": "$eventErrorMessage",
+    "description": "Consulta o campo do evento; requer contexto de evento e preserva ausências como null."
+  },
+  {
+    "name": "voiceState",
+    "category": "voice",
+    "minArgs": 0,
+    "maxArgs": 1,
+    "usage": "$voiceState[usuário?]",
+    "description": "Consulta voz do usuário no servidor; não expõe sessão autenticada."
+  },
+  {
+    "name": "voiceChannelOf",
+    "category": "voice",
+    "minArgs": 0,
+    "maxArgs": 1,
+    "usage": "$voiceChannelOf[usuário?]",
+    "description": "Consulta voz do usuário no servidor; não expõe sessão autenticada."
+  },
+  {
+    "name": "voiceStates",
+    "category": "voice",
+    "minArgs": 0,
+    "maxArgs": 0,
+    "usage": "$voiceStates",
+    "description": "Lista até 100 estados de voz do servidor, sem sessões."
+  },
+  {
+    "name": "voiceMembers",
+    "category": "voice",
+    "minArgs": 0,
+    "maxArgs": 1,
+    "usage": "$voiceMembers[canal?]",
+    "description": "Lista até 100 participantes; padrão: canal de voz do autor."
+  },
+  {
+    "name": "botVoiceChannel",
+    "category": "voice",
+    "minArgs": 0,
+    "maxArgs": 0,
+    "usage": "$botVoiceChannel",
+    "description": "Retorna o canal da conexão do bot ou texto vazio."
+  },
+  {
+    "name": "voiceJoin",
+    "category": "voice",
+    "minArgs": 0,
+    "maxArgs": 1,
+    "usage": "$voiceJoin[canal?]",
+    "description": "Conecta ao canal do autor ou informado; exige Connect do autor e Connect/Speak do bot."
+  },
+  {
+    "name": "voiceStatus",
+    "category": "voice",
+    "minArgs": 0,
+    "maxArgs": 0,
+    "usage": "$voiceStatus",
+    "description": "Retorna conexão, canal, servidor, reprodução e volume; não expõe endpoint/token."
+  },
+  {
+    "name": "voiceLeave",
+    "category": "voice",
+    "minArgs": 0,
+    "maxArgs": 1,
+    "usage": "$voiceLeave[canal?]",
+    "description": "Sai da voz; exige mesmo canal do bot ou MoveMembers, inclusive sem conexão."
+  },
+  {
+    "name": "voiceStop",
+    "category": "voice",
+    "minArgs": 0,
+    "maxArgs": 0,
+    "usage": "$voiceStop",
+    "description": "Para áudio e vídeo; exige mesmo canal do bot ou MoveMembers."
+  },
+  {
+    "name": "voiceVolume",
+    "category": "voice",
+    "minArgs": 0,
+    "maxArgs": 1,
+    "usage": "$voiceVolume[volume?]",
+    "description": "Lê ou define volume inteiro de 0 a 200; exige mesmo canal do bot ou MoveMembers."
+  },
+  {
+    "name": "botVoiceState",
+    "category": "voice",
+    "minArgs": 0,
+    "maxArgs": 2,
+    "usage": "$botVoiceState[selfMute?;selfDeaf?]",
+    "description": "Atualiza mute/deaf do bot; exige mesmo canal do bot ou MoveMembers."
+  },
+  {
+    "name": "musicSearch",
+    "category": "music",
+    "minArgs": 1,
+    "maxArgs": 2,
+    "usage": "$musicSearch[busca;limite?]",
+    "description": "Busca até 25 faixas; busca de até 500 caracteres, sem blobs encoded."
+  },
+  {
+    "name": "musicPlay",
+    "category": "music",
+    "minArgs": 1,
+    "maxArgs": 2,
+    "usage": "$musicPlay[busca;índice?]",
+    "description": "Enfileira uma faixa da busca/playlist (índice desde 1), conecta à voz do autor e inicia se ocioso."
+  },
+  {
+    "name": "musicNowPlaying",
+    "category": "music",
+    "minArgs": 0,
+    "maxArgs": 0,
+    "usage": "$musicNowPlaying",
+    "description": "Retorna faixa atual, posição em ms, pausa, volume e loop, sem encoded."
+  },
+  {
+    "name": "musicQueue",
+    "category": "music",
+    "minArgs": 0,
+    "maxArgs": 1,
+    "usage": "$musicQueue[página?]",
+    "description": "Lista até 25 faixas da fila; páginas começam em 1."
+  },
+  {
+    "name": "musicPause",
+    "category": "music",
+    "minArgs": 0,
+    "maxArgs": 0,
+    "usage": "$musicPause",
+    "description": "Controla o player; exige mesmo canal de voz ou MoveMembers."
+  },
+  {
+    "name": "musicResume",
+    "category": "music",
+    "minArgs": 0,
+    "maxArgs": 0,
+    "usage": "$musicResume",
+    "description": "Controla o player; exige mesmo canal de voz ou MoveMembers."
+  },
+  {
+    "name": "musicSkip",
+    "category": "music",
+    "minArgs": 0,
+    "maxArgs": 0,
+    "usage": "$musicSkip",
+    "description": "Controla o player; exige mesmo canal de voz ou MoveMembers."
+  },
+  {
+    "name": "musicShuffle",
+    "category": "music",
+    "minArgs": 0,
+    "maxArgs": 0,
+    "usage": "$musicShuffle",
+    "description": "Controla o player; exige mesmo canal de voz ou MoveMembers."
+  },
+  {
+    "name": "musicClear",
+    "category": "music",
+    "minArgs": 0,
+    "maxArgs": 0,
+    "usage": "$musicClear",
+    "description": "Controla o player; exige mesmo canal de voz ou MoveMembers."
+  },
+  {
+    "name": "musicStop",
+    "category": "music",
+    "minArgs": 0,
+    "maxArgs": 1,
+    "usage": "$musicStop[limparFila?]",
+    "description": "Para reprodução; limpa fila por padrão. Exige mesmo canal ou MoveMembers."
+  },
+  {
+    "name": "musicRemove",
+    "category": "music",
+    "minArgs": 1,
+    "maxArgs": 2,
+    "usage": "$musicRemove[índice;quantidade?]",
+    "description": "Remove até 25 faixas da fila (índice desde 1); exige mesmo canal ou MoveMembers."
+  },
+  {
+    "name": "musicMove",
+    "category": "music",
+    "minArgs": 2,
+    "maxArgs": 2,
+    "usage": "$musicMove[de;para]",
+    "description": "Move faixa na fila; índices desde 1. Exige mesmo canal ou MoveMembers."
+  },
+  {
+    "name": "musicLoop",
+    "category": "music",
+    "minArgs": 0,
+    "maxArgs": 1,
+    "usage": "$musicLoop[off|track|queue?]",
+    "description": "Consulta ou define loop; exige mesmo canal ou MoveMembers."
+  },
+  {
+    "name": "musicVolume",
+    "category": "music",
+    "minArgs": 0,
+    "maxArgs": 1,
+    "usage": "$musicVolume[volume?]",
+    "description": "Consulta ou define volume inteiro de 0 a 200; exige mesmo canal ou MoveMembers."
+  },
+  {
+    "name": "musicSeek",
+    "category": "music",
+    "minArgs": 1,
+    "maxArgs": 1,
+    "usage": "$musicSeek[ms]",
+    "description": "Busca posição em milissegundos; exige faixa com seek e mesmo canal ou MoveMembers."
+  },
+  {
+    "name": "musicFilters",
+    "category": "music",
+    "minArgs": 0,
+    "maxArgs": 1,
+    "usage": "$musicFilters[json?]",
+    "description": "Consulta ou substitui filtros padrão via JSON estrito (até 5000 caracteres); exige mesmo canal ou MoveMembers."
   }
 ]

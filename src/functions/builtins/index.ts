@@ -24,6 +24,8 @@ import { valueFunctions } from './values.js';
 import { resourceExtras } from './resource-extras.js';
 import { eventFunctions } from './events.js';
 import { canvasFunctions } from './canvas.js';
+import { voiceFunctions } from './voice.js';
+import { musicFunctions } from './music.js';
 
 export const builtinFunctions: FunctionDefinition[] = [
   ...contextFunctions, ...flowFunctions, ...guardFunctions, ...valueFunctions,
@@ -34,6 +36,8 @@ export const builtinFunctions: FunctionDefinition[] = [
   ...resourceExtras,
   ...canvasFunctions,
   ...eventFunctions,
+  ...voiceFunctions,
+  ...musicFunctions,
 ];
 
 export function registerBuiltins(runtime: Runtime): Runtime {
