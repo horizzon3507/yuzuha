@@ -63,7 +63,7 @@ export class Evaluator {
   private async sequence(nodes: Node[], depth: number): Promise<unknown> {
     let soleCall: CallNode | undefined;
     for (const node of nodes) {
-      if (node.kind === 'text' && !node.value.trim()) continue;
+      if (node.kind === 'text' && !/\S/.test(node.value)) continue;
       if (node.kind === 'text' || soleCall) { soleCall = undefined; break; }
       soleCall = node;
     }

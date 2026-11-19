@@ -169,3 +169,22 @@ test('empty and failed object serialization preserve output and error handling',
   });
   assert.equal(await f.run('$try[prefix$badObject;fallback]'), 'fallback');
 });
+
+test('sole-call whitespace scanning matches trim including Unicode spaces without caching mutable ASTs', async () => {
+  const f = harness(), value = { value: 1 };
+  f.register('typed', () => value);
+  for (const space of [' ', '\t', '\n', '\r', '\u00a0', '\ufeff', '\u2028', '\u2029', '\u2000', '\u3000']) {
+    assert.equal(space.trim(), '');
+    assert.equal(await f.run(`${space}$typed${space}`), value);
+  }
+  for (const space of ['\u0085', '\u200b']) {
+    assert.notEqual(space.trim(), '');
+    assert.equal(await f.run(`${space}$typed${space}`), `${space}${JSON.stringify(value)}${space}`);
+  }
+  const program = f.runtime.compile('\u00a0$typed\ufeff\u2028');
+  assert.equal(await f.runtime.execute(program, f.ctx), value);
+  const first = program.nodes[0]!;
+  assert.equal(first.kind, 'text');
+  if (first.kind === 'text') first.value = 'prefix';
+  assert.equal(await f.runtime.execute(program, f.ctx), `prefix${JSON.stringify(value)}\ufeff\u2028`);
+});
