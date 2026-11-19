@@ -11,7 +11,7 @@ Paridade significa toda operação segura do SDK alcançável por scripts, com e
 - **excluded**: fora da linguagem por segurança ou por não representar operação; categoria e motivo visíveis.
 - **pending**: operação segura reservada à área indicada; permitida durante desenvolvimento, não no gate de release.
 
-**Function-mode safe coverage: 32.03%** (311/971). Denominador = function + equivalent + pending; excluded não entra. Cada linha é uma unidade, inclusive reexports em pacotes distintos; não é uma medição de testes ou completude de parâmetros.
+**Function-mode safe coverage: 52.08%** (501/962). Denominador = function + equivalent + pending; excluded não entra. Cada linha é uma unidade, inclusive reexports em pacotes distintos; não é uma medição de testes ou completude de parâmetros.
 
 Inventário: todos os exports (inclusive tipos), membros próprios não privados de classes, construtores e eventos dos contratos exportados *Events. Membros herdados aparecem no export de origem. Enums/constantes de runtime precisam de classificação operacional; interfaces e aliases são data-only. APIs novas exigem revisão explícita.
 
@@ -19,16 +19,16 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types, @fluxerjs/voice, @
 
 | Status | Itens |
 |---|---:|
-| function | 82 |
-| equivalent | 229 |
-| excluded | 834 |
-| pending | 660 |
+| function | 248 |
+| equivalent | 253 |
+| excluded | 843 |
+| pending | 461 |
 
 ## Pendências por área
 
 | Área | Itens pending |
 |---|---:|
-| pure | 199 |
+| pure | 0 |
 | resources | 120 |
 | entities | 238 |
 | events | 59 |
@@ -46,38 +46,38 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types, @fluxerjs/voice, @
 | `@fluxerjs/builders#EmbedFieldData` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/builders#EmbedFooterOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/builders#EmbedMediaOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
-| `@fluxerjs/builders#MessagePayload.static:ContentMaxLength` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/builders#MessagePayload.static:ContentMaxLength` | property | function | $sdkConstant | ContentMaxLength é o limite padrão do SDK; não modifica o payload. |
 | `@fluxerjs/builders#MessagePayloadCreateOptions` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/builders#MessagePayloadData` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/builders#RESTPostAPIEmbed` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/collection#Collection` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
-| `@fluxerjs/collection#Collection.cache` | accessor | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/collection#Collection.clone` | method | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/collection#Collection.concat` | method | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/collection#Collection.each` | method | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/collection#Collection.every` | method | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/collection#Collection.filter` | method | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/collection#Collection.find` | method | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/collection#Collection.findKey` | method | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/collection#Collection.first` | method | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/collection#Collection.last` | method | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/collection#Collection.map` | method | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/collection#Collection.partition` | method | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/collection#Collection.random` | method | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/collection#Collection.reduce` | method | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/collection#Collection.some` | method | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/collection#Collection.sort` | method | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/collection#Collection.tap` | method | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/collection#Collection.toJSON` | method | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/collection#Collection.toString` | method | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/collection#Collection.cache` | accessor | equivalent | $sdkCollection | Use o valor local da coleção ou clone; não há alias de cache do SDK. |
+| `@fluxerjs/collection#Collection.clone` | method | function | $sdkCollection | clone copia os pares ordenados sem estado compartilhado. |
+| `@fluxerjs/collection#Collection.concat` | method | function | $sdkCollection | Operação concat em até 1000 pares locais. |
+| `@fluxerjs/collection#Collection.each` | method | equivalent | $forEach, $let, $get | Percorra os pares com $loopValue/$loopIndex; reutilize o valor original para encadear. |
+| `@fluxerjs/collection#Collection.every` | method | equivalent | $arrayEvery, $loopValue | Avalie um predicado por par, com $loopValue contendo [chave, valor]. |
+| `@fluxerjs/collection#Collection.filter` | method | equivalent | $arrayFilter, $loopValue | Filtre os pares [chave, valor], preservando chaves e ordem. |
+| `@fluxerjs/collection#Collection.find` | method | equivalent | $arrayFind, $jsonGet, $loopValue | Busque o primeiro par pelo predicado e extraia o valor no caminho 1, com fallback se ausente. |
+| `@fluxerjs/collection#Collection.findKey` | method | equivalent | $arrayFind, $jsonGet, $loopValue | Busque o primeiro par pelo predicado e extraia a chave no caminho 0, com fallback se ausente. |
+| `@fluxerjs/collection#Collection.first` | method | function | $sdkCollection | Operação first em até 1000 pares locais. |
+| `@fluxerjs/collection#Collection.last` | method | function | $sdkCollection | Operação last em até 1000 pares locais. |
+| `@fluxerjs/collection#Collection.map` | method | equivalent | $arrayMap, $loopValue | Transforme cada par; o callback recebe [chave, valor] em $loopValue. |
+| `@fluxerjs/collection#Collection.partition` | method | function | $sdkCollection | Operação partition em até 1000 pares locais. |
+| `@fluxerjs/collection#Collection.random` | method | function | $sdkCollection | Operação random em até 1000 pares locais. |
+| `@fluxerjs/collection#Collection.reduce` | method | equivalent | $arrayReduce, $loopValue | Reduza pares ordenados com acumulador e $loopValue. |
+| `@fluxerjs/collection#Collection.some` | method | equivalent | $arraySome, $loopValue | Avalie um predicado por par, com $loopValue contendo [chave, valor]. |
+| `@fluxerjs/collection#Collection.sort` | method | equivalent | $arraySortWith, $sortLeft, $sortRight | Ordene uma cópia dos pares com comparador que recebe pares e acessa chave e valor. |
+| `@fluxerjs/collection#Collection.tap` | method | equivalent | $let, $get | Guarde a coleção, execute a expressão no script e retorne o valor original com $get. |
+| `@fluxerjs/collection#Collection.toJSON` | method | function | $sdkCollection | values retorna o array de valores na ordem da coleção. |
+| `@fluxerjs/collection#Collection.toString` | method | function | $sdkCollection | text retorna Collection(n). |
 | `@fluxerjs/collection#LimitedCollection` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
-| `@fluxerjs/collection#LimitedCollection.bounded` | accessor | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/collection#LimitedCollection.clone` | method | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/collection#LimitedCollection.bounded` | accessor | function | $sdkCollection | describe retorna bounded; null em maxSize significa sem capacidade explícita. |
+| `@fluxerjs/collection#LimitedCollection.clone` | method | equivalent | $sdkCollection | describe copia os pares e acompanha a capacidade explícita, sem callback ou estado vivo. |
 | `@fluxerjs/collection#LimitedCollection.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
-| `@fluxerjs/collection#LimitedCollection.maxSize` | property | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/collection#LimitedCollection.onEvict` | property | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/collection#LimitedCollection.set` | method | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/collection#LimitedCollection.sweep` | method | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/collection#LimitedCollection.maxSize` | property | function | $sdkCollection | describe retorna maxSize; null representa capacidade ilimitada. |
+| `@fluxerjs/collection#LimitedCollection.onEvict` | property | equivalent | $sdkCollection, $jsonGet, $if | set retorna o par evicted para tratamento explícito com $if, sem callback JS. |
+| `@fluxerjs/collection#LimitedCollection.set` | method | function | $sdkCollection | set retorna a nova coleção e o par expulso em FIFO, se houver. |
+| `@fluxerjs/collection#LimitedCollection.sweep` | method | function | $sdkCollection | sweep retorna os pares restantes e a contagem de removidos; aceita predicado de script. |
 | `@fluxerjs/collection#LimitedCollectionOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/collection#ReadonlyCollection` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/core#AddClientRuntimeOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
@@ -96,7 +96,7 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types, @fluxerjs/voice, @
 | `@fluxerjs/core#AttachmentUploadCompleteResponse` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/core#AttachmentUploadPlanItem` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/core#AttachmentUploadPlanResponse` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
-| `@fluxerjs/core#AuditLogActionType` | enum | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/core#AuditLogActionType` | enum | function | $sdkConstant | Leitura explícita de AuditLogActionType ou de uma chave própria; BigInt é texto decimal. |
 | `@fluxerjs/core#AuditLogChange` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/core#AuditLogEntryPayload` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/core#AuditLogFetchPayload` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
@@ -107,16 +107,16 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types, @fluxerjs/voice, @
 | `@fluxerjs/core#BulkFetchMessagesResult` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/core#CacheSizeLimits` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/core#CacheStats` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
-| `@fluxerjs/core#CDN_URL` | variable | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/core#cdnAvatarURL` | function | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/core#cdnBannerURL` | function | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/core#cdnDefaultAvatarURL` | function | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/core#cdnDisplayAvatarURL` | function | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/core#cdnEmojiURL` | function | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/core#cdnGuildAssetURL` | function | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/core#cdnMemberAvatarURL` | function | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/core#cdnMemberBannerURL` | function | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/core#cdnStickerURL` | function | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/core#CDN_URL` | variable | function | $sdkConstant, $cdnURL | CDN_URL é a constante SDK hospedada; use cdnURL para a base da instância. |
+| `@fluxerjs/core#cdnAvatarURL` | function | function | $cdnURL | Tipo avatar via CDN do contexto; sem requisição. |
+| `@fluxerjs/core#cdnBannerURL` | function | function | $cdnURL | Tipo banner via CDN do contexto; sem requisição. |
+| `@fluxerjs/core#cdnDefaultAvatarURL` | function | function | $cdnURL | Tipo defaultAvatar via CDN do contexto; sem requisição. |
+| `@fluxerjs/core#cdnDisplayAvatarURL` | function | function | $cdnURL | Tipo displayAvatar via CDN do contexto; sem requisição. |
+| `@fluxerjs/core#cdnEmojiURL` | function | function | $cdnURL | Tipo emoji via CDN do contexto; sem requisição. |
+| `@fluxerjs/core#cdnGuildAssetURL` | function | function | $cdnURL | Tipo guildIcon/guildBanner/guildSplash via CDN do contexto; sem requisição. |
+| `@fluxerjs/core#cdnMemberAvatarURL` | function | function | $cdnURL | Tipo memberAvatar via CDN do contexto; sem requisição. |
+| `@fluxerjs/core#cdnMemberBannerURL` | function | function | $cdnURL | Tipo memberBanner via CDN do contexto; sem requisição. |
+| `@fluxerjs/core#cdnStickerURL` | function | function | $cdnURL | Tipo sticker via CDN do contexto; sem requisição. |
 | `@fluxerjs/core#CdnUrlOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/core#ChannelEditOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/core#ChannelInviteCreateOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
@@ -124,11 +124,11 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types, @fluxerjs/voice, @
 | `@fluxerjs/core#ChannelPinsUpdatePayload` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/core#ChannelRecipientPayload` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/core#ChannelSlowmodePayload` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
-| `@fluxerjs/core#ChannelType` | enum | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/core#ChannelType` | enum | function | $sdkConstant | Leitura explícita de ChannelType ou de uma chave própria; BigInt é texto decimal. |
 | `@fluxerjs/core#ClientClusterEventListener` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/core#ClientClusterEventMap` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/core#ClientClusterEventName` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
-| `@fluxerjs/core#ClientClusterEvents` | variable | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/core#ClientClusterEvents` | variable | function | $sdkConstant | Leitura explícita de ClientClusterEvents ou de uma chave própria; BigInt é texto decimal. |
 | `@fluxerjs/core#ClientClusterOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/core#ClientEventListener` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/core#ClientEventMethods` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
@@ -137,17 +137,17 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types, @fluxerjs/voice, @
 | `@fluxerjs/core#ClientRuntime` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/core#ClientRuntimeStatus` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/core#CollectedReaction` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
-| `@fluxerjs/core#ContentWarningLevel` | enum | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/core#createLogger` | function | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/core#DEFAULT_CACHE_LIMITS` | variable | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/core#DEFAULT_INSTANCE_ENDPOINTS` | variable | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/core#ContentWarningLevel` | enum | function | $sdkConstant | Leitura explícita de ContentWarningLevel ou de uma chave própria; BigInt é texto decimal. |
+| `@fluxerjs/core#createLogger` | function | excluded | internal | O logger, o sink e a saída do processo são controlados pelo host confiável; scripts não criam loggers do SDK. |
+| `@fluxerjs/core#DEFAULT_CACHE_LIMITS` | variable | function | $sdkConstant | Leitura explícita de DEFAULT_CACHE_LIMITS ou de uma chave própria; BigInt é texto decimal. |
+| `@fluxerjs/core#DEFAULT_INSTANCE_ENDPOINTS` | variable | function | $sdkConstant | Leitura explícita de DEFAULT_INSTANCE_ENDPOINTS ou de uma chave própria; BigInt é texto decimal. |
 | `@fluxerjs/core#DefaultReactionEmojiInput` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/core#DiscoveryApplicationOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/core#DiscoveryApplicationPayload` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/core#DiscoveryOrigin` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/core#DiscoveryStatusPayload` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
-| `@fluxerjs/core#ErrorCodes` | variable | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/core#Events` | variable | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/core#ErrorCodes` | variable | function | $sdkConstant | Leitura explícita de ErrorCodes ou de uma chave própria; BigInt é texto decimal. |
+| `@fluxerjs/core#Events` | variable | function | $sdkConstant | Leitura explícita de Events ou de uma chave própria; BigInt é texto decimal. |
 | `@fluxerjs/core#ExpressionCreateOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/core#ExpressionEditOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/core#fetchActiveThreads` | function | function | $activeThreads | Lista threads ativas pelo recurso threads.active. |
@@ -159,51 +159,51 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types, @fluxerjs/voice, @
 | `@fluxerjs/core#FetchPinnedMessagesOptions` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/core#FetchThreadMembersOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/core#FluxerError` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
-| `@fluxerjs/core#FluxerError.code` | property | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/core#FluxerError.code` | property | function | $sdkError, $jsonGet | info inclui code quando seguro; não expõe o objeto do SDK. |
 | `@fluxerjs/core#FluxerError.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
-| `@fluxerjs/core#FluxerError.static:isFluxerError` | method | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/core#FluxerError.toJSON` | method | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/core#FluxerError.toString` | method | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/core#FluxerError.static:isFluxerError` | method | function | $sdkError | isFluxer testa a instância real que falhou, sem expor o objeto de erro. |
+| `@fluxerjs/core#FluxerError.toJSON` | method | equivalent | $sdkError | info retorna metadados serializáveis de erros SDK; não expõe mensagem, causa, URL ou corpo. |
+| `@fluxerjs/core#FluxerError.toString` | method | equivalent | $sdkError | text retorna tipo e código conhecido, sem expor mensagem ou causa. |
 | `@fluxerjs/core#FluxerErrorOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/core#ForumAvailableTag` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
-| `@fluxerjs/core#ForumLayout` | enum | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/core#ForumLayout` | enum | function | $sdkConstant | Leitura explícita de ForumLayout ou de uma chave própria; BigInt é texto decimal. |
 | `@fluxerjs/core#ForumParentEditOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/core#ForumParentFields` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
-| `@fluxerjs/core#ForumSortOrder` | enum | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/core#ForumSortOrder` | enum | function | $sdkConstant | Leitura explícita de ForumSortOrder ou de uma chave própria; BigInt é texto decimal. |
 | `@fluxerjs/core#ForumTagOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
-| `@fluxerjs/core#ForumTagSetting` | enum | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/core#ForumTagSetting` | enum | function | $sdkConstant | Leitura explícita de ForumTagSetting ou de uma chave própria; BigInt é texto decimal. |
 | `@fluxerjs/core#ForumUnreadEntry` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/core#ForumUnreadsPayload` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
-| `@fluxerjs/core#GatewayOpcodes` | enum | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/core#GatewayOpcodes` | enum | function | $sdkConstant | Leitura explícita de GatewayOpcodes ou de uma chave própria; BigInt é texto decimal. |
 | `@fluxerjs/core#GroupDmEditOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/core#GuildChannelCreateOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/core#GuildCountsUpdatePayload` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/core#GuildEmojisUpdatePayload` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/core#GuildMemberEditOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
-| `@fluxerjs/core#GuildMemberProfileFlags` | variable | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/core#GuildMemberProfileFlags` | variable | function | $sdkConstant | Leitura explícita de GuildMemberProfileFlags ou de uma chave própria; BigInt é texto decimal. |
 | `@fluxerjs/core#GuildMembersChunkPayload` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/core#GuildMemberSearchHit` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/core#GuildMemberSearchOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/core#GuildMemberSearchPayload` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
-| `@fluxerjs/core#GuildNSFWLevel` | enum | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/core#GuildOperations` | variable | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/core#GuildNSFWLevel` | enum | function | $sdkConstant | Leitura explícita de GuildNSFWLevel ou de uma chave própria; BigInt é texto decimal. |
+| `@fluxerjs/core#GuildOperations` | variable | function | $sdkConstant | Leitura explícita de GuildOperations ou de uma chave própria; BigInt é texto decimal. |
 | `@fluxerjs/core#GuildRoleDeletePayload` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/core#GuildRoleUpdatePayload` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/core#GuildStickersUpdatePayload` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
-| `@fluxerjs/core#INSTANCE_DISCOVERY_PATH` | variable | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/core#instanceDiscoveryUrl` | function | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/core#INSTANCE_DISCOVERY_PATH` | variable | function | $sdkConstant | Leitura explícita de INSTANCE_DISCOVERY_PATH ou de uma chave própria; BigInt é texto decimal. |
+| `@fluxerjs/core#instanceDiscoveryUrl` | function | function | $instanceValue | Operação discoveryURL sobre valores, sem requisição ou configuração do client. |
 | `@fluxerjs/core#InviteChannelSnapshot` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/core#InviteDeletePayload` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/core#InviteGuildSnapshot` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
-| `@fluxerjs/core#InviteType` | enum | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/core#inviteUrl` | function | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/core#InviteType` | enum | function | $sdkConstant | Leitura explícita de InviteType ou de uma chave própria; BigInt é texto decimal. |
+| `@fluxerjs/core#inviteUrl` | function | function | $inviteURL | Monta URL usando código seguro e base informada ou da instância, sem requisição. |
 | `@fluxerjs/core#LogFields` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/core#Logger` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/core#LoggerOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/core#LogLevel` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/core#MessageAttachment` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/core#MessageAttachmentEdit` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
-| `@fluxerjs/core#MessageAttachmentFlags` | variable | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/core#MessageAttachmentFlags` | variable | function | $sdkConstant | Leitura explícita de MessageAttachmentFlags ou de uma chave própria; BigInt é texto decimal. |
 | `@fluxerjs/core#MessageCall` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/core#MessageCollectorEndReason` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/core#MessageCollectorOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
@@ -214,13 +214,13 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types, @fluxerjs/voice, @
 | `@fluxerjs/core#MessageEmbedField` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/core#MessageEmbedFooter` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/core#MessageEmbedMedia` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
-| `@fluxerjs/core#MessageFlags` | variable | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/core#MessageFlags` | variable | function | $sdkConstant | Leitura explícita de MessageFlags ou de uma chave própria; BigInt é texto decimal. |
 | `@fluxerjs/core#MessageFlagsBitField` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
-| `@fluxerjs/core#MessageFlagsBitField.static:Flags` | property | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/core#MessageFlagsBits` | variable | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/core#MessageFlagsBitField.static:Flags` | property | function | $flags | table da família message retorna os nomes e máscaras decimais. |
+| `@fluxerjs/core#MessageFlagsBits` | variable | function | $sdkConstant | Leitura explícita de MessageFlagsBits ou de uma chave própria; BigInt é texto decimal. |
 | `@fluxerjs/core#MessageFlagsResolvable` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/core#MessageFlagsString` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
-| `@fluxerjs/core#MessagePayload.static:ContentMaxLength` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#MessagePayload.static:ContentMaxLength` | property | function | $sdkConstant | ContentMaxLength é o limite padrão do SDK; não modifica o payload. |
 | `@fluxerjs/core#MessagePrepareInput` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/core#MessageReactionAddManyEntry` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/core#MessageReactionAddManyPayload` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
@@ -228,7 +228,7 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types, @fluxerjs/voice, @
 | `@fluxerjs/core#MessageReactionRemoveAllPayload` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/core#MessageReactionRemoveEmojiPayload` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/core#MessageReference` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
-| `@fluxerjs/core#MessageReferenceType` | enum | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/core#MessageReferenceType` | enum | function | $sdkConstant | Leitura explícita de MessageReferenceType ou de uma chave própria; BigInt é texto decimal. |
 | `@fluxerjs/core#MessageReplyTarget` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/core#MessageSearchIndexing` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/core#MessageSearchOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
@@ -236,22 +236,22 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types, @fluxerjs/voice, @
 | `@fluxerjs/core#MessageSearchResults` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/core#MessageSendOptions` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/core#MessageSnapshot` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
-| `@fluxerjs/core#MessageType` | enum | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/core#normalizeApiOrigin` | function | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/core#normalizeCacheLimit` | function | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/core#OverwriteType` | enum | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/core#parseInstanceDiscovery` | function | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/core#parsePrefixCommand` | function | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/core#parseUserMention` | function | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/core#MessageType` | enum | function | $sdkConstant | Leitura explícita de MessageType ou de uma chave própria; BigInt é texto decimal. |
+| `@fluxerjs/core#normalizeApiOrigin` | function | function | $instanceValue | Operação normalize sobre valores, sem requisição ou configuração do client. |
+| `@fluxerjs/core#normalizeCacheLimit` | function | function | $sdkCacheLimit | Cálculo local normalizeCacheLimit, sem alterar o cache ou emitir aviso; null representa infinito. |
+| `@fluxerjs/core#OverwriteType` | enum | function | $sdkConstant | Leitura explícita de OverwriteType ou de uma chave própria; BigInt é texto decimal. |
+| `@fluxerjs/core#parseInstanceDiscovery` | function | function | $instanceValue | Operação parse sobre valores, sem requisição ou configuração do client. |
+| `@fluxerjs/core#parsePrefixCommand` | function | function | $sdkParse | Operação prefix sobre valores, sem interpretar a entrada como código. |
+| `@fluxerjs/core#parseUserMention` | function | function | $sdkParse | Operação userMention sobre valores, sem interpretar a entrada como código. |
 | `@fluxerjs/core#PartialUserGuildPayload` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
-| `@fluxerjs/core#PermissionFlags` | variable | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/core#PermissionFlags` | variable | function | $sdkConstant | Leitura explícita de PermissionFlags ou de uma chave própria; BigInt é texto decimal. |
 | `@fluxerjs/core#PermissionOverwriteEditOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/core#PermissionResolvable` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/core#PermissionsBitField` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
-| `@fluxerjs/core#PermissionsBitField.any` | method | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/core#PermissionsBitField.has` | method | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/core#PermissionsBitField.missing` | method | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/core#PermissionsBitField.static:Flags` | property | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/core#PermissionsBitField.any` | method | function | $flags | Operação any com máscaras limitadas a 128 bits e aritmética exata. |
+| `@fluxerjs/core#PermissionsBitField.has` | method | function | $flags | Operação has com máscaras limitadas a 128 bits e aritmética exata. |
+| `@fluxerjs/core#PermissionsBitField.missing` | method | function | $flags | Operação missing com máscaras limitadas a 128 bits e aritmética exata. |
+| `@fluxerjs/core#PermissionsBitField.static:Flags` | property | function | $flags | table da família permissions retorna os nomes e máscaras decimais. |
 | `@fluxerjs/core#PermissionString` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/core#PinnedMessagesPage` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/core#PresenceActivity` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
@@ -259,39 +259,39 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types, @fluxerjs/voice, @
 | `@fluxerjs/core#PresenceUpdateOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/core#PresenceUpdatePayload` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/core#ProfilePayload` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
-| `@fluxerjs/core#PublicUserFlags` | variable | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/core#PublicUserFlags` | variable | function | $sdkConstant | Leitura explícita de PublicUserFlags ou de uma chave própria; BigInt é texto decimal. |
 | `@fluxerjs/core#ReactionCollectorEndReason` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/core#ReactionCollectorOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/core#ReactionEmojiPayload` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
-| `@fluxerjs/core#RelationshipType` | enum | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/core#RelationshipType` | enum | function | $sdkConstant | Leitura explícita de RelationshipType ou de uma chave própria; BigInt é texto decimal. |
 | `@fluxerjs/core#ReplyOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
-| `@fluxerjs/core#resolveCacheLimits` | function | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/core#resolveCacheLimits` | function | function | $sdkCacheLimit | Cálculo local resolveCacheLimits, sem alterar o cache ou emitir aviso; null representa infinito. |
 | `@fluxerjs/core#ResolvedCacheLimits` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/core#ResolvedInstance` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
-| `@fluxerjs/core#resolveInstanceEndpoints` | function | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/core#resolveKlipyToImageUrl` | function | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/core#resolvePermissionsToBitfield` | function | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/core#resolveInstanceEndpoints` | function | function | $instanceValue | Operação resolve sobre valores, sem requisição ou configuração do client. |
+| `@fluxerjs/core#resolveKlipyToImageUrl` | function | excluded | raw-transport | O SDK faz fetch direto com redirects automáticos e lê o corpo sem limite, fora da política HTTP do Yuzuha. |
+| `@fluxerjs/core#resolvePermissionsToBitfield` | function | function | $flags | resolve na família permissions devolve texto decimal exato. |
 | `@fluxerjs/core#RestartClientRuntimeOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/core#RoleCreateOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/core#RoleEditOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/core#RoleResolvable` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/core#Routes` | variable | excluded | raw-transport | Rotas REST autenticadas arbitrárias contornariam os ports e guards; usar operações tipadas. |
 | `@fluxerjs/core#RtcRegionPayload` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
-| `@fluxerjs/core#serializeError` | function | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/core#SplashCardAlignment` | enum | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/core#serializeError` | function | equivalent | $sdkError | info retorna metadados serializáveis de erros SDK; não expõe mensagem, causa, URL ou corpo. |
+| `@fluxerjs/core#SplashCardAlignment` | enum | function | $sdkConstant | Leitura explícita de SplashCardAlignment ou de uma chave própria; BigInt é texto decimal. |
 | `@fluxerjs/core#StartForumThreadOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/core#StartThreadFromMessageOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/core#StartThreadOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
-| `@fluxerjs/core#STATIC_CDN_URL` | variable | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/core#STATIC_CDN_URL` | variable | function | $sdkConstant, $cdnURL | STATIC_CDN_URL é a constante SDK hospedada; use cdnURL para a base da instância. |
 | `@fluxerjs/core#StickerCreateOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/core#StickerEditOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/core#SudoVerificationOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
-| `@fluxerjs/core#SystemChannelFlags` | variable | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/core#SystemChannelFlags` | variable | function | $sdkConstant | Leitura explícita de SystemChannelFlags ou de uma chave própria; BigInt é texto decimal. |
 | `@fluxerjs/core#TextBasedChannel` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
-| `@fluxerjs/core#ThreadAutoArchiveDuration` | enum | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/core#ThreadAutoArchiveDuration` | enum | function | $sdkConstant | Leitura explícita de ThreadAutoArchiveDuration ou de uma chave própria; BigInt é texto decimal. |
 | `@fluxerjs/core#ThreadEditOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/core#ThreadListSyncPayload` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
-| `@fluxerjs/core#ThreadMemberFlags` | variable | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/core#ThreadMemberFlags` | variable | function | $sdkConstant | Leitura explícita de ThreadMemberFlags ou de uma chave própria; BigInt é texto decimal. |
 | `@fluxerjs/core#ThreadMemberListEntry` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/core#ThreadMemberListUpdatePayload` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/core#ThreadMemberSettingsOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
@@ -302,8 +302,8 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types, @fluxerjs/voice, @
 | `@fluxerjs/core#TypingStartPayload` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/core#UploadFileForSend` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/core#UserFlagsBitField` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
-| `@fluxerjs/core#UserFlagsBitField.static:Flags` | property | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/core#UserFlagsBits` | variable | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/core#UserFlagsBitField.static:Flags` | property | function | $flags | table da família user retorna os nomes e máscaras decimais. |
+| `@fluxerjs/core#UserFlagsBits` | variable | function | $sdkConstant | Leitura explícita de UserFlagsBits ou de uma chave própria; BigInt é texto decimal. |
 | `@fluxerjs/core#UserFlagsResolvable` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/core#UserFlagsString` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/core#VanityURLPayload` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
@@ -312,25 +312,25 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types, @fluxerjs/voice, @
 | `@fluxerjs/core#WebhookSendOptions` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/core#WebhooksUpdatePayload` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/rest#FluxerAPIError` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
-| `@fluxerjs/rest#FluxerAPIError.code` | property | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/rest#FluxerAPIError.code` | property | function | $sdkError, $jsonGet | info inclui code quando seguro; não expõe o objeto do SDK. |
 | `@fluxerjs/rest#FluxerAPIError.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
-| `@fluxerjs/rest#FluxerAPIError.errors` | property | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/rest#FluxerAPIError.isRetryable` | accessor | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/rest#FluxerAPIError.method` | property | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/rest#FluxerAPIError.path` | property | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/rest#FluxerAPIError.rawBody` | property | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/rest#FluxerAPIError.statusCode` | property | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/rest#FluxerAPIError.errors` | property | excluded | credentials | Corpo/metadados brutos de falhas podem conter segredos e dados privados da resposta. |
+| `@fluxerjs/rest#FluxerAPIError.isRetryable` | accessor | function | $sdkError, $jsonGet | info inclui isRetryable quando seguro; não expõe o objeto do SDK. |
+| `@fluxerjs/rest#FluxerAPIError.method` | property | function | $sdkError, $jsonGet | info inclui method quando seguro; não expõe o objeto do SDK. |
+| `@fluxerjs/rest#FluxerAPIError.path` | property | excluded | credentials | O caminho bruto pode incluir segredos embutidos na rota. |
+| `@fluxerjs/rest#FluxerAPIError.rawBody` | property | excluded | credentials | Corpo/metadados brutos de falhas podem conter segredos e dados privados da resposta. |
+| `@fluxerjs/rest#FluxerAPIError.statusCode` | property | function | $sdkError, $jsonGet | info inclui statusCode quando seguro; não expõe o objeto do SDK. |
 | `@fluxerjs/rest#HTTPError` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
-| `@fluxerjs/rest#HTTPError.body` | property | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/rest#HTTPError.body` | property | excluded | credentials | Corpo/metadados brutos de falhas podem conter segredos e dados privados da resposta. |
 | `@fluxerjs/rest#HTTPError.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
-| `@fluxerjs/rest#HTTPError.isRetryable` | accessor | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/rest#HTTPError.method` | property | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/rest#HTTPError.path` | property | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/rest#HTTPError.statusCode` | property | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/rest#HTTPError.isRetryable` | accessor | function | $sdkError, $jsonGet | info inclui isRetryable quando seguro; não expõe o objeto do SDK. |
+| `@fluxerjs/rest#HTTPError.method` | property | function | $sdkError, $jsonGet | info inclui method quando seguro; não expõe o objeto do SDK. |
+| `@fluxerjs/rest#HTTPError.path` | property | excluded | credentials | O caminho bruto pode incluir segredos embutidos na rota. |
+| `@fluxerjs/rest#HTTPError.statusCode` | property | function | $sdkError, $jsonGet | info inclui statusCode quando seguro; não expõe o objeto do SDK. |
 | `@fluxerjs/rest#RateLimitError` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
 | `@fluxerjs/rest#RateLimitError.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
-| `@fluxerjs/rest#RateLimitError.global` | property | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/rest#RateLimitError.retryAfter` | property | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/rest#RateLimitError.global` | property | function | $sdkError, $jsonGet | info inclui global quando seguro; não expõe o objeto do SDK. |
+| `@fluxerjs/rest#RateLimitError.retryAfter` | property | function | $sdkError, $jsonGet | info inclui retryAfter quando seguro; não expõe o objeto do SDK. |
 | `@fluxerjs/types#AllowedMentionType` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/types#APIAllowedMentions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/types#APIApplicationMe` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
@@ -359,7 +359,7 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types, @fluxerjs/voice, @
 | `@fluxerjs/types#APIEmojiMetadata` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/types#APIEmojiWithUser` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/types#APIErrorBody` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
-| `@fluxerjs/types#APIErrorCode` | enum | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/types#APIErrorCode` | enum | function | $sdkConstant | Leitura explícita de APIErrorCode ou de uma chave própria; BigInt é texto decimal. |
 | `@fluxerjs/types#APIForumTag` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/types#APIForumTagUpdate` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/types#APIForumThreadMessageRequest` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
@@ -444,18 +444,18 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types, @fluxerjs/voice, @
 | `@fluxerjs/types#APIWebhookTokenUpdateRequest` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/types#APIWebhookUpdateRequest` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/types#APIWellKnownFluxer` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
-| `@fluxerjs/types#AuditLogActionType` | enum | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/types#AuditLogActionType` | enum | function | $sdkConstant | Leitura explícita de AuditLogActionType ou de uma chave própria; BigInt é texto decimal. |
 | `@fluxerjs/types#ChannelCreateRequest` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/types#ChannelInviteCreateRequest` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
-| `@fluxerjs/types#ChannelType` | enum | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/types#ContentWarningLevel` | enum | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/types#DefaultMessageNotifications` | enum | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/types#EmbedMediaFlags` | variable | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/types#ChannelType` | enum | function | $sdkConstant | Leitura explícita de ChannelType ou de uma chave própria; BigInt é texto decimal. |
+| `@fluxerjs/types#ContentWarningLevel` | enum | function | $sdkConstant | Leitura explícita de ContentWarningLevel ou de uma chave própria; BigInt é texto decimal. |
+| `@fluxerjs/types#DefaultMessageNotifications` | enum | function | $sdkConstant | Leitura explícita de DefaultMessageNotifications ou de uma chave própria; BigInt é texto decimal. |
+| `@fluxerjs/types#EmbedMediaFlags` | variable | function | $sdkConstant | Leitura explícita de EmbedMediaFlags ou de uma chave própria; BigInt é texto decimal. |
 | `@fluxerjs/types#EmbedType` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
-| `@fluxerjs/types#FLUXER_EPOCH` | variable | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/types#ForumLayout` | enum | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/types#ForumSortOrder` | enum | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/types#ForumTagSetting` | enum | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/types#FLUXER_EPOCH` | variable | function | $sdkConstant | Leitura explícita de FLUXER_EPOCH ou de uma chave própria; BigInt é texto decimal. |
+| `@fluxerjs/types#ForumLayout` | enum | function | $sdkConstant | Leitura explícita de ForumLayout ou de uma chave própria; BigInt é texto decimal. |
+| `@fluxerjs/types#ForumSortOrder` | enum | function | $sdkConstant | Leitura explícita de ForumSortOrder ou de uma chave própria; BigInt é texto decimal. |
+| `@fluxerjs/types#ForumTagSetting` | enum | function | $sdkConstant | Leitura explícita de ForumTagSetting ou de uma chave própria; BigInt é texto decimal. |
 | `@fluxerjs/types#GatewayAuthSessionChangeDispatchData` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/types#GatewayCallCreateDispatchData` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/types#GatewayCallDeleteDispatchData` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
@@ -472,10 +472,10 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types, @fluxerjs/voice, @
 | `@fluxerjs/types#GatewayChannelUpdateDispatchData` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/types#GatewayCustomStatus` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/types#GatewayDispatchEventName` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
-| `@fluxerjs/types#GatewayDispatchEvents` | variable | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/types#GatewayDispatchEvents` | variable | function | $sdkConstant | Leitura explícita de GatewayDispatchEvents ou de uma chave própria; BigInt é texto decimal. |
 | `@fluxerjs/types#GatewayEntranceSoundPlayDispatchData` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/types#GatewayErrorCode` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
-| `@fluxerjs/types#GatewayErrorCodes` | variable | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/types#GatewayErrorCodes` | variable | function | $sdkConstant | Leitura explícita de GatewayErrorCodes ou de uma chave própria; BigInt é texto decimal. |
 | `@fluxerjs/types#GatewayFavoriteMemeCreateDispatchData` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/types#GatewayFavoriteMemeDeleteDispatchData` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/types#GatewayFavoriteMemePayload` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
@@ -506,7 +506,7 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types, @fluxerjs/voice, @
 | `@fluxerjs/types#GatewayGuildUpdateDispatchData` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/types#GatewayHelloData` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/types#GatewayIdentifyData` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
-| `@fluxerjs/types#GatewayIdentifyFlags` | variable | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/types#GatewayIdentifyFlags` | variable | function | $sdkConstant | Leitura explícita de GatewayIdentifyFlags ou de uma chave própria; BigInt é texto decimal. |
 | `@fluxerjs/types#GatewayInviteCreateDispatchData` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/types#GatewayInviteDeleteDispatchData` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/types#GatewayLazyRequestData` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
@@ -522,7 +522,7 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types, @fluxerjs/voice, @
 | `@fluxerjs/types#GatewayMessageReactionRemoveDispatchData` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/types#GatewayMessageReactionRemoveEmojiDispatchData` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/types#GatewayMessageUpdateDispatchData` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
-| `@fluxerjs/types#GatewayOpcodes` | enum | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/types#GatewayOpcodes` | enum | function | $sdkConstant | Leitura explícita de GatewayOpcodes ou de uma chave própria; BigInt é texto decimal. |
 | `@fluxerjs/types#GatewayPassiveUpdatesDispatchData` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/types#GatewayPresenceUpdateBulkDispatchData` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/types#GatewayPresenceUpdateData` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
@@ -572,35 +572,35 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types, @fluxerjs/voice, @
 | `@fluxerjs/types#GatewayWebhooksUpdateDispatchData` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/types#GuildAnnouncementChannelCreateRequest` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/types#GuildCategoryChannelCreateRequest` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
-| `@fluxerjs/types#GuildExplicitContentFilter` | enum | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/types#GuildExplicitContentFilter` | enum | function | $sdkConstant | Leitura explícita de GuildExplicitContentFilter ou de uma chave própria; BigInt é texto decimal. |
 | `@fluxerjs/types#GuildFeature` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/types#GuildForumChannelCreateRequest` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/types#GuildLinkChannelCreateRequest` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/types#GuildMediaChannelCreateRequest` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
-| `@fluxerjs/types#GuildMemberProfileFlags` | variable | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/types#GuildMemberProfileFlags` | variable | function | $sdkConstant | Leitura explícita de GuildMemberProfileFlags ou de uma chave própria; BigInt é texto decimal. |
 | `@fluxerjs/types#GuildMemberProfileFlagsValue` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
-| `@fluxerjs/types#GuildMFALevel` | enum | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/types#GuildNSFWLevel` | enum | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/types#GuildOperations` | variable | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/types#GuildMFALevel` | enum | function | $sdkConstant | Leitura explícita de GuildMFALevel ou de uma chave própria; BigInt é texto decimal. |
+| `@fluxerjs/types#GuildNSFWLevel` | enum | function | $sdkConstant | Leitura explícita de GuildNSFWLevel ou de uma chave própria; BigInt é texto decimal. |
+| `@fluxerjs/types#GuildOperations` | variable | function | $sdkConstant | Leitura explícita de GuildOperations ou de uma chave própria; BigInt é texto decimal. |
 | `@fluxerjs/types#GuildOperationsValue` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/types#GuildTextChannelCreateRequest` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
-| `@fluxerjs/types#GuildVerificationLevel` | enum | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/types#GuildVerificationLevel` | enum | function | $sdkConstant | Leitura explícita de GuildVerificationLevel ou de uma chave própria; BigInt é texto decimal. |
 | `@fluxerjs/types#GuildVoiceChannelCreateRequest` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
-| `@fluxerjs/types#InviteType` | enum | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/types#isGroupDmInvite` | function | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/types#isGuildInvite` | function | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/types#isUploadedAttachment` | function | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/types#MessageAttachmentFlags` | variable | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/types#MessageFlags` | variable | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/types#InviteType` | enum | function | $sdkConstant | Leitura explícita de InviteType ou de uma chave própria; BigInt é texto decimal. |
+| `@fluxerjs/types#isGroupDmInvite` | function | function | $sdkParse | Operação groupDmInvite sobre valores, sem interpretar a entrada como código. |
+| `@fluxerjs/types#isGuildInvite` | function | function | $sdkParse | Operação guildInvite sobre valores, sem interpretar a entrada como código. |
+| `@fluxerjs/types#isUploadedAttachment` | function | function | $sdkParse | Operação uploadedAttachment sobre valores, sem interpretar a entrada como código. |
+| `@fluxerjs/types#MessageAttachmentFlags` | variable | function | $sdkConstant | Leitura explícita de MessageAttachmentFlags ou de uma chave própria; BigInt é texto decimal. |
+| `@fluxerjs/types#MessageFlags` | variable | function | $sdkConstant | Leitura explícita de MessageFlags ou de uma chave própria; BigInt é texto decimal. |
 | `@fluxerjs/types#MessageFlagsValue` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
-| `@fluxerjs/types#MessageReferenceType` | enum | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/types#MessageReferenceType` | enum | function | $sdkConstant | Leitura explícita de MessageReferenceType ou de uma chave própria; BigInt é texto decimal. |
 | `@fluxerjs/types#MessageSearchScope` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
-| `@fluxerjs/types#MessageType` | enum | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/types#OverwriteType` | enum | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/types#PublicUserFlags` | variable | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/types#MessageType` | enum | function | $sdkConstant | Leitura explícita de MessageType ou de uma chave própria; BigInt é texto decimal. |
+| `@fluxerjs/types#OverwriteType` | enum | function | $sdkConstant | Leitura explícita de OverwriteType ou de uma chave própria; BigInt é texto decimal. |
+| `@fluxerjs/types#PublicUserFlags` | variable | function | $sdkConstant | Leitura explícita de PublicUserFlags ou de uma chave própria; BigInt é texto decimal. |
 | `@fluxerjs/types#PublicUserFlagsValue` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/types#RateLimitErrorBody` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
-| `@fluxerjs/types#RelationshipType` | enum | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/types#RelationshipType` | enum | function | $sdkConstant | Leitura explícita de RelationshipType ou de uma chave própria; BigInt é texto decimal. |
 | `@fluxerjs/types#RESTCreateRoleBody` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/types#RESTPatchAPIGuildDiscoveryJSONBody` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/types#RESTPatchAPIGuildEmojiJSONBody` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
@@ -630,56 +630,56 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types, @fluxerjs/voice, @
 | `@fluxerjs/types#RESTUpdateRoleBody` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/types#Routes` | variable | excluded | raw-transport | Rotas REST autenticadas arbitrárias contornariam os ports e guards; usar operações tipadas. |
 | `@fluxerjs/types#Snowflake` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
-| `@fluxerjs/types#SplashCardAlignment` | enum | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/types#SystemChannelFlags` | variable | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/types#SplashCardAlignment` | enum | function | $sdkConstant | Leitura explícita de SplashCardAlignment ou de uma chave própria; BigInt é texto decimal. |
+| `@fluxerjs/types#SystemChannelFlags` | variable | function | $sdkConstant | Leitura explícita de SystemChannelFlags ou de uma chave própria; BigInt é texto decimal. |
 | `@fluxerjs/types#SystemChannelFlagsValue` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
-| `@fluxerjs/types#ThreadAutoArchiveDuration` | enum | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/types#ThreadAutoArchiveDuration` | enum | function | $sdkConstant | Leitura explícita de ThreadAutoArchiveDuration ou de uma chave própria; BigInt é texto decimal. |
 | `@fluxerjs/types#ThreadChannelType` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
-| `@fluxerjs/types#ThreadMemberFlags` | variable | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/types#ThreadMemberFlags` | variable | function | $sdkConstant | Leitura explícita de ThreadMemberFlags ou de uma chave própria; BigInt é texto decimal. |
 | `@fluxerjs/types#ThreadSearchSortBy` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/types#ThreadSearchSortOrder` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
-| `@fluxerjs/types#WebhookType` | enum | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/util#ALL_PERMISSIONS_BIGINT` | variable | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/util#asRecord` | function | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/types#WebhookType` | enum | function | $sdkConstant | Leitura explícita de WebhookType ou de uma chave própria; BigInt é texto decimal. |
+| `@fluxerjs/util#ALL_PERMISSIONS_BIGINT` | variable | function | $sdkConstant | Leitura explícita de ALL_PERMISSIONS_BIGINT ou de uma chave própria; BigInt é texto decimal. |
+| `@fluxerjs/util#asRecord` | function | function | $sdkParse | Operação record sobre valores, sem interpretar a entrada como código. |
 | `@fluxerjs/util#BitField` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
 | `@fluxerjs/util#BitField.[Symbol.iterator]` | method | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
 | `@fluxerjs/util#BitField.[Symbol.toStringTag]` | accessor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
-| `@fluxerjs/util#BitField.add` | method | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/util#BitField.any` | method | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/util#BitField.bitfield` | property | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/util#BitField.add` | method | function | $flags | Operação add com máscaras limitadas a 128 bits e aritmética exata. |
+| `@fluxerjs/util#BitField.any` | method | function | $flags | Operação any com máscaras limitadas a 128 bits e aritmética exata. |
+| `@fluxerjs/util#BitField.bitfield` | property | equivalent | $flags | resolve produz uma máscara decimal imutável por valor, sem objeto do SDK. |
 | `@fluxerjs/util#BitField.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
-| `@fluxerjs/util#BitField.equals` | method | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/util#BitField.freeze` | method | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/util#BitField.has` | method | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/util#BitField.missing` | method | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/util#BitField.remove` | method | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/util#BitField.serialize` | method | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/util#BitField.static:DefaultBit` | property | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/util#BitField.static:Flags` | property | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/util#BitField.static:resolve` | method | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/util#BitField.toArray` | method | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/util#BitField.toJSON` | method | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/util#BitField.toString` | method | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/util#BitField.valueOf` | method | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/util#BitField.equals` | method | function | $flags | Operação equals com máscaras limitadas a 128 bits e aritmética exata. |
+| `@fluxerjs/util#BitField.freeze` | method | equivalent | $flags | resolve produz uma máscara decimal imutável por valor, sem objeto do SDK. |
+| `@fluxerjs/util#BitField.has` | method | function | $flags | Operação has com máscaras limitadas a 128 bits e aritmética exata. |
+| `@fluxerjs/util#BitField.missing` | method | function | $flags | Operação missing com máscaras limitadas a 128 bits e aritmética exata. |
+| `@fluxerjs/util#BitField.remove` | method | function | $flags | Operação remove com máscaras limitadas a 128 bits e aritmética exata. |
+| `@fluxerjs/util#BitField.serialize` | method | function | $flags | Operação serialize com máscaras limitadas a 128 bits e aritmética exata. |
+| `@fluxerjs/util#BitField.static:DefaultBit` | property | function | $sdkConstant | DefaultBit em texto decimal. |
+| `@fluxerjs/util#BitField.static:Flags` | property | function | $flags | table da família bits retorna os nomes e máscaras decimais. |
+| `@fluxerjs/util#BitField.static:resolve` | method | function | $flags | Operação resolve com máscaras limitadas a 128 bits e aritmética exata. |
+| `@fluxerjs/util#BitField.toArray` | method | function | $flags | Operação names com máscaras limitadas a 128 bits e aritmética exata. |
+| `@fluxerjs/util#BitField.toJSON` | method | equivalent | $flags | resolve produz uma máscara decimal imutável por valor, sem objeto do SDK. |
+| `@fluxerjs/util#BitField.toString` | method | equivalent | $flags | resolve produz uma máscara decimal imutável por valor, sem objeto do SDK. |
+| `@fluxerjs/util#BitField.valueOf` | method | equivalent | $flags | resolve produz uma máscara decimal imutável por valor, sem objeto do SDK. |
 | `@fluxerjs/util#BitFieldResolvable` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
-| `@fluxerjs/util#createLogger` | function | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/util#createLogger` | function | excluded | internal | O logger, o sink e a saída do processo são controlados pelo host confiável; scripts não criam loggers do SDK. |
 | `@fluxerjs/util#DeconstructedSnowflake` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/util#ErrorCode` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
-| `@fluxerjs/util#ErrorCodes` | variable | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/util#ErrorCodes` | variable | function | $sdkConstant | Leitura explícita de ErrorCodes ou de uma chave própria; BigInt é texto decimal. |
 | `@fluxerjs/util#escapeMarkdown` | function | equivalent | $escapeMarkdown | Escape de Markdown com builtin limitado. |
-| `@fluxerjs/util#FLUXER_EPOCH` | variable | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/util#FLUXER_EPOCH` | variable | function | $sdkConstant | Leitura explícita de FLUXER_EPOCH ou de uma chave própria; BigInt é texto decimal. |
 | `@fluxerjs/util#FluxerError` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
-| `@fluxerjs/util#FluxerError.code` | property | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/util#FluxerError.code` | property | function | $sdkError, $jsonGet | info inclui code quando seguro; não expõe o objeto do SDK. |
 | `@fluxerjs/util#FluxerError.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
-| `@fluxerjs/util#FluxerError.static:isFluxerError` | method | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/util#FluxerError.toJSON` | method | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/util#FluxerError.toString` | method | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/util#FluxerError.static:isFluxerError` | method | function | $sdkError | isFluxer testa a instância real que falhou, sem expor o objeto de erro. |
+| `@fluxerjs/util#FluxerError.toJSON` | method | equivalent | $sdkError | info retorna metadados serializáveis de erros SDK; não expõe mensagem, causa, URL ou corpo. |
+| `@fluxerjs/util#FluxerError.toString` | method | equivalent | $sdkError | text retorna tipo e código conhecido, sem expor mensagem ou causa. |
 | `@fluxerjs/util#FluxerErrorOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
-| `@fluxerjs/util#formatColor` | function | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/util#formatEmoji` | function | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/util#formatTimestamp` | function | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/util#getUnicodeFromShortcode` | function | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/util#isRecord` | function | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/util#formatColor` | function | function | $sdkFormat | Operação color sobre valores de script. |
+| `@fluxerjs/util#formatEmoji` | function | function | $sdkFormat | Operação emoji sobre valores de script. |
+| `@fluxerjs/util#formatTimestamp` | function | function | $sdkFormat | Operação timestamp sobre valores de script. |
+| `@fluxerjs/util#getUnicodeFromShortcode` | function | function | $sdkParse | Operação shortcode sobre valores, sem interpretar a entrada como código. |
+| `@fluxerjs/util#isRecord` | function | function | $sdkParse | Operação isRecord sobre valores, sem interpretar a entrada como código. |
 | `@fluxerjs/util#KlipyMediaResult` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/util#LogFields` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/util#Logger` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
@@ -687,43 +687,43 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types, @fluxerjs/voice, @
 | `@fluxerjs/util#LoggerSink` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/util#LogLevel` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/util#MessageFlagsBitField` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
-| `@fluxerjs/util#MessageFlagsBitField.static:Flags` | property | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/util#MessageFlagsBits` | variable | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/util#MessageFlagsBitField.static:Flags` | property | function | $flags | table da família message retorna os nomes e máscaras decimais. |
+| `@fluxerjs/util#MessageFlagsBits` | variable | function | $sdkConstant | Leitura explícita de MessageFlagsBits ou de uma chave própria; BigInt é texto decimal. |
 | `@fluxerjs/util#MessageFlagsResolvable` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/util#MessageFlagsString` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
-| `@fluxerjs/util#num` | function | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/util#num` | function | function | $sdkParse | Operação number sobre valores, sem interpretar a entrada como código. |
 | `@fluxerjs/util#ParsedEmoji` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/util#ParsedPrefixCommand` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
-| `@fluxerjs/util#parseEmoji` | function | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/util#parsePrefixCommand` | function | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/util#parseRoleMention` | function | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/util#parseUserMention` | function | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/util#PermissionFlags` | variable | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/util#parseEmoji` | function | function | $sdkParse | Operação emoji sobre valores, sem interpretar a entrada como código. |
+| `@fluxerjs/util#parsePrefixCommand` | function | function | $sdkParse | Operação prefix sobre valores, sem interpretar a entrada como código. |
+| `@fluxerjs/util#parseRoleMention` | function | function | $sdkParse | Operação roleMention sobre valores, sem interpretar a entrada como código. |
+| `@fluxerjs/util#parseUserMention` | function | function | $sdkParse | Operação userMention sobre valores, sem interpretar a entrada como código. |
+| `@fluxerjs/util#PermissionFlags` | variable | function | $sdkConstant | Leitura explícita de PermissionFlags ou de uma chave própria; BigInt é texto decimal. |
 | `@fluxerjs/util#PermissionResolvable` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/util#PermissionsBitField` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
-| `@fluxerjs/util#PermissionsBitField.any` | method | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/util#PermissionsBitField.has` | method | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/util#PermissionsBitField.missing` | method | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/util#PermissionsBitField.static:Flags` | property | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/util#PermissionsBitField.any` | method | function | $flags | Operação any com máscaras limitadas a 128 bits e aritmética exata. |
+| `@fluxerjs/util#PermissionsBitField.has` | method | function | $flags | Operação has com máscaras limitadas a 128 bits e aritmética exata. |
+| `@fluxerjs/util#PermissionsBitField.missing` | method | function | $flags | Operação missing com máscaras limitadas a 128 bits e aritmética exata. |
+| `@fluxerjs/util#PermissionsBitField.static:Flags` | property | function | $flags | table da família permissions retorna os nomes e máscaras decimais. |
 | `@fluxerjs/util#PermissionString` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
-| `@fluxerjs/util#resolveColor` | function | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/util#resolveKlipyToImageUrl` | function | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/util#resolvePermissionsToBitfield` | function | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/util#serializeError` | function | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/util#resolveColor` | function | function | $sdkFormat | Operação resolveColor sobre valores de script. |
+| `@fluxerjs/util#resolveKlipyToImageUrl` | function | excluded | raw-transport | O SDK faz fetch direto com redirects automáticos e lê o corpo sem limite, fora da política HTTP do Yuzuha. |
+| `@fluxerjs/util#resolvePermissionsToBitfield` | function | function | $flags | resolve na família permissions devolve texto decimal exato. |
+| `@fluxerjs/util#serializeError` | function | equivalent | $sdkError | info retorna metadados serializáveis de erros SDK; não expõe mensagem, causa, URL ou corpo. |
 | `@fluxerjs/util#SnowflakeUtil` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
-| `@fluxerjs/util#SnowflakeUtil.static:dateFromSnowflake` | method | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/util#SnowflakeUtil.static:deconstruct` | method | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/util#SnowflakeUtil.static:EPOCH` | property | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/util#SnowflakeUtil.static:isValid` | method | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/util#SnowflakeUtil.static:parse` | method | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/util#SnowflakeUtil.static:snowflakeFromTimestamp` | method | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/util#SnowflakeUtil.static:timestampFromSnowflake` | method | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/util#str` | function | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/util#SnowflakeUtil.static:dateFromSnowflake` | method | function | $snowflake | Operação date; datas em ISO e bigint em texto decimal. |
+| `@fluxerjs/util#SnowflakeUtil.static:deconstruct` | method | function | $snowflake | Operação deconstruct; datas em ISO e bigint em texto decimal. |
+| `@fluxerjs/util#SnowflakeUtil.static:EPOCH` | property | function | $sdkConstant | FLUXER_EPOCH em texto decimal exato. |
+| `@fluxerjs/util#SnowflakeUtil.static:isValid` | method | function | $snowflake | Operação valid; datas em ISO e bigint em texto decimal. |
+| `@fluxerjs/util#SnowflakeUtil.static:parse` | method | function | $snowflake | Operação parse; datas em ISO e bigint em texto decimal. |
+| `@fluxerjs/util#SnowflakeUtil.static:snowflakeFromTimestamp` | method | function | $snowflake | Operação fromTimestamp; datas em ISO e bigint em texto decimal. |
+| `@fluxerjs/util#SnowflakeUtil.static:timestampFromSnowflake` | method | function | $snowflake | Operação timestamp; datas em ISO e bigint em texto decimal. |
+| `@fluxerjs/util#str` | function | function | $sdkParse | Operação string sobre valores, sem interpretar a entrada como código. |
 | `@fluxerjs/util#TimestampStyle` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
-| `@fluxerjs/util#truncate` | function | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/util#truncate` | function | function | $sdkFormat | Operação truncate sobre valores de script. |
 | `@fluxerjs/util#UserFlagsBitField` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
-| `@fluxerjs/util#UserFlagsBitField.static:Flags` | property | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
-| `@fluxerjs/util#UserFlagsBits` | variable | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/util#UserFlagsBitField.static:Flags` | property | function | $flags | table da família user retorna os nomes e máscaras decimais. |
+| `@fluxerjs/util#UserFlagsBits` | variable | function | $sdkConstant | Leitura explícita de UserFlagsBits ou de uma chave própria; BigInt é texto decimal. |
 | `@fluxerjs/util#UserFlagsResolvable` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/util#UserFlagsString` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 

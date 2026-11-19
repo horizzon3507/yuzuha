@@ -10,33 +10,33 @@
 {"id":"@fluxerjs/builders#MessagePayloadData","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/builders#RESTPostAPIEmbed","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/collection#Collection","area":"pure","status":"excluded","note":"Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK.","reason":"data-only"}
-{"id":"@fluxerjs/collection#Collection.cache","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/collection#Collection.clone","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/collection#Collection.concat","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/collection#Collection.each","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/collection#Collection.every","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/collection#Collection.filter","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/collection#Collection.find","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/collection#Collection.findKey","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/collection#Collection.first","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/collection#Collection.last","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/collection#Collection.map","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/collection#Collection.partition","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/collection#Collection.random","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/collection#Collection.reduce","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/collection#Collection.some","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/collection#Collection.sort","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/collection#Collection.tap","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/collection#Collection.toJSON","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/collection#Collection.toString","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
+{"id":"@fluxerjs/collection#Collection.cache","area":"pure","status":"equivalent","note":"Use o valor local da coleção ou clone; não há alias de cache do SDK.","functions":["$sdkCollection"]}
+{"id":"@fluxerjs/collection#Collection.clone","area":"pure","status":"function","note":"clone copia os pares ordenados sem estado compartilhado.","functions":["$sdkCollection"]}
+{"id":"@fluxerjs/collection#Collection.concat","area":"pure","status":"function","note":"Operação concat em até 1000 pares locais.","functions":["$sdkCollection"]}
+{"id":"@fluxerjs/collection#Collection.each","area":"pure","status":"equivalent","note":"Percorra os pares com $loopValue/$loopIndex; reutilize o valor original para encadear.","functions":["$forEach","$let","$get"]}
+{"id":"@fluxerjs/collection#Collection.every","area":"pure","status":"equivalent","note":"Avalie um predicado por par, com $loopValue contendo [chave, valor].","functions":["$arrayEvery","$loopValue"]}
+{"id":"@fluxerjs/collection#Collection.filter","area":"pure","status":"equivalent","note":"Filtre os pares [chave, valor], preservando chaves e ordem.","functions":["$arrayFilter","$loopValue"]}
+{"id":"@fluxerjs/collection#Collection.find","area":"pure","status":"equivalent","note":"Busque o primeiro par pelo predicado e extraia o valor no caminho 1, com fallback se ausente.","functions":["$arrayFind","$jsonGet","$loopValue"]}
+{"id":"@fluxerjs/collection#Collection.findKey","area":"pure","status":"equivalent","note":"Busque o primeiro par pelo predicado e extraia a chave no caminho 0, com fallback se ausente.","functions":["$arrayFind","$jsonGet","$loopValue"]}
+{"id":"@fluxerjs/collection#Collection.first","area":"pure","status":"function","note":"Operação first em até 1000 pares locais.","functions":["$sdkCollection"]}
+{"id":"@fluxerjs/collection#Collection.last","area":"pure","status":"function","note":"Operação last em até 1000 pares locais.","functions":["$sdkCollection"]}
+{"id":"@fluxerjs/collection#Collection.map","area":"pure","status":"equivalent","note":"Transforme cada par; o callback recebe [chave, valor] em $loopValue.","functions":["$arrayMap","$loopValue"]}
+{"id":"@fluxerjs/collection#Collection.partition","area":"pure","status":"function","note":"Operação partition em até 1000 pares locais.","functions":["$sdkCollection"]}
+{"id":"@fluxerjs/collection#Collection.random","area":"pure","status":"function","note":"Operação random em até 1000 pares locais.","functions":["$sdkCollection"]}
+{"id":"@fluxerjs/collection#Collection.reduce","area":"pure","status":"equivalent","note":"Reduza pares ordenados com acumulador e $loopValue.","functions":["$arrayReduce","$loopValue"]}
+{"id":"@fluxerjs/collection#Collection.some","area":"pure","status":"equivalent","note":"Avalie um predicado por par, com $loopValue contendo [chave, valor].","functions":["$arraySome","$loopValue"]}
+{"id":"@fluxerjs/collection#Collection.sort","area":"pure","status":"equivalent","note":"Ordene uma cópia dos pares com comparador que recebe pares e acessa chave e valor.","functions":["$arraySortWith","$sortLeft","$sortRight"]}
+{"id":"@fluxerjs/collection#Collection.tap","area":"pure","status":"equivalent","note":"Guarde a coleção, execute a expressão no script e retorne o valor original com $get.","functions":["$let","$get"]}
+{"id":"@fluxerjs/collection#Collection.toJSON","area":"pure","status":"function","note":"values retorna o array de valores na ordem da coleção.","functions":["$sdkCollection"]}
+{"id":"@fluxerjs/collection#Collection.toString","area":"pure","status":"function","note":"text retorna Collection(n).","functions":["$sdkCollection"]}
 {"id":"@fluxerjs/collection#LimitedCollection","area":"pure","status":"excluded","note":"Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK.","reason":"data-only"}
-{"id":"@fluxerjs/collection#LimitedCollection.bounded","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/collection#LimitedCollection.clone","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
+{"id":"@fluxerjs/collection#LimitedCollection.bounded","area":"pure","status":"function","note":"describe retorna bounded; null em maxSize significa sem capacidade explícita.","functions":["$sdkCollection"]}
+{"id":"@fluxerjs/collection#LimitedCollection.clone","area":"pure","status":"equivalent","note":"describe copia os pares e acompanha a capacidade explícita, sem callback ou estado vivo.","functions":["$sdkCollection"]}
 {"id":"@fluxerjs/collection#LimitedCollection.constructor","area":"pure","status":"excluded","note":"Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados.","reason":"internal"}
-{"id":"@fluxerjs/collection#LimitedCollection.maxSize","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/collection#LimitedCollection.onEvict","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/collection#LimitedCollection.set","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/collection#LimitedCollection.sweep","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
+{"id":"@fluxerjs/collection#LimitedCollection.maxSize","area":"pure","status":"function","note":"describe retorna maxSize; null representa capacidade ilimitada.","functions":["$sdkCollection"]}
+{"id":"@fluxerjs/collection#LimitedCollection.onEvict","area":"pure","status":"equivalent","note":"set retorna o par evicted para tratamento explícito com $if, sem callback JS.","functions":["$sdkCollection","$jsonGet","$if"]}
+{"id":"@fluxerjs/collection#LimitedCollection.set","area":"pure","status":"function","note":"set retorna a nova coleção e o par expulso em FIFO, se houver.","functions":["$sdkCollection"]}
+{"id":"@fluxerjs/collection#LimitedCollection.sweep","area":"pure","status":"function","note":"sweep retorna os pares restantes e a contagem de removidos; aceita predicado de script.","functions":["$sdkCollection"]}
 {"id":"@fluxerjs/collection#LimitedCollectionOptions","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/collection#ReadonlyCollection","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/core#AddClientRuntimeOptions","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
@@ -55,7 +55,7 @@
 {"id":"@fluxerjs/core#AttachmentUploadCompleteResponse","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/core#AttachmentUploadPlanItem","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/core#AttachmentUploadPlanResponse","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
-{"id":"@fluxerjs/core#AuditLogActionType","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
+{"id":"@fluxerjs/core#AuditLogActionType","area":"pure","status":"function","note":"Leitura explícita de AuditLogActionType ou de uma chave própria; BigInt é texto decimal.","functions":["$sdkConstant"]}
 {"id":"@fluxerjs/core#AuditLogChange","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/core#AuditLogEntryPayload","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/core#AuditLogFetchPayload","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
@@ -66,16 +66,16 @@
 {"id":"@fluxerjs/core#BulkFetchMessagesResult","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/core#CacheSizeLimits","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/core#CacheStats","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
-{"id":"@fluxerjs/core#CDN_URL","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/core#cdnAvatarURL","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/core#cdnBannerURL","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/core#cdnDefaultAvatarURL","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/core#cdnDisplayAvatarURL","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/core#cdnEmojiURL","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/core#cdnGuildAssetURL","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/core#cdnMemberAvatarURL","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/core#cdnMemberBannerURL","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/core#cdnStickerURL","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
+{"id":"@fluxerjs/core#CDN_URL","area":"pure","status":"function","note":"CDN_URL é a constante SDK hospedada; use cdnURL para a base da instância.","functions":["$sdkConstant","$cdnURL"]}
+{"id":"@fluxerjs/core#cdnAvatarURL","area":"pure","status":"function","note":"Tipo avatar via CDN do contexto; sem requisição.","functions":["$cdnURL"]}
+{"id":"@fluxerjs/core#cdnBannerURL","area":"pure","status":"function","note":"Tipo banner via CDN do contexto; sem requisição.","functions":["$cdnURL"]}
+{"id":"@fluxerjs/core#cdnDefaultAvatarURL","area":"pure","status":"function","note":"Tipo defaultAvatar via CDN do contexto; sem requisição.","functions":["$cdnURL"]}
+{"id":"@fluxerjs/core#cdnDisplayAvatarURL","area":"pure","status":"function","note":"Tipo displayAvatar via CDN do contexto; sem requisição.","functions":["$cdnURL"]}
+{"id":"@fluxerjs/core#cdnEmojiURL","area":"pure","status":"function","note":"Tipo emoji via CDN do contexto; sem requisição.","functions":["$cdnURL"]}
+{"id":"@fluxerjs/core#cdnGuildAssetURL","area":"pure","status":"function","note":"Tipo guildIcon/guildBanner/guildSplash via CDN do contexto; sem requisição.","functions":["$cdnURL"]}
+{"id":"@fluxerjs/core#cdnMemberAvatarURL","area":"pure","status":"function","note":"Tipo memberAvatar via CDN do contexto; sem requisição.","functions":["$cdnURL"]}
+{"id":"@fluxerjs/core#cdnMemberBannerURL","area":"pure","status":"function","note":"Tipo memberBanner via CDN do contexto; sem requisição.","functions":["$cdnURL"]}
+{"id":"@fluxerjs/core#cdnStickerURL","area":"pure","status":"function","note":"Tipo sticker via CDN do contexto; sem requisição.","functions":["$cdnURL"]}
 {"id":"@fluxerjs/core#CdnUrlOptions","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/core#ChannelEditOptions","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/core#ChannelInviteCreateOptions","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
@@ -83,11 +83,11 @@
 {"id":"@fluxerjs/core#ChannelPinsUpdatePayload","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/core#ChannelRecipientPayload","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/core#ChannelSlowmodePayload","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
-{"id":"@fluxerjs/core#ChannelType","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
+{"id":"@fluxerjs/core#ChannelType","area":"pure","status":"function","note":"Leitura explícita de ChannelType ou de uma chave própria; BigInt é texto decimal.","functions":["$sdkConstant"]}
 {"id":"@fluxerjs/core#ClientClusterEventListener","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/core#ClientClusterEventMap","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/core#ClientClusterEventName","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
-{"id":"@fluxerjs/core#ClientClusterEvents","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
+{"id":"@fluxerjs/core#ClientClusterEvents","area":"pure","status":"function","note":"Leitura explícita de ClientClusterEvents ou de uma chave própria; BigInt é texto decimal.","functions":["$sdkConstant"]}
 {"id":"@fluxerjs/core#ClientClusterOptions","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/core#ClientEventListener","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/core#ClientEventMethods","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
@@ -96,17 +96,17 @@
 {"id":"@fluxerjs/core#ClientRuntime","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/core#ClientRuntimeStatus","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/core#CollectedReaction","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
-{"id":"@fluxerjs/core#ContentWarningLevel","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/core#createLogger","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/core#DEFAULT_CACHE_LIMITS","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/core#DEFAULT_INSTANCE_ENDPOINTS","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
+{"id":"@fluxerjs/core#ContentWarningLevel","area":"pure","status":"function","note":"Leitura explícita de ContentWarningLevel ou de uma chave própria; BigInt é texto decimal.","functions":["$sdkConstant"]}
+{"id":"@fluxerjs/core#createLogger","area":"pure","status":"excluded","note":"O logger, o sink e a saída do processo são controlados pelo host confiável; scripts não criam loggers do SDK.","reason":"internal"}
+{"id":"@fluxerjs/core#DEFAULT_CACHE_LIMITS","area":"pure","status":"function","note":"Leitura explícita de DEFAULT_CACHE_LIMITS ou de uma chave própria; BigInt é texto decimal.","functions":["$sdkConstant"]}
+{"id":"@fluxerjs/core#DEFAULT_INSTANCE_ENDPOINTS","area":"pure","status":"function","note":"Leitura explícita de DEFAULT_INSTANCE_ENDPOINTS ou de uma chave própria; BigInt é texto decimal.","functions":["$sdkConstant"]}
 {"id":"@fluxerjs/core#DefaultReactionEmojiInput","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/core#DiscoveryApplicationOptions","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/core#DiscoveryApplicationPayload","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/core#DiscoveryOrigin","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/core#DiscoveryStatusPayload","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
-{"id":"@fluxerjs/core#ErrorCodes","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/core#Events","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
+{"id":"@fluxerjs/core#ErrorCodes","area":"pure","status":"function","note":"Leitura explícita de ErrorCodes ou de uma chave própria; BigInt é texto decimal.","functions":["$sdkConstant"]}
+{"id":"@fluxerjs/core#Events","area":"pure","status":"function","note":"Leitura explícita de Events ou de uma chave própria; BigInt é texto decimal.","functions":["$sdkConstant"]}
 {"id":"@fluxerjs/core#ExpressionCreateOptions","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/core#ExpressionEditOptions","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/core#fetchActiveThreads","area":"pure","status":"function","note":"Lista threads ativas pelo recurso threads.active.","functions":["$activeThreads"]}
@@ -118,51 +118,51 @@
 {"id":"@fluxerjs/core#FetchPinnedMessagesOptions","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/core#FetchThreadMembersOptions","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/core#FluxerError","area":"pure","status":"excluded","note":"Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK.","reason":"data-only"}
-{"id":"@fluxerjs/core#FluxerError.code","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
+{"id":"@fluxerjs/core#FluxerError.code","area":"pure","status":"function","note":"info inclui code quando seguro; não expõe o objeto do SDK.","functions":["$sdkError","$jsonGet"]}
 {"id":"@fluxerjs/core#FluxerError.constructor","area":"pure","status":"excluded","note":"Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados.","reason":"internal"}
-{"id":"@fluxerjs/core#FluxerError.static:isFluxerError","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/core#FluxerError.toJSON","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/core#FluxerError.toString","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
+{"id":"@fluxerjs/core#FluxerError.static:isFluxerError","area":"pure","status":"function","note":"isFluxer testa a instância real que falhou, sem expor o objeto de erro.","functions":["$sdkError"]}
+{"id":"@fluxerjs/core#FluxerError.toJSON","area":"pure","status":"equivalent","note":"info retorna metadados serializáveis de erros SDK; não expõe mensagem, causa, URL ou corpo.","functions":["$sdkError"]}
+{"id":"@fluxerjs/core#FluxerError.toString","area":"pure","status":"equivalent","note":"text retorna tipo e código conhecido, sem expor mensagem ou causa.","functions":["$sdkError"]}
 {"id":"@fluxerjs/core#FluxerErrorOptions","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/core#ForumAvailableTag","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
-{"id":"@fluxerjs/core#ForumLayout","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
+{"id":"@fluxerjs/core#ForumLayout","area":"pure","status":"function","note":"Leitura explícita de ForumLayout ou de uma chave própria; BigInt é texto decimal.","functions":["$sdkConstant"]}
 {"id":"@fluxerjs/core#ForumParentEditOptions","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/core#ForumParentFields","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
-{"id":"@fluxerjs/core#ForumSortOrder","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
+{"id":"@fluxerjs/core#ForumSortOrder","area":"pure","status":"function","note":"Leitura explícita de ForumSortOrder ou de uma chave própria; BigInt é texto decimal.","functions":["$sdkConstant"]}
 {"id":"@fluxerjs/core#ForumTagOptions","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
-{"id":"@fluxerjs/core#ForumTagSetting","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
+{"id":"@fluxerjs/core#ForumTagSetting","area":"pure","status":"function","note":"Leitura explícita de ForumTagSetting ou de uma chave própria; BigInt é texto decimal.","functions":["$sdkConstant"]}
 {"id":"@fluxerjs/core#ForumUnreadEntry","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/core#ForumUnreadsPayload","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
-{"id":"@fluxerjs/core#GatewayOpcodes","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
+{"id":"@fluxerjs/core#GatewayOpcodes","area":"pure","status":"function","note":"Leitura explícita de GatewayOpcodes ou de uma chave própria; BigInt é texto decimal.","functions":["$sdkConstant"]}
 {"id":"@fluxerjs/core#GroupDmEditOptions","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/core#GuildChannelCreateOptions","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/core#GuildCountsUpdatePayload","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/core#GuildEmojisUpdatePayload","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/core#GuildMemberEditOptions","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
-{"id":"@fluxerjs/core#GuildMemberProfileFlags","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
+{"id":"@fluxerjs/core#GuildMemberProfileFlags","area":"pure","status":"function","note":"Leitura explícita de GuildMemberProfileFlags ou de uma chave própria; BigInt é texto decimal.","functions":["$sdkConstant"]}
 {"id":"@fluxerjs/core#GuildMembersChunkPayload","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/core#GuildMemberSearchHit","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/core#GuildMemberSearchOptions","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/core#GuildMemberSearchPayload","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
-{"id":"@fluxerjs/core#GuildNSFWLevel","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/core#GuildOperations","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
+{"id":"@fluxerjs/core#GuildNSFWLevel","area":"pure","status":"function","note":"Leitura explícita de GuildNSFWLevel ou de uma chave própria; BigInt é texto decimal.","functions":["$sdkConstant"]}
+{"id":"@fluxerjs/core#GuildOperations","area":"pure","status":"function","note":"Leitura explícita de GuildOperations ou de uma chave própria; BigInt é texto decimal.","functions":["$sdkConstant"]}
 {"id":"@fluxerjs/core#GuildRoleDeletePayload","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/core#GuildRoleUpdatePayload","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/core#GuildStickersUpdatePayload","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
-{"id":"@fluxerjs/core#INSTANCE_DISCOVERY_PATH","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/core#instanceDiscoveryUrl","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
+{"id":"@fluxerjs/core#INSTANCE_DISCOVERY_PATH","area":"pure","status":"function","note":"Leitura explícita de INSTANCE_DISCOVERY_PATH ou de uma chave própria; BigInt é texto decimal.","functions":["$sdkConstant"]}
+{"id":"@fluxerjs/core#instanceDiscoveryUrl","area":"pure","status":"function","note":"Operação discoveryURL sobre valores, sem requisição ou configuração do client.","functions":["$instanceValue"]}
 {"id":"@fluxerjs/core#InviteChannelSnapshot","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/core#InviteDeletePayload","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/core#InviteGuildSnapshot","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
-{"id":"@fluxerjs/core#InviteType","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/core#inviteUrl","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
+{"id":"@fluxerjs/core#InviteType","area":"pure","status":"function","note":"Leitura explícita de InviteType ou de uma chave própria; BigInt é texto decimal.","functions":["$sdkConstant"]}
+{"id":"@fluxerjs/core#inviteUrl","area":"pure","status":"function","note":"Monta URL usando código seguro e base informada ou da instância, sem requisição.","functions":["$inviteURL"]}
 {"id":"@fluxerjs/core#LogFields","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/core#Logger","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/core#LoggerOptions","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/core#LogLevel","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/core#MessageAttachment","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/core#MessageAttachmentEdit","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
-{"id":"@fluxerjs/core#MessageAttachmentFlags","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
+{"id":"@fluxerjs/core#MessageAttachmentFlags","area":"pure","status":"function","note":"Leitura explícita de MessageAttachmentFlags ou de uma chave própria; BigInt é texto decimal.","functions":["$sdkConstant"]}
 {"id":"@fluxerjs/core#MessageCall","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/core#MessageCollectorEndReason","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/core#MessageCollectorOptions","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
@@ -173,10 +173,10 @@
 {"id":"@fluxerjs/core#MessageEmbedField","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/core#MessageEmbedFooter","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/core#MessageEmbedMedia","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
-{"id":"@fluxerjs/core#MessageFlags","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
+{"id":"@fluxerjs/core#MessageFlags","area":"pure","status":"function","note":"Leitura explícita de MessageFlags ou de uma chave própria; BigInt é texto decimal.","functions":["$sdkConstant"]}
 {"id":"@fluxerjs/core#MessageFlagsBitField","area":"pure","status":"excluded","note":"Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK.","reason":"data-only"}
-{"id":"@fluxerjs/core#MessageFlagsBitField.static:Flags","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/core#MessageFlagsBits","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
+{"id":"@fluxerjs/core#MessageFlagsBitField.static:Flags","area":"pure","status":"function","note":"table da família message retorna os nomes e máscaras decimais.","functions":["$flags"]}
+{"id":"@fluxerjs/core#MessageFlagsBits","area":"pure","status":"function","note":"Leitura explícita de MessageFlagsBits ou de uma chave própria; BigInt é texto decimal.","functions":["$sdkConstant"]}
 {"id":"@fluxerjs/core#MessageFlagsResolvable","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/core#MessageFlagsString","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/core#MessagePrepareInput","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
@@ -186,7 +186,7 @@
 {"id":"@fluxerjs/core#MessageReactionRemoveAllPayload","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/core#MessageReactionRemoveEmojiPayload","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/core#MessageReference","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
-{"id":"@fluxerjs/core#MessageReferenceType","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
+{"id":"@fluxerjs/core#MessageReferenceType","area":"pure","status":"function","note":"Leitura explícita de MessageReferenceType ou de uma chave própria; BigInt é texto decimal.","functions":["$sdkConstant"]}
 {"id":"@fluxerjs/core#MessageReplyTarget","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/core#MessageSearchIndexing","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/core#MessageSearchOptions","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
@@ -194,22 +194,22 @@
 {"id":"@fluxerjs/core#MessageSearchResults","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/core#MessageSendOptions","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/core#MessageSnapshot","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
-{"id":"@fluxerjs/core#MessageType","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/core#normalizeApiOrigin","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/core#normalizeCacheLimit","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/core#OverwriteType","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/core#parseInstanceDiscovery","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/core#parsePrefixCommand","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/core#parseUserMention","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
+{"id":"@fluxerjs/core#MessageType","area":"pure","status":"function","note":"Leitura explícita de MessageType ou de uma chave própria; BigInt é texto decimal.","functions":["$sdkConstant"]}
+{"id":"@fluxerjs/core#normalizeApiOrigin","area":"pure","status":"function","note":"Operação normalize sobre valores, sem requisição ou configuração do client.","functions":["$instanceValue"]}
+{"id":"@fluxerjs/core#normalizeCacheLimit","area":"pure","status":"function","note":"Cálculo local normalizeCacheLimit, sem alterar o cache ou emitir aviso; null representa infinito.","functions":["$sdkCacheLimit"]}
+{"id":"@fluxerjs/core#OverwriteType","area":"pure","status":"function","note":"Leitura explícita de OverwriteType ou de uma chave própria; BigInt é texto decimal.","functions":["$sdkConstant"]}
+{"id":"@fluxerjs/core#parseInstanceDiscovery","area":"pure","status":"function","note":"Operação parse sobre valores, sem requisição ou configuração do client.","functions":["$instanceValue"]}
+{"id":"@fluxerjs/core#parsePrefixCommand","area":"pure","status":"function","note":"Operação prefix sobre valores, sem interpretar a entrada como código.","functions":["$sdkParse"]}
+{"id":"@fluxerjs/core#parseUserMention","area":"pure","status":"function","note":"Operação userMention sobre valores, sem interpretar a entrada como código.","functions":["$sdkParse"]}
 {"id":"@fluxerjs/core#PartialUserGuildPayload","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
-{"id":"@fluxerjs/core#PermissionFlags","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
+{"id":"@fluxerjs/core#PermissionFlags","area":"pure","status":"function","note":"Leitura explícita de PermissionFlags ou de uma chave própria; BigInt é texto decimal.","functions":["$sdkConstant"]}
 {"id":"@fluxerjs/core#PermissionOverwriteEditOptions","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/core#PermissionResolvable","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/core#PermissionsBitField","area":"pure","status":"excluded","note":"Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK.","reason":"data-only"}
-{"id":"@fluxerjs/core#PermissionsBitField.any","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/core#PermissionsBitField.has","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/core#PermissionsBitField.missing","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/core#PermissionsBitField.static:Flags","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
+{"id":"@fluxerjs/core#PermissionsBitField.any","area":"pure","status":"function","note":"Operação any com máscaras limitadas a 128 bits e aritmética exata.","functions":["$flags"]}
+{"id":"@fluxerjs/core#PermissionsBitField.has","area":"pure","status":"function","note":"Operação has com máscaras limitadas a 128 bits e aritmética exata.","functions":["$flags"]}
+{"id":"@fluxerjs/core#PermissionsBitField.missing","area":"pure","status":"function","note":"Operação missing com máscaras limitadas a 128 bits e aritmética exata.","functions":["$flags"]}
+{"id":"@fluxerjs/core#PermissionsBitField.static:Flags","area":"pure","status":"function","note":"table da família permissions retorna os nomes e máscaras decimais.","functions":["$flags"]}
 {"id":"@fluxerjs/core#PermissionString","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/core#PinnedMessagesPage","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/core#PresenceActivity","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
@@ -217,39 +217,39 @@
 {"id":"@fluxerjs/core#PresenceUpdateOptions","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/core#PresenceUpdatePayload","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/core#ProfilePayload","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
-{"id":"@fluxerjs/core#PublicUserFlags","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
+{"id":"@fluxerjs/core#PublicUserFlags","area":"pure","status":"function","note":"Leitura explícita de PublicUserFlags ou de uma chave própria; BigInt é texto decimal.","functions":["$sdkConstant"]}
 {"id":"@fluxerjs/core#ReactionCollectorEndReason","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/core#ReactionCollectorOptions","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/core#ReactionEmojiPayload","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
-{"id":"@fluxerjs/core#RelationshipType","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
+{"id":"@fluxerjs/core#RelationshipType","area":"pure","status":"function","note":"Leitura explícita de RelationshipType ou de uma chave própria; BigInt é texto decimal.","functions":["$sdkConstant"]}
 {"id":"@fluxerjs/core#ReplyOptions","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
-{"id":"@fluxerjs/core#resolveCacheLimits","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
+{"id":"@fluxerjs/core#resolveCacheLimits","area":"pure","status":"function","note":"Cálculo local resolveCacheLimits, sem alterar o cache ou emitir aviso; null representa infinito.","functions":["$sdkCacheLimit"]}
 {"id":"@fluxerjs/core#ResolvedCacheLimits","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/core#ResolvedInstance","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
-{"id":"@fluxerjs/core#resolveInstanceEndpoints","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/core#resolveKlipyToImageUrl","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/core#resolvePermissionsToBitfield","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
+{"id":"@fluxerjs/core#resolveInstanceEndpoints","area":"pure","status":"function","note":"Operação resolve sobre valores, sem requisição ou configuração do client.","functions":["$instanceValue"]}
+{"id":"@fluxerjs/core#resolveKlipyToImageUrl","area":"pure","status":"excluded","note":"O SDK faz fetch direto com redirects automáticos e lê o corpo sem limite, fora da política HTTP do Yuzuha.","reason":"raw-transport"}
+{"id":"@fluxerjs/core#resolvePermissionsToBitfield","area":"pure","status":"function","note":"resolve na família permissions devolve texto decimal exato.","functions":["$flags"]}
 {"id":"@fluxerjs/core#RestartClientRuntimeOptions","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/core#RoleCreateOptions","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/core#RoleEditOptions","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/core#RoleResolvable","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/core#Routes","area":"pure","status":"excluded","note":"Rotas REST autenticadas arbitrárias contornariam os ports e guards; usar operações tipadas.","reason":"raw-transport"}
 {"id":"@fluxerjs/core#RtcRegionPayload","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
-{"id":"@fluxerjs/core#serializeError","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/core#SplashCardAlignment","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
+{"id":"@fluxerjs/core#serializeError","area":"pure","status":"equivalent","note":"info retorna metadados serializáveis de erros SDK; não expõe mensagem, causa, URL ou corpo.","functions":["$sdkError"]}
+{"id":"@fluxerjs/core#SplashCardAlignment","area":"pure","status":"function","note":"Leitura explícita de SplashCardAlignment ou de uma chave própria; BigInt é texto decimal.","functions":["$sdkConstant"]}
 {"id":"@fluxerjs/core#StartForumThreadOptions","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/core#StartThreadFromMessageOptions","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/core#StartThreadOptions","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
-{"id":"@fluxerjs/core#STATIC_CDN_URL","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
+{"id":"@fluxerjs/core#STATIC_CDN_URL","area":"pure","status":"function","note":"STATIC_CDN_URL é a constante SDK hospedada; use cdnURL para a base da instância.","functions":["$sdkConstant","$cdnURL"]}
 {"id":"@fluxerjs/core#StickerCreateOptions","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/core#StickerEditOptions","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/core#SudoVerificationOptions","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
-{"id":"@fluxerjs/core#SystemChannelFlags","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
+{"id":"@fluxerjs/core#SystemChannelFlags","area":"pure","status":"function","note":"Leitura explícita de SystemChannelFlags ou de uma chave própria; BigInt é texto decimal.","functions":["$sdkConstant"]}
 {"id":"@fluxerjs/core#TextBasedChannel","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
-{"id":"@fluxerjs/core#ThreadAutoArchiveDuration","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
+{"id":"@fluxerjs/core#ThreadAutoArchiveDuration","area":"pure","status":"function","note":"Leitura explícita de ThreadAutoArchiveDuration ou de uma chave própria; BigInt é texto decimal.","functions":["$sdkConstant"]}
 {"id":"@fluxerjs/core#ThreadEditOptions","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/core#ThreadListSyncPayload","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
-{"id":"@fluxerjs/core#ThreadMemberFlags","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
+{"id":"@fluxerjs/core#ThreadMemberFlags","area":"pure","status":"function","note":"Leitura explícita de ThreadMemberFlags ou de uma chave própria; BigInt é texto decimal.","functions":["$sdkConstant"]}
 {"id":"@fluxerjs/core#ThreadMemberListEntry","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/core#ThreadMemberListUpdatePayload","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/core#ThreadMemberSettingsOptions","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
@@ -260,8 +260,8 @@
 {"id":"@fluxerjs/core#TypingStartPayload","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/core#UploadFileForSend","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/core#UserFlagsBitField","area":"pure","status":"excluded","note":"Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK.","reason":"data-only"}
-{"id":"@fluxerjs/core#UserFlagsBitField.static:Flags","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/core#UserFlagsBits","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
+{"id":"@fluxerjs/core#UserFlagsBitField.static:Flags","area":"pure","status":"function","note":"table da família user retorna os nomes e máscaras decimais.","functions":["$flags"]}
+{"id":"@fluxerjs/core#UserFlagsBits","area":"pure","status":"function","note":"Leitura explícita de UserFlagsBits ou de uma chave própria; BigInt é texto decimal.","functions":["$sdkConstant"]}
 {"id":"@fluxerjs/core#UserFlagsResolvable","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/core#UserFlagsString","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/core#VanityURLPayload","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
@@ -270,25 +270,25 @@
 {"id":"@fluxerjs/core#WebhookSendOptions","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/core#WebhooksUpdatePayload","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/rest#FluxerAPIError","area":"pure","status":"excluded","note":"Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK.","reason":"data-only"}
-{"id":"@fluxerjs/rest#FluxerAPIError.code","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
+{"id":"@fluxerjs/rest#FluxerAPIError.code","area":"pure","status":"function","note":"info inclui code quando seguro; não expõe o objeto do SDK.","functions":["$sdkError","$jsonGet"]}
 {"id":"@fluxerjs/rest#FluxerAPIError.constructor","area":"pure","status":"excluded","note":"Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados.","reason":"internal"}
-{"id":"@fluxerjs/rest#FluxerAPIError.errors","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/rest#FluxerAPIError.isRetryable","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/rest#FluxerAPIError.method","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/rest#FluxerAPIError.path","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/rest#FluxerAPIError.rawBody","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/rest#FluxerAPIError.statusCode","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
+{"id":"@fluxerjs/rest#FluxerAPIError.errors","area":"pure","status":"excluded","note":"Corpo/metadados brutos de falhas podem conter segredos e dados privados da resposta.","reason":"credentials"}
+{"id":"@fluxerjs/rest#FluxerAPIError.isRetryable","area":"pure","status":"function","note":"info inclui isRetryable quando seguro; não expõe o objeto do SDK.","functions":["$sdkError","$jsonGet"]}
+{"id":"@fluxerjs/rest#FluxerAPIError.method","area":"pure","status":"function","note":"info inclui method quando seguro; não expõe o objeto do SDK.","functions":["$sdkError","$jsonGet"]}
+{"id":"@fluxerjs/rest#FluxerAPIError.path","area":"pure","status":"excluded","note":"O caminho bruto pode incluir segredos embutidos na rota.","reason":"credentials"}
+{"id":"@fluxerjs/rest#FluxerAPIError.rawBody","area":"pure","status":"excluded","note":"Corpo/metadados brutos de falhas podem conter segredos e dados privados da resposta.","reason":"credentials"}
+{"id":"@fluxerjs/rest#FluxerAPIError.statusCode","area":"pure","status":"function","note":"info inclui statusCode quando seguro; não expõe o objeto do SDK.","functions":["$sdkError","$jsonGet"]}
 {"id":"@fluxerjs/rest#HTTPError","area":"pure","status":"excluded","note":"Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK.","reason":"data-only"}
-{"id":"@fluxerjs/rest#HTTPError.body","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
+{"id":"@fluxerjs/rest#HTTPError.body","area":"pure","status":"excluded","note":"Corpo/metadados brutos de falhas podem conter segredos e dados privados da resposta.","reason":"credentials"}
 {"id":"@fluxerjs/rest#HTTPError.constructor","area":"pure","status":"excluded","note":"Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados.","reason":"internal"}
-{"id":"@fluxerjs/rest#HTTPError.isRetryable","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/rest#HTTPError.method","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/rest#HTTPError.path","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/rest#HTTPError.statusCode","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
+{"id":"@fluxerjs/rest#HTTPError.isRetryable","area":"pure","status":"function","note":"info inclui isRetryable quando seguro; não expõe o objeto do SDK.","functions":["$sdkError","$jsonGet"]}
+{"id":"@fluxerjs/rest#HTTPError.method","area":"pure","status":"function","note":"info inclui method quando seguro; não expõe o objeto do SDK.","functions":["$sdkError","$jsonGet"]}
+{"id":"@fluxerjs/rest#HTTPError.path","area":"pure","status":"excluded","note":"O caminho bruto pode incluir segredos embutidos na rota.","reason":"credentials"}
+{"id":"@fluxerjs/rest#HTTPError.statusCode","area":"pure","status":"function","note":"info inclui statusCode quando seguro; não expõe o objeto do SDK.","functions":["$sdkError","$jsonGet"]}
 {"id":"@fluxerjs/rest#RateLimitError","area":"pure","status":"excluded","note":"Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK.","reason":"data-only"}
 {"id":"@fluxerjs/rest#RateLimitError.constructor","area":"pure","status":"excluded","note":"Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados.","reason":"internal"}
-{"id":"@fluxerjs/rest#RateLimitError.global","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/rest#RateLimitError.retryAfter","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
+{"id":"@fluxerjs/rest#RateLimitError.global","area":"pure","status":"function","note":"info inclui global quando seguro; não expõe o objeto do SDK.","functions":["$sdkError","$jsonGet"]}
+{"id":"@fluxerjs/rest#RateLimitError.retryAfter","area":"pure","status":"function","note":"info inclui retryAfter quando seguro; não expõe o objeto do SDK.","functions":["$sdkError","$jsonGet"]}
 {"id":"@fluxerjs/types#AllowedMentionType","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/types#APIAllowedMentions","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/types#APIApplicationMe","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
@@ -317,7 +317,7 @@
 {"id":"@fluxerjs/types#APIEmojiMetadata","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/types#APIEmojiWithUser","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/types#APIErrorBody","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
-{"id":"@fluxerjs/types#APIErrorCode","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
+{"id":"@fluxerjs/types#APIErrorCode","area":"pure","status":"function","note":"Leitura explícita de APIErrorCode ou de uma chave própria; BigInt é texto decimal.","functions":["$sdkConstant"]}
 {"id":"@fluxerjs/types#APIForumTag","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/types#APIForumTagUpdate","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/types#APIForumThreadMessageRequest","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
@@ -402,18 +402,18 @@
 {"id":"@fluxerjs/types#APIWebhookTokenUpdateRequest","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/types#APIWebhookUpdateRequest","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/types#APIWellKnownFluxer","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
-{"id":"@fluxerjs/types#AuditLogActionType","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
+{"id":"@fluxerjs/types#AuditLogActionType","area":"pure","status":"function","note":"Leitura explícita de AuditLogActionType ou de uma chave própria; BigInt é texto decimal.","functions":["$sdkConstant"]}
 {"id":"@fluxerjs/types#ChannelCreateRequest","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/types#ChannelInviteCreateRequest","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
-{"id":"@fluxerjs/types#ChannelType","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/types#ContentWarningLevel","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/types#DefaultMessageNotifications","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/types#EmbedMediaFlags","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
+{"id":"@fluxerjs/types#ChannelType","area":"pure","status":"function","note":"Leitura explícita de ChannelType ou de uma chave própria; BigInt é texto decimal.","functions":["$sdkConstant"]}
+{"id":"@fluxerjs/types#ContentWarningLevel","area":"pure","status":"function","note":"Leitura explícita de ContentWarningLevel ou de uma chave própria; BigInt é texto decimal.","functions":["$sdkConstant"]}
+{"id":"@fluxerjs/types#DefaultMessageNotifications","area":"pure","status":"function","note":"Leitura explícita de DefaultMessageNotifications ou de uma chave própria; BigInt é texto decimal.","functions":["$sdkConstant"]}
+{"id":"@fluxerjs/types#EmbedMediaFlags","area":"pure","status":"function","note":"Leitura explícita de EmbedMediaFlags ou de uma chave própria; BigInt é texto decimal.","functions":["$sdkConstant"]}
 {"id":"@fluxerjs/types#EmbedType","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
-{"id":"@fluxerjs/types#FLUXER_EPOCH","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/types#ForumLayout","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/types#ForumSortOrder","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/types#ForumTagSetting","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
+{"id":"@fluxerjs/types#FLUXER_EPOCH","area":"pure","status":"function","note":"Leitura explícita de FLUXER_EPOCH ou de uma chave própria; BigInt é texto decimal.","functions":["$sdkConstant"]}
+{"id":"@fluxerjs/types#ForumLayout","area":"pure","status":"function","note":"Leitura explícita de ForumLayout ou de uma chave própria; BigInt é texto decimal.","functions":["$sdkConstant"]}
+{"id":"@fluxerjs/types#ForumSortOrder","area":"pure","status":"function","note":"Leitura explícita de ForumSortOrder ou de uma chave própria; BigInt é texto decimal.","functions":["$sdkConstant"]}
+{"id":"@fluxerjs/types#ForumTagSetting","area":"pure","status":"function","note":"Leitura explícita de ForumTagSetting ou de uma chave própria; BigInt é texto decimal.","functions":["$sdkConstant"]}
 {"id":"@fluxerjs/types#GatewayAuthSessionChangeDispatchData","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/types#GatewayCallCreateDispatchData","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/types#GatewayCallDeleteDispatchData","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
@@ -430,10 +430,10 @@
 {"id":"@fluxerjs/types#GatewayChannelUpdateDispatchData","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/types#GatewayCustomStatus","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/types#GatewayDispatchEventName","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
-{"id":"@fluxerjs/types#GatewayDispatchEvents","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
+{"id":"@fluxerjs/types#GatewayDispatchEvents","area":"pure","status":"function","note":"Leitura explícita de GatewayDispatchEvents ou de uma chave própria; BigInt é texto decimal.","functions":["$sdkConstant"]}
 {"id":"@fluxerjs/types#GatewayEntranceSoundPlayDispatchData","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/types#GatewayErrorCode","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
-{"id":"@fluxerjs/types#GatewayErrorCodes","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
+{"id":"@fluxerjs/types#GatewayErrorCodes","area":"pure","status":"function","note":"Leitura explícita de GatewayErrorCodes ou de uma chave própria; BigInt é texto decimal.","functions":["$sdkConstant"]}
 {"id":"@fluxerjs/types#GatewayFavoriteMemeCreateDispatchData","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/types#GatewayFavoriteMemeDeleteDispatchData","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/types#GatewayFavoriteMemePayload","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
@@ -464,7 +464,7 @@
 {"id":"@fluxerjs/types#GatewayGuildUpdateDispatchData","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/types#GatewayHelloData","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/types#GatewayIdentifyData","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
-{"id":"@fluxerjs/types#GatewayIdentifyFlags","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
+{"id":"@fluxerjs/types#GatewayIdentifyFlags","area":"pure","status":"function","note":"Leitura explícita de GatewayIdentifyFlags ou de uma chave própria; BigInt é texto decimal.","functions":["$sdkConstant"]}
 {"id":"@fluxerjs/types#GatewayInviteCreateDispatchData","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/types#GatewayInviteDeleteDispatchData","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/types#GatewayLazyRequestData","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
@@ -480,7 +480,7 @@
 {"id":"@fluxerjs/types#GatewayMessageReactionRemoveDispatchData","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/types#GatewayMessageReactionRemoveEmojiDispatchData","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/types#GatewayMessageUpdateDispatchData","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
-{"id":"@fluxerjs/types#GatewayOpcodes","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
+{"id":"@fluxerjs/types#GatewayOpcodes","area":"pure","status":"function","note":"Leitura explícita de GatewayOpcodes ou de uma chave própria; BigInt é texto decimal.","functions":["$sdkConstant"]}
 {"id":"@fluxerjs/types#GatewayPassiveUpdatesDispatchData","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/types#GatewayPresenceUpdateBulkDispatchData","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/types#GatewayPresenceUpdateData","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
@@ -530,35 +530,35 @@
 {"id":"@fluxerjs/types#GatewayWebhooksUpdateDispatchData","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/types#GuildAnnouncementChannelCreateRequest","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/types#GuildCategoryChannelCreateRequest","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
-{"id":"@fluxerjs/types#GuildExplicitContentFilter","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
+{"id":"@fluxerjs/types#GuildExplicitContentFilter","area":"pure","status":"function","note":"Leitura explícita de GuildExplicitContentFilter ou de uma chave própria; BigInt é texto decimal.","functions":["$sdkConstant"]}
 {"id":"@fluxerjs/types#GuildFeature","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/types#GuildForumChannelCreateRequest","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/types#GuildLinkChannelCreateRequest","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/types#GuildMediaChannelCreateRequest","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
-{"id":"@fluxerjs/types#GuildMemberProfileFlags","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
+{"id":"@fluxerjs/types#GuildMemberProfileFlags","area":"pure","status":"function","note":"Leitura explícita de GuildMemberProfileFlags ou de uma chave própria; BigInt é texto decimal.","functions":["$sdkConstant"]}
 {"id":"@fluxerjs/types#GuildMemberProfileFlagsValue","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
-{"id":"@fluxerjs/types#GuildMFALevel","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/types#GuildNSFWLevel","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/types#GuildOperations","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
+{"id":"@fluxerjs/types#GuildMFALevel","area":"pure","status":"function","note":"Leitura explícita de GuildMFALevel ou de uma chave própria; BigInt é texto decimal.","functions":["$sdkConstant"]}
+{"id":"@fluxerjs/types#GuildNSFWLevel","area":"pure","status":"function","note":"Leitura explícita de GuildNSFWLevel ou de uma chave própria; BigInt é texto decimal.","functions":["$sdkConstant"]}
+{"id":"@fluxerjs/types#GuildOperations","area":"pure","status":"function","note":"Leitura explícita de GuildOperations ou de uma chave própria; BigInt é texto decimal.","functions":["$sdkConstant"]}
 {"id":"@fluxerjs/types#GuildOperationsValue","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/types#GuildTextChannelCreateRequest","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
-{"id":"@fluxerjs/types#GuildVerificationLevel","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
+{"id":"@fluxerjs/types#GuildVerificationLevel","area":"pure","status":"function","note":"Leitura explícita de GuildVerificationLevel ou de uma chave própria; BigInt é texto decimal.","functions":["$sdkConstant"]}
 {"id":"@fluxerjs/types#GuildVoiceChannelCreateRequest","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
-{"id":"@fluxerjs/types#InviteType","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/types#isGroupDmInvite","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/types#isGuildInvite","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/types#isUploadedAttachment","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/types#MessageAttachmentFlags","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/types#MessageFlags","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
+{"id":"@fluxerjs/types#InviteType","area":"pure","status":"function","note":"Leitura explícita de InviteType ou de uma chave própria; BigInt é texto decimal.","functions":["$sdkConstant"]}
+{"id":"@fluxerjs/types#isGroupDmInvite","area":"pure","status":"function","note":"Operação groupDmInvite sobre valores, sem interpretar a entrada como código.","functions":["$sdkParse"]}
+{"id":"@fluxerjs/types#isGuildInvite","area":"pure","status":"function","note":"Operação guildInvite sobre valores, sem interpretar a entrada como código.","functions":["$sdkParse"]}
+{"id":"@fluxerjs/types#isUploadedAttachment","area":"pure","status":"function","note":"Operação uploadedAttachment sobre valores, sem interpretar a entrada como código.","functions":["$sdkParse"]}
+{"id":"@fluxerjs/types#MessageAttachmentFlags","area":"pure","status":"function","note":"Leitura explícita de MessageAttachmentFlags ou de uma chave própria; BigInt é texto decimal.","functions":["$sdkConstant"]}
+{"id":"@fluxerjs/types#MessageFlags","area":"pure","status":"function","note":"Leitura explícita de MessageFlags ou de uma chave própria; BigInt é texto decimal.","functions":["$sdkConstant"]}
 {"id":"@fluxerjs/types#MessageFlagsValue","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
-{"id":"@fluxerjs/types#MessageReferenceType","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
+{"id":"@fluxerjs/types#MessageReferenceType","area":"pure","status":"function","note":"Leitura explícita de MessageReferenceType ou de uma chave própria; BigInt é texto decimal.","functions":["$sdkConstant"]}
 {"id":"@fluxerjs/types#MessageSearchScope","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
-{"id":"@fluxerjs/types#MessageType","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/types#OverwriteType","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/types#PublicUserFlags","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
+{"id":"@fluxerjs/types#MessageType","area":"pure","status":"function","note":"Leitura explícita de MessageType ou de uma chave própria; BigInt é texto decimal.","functions":["$sdkConstant"]}
+{"id":"@fluxerjs/types#OverwriteType","area":"pure","status":"function","note":"Leitura explícita de OverwriteType ou de uma chave própria; BigInt é texto decimal.","functions":["$sdkConstant"]}
+{"id":"@fluxerjs/types#PublicUserFlags","area":"pure","status":"function","note":"Leitura explícita de PublicUserFlags ou de uma chave própria; BigInt é texto decimal.","functions":["$sdkConstant"]}
 {"id":"@fluxerjs/types#PublicUserFlagsValue","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/types#RateLimitErrorBody","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
-{"id":"@fluxerjs/types#RelationshipType","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
+{"id":"@fluxerjs/types#RelationshipType","area":"pure","status":"function","note":"Leitura explícita de RelationshipType ou de uma chave própria; BigInt é texto decimal.","functions":["$sdkConstant"]}
 {"id":"@fluxerjs/types#RESTCreateRoleBody","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/types#RESTPatchAPIGuildDiscoveryJSONBody","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/types#RESTPatchAPIGuildEmojiJSONBody","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
@@ -588,56 +588,56 @@
 {"id":"@fluxerjs/types#RESTUpdateRoleBody","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/types#Routes","area":"pure","status":"excluded","note":"Rotas REST autenticadas arbitrárias contornariam os ports e guards; usar operações tipadas.","reason":"raw-transport"}
 {"id":"@fluxerjs/types#Snowflake","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
-{"id":"@fluxerjs/types#SplashCardAlignment","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/types#SystemChannelFlags","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
+{"id":"@fluxerjs/types#SplashCardAlignment","area":"pure","status":"function","note":"Leitura explícita de SplashCardAlignment ou de uma chave própria; BigInt é texto decimal.","functions":["$sdkConstant"]}
+{"id":"@fluxerjs/types#SystemChannelFlags","area":"pure","status":"function","note":"Leitura explícita de SystemChannelFlags ou de uma chave própria; BigInt é texto decimal.","functions":["$sdkConstant"]}
 {"id":"@fluxerjs/types#SystemChannelFlagsValue","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
-{"id":"@fluxerjs/types#ThreadAutoArchiveDuration","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
+{"id":"@fluxerjs/types#ThreadAutoArchiveDuration","area":"pure","status":"function","note":"Leitura explícita de ThreadAutoArchiveDuration ou de uma chave própria; BigInt é texto decimal.","functions":["$sdkConstant"]}
 {"id":"@fluxerjs/types#ThreadChannelType","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
-{"id":"@fluxerjs/types#ThreadMemberFlags","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
+{"id":"@fluxerjs/types#ThreadMemberFlags","area":"pure","status":"function","note":"Leitura explícita de ThreadMemberFlags ou de uma chave própria; BigInt é texto decimal.","functions":["$sdkConstant"]}
 {"id":"@fluxerjs/types#ThreadSearchSortBy","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/types#ThreadSearchSortOrder","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
-{"id":"@fluxerjs/types#WebhookType","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/util#ALL_PERMISSIONS_BIGINT","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/util#asRecord","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
+{"id":"@fluxerjs/types#WebhookType","area":"pure","status":"function","note":"Leitura explícita de WebhookType ou de uma chave própria; BigInt é texto decimal.","functions":["$sdkConstant"]}
+{"id":"@fluxerjs/util#ALL_PERMISSIONS_BIGINT","area":"pure","status":"function","note":"Leitura explícita de ALL_PERMISSIONS_BIGINT ou de uma chave própria; BigInt é texto decimal.","functions":["$sdkConstant"]}
+{"id":"@fluxerjs/util#asRecord","area":"pure","status":"function","note":"Operação record sobre valores, sem interpretar a entrada como código.","functions":["$sdkParse"]}
 {"id":"@fluxerjs/util#BitField","area":"pure","status":"excluded","note":"Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK.","reason":"data-only"}
 {"id":"@fluxerjs/util#BitField.[Symbol.iterator]","area":"pure","status":"excluded","note":"Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados.","reason":"internal"}
 {"id":"@fluxerjs/util#BitField.[Symbol.toStringTag]","area":"pure","status":"excluded","note":"Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados.","reason":"internal"}
-{"id":"@fluxerjs/util#BitField.add","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/util#BitField.any","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/util#BitField.bitfield","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
+{"id":"@fluxerjs/util#BitField.add","area":"pure","status":"function","note":"Operação add com máscaras limitadas a 128 bits e aritmética exata.","functions":["$flags"]}
+{"id":"@fluxerjs/util#BitField.any","area":"pure","status":"function","note":"Operação any com máscaras limitadas a 128 bits e aritmética exata.","functions":["$flags"]}
+{"id":"@fluxerjs/util#BitField.bitfield","area":"pure","status":"equivalent","note":"resolve produz uma máscara decimal imutável por valor, sem objeto do SDK.","functions":["$flags"]}
 {"id":"@fluxerjs/util#BitField.constructor","area":"pure","status":"excluded","note":"Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados.","reason":"internal"}
-{"id":"@fluxerjs/util#BitField.equals","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/util#BitField.freeze","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/util#BitField.has","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/util#BitField.missing","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/util#BitField.remove","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/util#BitField.serialize","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/util#BitField.static:DefaultBit","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/util#BitField.static:Flags","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/util#BitField.static:resolve","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/util#BitField.toArray","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/util#BitField.toJSON","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/util#BitField.toString","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/util#BitField.valueOf","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
+{"id":"@fluxerjs/util#BitField.equals","area":"pure","status":"function","note":"Operação equals com máscaras limitadas a 128 bits e aritmética exata.","functions":["$flags"]}
+{"id":"@fluxerjs/util#BitField.freeze","area":"pure","status":"equivalent","note":"resolve produz uma máscara decimal imutável por valor, sem objeto do SDK.","functions":["$flags"]}
+{"id":"@fluxerjs/util#BitField.has","area":"pure","status":"function","note":"Operação has com máscaras limitadas a 128 bits e aritmética exata.","functions":["$flags"]}
+{"id":"@fluxerjs/util#BitField.missing","area":"pure","status":"function","note":"Operação missing com máscaras limitadas a 128 bits e aritmética exata.","functions":["$flags"]}
+{"id":"@fluxerjs/util#BitField.remove","area":"pure","status":"function","note":"Operação remove com máscaras limitadas a 128 bits e aritmética exata.","functions":["$flags"]}
+{"id":"@fluxerjs/util#BitField.serialize","area":"pure","status":"function","note":"Operação serialize com máscaras limitadas a 128 bits e aritmética exata.","functions":["$flags"]}
+{"id":"@fluxerjs/util#BitField.static:DefaultBit","area":"pure","status":"function","note":"DefaultBit em texto decimal.","functions":["$sdkConstant"]}
+{"id":"@fluxerjs/util#BitField.static:Flags","area":"pure","status":"function","note":"table da família bits retorna os nomes e máscaras decimais.","functions":["$flags"]}
+{"id":"@fluxerjs/util#BitField.static:resolve","area":"pure","status":"function","note":"Operação resolve com máscaras limitadas a 128 bits e aritmética exata.","functions":["$flags"]}
+{"id":"@fluxerjs/util#BitField.toArray","area":"pure","status":"function","note":"Operação names com máscaras limitadas a 128 bits e aritmética exata.","functions":["$flags"]}
+{"id":"@fluxerjs/util#BitField.toJSON","area":"pure","status":"equivalent","note":"resolve produz uma máscara decimal imutável por valor, sem objeto do SDK.","functions":["$flags"]}
+{"id":"@fluxerjs/util#BitField.toString","area":"pure","status":"equivalent","note":"resolve produz uma máscara decimal imutável por valor, sem objeto do SDK.","functions":["$flags"]}
+{"id":"@fluxerjs/util#BitField.valueOf","area":"pure","status":"equivalent","note":"resolve produz uma máscara decimal imutável por valor, sem objeto do SDK.","functions":["$flags"]}
 {"id":"@fluxerjs/util#BitFieldResolvable","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
-{"id":"@fluxerjs/util#createLogger","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
+{"id":"@fluxerjs/util#createLogger","area":"pure","status":"excluded","note":"O logger, o sink e a saída do processo são controlados pelo host confiável; scripts não criam loggers do SDK.","reason":"internal"}
 {"id":"@fluxerjs/util#DeconstructedSnowflake","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/util#ErrorCode","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
-{"id":"@fluxerjs/util#ErrorCodes","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
+{"id":"@fluxerjs/util#ErrorCodes","area":"pure","status":"function","note":"Leitura explícita de ErrorCodes ou de uma chave própria; BigInt é texto decimal.","functions":["$sdkConstant"]}
 {"id":"@fluxerjs/util#escapeMarkdown","area":"pure","status":"equivalent","note":"Escape de Markdown com builtin limitado.","functions":["$escapeMarkdown"]}
-{"id":"@fluxerjs/util#FLUXER_EPOCH","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
+{"id":"@fluxerjs/util#FLUXER_EPOCH","area":"pure","status":"function","note":"Leitura explícita de FLUXER_EPOCH ou de uma chave própria; BigInt é texto decimal.","functions":["$sdkConstant"]}
 {"id":"@fluxerjs/util#FluxerError","area":"pure","status":"excluded","note":"Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK.","reason":"data-only"}
-{"id":"@fluxerjs/util#FluxerError.code","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
+{"id":"@fluxerjs/util#FluxerError.code","area":"pure","status":"function","note":"info inclui code quando seguro; não expõe o objeto do SDK.","functions":["$sdkError","$jsonGet"]}
 {"id":"@fluxerjs/util#FluxerError.constructor","area":"pure","status":"excluded","note":"Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados.","reason":"internal"}
-{"id":"@fluxerjs/util#FluxerError.static:isFluxerError","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/util#FluxerError.toJSON","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/util#FluxerError.toString","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
+{"id":"@fluxerjs/util#FluxerError.static:isFluxerError","area":"pure","status":"function","note":"isFluxer testa a instância real que falhou, sem expor o objeto de erro.","functions":["$sdkError"]}
+{"id":"@fluxerjs/util#FluxerError.toJSON","area":"pure","status":"equivalent","note":"info retorna metadados serializáveis de erros SDK; não expõe mensagem, causa, URL ou corpo.","functions":["$sdkError"]}
+{"id":"@fluxerjs/util#FluxerError.toString","area":"pure","status":"equivalent","note":"text retorna tipo e código conhecido, sem expor mensagem ou causa.","functions":["$sdkError"]}
 {"id":"@fluxerjs/util#FluxerErrorOptions","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
-{"id":"@fluxerjs/util#formatColor","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/util#formatEmoji","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/util#formatTimestamp","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/util#getUnicodeFromShortcode","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/util#isRecord","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
+{"id":"@fluxerjs/util#formatColor","area":"pure","status":"function","note":"Operação color sobre valores de script.","functions":["$sdkFormat"]}
+{"id":"@fluxerjs/util#formatEmoji","area":"pure","status":"function","note":"Operação emoji sobre valores de script.","functions":["$sdkFormat"]}
+{"id":"@fluxerjs/util#formatTimestamp","area":"pure","status":"function","note":"Operação timestamp sobre valores de script.","functions":["$sdkFormat"]}
+{"id":"@fluxerjs/util#getUnicodeFromShortcode","area":"pure","status":"function","note":"Operação shortcode sobre valores, sem interpretar a entrada como código.","functions":["$sdkParse"]}
+{"id":"@fluxerjs/util#isRecord","area":"pure","status":"function","note":"Operação isRecord sobre valores, sem interpretar a entrada como código.","functions":["$sdkParse"]}
 {"id":"@fluxerjs/util#KlipyMediaResult","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/util#LogFields","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/util#Logger","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
@@ -645,44 +645,44 @@
 {"id":"@fluxerjs/util#LoggerSink","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/util#LogLevel","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/util#MessageFlagsBitField","area":"pure","status":"excluded","note":"Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK.","reason":"data-only"}
-{"id":"@fluxerjs/util#MessageFlagsBitField.static:Flags","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/util#MessageFlagsBits","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
+{"id":"@fluxerjs/util#MessageFlagsBitField.static:Flags","area":"pure","status":"function","note":"table da família message retorna os nomes e máscaras decimais.","functions":["$flags"]}
+{"id":"@fluxerjs/util#MessageFlagsBits","area":"pure","status":"function","note":"Leitura explícita de MessageFlagsBits ou de uma chave própria; BigInt é texto decimal.","functions":["$sdkConstant"]}
 {"id":"@fluxerjs/util#MessageFlagsResolvable","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/util#MessageFlagsString","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
-{"id":"@fluxerjs/util#num","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
+{"id":"@fluxerjs/util#num","area":"pure","status":"function","note":"Operação number sobre valores, sem interpretar a entrada como código.","functions":["$sdkParse"]}
 {"id":"@fluxerjs/util#ParsedEmoji","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/util#ParsedPrefixCommand","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
-{"id":"@fluxerjs/util#parseEmoji","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/util#parsePrefixCommand","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/util#parseRoleMention","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/util#parseUserMention","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/util#PermissionFlags","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
+{"id":"@fluxerjs/util#parseEmoji","area":"pure","status":"function","note":"Operação emoji sobre valores, sem interpretar a entrada como código.","functions":["$sdkParse"]}
+{"id":"@fluxerjs/util#parsePrefixCommand","area":"pure","status":"function","note":"Operação prefix sobre valores, sem interpretar a entrada como código.","functions":["$sdkParse"]}
+{"id":"@fluxerjs/util#parseRoleMention","area":"pure","status":"function","note":"Operação roleMention sobre valores, sem interpretar a entrada como código.","functions":["$sdkParse"]}
+{"id":"@fluxerjs/util#parseUserMention","area":"pure","status":"function","note":"Operação userMention sobre valores, sem interpretar a entrada como código.","functions":["$sdkParse"]}
+{"id":"@fluxerjs/util#PermissionFlags","area":"pure","status":"function","note":"Leitura explícita de PermissionFlags ou de uma chave própria; BigInt é texto decimal.","functions":["$sdkConstant"]}
 {"id":"@fluxerjs/util#PermissionResolvable","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/util#PermissionsBitField","area":"pure","status":"excluded","note":"Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK.","reason":"data-only"}
-{"id":"@fluxerjs/util#PermissionsBitField.any","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/util#PermissionsBitField.has","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/util#PermissionsBitField.missing","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/util#PermissionsBitField.static:Flags","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
+{"id":"@fluxerjs/util#PermissionsBitField.any","area":"pure","status":"function","note":"Operação any com máscaras limitadas a 128 bits e aritmética exata.","functions":["$flags"]}
+{"id":"@fluxerjs/util#PermissionsBitField.has","area":"pure","status":"function","note":"Operação has com máscaras limitadas a 128 bits e aritmética exata.","functions":["$flags"]}
+{"id":"@fluxerjs/util#PermissionsBitField.missing","area":"pure","status":"function","note":"Operação missing com máscaras limitadas a 128 bits e aritmética exata.","functions":["$flags"]}
+{"id":"@fluxerjs/util#PermissionsBitField.static:Flags","area":"pure","status":"function","note":"table da família permissions retorna os nomes e máscaras decimais.","functions":["$flags"]}
 {"id":"@fluxerjs/util#PermissionString","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
-{"id":"@fluxerjs/util#resolveColor","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/util#resolveKlipyToImageUrl","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/util#resolvePermissionsToBitfield","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/util#serializeError","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
+{"id":"@fluxerjs/util#resolveColor","area":"pure","status":"function","note":"Operação resolveColor sobre valores de script.","functions":["$sdkFormat"]}
+{"id":"@fluxerjs/util#resolveKlipyToImageUrl","area":"pure","status":"excluded","note":"O SDK faz fetch direto com redirects automáticos e lê o corpo sem limite, fora da política HTTP do Yuzuha.","reason":"raw-transport"}
+{"id":"@fluxerjs/util#resolvePermissionsToBitfield","area":"pure","status":"function","note":"resolve na família permissions devolve texto decimal exato.","functions":["$flags"]}
+{"id":"@fluxerjs/util#serializeError","area":"pure","status":"equivalent","note":"info retorna metadados serializáveis de erros SDK; não expõe mensagem, causa, URL ou corpo.","functions":["$sdkError"]}
 {"id":"@fluxerjs/util#SnowflakeUtil","area":"pure","status":"excluded","note":"Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK.","reason":"data-only"}
-{"id":"@fluxerjs/util#SnowflakeUtil.static:dateFromSnowflake","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/util#SnowflakeUtil.static:deconstruct","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/util#SnowflakeUtil.static:EPOCH","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/util#SnowflakeUtil.static:isValid","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/util#SnowflakeUtil.static:parse","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/util#SnowflakeUtil.static:snowflakeFromTimestamp","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/util#SnowflakeUtil.static:timestampFromSnowflake","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/util#str","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
+{"id":"@fluxerjs/util#SnowflakeUtil.static:dateFromSnowflake","area":"pure","status":"function","note":"Operação date; datas em ISO e bigint em texto decimal.","functions":["$snowflake"]}
+{"id":"@fluxerjs/util#SnowflakeUtil.static:deconstruct","area":"pure","status":"function","note":"Operação deconstruct; datas em ISO e bigint em texto decimal.","functions":["$snowflake"]}
+{"id":"@fluxerjs/util#SnowflakeUtil.static:EPOCH","area":"pure","status":"function","note":"FLUXER_EPOCH em texto decimal exato.","functions":["$sdkConstant"]}
+{"id":"@fluxerjs/util#SnowflakeUtil.static:isValid","area":"pure","status":"function","note":"Operação valid; datas em ISO e bigint em texto decimal.","functions":["$snowflake"]}
+{"id":"@fluxerjs/util#SnowflakeUtil.static:parse","area":"pure","status":"function","note":"Operação parse; datas em ISO e bigint em texto decimal.","functions":["$snowflake"]}
+{"id":"@fluxerjs/util#SnowflakeUtil.static:snowflakeFromTimestamp","area":"pure","status":"function","note":"Operação fromTimestamp; datas em ISO e bigint em texto decimal.","functions":["$snowflake"]}
+{"id":"@fluxerjs/util#SnowflakeUtil.static:timestampFromSnowflake","area":"pure","status":"function","note":"Operação timestamp; datas em ISO e bigint em texto decimal.","functions":["$snowflake"]}
+{"id":"@fluxerjs/util#str","area":"pure","status":"function","note":"Operação string sobre valores, sem interpretar a entrada como código.","functions":["$sdkParse"]}
 {"id":"@fluxerjs/util#TimestampStyle","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
-{"id":"@fluxerjs/util#truncate","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
+{"id":"@fluxerjs/util#truncate","area":"pure","status":"function","note":"Operação truncate sobre valores de script.","functions":["$sdkFormat"]}
 {"id":"@fluxerjs/util#UserFlagsBitField","area":"pure","status":"excluded","note":"Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK.","reason":"data-only"}
-{"id":"@fluxerjs/util#UserFlagsBitField.static:Flags","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
-{"id":"@fluxerjs/util#UserFlagsBits","area":"pure","status":"pending","note":"Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK."}
+{"id":"@fluxerjs/util#UserFlagsBitField.static:Flags","area":"pure","status":"function","note":"table da família user retorna os nomes e máscaras decimais.","functions":["$flags"]}
+{"id":"@fluxerjs/util#UserFlagsBits","area":"pure","status":"function","note":"Leitura explícita de UserFlagsBits ou de uma chave própria; BigInt é texto decimal.","functions":["$sdkConstant"]}
 {"id":"@fluxerjs/util#UserFlagsResolvable","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/util#UserFlagsString","area":"pure","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
-{"id":"@fluxerjs/builders#MessagePayload.static:ContentMaxLength","area":"pure","status":"pending","note":"Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial."}
-{"id":"@fluxerjs/core#MessagePayload.static:ContentMaxLength","area":"pure","status":"pending","note":"Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial."}
+{"id":"@fluxerjs/builders#MessagePayload.static:ContentMaxLength","area":"pure","status":"function","note":"ContentMaxLength é o limite padrão do SDK; não modifica o payload.","functions":["$sdkConstant"]}
+{"id":"@fluxerjs/core#MessagePayload.static:ContentMaxLength","area":"pure","status":"function","note":"ContentMaxLength é o limite padrão do SDK; não modifica o payload.","functions":["$sdkConstant"]}

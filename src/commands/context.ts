@@ -83,7 +83,7 @@ export interface ContextOptions {
   deleteLater?: (channelID: string, messageID: string, ttlMs: number) => void;
   /** Mapa nome → emoji do bot, compartilhado por referência. */
   emoji?: Record<string, string>;
-  cdn?: import('../domain/cdn.js').Cdn;
+  cdn?: import('../domain/cdn.js').Cdn | ReturnType<typeof createCdn>;
   disableResourceAuthorization?: boolean;
   actor?: { guildID: string; authorID: string };
   isOwner?: (userID: string) => boolean;
@@ -109,7 +109,7 @@ export class CommandContext {
   readonly event?: Readonly<EventData>;
   private readonly messageAvailable: boolean;
   private readonly deleteLaterFn?: (channelID: string, messageID: string, ttlMs: number) => void;
-  private cdnService = createCdn();
+  private readonly cdnService: ReturnType<typeof createCdn>;
   private readonly emojiMap: Record<string, string> = {};
   private disableResourceAuthorization = false;
   private readonly actor?: { guildID: string; authorID: string };
@@ -191,7 +191,18 @@ export class CommandContext {
     this.musicService = options.music;
     this.voiceService = options.voice;
     this.voiceStatesTracker = options.voiceStates;
-    this.cdnService = options.cdn ?? createCdn();
+    const cdn = options.cdn;
+    if (cdn && 'endpoints' in cdn) {
+      this.cdnService = cdn;
+    } else {
+      const defaults = createCdn(undefined, options.native?.client.instance?.endpoints);
+      this.cdnService = cdn ? new Proxy(defaults, {
+        get(target, key) {
+          const override: unknown = Reflect.get(cdn, key);
+          return typeof override === 'function' ? override.bind(cdn) : Reflect.get(target, key);
+        },
+      }) : defaults;
+    }
     this.emojiMap = options.emoji ?? {};
     this.disableResourceAuthorization = options.disableResourceAuthorization === true;
     this.checkOwner = options.isOwner;

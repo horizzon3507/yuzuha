@@ -532,3 +532,8 @@ plugins em JSON, conforme [EDITOR.md](../EDITOR.md). Cancelamento HTTP/collector
 do contexto interrompe a espera e não é capturado por `$try`.
 O usuário recebe um erro genérico nas falhas internas; guards usam suas próprias
 mensagens. Confira os limites e o modelo de confiança em [STORAGE.md](../STORAGE.md).
+
+## Valores do SDK
+
+Veja [Valores do SDK no function mode](SDK-VALUES.md) para URLs da instância,
+bitfields exatos, coleções locais e erros redigidos.

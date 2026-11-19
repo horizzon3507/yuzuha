@@ -1,7 +1,7 @@
 import { ConfigError, GuardError } from '../shared/errors.js';
-import { cdnAvatarURL, cdnBannerURL, cdnEmojiURL, cdnGuildAssetURL,
-  cdnMemberAvatarURL, cdnMemberBannerURL, cdnStickerURL } from '@fluxerjs/core';
-import type { CdnUrlOptions } from '@fluxerjs/core';
+import { cdnAvatarURL, cdnBannerURL, cdnDefaultAvatarURL, cdnDisplayAvatarURL, cdnEmojiURL, cdnGuildAssetURL,
+  cdnMemberAvatarURL, cdnMemberBannerURL, cdnStickerURL, DEFAULT_INSTANCE_ENDPOINTS, inviteUrl } from '@fluxerjs/core';
+import type { APIInstanceEndpoints, CdnUrlOptions } from '@fluxerjs/core';
 
 export function fixAnimatedAssetUrl(url: string | null): string | null {
   return url?.replace(/\/(a_[^/.]+)\.png(\?|$)/, '/$1.gif$2') ?? null;
@@ -22,13 +22,41 @@ export interface Cdn {
   asset(url: string, options?: { size?: number; format?: 'png' | 'jpg' | 'jpeg' | 'webp' | 'gif' }): string;
 }
 
-export function createCdn(mediaBase?: string): Cdn {
-  if (mediaBase !== undefined && !/^https:\/\//.test(mediaBase)) {
+type AssetEndpoints = Pick<APIInstanceEndpoints, 'media' | 'static_cdn' | 'invite'>;
+type InstanceCdn = Cdn & {
+  endpoints: Readonly<AssetEndpoints>;
+  defaultAvatar(userIDOrIndex: string | number): string;
+  displayAvatar(userID: string, hash: string | null, options?: CdnUrlOptions): string;
+  invite(code: string, inviteBase?: string): string;
+};
+
+function endpoint(value: string): string | undefined {
+  if (typeof value !== 'string' || !/^https?:\/\//i.test(value) || value.includes('\\')) return;
+  const url = URL.parse(value);
+  return url && (url.protocol === 'https:' || url.protocol === 'http:')
+    && !url.username && !url.password && !url.search && !url.hash ? value.trim().replace(/\/+$/, '') : undefined;
+}
+
+export function createCdn(mediaBase?: string, instance: AssetEndpoints = DEFAULT_INSTANCE_ENDPOINTS): InstanceCdn {
+  const override = mediaBase === undefined ? undefined : endpoint(mediaBase);
+  if (mediaBase !== undefined && !override?.startsWith('https://')) {
     throw new ConfigError('OPTIONS', 'cdn.mediaBase deve ser uma URL https.');
   }
-  const base = <T extends { mediaBase?: string }>(options: T | undefined): T | undefined =>
-    mediaBase === undefined ? options : { ...options, mediaBase } as T;
+  const endpoints = Object.freeze({
+    media: override ?? endpoint(instance.media) ?? DEFAULT_INSTANCE_ENDPOINTS.media,
+    static_cdn: endpoint(instance.static_cdn) ?? DEFAULT_INSTANCE_ENDPOINTS.static_cdn,
+    invite: endpoint(instance.invite) ?? DEFAULT_INSTANCE_ENDPOINTS.invite,
+  });
+  const base = (options?: CdnUrlOptions): CdnUrlOptions => ({
+    ...options, mediaBase: override ?? options?.mediaBase ?? endpoints.media,
+    staticCdnBase: options?.staticCdnBase ?? endpoints.static_cdn,
+  });
   return {
+    endpoints,
+    defaultAvatar: (userIDOrIndex: string | number) => cdnDefaultAvatarURL(userIDOrIndex, base()),
+    displayAvatar: (userID: string, hash: string | null, options?: CdnUrlOptions) =>
+      fixAnimatedAssetUrl(cdnDisplayAvatarURL(userID, hash, base(options)))!,
+    invite: (code: string, inviteBase = endpoints.invite) => inviteUrl(inviteBase, code),
     avatar: (userID, hash, options) => fixAnimatedAssetUrl(cdnAvatarURL(userID, hash, base(options))),
     banner: (userID, hash, options) => fixAnimatedAssetUrl(cdnBannerURL(userID, hash, base(options))),
     guildIcon: (guildID, hash, options) => fixAnimatedAssetUrl(cdnGuildAssetURL('icons', guildID, hash, base(options))),

@@ -274,7 +274,7 @@ export class Yuzuha {
   private reliability: import('../services/retry.js').Reliability = {};
   private timers: NonNullable<YuzuhaOptions['timers']> = { setTimeout: (fn: () => void, ms: number) => setTimeout(fn, ms), clearTimeout: () => {} };
   private readonly pendingTimers = new Set<unknown>();
-  private cdnService: import('../domain/cdn.js').Cdn = createCdn();
+  private cdnService: ReturnType<typeof createCdn>;
   private readonly emojiMap: Record<string, string>;
   private readonly messagesRuntime: ResolvedMessages;
   private readonly memberCache?: MemberCache;
@@ -512,7 +512,7 @@ export class Yuzuha {
         : options.memberCache;
       this.memberCache = new MemberCache(cacheOptions);
     }
-    this.cdnService = createCdn(options.cdn?.mediaBase);
+    this.cdnService = createCdn(options.cdn?.mediaBase, this.client.instance?.endpoints);
     this.transport = options.transport ?? new FluxerTransport(this.client, this.reliability, this.memberCache);
     if (this.memberCache && !options.transport && this.transport instanceof FluxerTransport) {
       this.detachMemberCache = this.transport.attachCacheInvalidation(this.client);
@@ -645,12 +645,7 @@ export class Yuzuha {
     nextClient.on(Events.ShardError, this.shardErrorListener);
     this.attachGatewayLogs();
 
-    if (!this.options.cdn?.mediaBase) {
-      const discoveredMedia = nextClient.instance?.endpoints?.media;
-      if (typeof discoveredMedia === 'string' && discoveredMedia.startsWith('https://')) {
-        try { this.cdnService = createCdn(discoveredMedia); } catch { /* preserva CDN padrão */ }
-      }
-    }
+    this.cdnService = createCdn(this.options.cdn?.mediaBase, nextClient.instance?.endpoints);
     if (!this.options.transport) {
       const nextTransport = new FluxerTransport(nextClient, this.reliability, this.memberCache);
       (this as { transport: Transport }).transport = nextTransport;
