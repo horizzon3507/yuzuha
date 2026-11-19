@@ -152,10 +152,17 @@ async function benchmarkSingleStore({ kind, createStore, filePath, entries, iter
   let readTotalMs;
   let queryTotalMs;
   let readVariableMode;
+  let extraResults;
 
   try {
     store = createStore();
     const service = new VariableService(store, { guildID: GUILD_ID, authorID: ACTOR_ID }, clock);
+    await store.update(state => {
+      state.cases[GUILD_ID] = Array.from({ length: entries }, (_, index) => ({
+        id: index + 1, guildID: GUILD_ID, action: 'ban', targetID: '2',
+        moderatorID: ACTOR_ID, reason: 'benchmark', createdAt: new Date(FIXED_CLOCK_MS).toISOString(),
+      }));
+    });
 
     for (let batchStart = 0; batchStart < entries; batchStart += batchSize) {
       const batchEnd = Math.min(entries, batchStart + batchSize);
@@ -178,6 +185,21 @@ async function benchmarkSingleStore({ kind, createStore, filePath, entries, iter
     const updateStart = performance.now();
     for (let i = 0; i < iterations; i++) await writeStep();
     updateTotalMs = performance.now() - updateStart;
+
+    extraResults = [];
+    for (const [operation, step] of [
+      ['updateValue', () => service.update('guild', names[0], value => Number(value) + 1)],
+      ['createCase', async () => {
+        const { CaseService } = await import('../dist/services/cases.js');
+        await new CaseService(store).create({ guildID: GUILD_ID, action: 'ban', targetID: '2', moderatorID: ACTOR_ID, reason: 'benchmark' });
+      }],
+    ]) {
+      for (let w = 0; w < warmup; w++) await step();
+      const start = performance.now();
+      for (let i = 0; i < iterations; i++) await step();
+      extraResults.push(buildResult({ name: `${kind}.${operation}`, store: kind, operation, entries, iterations, totalMs: performance.now() - start, fileBytes: null }));
+    }
+    expected[0] += warmup + iterations;
 
     const hasReadVariable = typeof store.readVariable === 'function';
     readVariableMode = hasReadVariable ? 'readVariable' : 'read';
@@ -221,6 +243,7 @@ async function benchmarkSingleStore({ kind, createStore, filePath, entries, iter
     fileBytes,
     readVariableMode,
     results: [
+      ...extraResults.map(row => ({ ...row, fileBytes })),
       buildResult({ name: `${kind}.updateSingle`, store: kind, operation: 'updateSingle', entries, iterations, totalMs: updateTotalMs, fileBytes }),
       buildResult({ name: `${kind}.readVariable`, store: kind, operation: 'readVariable', entries, iterations, totalMs: readTotalMs, fileBytes }),
       buildResult({ name: `${kind}.queryPrefix`, store: kind, operation: 'queryPrefix', entries, iterations, totalMs: queryTotalMs, fileBytes }),
