@@ -2698,5 +2698,13 @@
     "maxArgs": 0,
     "usage": "$eventEmoji",
     "description": "Consulta o campo do evento; requer contexto de evento e preserva ausências como null."
+  },
+  {
+    "name": "threadInfo",
+    "category": "threads",
+    "minArgs": 2,
+    "maxArgs": 2,
+    "usage": "$threadInfo[propriedade;thread]",
+    "description": "Lê campo público da thread no servidor atual; associações e tags são JSON."
   }
 ]

@@ -5,6 +5,13 @@ import type { AuditLogChangeInfo, AuditLogOptionsInfo, AuditLogQueryInput } from
 export type { AuditLogChangeInfo, AuditLogOptionsInfo, AuditLogQueryInput } from '../../domain/audit-log.js';
 
 export interface UserInfo {
+  avatar?: string | null;
+  banner?: string | null;
+  avatarColor?: number | null;
+  discriminator?: string;
+  flags?: number | null;
+  globalName?: string | null;
+  system?: boolean;
   id: string;
   username: string;
   displayName: string;
@@ -15,6 +22,12 @@ export interface UserInfo {
 }
 
 export interface MemberInfo extends UserInfo {
+  guildID?: string;
+  partial?: boolean;
+  deaf?: boolean;
+  mute?: boolean;
+  profileFlags?: number | null;
+  mentionFlags?: number | null;
   nickname: string | null;
   joinedTimestamp: number;
   roles: string[];
@@ -23,6 +36,34 @@ export interface MemberInfo extends UserInfo {
 }
 
 export interface GuildInfo {
+  available?: boolean;
+  afkChannelId?: string | null;
+  afkTimeout?: number;
+  banner?: string | null;
+  bannerHeight?: number | null;
+  bannerWidth?: number | null;
+  icon?: string | null;
+  splash?: string | null;
+  splashURL?: string | null;
+  splashHeight?: number | null;
+  splashWidth?: number | null;
+  splashCardAlignment?: number;
+  embedSplash?: string | null;
+  verificationLevel?: number;
+  mfaLevel?: number;
+  nsfwLevel?: number;
+  nsfw?: boolean;
+  contentWarningLevel?: number;
+  contentWarningText?: string | null;
+  disabledOperations?: number;
+  defaultMessageNotifications?: number;
+  explicitContentFilter?: number;
+  messageHistoryCutoff?: string | null;
+  systemChannelFlags?: number;
+  systemChannelId?: string | null;
+  rulesChannelId?: string | null;
+  vanityURLCode?: string | null;
+  onlineCount?: number | null;
   id: string;
   name: string;
   ownerID: string;

@@ -1,7 +1,7 @@
 # Referência das funções
 
 Function mode opcional, importado de `yuzuha/functions`.
-Gerada do registro executável: **336 funções**. Atualize com `npm run docs:generate`.
+Gerada do registro executável: **337 funções**. Atualize com `npm run docs:generate`.
 
 Aliases não contam como funções adicionais. Índices e semântica estão em [LANGUAGE.md](LANGUAGE.md).
 
@@ -383,6 +383,7 @@ Aliases não contam como funções adicionais. Índices e semântica estão em [
 | `$leaveThread[thread]` | Faz o bot sair da thread. |  |
 | `$removeThreadMember[thread;usuário]` | Adiciona ou remove um membro da thread. |  |
 | `$searchThreads[canal;nome?;limite?;offset?]` | Busca threads; retorna threads, total, hasMore, indexing e retryAfter. |  |
+| `$threadInfo[propriedade;thread]` | Lê campo público da thread no servidor atual; associações e tags são JSON. |  |
 | `$threadMember[thread;usuário?]` | Busca um membro da thread com flags e estado de mute; usuário padrão é o autor. |  |
 | `$threadMembers[thread;limite?;após?]` | Lista membros da thread com limite de 1 a 100 e cursor por usuário. |  |
 | `$unarchiveThread[thread]` | Desarquiva thread. |  |

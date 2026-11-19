@@ -82,11 +82,11 @@ function harness(overrides: Partial<ContextOptions> = {}, channels = channelFake
   return { ctx, runtime, run, channels, invites };
 }
 
-test('channel mostra canal, propriedade e vazio para propriedade ausente', async () => {
+test('channel mostra canal/propriedade e recusa propriedade desconhecida', async () => {
   const { run } = harness();
   assert.deepEqual(await run('$channel[10]'), channelFixture());
   assert.equal(await run('$channel[10;name]'), 'geral');
-  assert.equal(await run('$channel[10;missing]'), '');
+  await assert.rejects(run('$channel[10;missing]'), /Propriedade inválida/);
 });
 
 test('channels lista canais do servidor atual', async () => {

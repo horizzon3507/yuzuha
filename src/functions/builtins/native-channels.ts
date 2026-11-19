@@ -3,6 +3,7 @@ import { defineFunctions } from './definition.js';
 import { integer } from './language/common.js';
 import type { FunctionCall } from '../runtime/types.js';
 import { GuardError } from '../../shared/errors.js';
+import { entityProperty } from './entities-info.js';
 
 const channelTypes: Record<string, number> = {
   texto: 0, text: 0,
@@ -132,11 +133,13 @@ export const channelFunctions = defineFunctions(fn => {
     return c.ctx.resources.channels.setCategory(id, raw ? channelID(raw) : null, c.count > 2 ? await c.text(2) : undefined);
   });
   fn('channel', 'channels', 1, 2, '[canal;propriedade?]', 'Mostra um canal; com propriedade, mostra só ela.', async c => {
-    const info = await c.ctx.resources.channels.get(channelID(await c.text(0)));
+    const id = channelID(await c.text(0));
+    const info = await c.ctx.resources.channels.get(id);
+    if (c.ctx.guildID ? info.guildID !== c.ctx.guildID : info.guildID !== null || id !== c.ctx.message.channelID) {
+      throw new GuardError('O canal deve pertencer ao contexto atual.');
+    }
     if (c.count < 2) return info;
-    const key = (await c.text(1)).trim();
-    if (!key || !Object.hasOwn(info, key)) return key ? '' : info;
-    return (info as unknown as Record<string, unknown>)[key];
+    return entityProperty(info, await c.text(1), 'channel');
   });
   fn('channels', 'channels', 0, 0, '', 'Lista os canais do servidor atual por posição.', async c => {
     return c.ctx.resources.channels.list(c.ctx.requireGuild());

@@ -1,5 +1,19 @@
 import type { ThreadDefaultsInput } from './threads.js';
 export interface ChannelInfo {
+  createdTimestamp?: number;
+  icon?: string | null;
+  lastPinTimestamp?: string | null;
+  lastMessageId?: string | null;
+  nsfwOverride?: boolean | null;
+  bitrate?: number | null;
+  userLimit?: number | null;
+  voiceConnectionLimit?: number | null;
+  rtcRegion?: string | null;
+  defaultAutoArchiveDuration?: number | null;
+  defaultThreadRateLimitPerUser?: number | null;
+  defaultForumLayout?: number | null;
+  nicks?: Record<string, string>;
+  permissionOverwrites?: { id: string; type: number; allow: string; deny: string }[];
   id: string;
   name: string;
   type: number;

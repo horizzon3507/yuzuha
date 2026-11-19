@@ -7,6 +7,18 @@ type FetchedChannel = Awaited<ReturnType<Client['channels']['fetch']>>;
 
 function toInfo(thread: ThreadChannel): ThreadInfo {
   return {
+    guildID: thread.guildId,
+    archiveTimestamp: thread.archiveTimestamp,
+    autoArchiveDuration: thread.autoArchiveDuration,
+    memberCount: thread.memberCount,
+    totalMessageSent: thread.totalMessageSent,
+    appliedTags: [...thread.appliedTags ?? []],
+    rateLimitPerUser: thread.rateLimitPerUser,
+    invitable: thread.invitable,
+    flags: thread.flags,
+    lastMessageId: thread.lastMessageId,
+    member: thread.member ? { threadID: thread.member.id, userID: thread.member.userId,
+      joinedTimestamp: thread.member.joinedAt.getTime(), flags: thread.member.flags } : null,
     id: thread.id,
     name: thread.name ?? '',
     parentID: thread.parentId,
@@ -44,6 +56,7 @@ function listPage(page: FetchedThreads, joined = false) {
 
 export function createThreadsResources(client: Client): ThreadsResources {
   return {
+    async get(threadID) { return toInfo(asThread(await client.channels.fetch(threadID))); },
     async active(guildID) {
       return { ...listPage(await (await client.guilds.resolve(guildID)).fetchActiveThreads()), nextBefore: null };
     },

@@ -108,7 +108,7 @@ precisam de `overrides` para o core fixado, como no manifesto do Yuzuha.
 | Estado e casos | `ctx.data`, TTL, userFor, transaction entre chaves e stores | Variáveis, TTL, incrementos, listas, casos e dataTransaction com operações declarativas |
 | Agendamentos | `ctx.scheduler`, cron/fusos, concorrência limitada, histórico, heartbeat e controles | schedule, scheduleEvery, scheduleCron, controles, histórico, reexecução e retry com jitter |
 | HTTP | `request`, `requestBytes`, `stream`, `multipart`, `withPolicy` e cancelamento | `$http`, `$httpJson`, `$httpMultipart` e download de imagens com política de rede por comando |
-| CLI, plugins, comandos e middleware | Recursos próprios do Yuzuha; lint/catálogos/cenários e manutenção de dados | 336 funções canônicas; comandos e eventos de script |
+| CLI, plugins, comandos e middleware | Recursos próprios do Yuzuha; lint/catálogos/cenários e manutenção de dados | 337 funções canônicas; comandos e eventos de script |
 | Composição de cartões | `ctx.canvas`, `yuzuha/canvas` (napi em processo) e `yuzuha/canvas/card` (builder isolado), com peer opcional `@napi-rs/canvas`; envio pelo contexto | 12 funções `$canvas*` para cenas privadas por execução; envio sem retorno automático |
 
 A camada nativa do Yuzuha — o caminho principal — acrescenta schemas de argumentos
@@ -182,6 +182,13 @@ retorno e limites próprios, publicados na referência gerada:
 - Embeds recebem partes separadas por `;`, preservando objetos tipados.
 - Moderação simples também verifica permissões e hierarquia; funções `mod*`
   acrescentam casos e definem `$caseID`.
+
+As leituras por propriedade de `$user`, `$member`, `$guild` e `$channel` aceitam
+somente campos públicos normalizados. Propriedades desconhecidas geram erro com
+a lista válida; `null` e campos ausentes retornam texto vazio, objetos e arrays
+retornam JSON. `$channel` restringe a leitura ao servidor atual ou à própria DM.
+`$threadInfo[propriedade;thread]` segue a mesma convenção no servidor atual,
+incluindo tags, arquivamento, contagens e associação do bot.
 
 Ao adaptar um script, revise cada chamada com a referência gerada em
 [FUNCTIONS.md](functions/FUNCTIONS.md). Use a matriz acima para distinguir funções de script

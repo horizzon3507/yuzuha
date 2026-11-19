@@ -3,14 +3,10 @@ import type { FunctionCall } from '../runtime/types.js';
 import { GuardError, YuzuhaError } from '../../errors.js';
 import { defineFunctions } from './definition.js';
 import { userID } from '../../domain/values.js';
+import { entityProperty } from './entities-info.js';
 
 const STATUSES = ['online', 'idle', 'dnd', 'invisible'] as const;
 const ACTIVITY_TYPES = ['playing', 'listening', 'watching', 'competing', 'custom'] as const;
-
-function own(value: object, key: string): unknown {
-  if (!Object.hasOwn(value, key)) return '';
-  return (value as Record<string, unknown>)[key];
-}
 
 /** Devolve '' quando o recurso indica ausência; nunca engole GuardError. */
 async function found<T>(run: () => Promise<T>): Promise<T | ''> {
@@ -102,13 +98,13 @@ export const userFunctions = defineFunctions(fn => {
     const id = await c.text(0);
     const info = await found(() => c.ctx.resources.users.user(id));
     if (info === '') return '';
-    return c.count > 1 ? own(info, await c.text(1)) : info;
+    return c.count > 1 ? entityProperty(info, await c.text(1), 'user') : info;
   });
   fn('member', 'users', 1, 2, '[id;propriedade?]', 'Membro do servidor atual, ou propriedade; vazio se não existir.', async c => {
     const guildID = c.ctx.requireGuild(), id = await c.text(0);
     const info = await found(() => c.ctx.resources.users.member(guildID, id));
     if (info === '') return '';
-    return c.count > 1 ? own(info, await c.text(1)) : info;
+    return c.count > 1 ? entityProperty(info, await c.text(1), 'member') : info;
   });
   fn('members', 'users', 0, 1, '[limite?]', 'Membros do servidor atual; padrão 50, máximo 1000.', async c => {
     const guildID = c.ctx.requireGuild();
@@ -140,7 +136,7 @@ export const userFunctions = defineFunctions(fn => {
   });
   fn('guild', 'users', 0, 1, '[propriedade?]', 'Servidor atual, ou uma propriedade própria.', async c => {
     const info = await c.ctx.resources.users.guild(c.ctx.requireGuild());
-    return c.count ? own(info, await c.text(0)) : info;
+    return c.count ? entityProperty(info, await c.text(0), 'guild') : info;
   });
   fn('guildIcon', 'users', 0, 1, '[tamanho?]', 'URL do ícone do servidor atual; vazio se ausente.', async c =>
     sized((await c.ctx.resources.users.guild(c.ctx.requireGuild())).iconURL, await size(c, 0)));

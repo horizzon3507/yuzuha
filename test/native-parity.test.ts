@@ -202,6 +202,8 @@ test('adaptador self normaliza usuário e guilds e encaminha verificação sudo'
   });
   Reflect.set(client, 'user', user);
   assert.deepEqual(await self.fetch(), { id: '1', username: 'bot', displayName: 'bot', bot: true,
+    avatar: undefined, banner: undefined, avatarColor: undefined, discriminator: undefined,
+    flags: undefined, globalName: null, system: undefined,
     avatarURL: null, bannerURL: null, createdTimestamp: 100 });
   assert.deepEqual(await self.guilds({ withCounts: true }), [
     { id: 'g1', name: 'srv', icon: 'ih', owner: true, permissions: '8', features: ['X'], memberCount: 40, onlineCount: 10 },
