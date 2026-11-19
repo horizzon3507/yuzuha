@@ -10,7 +10,62 @@ Yuzuha. Os dois modos usam o mesmo contexto e os mesmos serviços.
 
 ## O que significa paridade
 
-A [matriz automática](PARITY-MATRIX.md) lista cada export e membro público de `@fluxerjs/core`, `@fluxerjs/builders` e `@fluxerjs/types`, com o status de cobertura de cada um. Ela é gerada por `npm run docs:generate`. Um teste falha quando o SDK ganha um export sem área, o que serve de gatilho ao atualizar o SDK.
+A meta da v0.8.0 é **toda operação segura do SDK alcançável pelo function mode,
+com exclusões documentadas**. Este contrato não declara a meta já entregue.
+A [matriz automática](PARITY-MATRIX.md) inventaria os exports (inclusive tipos),
+membros próprios não privados de classes e eventos dos contratos `*Events` de
+`@fluxerjs/core`, `builders`, `types`, `voice`, `sharding`, `rest`, `ws`,
+`collection` e `util`. Membros herdados constam no export de origem. Reexports
+em pacotes diferentes têm IDs diferentes e contam separadamente.
+
+A fonte de cobertura é `scripts/parity/{pure,resources,entities,events,voice}.jsonl`:
+um objeto JSON por linha, identificado por `@pacote#Export.membro`,
+`@pacote#Export.static:membro` ou `@pacote#ContratoEvents:evento`. Cada ID tem
+`area`, `status` e `note`, mais:
+
+| Status | Campos e significado |
+|---|---|
+| `function` | `functions`: nomes `$...` registrados que alcançam a operação |
+| `equivalent` | `functions`: composição existente; `note` explica a equivalência, sem exigir objetos mutáveis SDK |
+| `excluded` | `reason`: internal, credentials, lifecycle, eval, raw-transport ou data-only |
+| `pending` | `area`: pure, resources, entities, events ou voice; implementação segura ainda ausente |
+
+**Function-mode safe coverage** = `(function + equivalent) / (function +
+equivalent + pending) × 100`. Tipos apagados, identidades de classes e exclusões
+não entram no denominador. Constantes de runtime não são automaticamente
+data-only: precisam de acesso por função ou ficam pending. A porcentagem mede
+operações/linhas, não testes ou completude de parâmetros opcionais.
+
+Excluímos login/destroy/emit, construtores/fábricas de instâncias e iteradores,
+`_patch`, campos privados/internos, raw ws/REST/Routes, broadcastEval/eval e
+credenciais/segredos sudo em scripts. Dados públicos de entidades não são
+excluídos só porque falta normalização: ficam pending. Eventos com dados
+sensíveis precisam de redação explícita; autenticação WebAuthn é excluída.
+JS/TS confiável mantém o acesso ao SDK, sem ampliar a autoridade dos scripts.
+
+`npm run check` rejeita ID sem classificação, duplicado ou obsoleto, status/área/
+motivo inválido, função inexistente e evento marcado coberto sem adaptação.
+Pending é permitido durante desenvolvimento. O gate obrigatório da release é
+`node scripts/parity-matrix.mjs --check --release`: exige **zero pending**.
+`scripts/parity-areas.json` e `scripts/parity-equivalents.json` preservam o
+catálogo nativo histórico; não são fonte de cobertura semântica de scripts.
+
+### Adicionar uma função e atualizar o contrato
+
+1. Escolha o ID pending no JSONL da área e defina argumentos, retorno,
+   contexto parcial/DM, autorização, limites, cancelamento e falhas parciais.
+2. Use `defineFunctions` em `src/functions/builtins/*.ts`; inclua novo módulo em
+   `src/functions/builtins/index.ts`. Reutilize `ctx.resources`/serviços; se faltar
+   operação, amplie port, adaptador, autorização e mocks, não o acesso cru ao SDK.
+3. Teste offline caminho normal, vazio, erro e negação de permissão; moderação
+   também testa autor/bot/hierarquia/falha parcial. Eventos requerem adaptação
+   em `src/framework/script-events.ts` e contexto normalizado, não só `$eventName`.
+4. Altere **a linha existente** para `function` ou `equivalent`, liste nomes
+   `$...` e explique a rota/composição em `note`. Acrescente uma linha somente
+   para ID novo. Não duplique IDs nem reordene arquivos: PRs paralelos editam
+   apenas sua área. Exclusões novas exigem revisão da justificativa.
+5. Rode `npm run docs:generate` e `npm run check`; para mudança de pacote/CLI,
+   também `npm run smoke:package`. Não edite a matriz gerada à mão.
 
 `yuzuha/sdk` executa `export * from '@fluxerjs/core'`. Isso preserva os exports
 públicos da raiz do pacote e seus tipos. `bot.client` é uma instância real de
@@ -46,7 +101,7 @@ precisam de `overrides` para o core fixado, como no manifesto do Yuzuha.
 | Presença | `bot.setPresence`, `bot.rotatePresence`, `users.setPresence` (`PresenceInput` com `activities[]`, `customStatus` e `afk`) e `client.user.setPresence` | setPresence, setStatus e setActivity |
 | Cache e presença | `ctx.resources.cache` (estatísticas, limites e limpezas), `cacheSweepers` periódicos (`messages`, `members`, `users`) e opções do SDK | Acesso nativo |
 | Usuário autenticado | `ctx.resources.self` (fetch, guilds, saída e limpeza com verificação sudo) | setPresence, setStatus, setActivity e leaveGuild |
-| Instância e aplicação | `ctx.resources.instance` (describe, gatewayInfo, application, oauthApplications, metadados de emoji/sticker, resolveEmoji); `discovery` em `YuzuhaOptions`/`defineConfig`, `Yuzuha.fromDiscovery`, `Client.fromDiscovery` e client injetado | Mesmo adaptador do client |
+| Instância e aplicação | `ctx.resources.instance` (describe, gatewayInfo, application, oauthApplications, metadados de emoji/sticker, resolveEmoji); `discovery` em `YuzuhaOptions`/`defineConfig`, `Yuzuha.fromDiscovery`, `Client.fromDiscovery` e client injetado | Pending em resources; o adaptador nativo não implica acesso por scripts |
 | Áudio em voz | `bot.voiceStates` / `ctx.voiceStates` (`VoiceStateTracker`) para estados de voz; `FluxerVoice` sobre `@fluxerjs/voice` opcional; Lavalink v4 com plugin de áudio, `FluxerLavalinkBridge`, filas editáveis e recuperação em `yuzuha/music` | Sem wrappers de reprodução; moderação de membros usa o SDK core |
 | Sharding | `bot.shard`, `ctx.shard`, `shardIdForGuild`, scheduler líder por padrão e `yuzuha/sdk/sharding` sobre `@fluxerjs/sharding` (peer opcional) | Sem coordenação própria |
 | Cluster/subpaths | `YuzuhaCluster` e `YuzuhaClusterEvents` sobre `ClientCluster`; `yuzuha/sdk/cluster` e demais subpaths `yuzuha/sdk/*` espelham `@fluxerjs/core/*` e os pacotes satélites | Sem coordenação própria |

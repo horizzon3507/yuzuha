@@ -1,177 +1,67 @@
 # Funções que ainda faltam
 
-Inventário da versão **0.2.1**, comparando o registro executável do Yuzuha com os
-tipos públicos de **@fluxerjs/core 3.3.0**, fixado no lockfile. O inventário tem
-**336 funções canônicas**; aliases não aumentam esse número.
+Contrato para a meta v0.8.0, sobre o SDK fixado no lockfile; não é uma declaração
+de paridade já concluída. O registro atual tem **336 funções canônicas**;
+aliases não aumentam esse número.
 
-Este documento distingue funções existentes, wrappers ainda ausentes e recursos
-acessíveis pelo SDK em JavaScript/TypeScript. Os nomes na coluna “Propostas” são
-ideias de API: **não estão registrados e não podem ser usados em scripts**.
+A fonte de verdade é a [matriz semântica](../PARITY-MATRIX.md), gerada dos
+JSONL por área em `scripts/parity/`. Ela inclui core/builders/types e os
+satélites voice/sharding/rest/ws/collection/util. Contagens e porcentagem
+atualizadas estão na matriz, não duplicadas neste documento.
 
-## Cobertura atual
+## Pendências divididas para PRs paralelos
 
-O function mode tem 336 funções canônicas. O SDK continua
-disponível em JS/TS, com recursos injetáveis e testáveis offline.
-Esta tabela é um mapa dos recursos entregues pelo Yuzuha e das APIs nativas
-disponíveis para escrever novos comandos. Desde a 0.2.1, `ctx.resources` inclui
-as áreas `gateway` (pedidos brutos), `instance` (descoberta e aplicação), `self`
-(usuário autenticado com verificação sudo) e `cache` (estatísticas e limpezas);
-`collectors` ganhou streams `AsyncIterable` e `messages` ganhou `bulkFetch` e
-`searchAll`. Os subpaths `yuzuha/sdk/*` espelham `@fluxerjs/core/*` e os pacotes
-satélites do monorepo.
-
-| Área | Funções | Cobertura |
+| Área / arquivo JSONL | Escopo seguro ainda a implementar | Base existente |
 |---|---|---|
-| Usuários e servidor | `$user`, `$member`, `$members`, `$memberCount`, `$avatar`, `$displayName`, `$guild`, `$guildIcon`, `$guildBanner`, `$bans`, `$auditLogs`, `$setPresence`, `$setStatus`, `$setActivity` | Leitura de usuário, membro, servidor, banimentos, auditoria e presença |
-| Cargos | `$role`, `$roles`, `$hasRole`, `$addRole`, `$removeRole`, `$createRole`, `$editRole`, `$deleteRole`, `$moveRole` | Resolução por nome, ID ou menção, mutações e posição |
-| Canais | `$channel`, `$channels`, `$createChannel`, `$editChannel`, `$deleteChannel`, `$channelPerms`, `$channelPermsOf`, `$slowmode`, `$moveChannel`, `$setCategory` | Criação, edição, exclusão, posição, categoria, overwrites e permissões efetivas |
-| Mensagens | `$fetchMessage`, `$messages`, `$pin`, `$unpin`, `$pinnedMessages`, `$pinnedMessagesPage`, `$searchMessagesAdvanced`, `$sendFiles`, `$removeReaction`, `$clearReactions`, `$reactionUsers`, `$reactionUsersPage` | Histórico, páginas de fixadas por timestamp, busca com filtros do SDK, anexos por URL e reações com metadados de paginação |
-| Embeds | `$embed`, `$author`, `$url`, `$embedTimestamp`, `$footerIcon`, `$imageAlt`, `$fields`, `$addField`, `$removeField`, `$editField`, `$embedFromObject`, `$embeds`, `$addEmbed`, `$messageOptions` | Partes tipadas, campos incrementais, lista de até 10 embeds, URLs HTTP(S), limites do SDK e opções de envio com permissão; detalhes em [EMBEDS.md](../EMBEDS.md) |
-| Coletores | `$awaitMessage`, `$awaitReaction`, `$confirm` | Espera com timeout, filtro por autor e múltiplos emojis |
-| Servidor e convites | `$invite`, `$createInvite`, `$deleteInvite` | Convite por código/URL e criação com duração |
-| Webhooks | `$webhooks`, `$createWebhook`, `$sendWebhook`, `$editWebhook`, `$deleteWebhook` | CRUD e envio com ou sem token |
-| Emojis e stickers | `$emoji`, `$emojis`, `$createEmoji`, `$editEmoji`, `$deleteEmoji`, `$sticker`, `$stickers`, `$createSticker`, `$editSticker`, `$deleteSticker` | Resolução por nome, ID ou menção e mutações; emoji por URL com download validado, sticker por base64 |
-| Threads e fóruns | `$createThread`, `$archiveThread`, `$unarchiveThread`, `$forumPost`, `$addThreadMember`, `$removeThreadMember`, `$threadMembers`, `$threadMember` | Threads de canal, posts de fórum/mídia, membros com paginação e consulta individual com estado de mute |
-| JSON e objetos | `$object`, `$jsonEncode`, `$jsonDecode`, `$jsonGet`, `$jsonSet`, `$jsonDelete`, `$jsonMerge`, `$jsonKeys`, `$jsonValues`, `$jsonEntries`, `$hasProp` | Construção, serialização, navegação por propriedades próprias, mesclagem e remoção por caminho |
-| Arrays | `$array`, `$arrayPush`, `$arrayGet`, `$arrayLength`, `$arraySlice`, `$arrayIncludes`, `$arrayIndexOf`, `$arrayJoin`, `$arraySort`, `$arrayReverse`, `$arrayUnique`, `$arrayConcat`, `$arrayFlat`, `$arrayChunk`, `$range`, `$paginate` | Construção, consulta, composição, ordenação e paginação |
-| Callbacks de arrays | `$arrayMap`, `$arrayFilter`, `$arraySome`, `$arrayEvery`, `$arrayFind`, `$arrayReduce`, `$arraySortBy` | Expressões reavaliadas por item, curto-circuito e chaves estáveis, sem compilar dados como código |
-| Texto | `$split`, `$sliceText`, `$includes`, `$startsWith`, `$endsWith`, `$padStart`, `$padEnd`, `$repeatText`, `$truncate`, `$escapeMarkdown`, `$mention` | Operações sem regex e formatação de menções |
-| Números e datas | `$round`, `$floor`, `$ceil`, `$abs`, `$clamp`, `$fixed`, `$formatNumber`, `$date`, `$relativeTime`, `$parseDate` | Formatação, arredondamento e datas localizadas |
-| Loops | `$repeat`, `$forEach`, `$loopIndex`, `$loopValue`, `$loopAccumulator` | Corpo reavaliado por iteração, com limite de 1000 e verificação incremental de saída |
-| Estado composto | `$incrementVar`, `$pushVar`, `$pullVar`, `$setVarPath` e variantes `GuildVar`/`UserVar`, `$caseList`, `$caseCount` | Atualizações atômicas, caminho em objetos persistentes e consulta paginada de casos |
-| Agendamentos | `$schedule`, `$scheduleEvery`, `$unschedule`, `$schedules` | Tarefas persistentes, repetíveis e recuperáveis |
-| HTTP | `$http`, `$httpJson`, `$httpMultipart` | Requisições, upload multipart, timeout, limites e políticas de rede |
+| pure | CDN, inviteUrl, constantes/flags/bitfields, parsing/guards, erros, helpers de instância e operações declarativas de coleção | ctx.cdn, helpers SDK e funções de arrays/texto; não é acesso JS arbitrário |
+| resources | Instância/aplicação, cache, self sem segredos sudo, gateway validado, mensagens de webhook, collectors completos e informação limitada de shard | ctx.resources.instance/cache/self/gateway/webhooks/collectors, bot.shard/ctx.shard; suporte nativo de sharding e cluster já existe |
+| entities | Campos normalizados e operações de guild/canal/thread/membro/mensagem: discovery, transferência de dono, role hoist, grupo de DM, acks/read-state, self settings de thread, stickers em lote | Ports users/channels/threads/messages/roles/expressions; autorização e mocks compartilhados |
+| events | Eventos ClientEvents ainda sem scriptEvent, com ator, contexto parcial e redação de dados sensíveis | Eventos contextuais nativos já abrangem o SDK; script-events.ts adapta seis eventos |
+| voice | Estados de voz, participantes e controle declarativo de áudio/música | VoiceStateTracker, ports voice/music, FluxerVoice, plugin Lavalink e filas |
 
-Assinaturas e aliases estão na [referência gerada](FUNCTIONS.md). Consulte o
-contrato do Yuzuha para conferir argumentos, retorno e limites de cada chamada.
+Os nomes acima são áreas, não novos nomes de funções. Consulte cada linha
+pending antes de implementar; não invente um segundo registro. Eventos de voz
+do pacote voice pertencem à área voice; eventos ClientEvents, inclusive estados
+de voz, pertencem à área events.
 
-## Cobertura adicional da 0.1.2
+## Equivalência não é coincidência de nomes
 
-| Área | Funções entregues | Contrato |
-|---|---|---|
-| Mensagens | `$dm`, `$forward`, `$searchMessages`; cursores em `$messages` | IDs de envio, buscas com índice/cursor e histórico paginado |
-| Membros | `$searchMembers`, `$nickname` | Busca por nome e mutação com autorização compartilhada em `ctx.members` |
-| Servidor | `$editGuild`, `$invites`, `$vanity`, `$setVanity` | Edição por objeto e convites; mutações com guards |
-| Threads | `$editThread`, `$joinThread`, `$leaveThread`, `$searchThreads` | Edição, associação do bot e busca com indexação/paginação |
-| Expressões | `$cloneEmoji`, `$cloneSticker` | Clonagem para o servidor atual |
-| Anexos | `$fileBase64`, `$sendFileBase64`, `$sendAttachments` | Bytes/base64, URLs e múltiplos anexos em uma mensagem |
-| Tarefas | `$editSchedule`, `$pauseSchedule`, `$resumeSchedule` | Autor/servidor, edição, pausa/retomada e retry configurável |
-| Ferramentas | Extensão VS Code, `yuzuha/tooling`, `doctor` e benchmarks | Metadados gerados, diagnóstico offline e medições reproduzíveis |
+Embeds usam partes tipadas (`$embed`, `$title`, `$fields`, etc.), não builders
+mutáveis. Payloads usam objetos validados e envio autorizado. Dados expostos
+por recursos podem ser lidos por `$prop`; a linha da matriz indica o recurso,
+a composição e as diferenças de normalização.
 
-`ctx.data.transaction` é uma API nativa para operações síncronas entre várias
-chaves. `$dataTransaction` recebe operações declarativas; não executa callbacks
-assíncronos dentro do store. A extensão cobre as 336 funções internas.
+A existência de um método em `ctx.resources`, um nome parecido em um builtin,
+ou um reexport em `yuzuha/sdk` **não** comprova acesso por function mode.
+Por exemplo, coletores nativos oferecem streams e resultados completos;
+`$awaitMessage` retorna só conteúdo e `$awaitReaction` só usuário. As operações
+de coletor mais amplas permanecem pending até terem contrato declarativo.
 
-## Cobertura adicional da 0.1.3
+## Exclusões documentadas
 
-| Área | Funções entregues | Contrato |
-|---|---|---|
-| Moderação de voz | `$moveMember`, `$muteMember`, `$deafenMember` e variantes `mod*` | Autor/bot, hierarquia, motivo e casos/falhas parciais compartilhados com `ctx.mod` |
-| Threads | `$activeThreads`, `$archivedThreads` | Membros e cursores para arquivos públicos, privados e privados associados |
-| Canais | `$createLinkChannel`, `$editLinkChannel`, `$setContentWarning` | URL HTTP(S), nível de aviso e autorização de autor/bot |
-| Usuários | `$userProfile`, `$guildCounts`, `$channelCounts` | Perfis normalizados e eventos de contagem filtrados com timeout/cancelamento |
-| Dados | `$ttlVar`, `$expireVar` e variantes guild/user; `$dataTransaction` | TTL e até 100 operações atômicas entre chaves/escopos |
-| Tarefas | `$scheduleHistory`, `$failedSchedules`, `$retrySchedule` | Histórico limitado, acesso por autor/servidor e reexecução operacional explícita |
-| Ferramentas | Diagnósticos, catálogos de plugins, logs e benchmarks comparativos | Análise offline, correlação e cargas/memória maiores |
-
-## Cobertura adicional da 0.1.4
-
-| Área | Funções entregues | Contrato |
-|---|---|---|
-| Mensagens | `$preloadMessages` | Última mensagem por canal; array de 1 a 100 IDs, com entradas ausentes normalizadas como null |
-| Expressões | `$createEmojisBulk` | 1 a 50 objetos name/image base64, até 10 MB; success/failed preservam falhas parciais |
-| Autorização | Cargos, canais e webhooks em `ctx.resources` | Guards de autor/bot compartilhados entre nativo e script, servidor, permissões locais e hierarquia; token de webhook não contorna a política |
-| Eventos | `$eventName`, `$eventUserID`, `$eventGuildID`, `$eventChannelID`, `$eventMessageID`, `$eventContent`, `$eventOldContent`, `$eventEmoji` | Seis eventos de SDK, ausências null, metadados imutáveis, ator explícito e cancelamento; veja [EVENTS.md](../EVENTS.md) |
-| Arrays | `$arrayUnion`, `$arrayIntersection`, `$arrayDifference` | Operações de conjuntos preservando ordem e igualdade profunda |
-| Números | `$formatBytes`, `$percent`, `$toBase`, `$fromBase` | Bytes SI/IEC, percentuais e conversão exata de inteiros em bases 2–36 |
-| Agendamentos | `$scheduleCron` | Cron de cinco campos em fuso IANA, missedRun e retryJitter; veja [SCHEDULER.md](../SCHEDULER.md) |
-| HTTP | `$httpMultipart`; `HttpService.stream`/`withPolicy` nativos | Upload limitado, streaming cancelável e políticas restritivas por comando; veja [HTTP.md](../HTTP.md) |
-| Ferramentas e estado | `lint`, catálogos JSON, cenários offline e `StateMaintenance` | Diagnósticos sem importar módulos; estatísticas, limpeza limitada, backup e restauração simulável; veja [STORAGE.md](../STORAGE.md) |
-
-## Cobertura adicional da 0.1.7
-
-- `$guildFeatures` copia os recursos habilitados do servidor; `$leaveGuild` exige
-  o dono do servidor e contexto de servidor.
-- `$while`, `$break` e `$continue` oferecem controle limitado de loops, com
-  restauração de estado e propagação dos erros protegidos.
-- `$arraySortWith`, `$sortLeft` e `$sortRight` permitem comparadores estáveis.
-- `$regexTest`, `$regexMatch` e `$regexReplace` executam em workers com prazo,
-  cancelamento e limites de entrada, saída e concorrência.
-- `$decimal`, `$decimalCompare` e `$decimalRound` usam BigInt para operações
-  decimais em texto, com precisão e arredondamento explícitos.
-
-- `$queryVars` e `ctx.data.*.query` oferecem páginas por prefixo com TTL. SQLite
-  usa índice derivado; o snapshot de escrita ainda é integral.
-- `$httpStream`, `$httpChunk` e `$httpChunkIndex` processam trechos UTF-8 sem
-  carregar a resposta inteira e preservam política HTTP e cancelamento.
-- Agendamentos têm prioridade e capacidade compartilhada por claims SQLite;
-  veja os requisitos de configuração no [guia](../SCHEDULER.md).
-
-- `yuzuha/images` transforma PNG/JPEG/WebP por processos isolados com Sharp opcional.
-  `ctx.sendStream` recebe anexos por stream com limite, acumulando antes do upload
-  exigido pelo SDK. Veja [IMAGES.md](../IMAGES.md).
-
-Veja contratos e exemplos no [guia de operações de dados](LANGUAGE-EXTENSIONS.md).
-
-## Wrappers ainda ausentes
-
-| Prioridade | Área | Propostas de funções | Alternativa nativa disponível |
-|---|---|---|---|
-| Baixa | Componentes | `$button`, `$select`, `$modal` | Dependem de API equivalente no Fluxer |
-
-As prioridades expressam ordem sugerida, sem data prometida. Métodos do SDK usam
-os tipos e permissões do Fluxer; mutações diretas não passam pelos guards, casos
-de moderação ou transporte mock do Yuzuha automaticamente.
-
-## Lacunas da própria linguagem
-
-Estas funções precisam de comportamento e limites próprios. Não são apenas
-nomes novos para métodos do SDK.
-
-| Área | O que existe | O que falta desenhar e implementar |
-|---|---|---|
-| Persistência | TTL, transações, consulta por prefixo/cursor e índice SQLite por escopo/sujeito/nome | Índices por propriedades dos valores e escritas que não reserializem o snapshot inteiro |
-
-
-| Binários | URL, bytes, base64, entrada por stream limitada e módulo opcional de imagens | Upload contínuo pela rede sem acumular bytes; o SDK atual não aceita esse contrato |
+Não são wrappers a implementar: login/destroy/emit, raw ws/REST/Routes,
+broadcastEval/eval, construtores/iteradores, _patch/campos internos, credenciais
+e segredos sudo. Categorias: internal, credentials, lifecycle, eval,
+raw-transport e data-only. Tipos apagados e identidade de classes não representam
+operações de script; propriedades públicas úteis continuam pending quando não
+há normalização, em vez de serem descartadas como data-only.
 
 Não há `$eval` de JavaScript nem reinterpretação de texto de usuário como código.
-Funções JS/TS próprias podem ser registradas explicitamente. Para operações
-complexas, use o [guia nativo](../NATIVE.md).
+Plugins JS/TS são código confiável e não alteram esta fronteira.
 
-## Limites de escopo do Yuzuha
+## Como fechar uma pendência
 
-- Comandos de aplicação, botões, selects e modais ainda não são contratos do
-  Yuzuha. Exigem suporte e APIs no Fluxer antes de qualquer implementação.
-- Voz e sharding têm pacotes separados no ecossistema Fluxer.js. A 0.1.6 integra
-  voz oficial opcional e controle Lavalink em `yuzuha/music`, sem wrappers de
-  reprodução em scripts. O core aceita configuração de shards via clientOptions;
-  gerência de processos exige `@fluxerjs/sharding`, não incluído no pacote.
-  Veja a [auditoria de integrações](../INTEGRATIONS.md).
-- Economia, XP, rankings e tickets são sistemas de produto. Ter variáveis,
-  moderação ou acesso ao SDK não significa que esses sistemas já estejam prontos.
-- LSP e migração automática de scripts de outros runtimes ainda não são ferramentas entregues.
-  Autocomplete, hover, assinatura e diagnósticos estão na extensão VS Code incluída.
+Siga a [receita em PARITY.md](../PARITY.md#adicionar-uma-função-e-atualizar-o-contrato):
+implemente sobre ports autorizados, teste normal/vazio/erro, altere a linha
+existente do seu JSONL para function/equivalent e regenere docs. Mantenha uma
+entrada por linha sem reordenar áreas de outros PRs. `npm run check` permite
+pending, mas rejeita classificações ausentes/obsoletas/duplicadas e funções
+inexistentes. A release exige `node scripts/parity-matrix.mjs --check --release`
+com zero pending.
 
-A cobertura verificável usa o registro executável do Yuzuha e os tipos da
-dependência instalada. Não mede compatibilidade com catálogos de outros runtimes.
+## Limites da própria linguagem
 
-## Como fechar uma lacuna
-
-1. Confirmar o recurso no SDK e no Fluxer alvo, inclusive tipos de canal e permissões.
-2. Definir argumentos, retorno tipado, resolução de IDs, erros e comportamento em DM.
-3. Para ações com efeitos, prever falhas parciais, repetição e limites do runtime.
-4. Implementar o serviço/port necessário; compartilhar a regra com a API nativa.
-5. Cobrir com testes offline significativos e regenerar a referência de funções.
-6. Registrar separadamente a validação real em servidor autorizado.
-
-## Evidências
-
-O inventário vem de `src/functions/builtins/` e [FUNCTIONS.md](FUNCTIONS.md).
-Os recursos nativos foram conferidos nas declarações distribuídas em
-`node_modules/@fluxerjs/core/dist/index.d.ts` e nos arquivos `.d.ts` reexportados
-por ela, incluindo `Guild`, `GuildMember`, `Channel`, `Message`, `Webhook` e
-`ClientUser`.
-
-Fontes primárias externas: [código do Fluxer.js](https://github.com/fluxerjs/core)
-e [documentação Fluxer.js](https://fluxer.js.org).
+Persistência ainda requer desenho para índices por propriedades e escritas
+incrementais; upload de rede sem acumular bytes depende de suporte do SDK.
+São evoluções de contrato próprias, não justificativas para expor transporte cru.
+Para operações nativas complexas, use o [guia JS/TS](../NATIVE.md).
