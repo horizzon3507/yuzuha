@@ -75,7 +75,7 @@ export class Evaluator {
     return result;
   }
 
-  private async invoke(node: CallNode, depth: number): Promise<unknown> {
+  private invoke(node: CallNode, depth: number): unknown | Promise<unknown> {
     this.calls++;
     this.check(node.offset, depth);
     const fn = this.registry.resolve(node, this.program);
@@ -113,20 +113,40 @@ export class Evaluator {
         this.canvasExecution,
       );
     try {
-      const result = await fn.execute(call);
+      const result = fn.execute(call);
+      if (result === null || typeof result !== 'object' && typeof result !== 'function') {
+        this.check(node.offset, depth);
+        this.checkOutput(result, node.offset);
+        releaseCanvasExecutionCall(call);
+        return result;
+      }
+      return this.awaitResult(result, call, node, depth);
+    } catch (error) {
+      releaseCanvasExecutionCall(call);
+      throw this.wrapError(error, node);
+    }
+  }
+
+  private async awaitResult(value: unknown, call: FunctionCall, node: CallNode, depth: number): Promise<unknown> {
+    try {
+      const result = await value;
       this.check(node.offset, depth);
       this.checkOutput(result, node.offset);
       return result;
     } catch (error) {
-      if (error instanceof GuardError || error instanceof StopExecution || error instanceof ScriptError || error instanceof PartialModerationError || error instanceof LoopControl) throw error;
-      if (error instanceof YuzuhaError && ['EXECUTION_LIMIT', 'OUTPUT_LIMIT', 'EXECUTION_ABORTED'].includes(error.code)) {
-        throw this.error(error.code, error.message, node.offset);
-      }
-      if (error instanceof YuzuhaError && error.code.startsWith('CANVAS_')) {
-        throw new ScriptError(error.code, error.message, this.program.source, node.offset, this.program.file, { cause: error });
-      }
-      throw new ScriptError('FUNCTION_ERROR', `Falha em $${node.name}: ${error instanceof YuzuhaError ? error.message : 'a operação não pôde ser concluída'}.`,
-        this.program.source, node.offset, this.program.file, { cause: error });
+      throw this.wrapError(error, node);
     } finally { releaseCanvasExecutionCall(call); }
+  }
+
+  private wrapError(error: unknown, node: CallNode): Error {
+    if (error instanceof GuardError || error instanceof StopExecution || error instanceof ScriptError || error instanceof PartialModerationError || error instanceof LoopControl) return error;
+    if (error instanceof YuzuhaError && ['EXECUTION_LIMIT', 'OUTPUT_LIMIT', 'EXECUTION_ABORTED'].includes(error.code)) {
+      return this.error(error.code, error.message, node.offset);
+    }
+    if (error instanceof YuzuhaError && error.code.startsWith('CANVAS_')) {
+      return new ScriptError(error.code, error.message, this.program.source, node.offset, this.program.file, { cause: error });
+    }
+    return new ScriptError('FUNCTION_ERROR', `Falha em $${node.name}: ${error instanceof YuzuhaError ? error.message : 'a operação não pôde ser concluída'}.`,
+      this.program.source, node.offset, this.program.file, { cause: error });
   }
 }

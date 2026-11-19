@@ -4,6 +4,8 @@ import { CommandContext, MemoryStore } from '../src/index.js';
 import { Runtime, defaultLimits, registerBuiltins } from '../src/functions.js';
 import type { FunctionCall } from '../src/functions/runtime/types.js';
 import { canvasExecution } from '../src/functions/runtime/canvas-execution.js';
+import { LoopControl } from '../src/functions/runtime/control-flow.js';
+import { GuardError, PartialModerationError, ScriptError, StopExecution, YuzuhaError } from '../src/errors.js';
 import { MockTransport, mockMessage } from '../src/testing.js';
 
 function harness(limits = {}) {
@@ -51,4 +53,79 @@ test('canvas state is released when functions throw or reject', async () => {
   f.register('asyncFailure', async c => { calls.push(c); await Promise.resolve(); throw new Error('async'); });
   assert.equal(await f.run('$try[$syncFailure;ok]$try[$asyncFailure;ok]'), 'okok');
   for (const c of calls) assert.throws(() => canvasExecution(c), canvasError);
+});
+
+test('sync scalar results retain their type and execute only once', async () => {
+  const f = harness();
+  for (const value of [undefined, null, '', 'value', true, false, 0, 42, NaN, Infinity, 1n, Symbol('value')]) {
+    let calls = 0;
+    const name = `scalar${f.runtime.functions().length}`;
+    f.register(name, () => { calls++; return value; });
+    assert.equal(await f.run(`$${name}`), value);
+    assert.equal(calls, 1);
+  }
+});
+
+test('sync throws and async rejections use the same ScriptError mapping', async () => {
+  const f = harness();
+  for (const error of [new Error('private'), 'private', new YuzuhaError('USER_ERROR', 'explicit'), new YuzuhaError('CANVAS_INPUT', 'invalid')]) {
+    for (const asynchronous of [false, true]) {
+      const name = `failure${f.runtime.functions().length}`;
+      f.register(name, () => { if (asynchronous) return Promise.reject(error); throw error; });
+      const source = `prefix$${name}`;
+      await assert.rejects(f.run(source), (actual: unknown) => {
+        assert.ok(actual instanceof ScriptError);
+        assert.equal(actual.code, error instanceof YuzuhaError && error.code === 'CANVAS_INPUT' ? 'CANVAS_INPUT' : 'FUNCTION_ERROR');
+        assert.equal(actual.message, error instanceof YuzuhaError && error.code === 'CANVAS_INPUT' ? 'invalid'
+          : `Falha em $${name}: ${error instanceof YuzuhaError ? error.message : 'a operação não pôde ser concluída'}.`);
+        assert.equal(actual.cause, error);
+        assert.equal(actual.source, source); assert.equal(actual.offset, 6); assert.equal(actual.file, 'perf.yz');
+        return true;
+      });
+    }
+  }
+});
+
+test('sync control flow and limit errors cannot be swallowed by $try', async () => {
+  const f = harness();
+  for (const error of [new GuardError('denied'), new LoopControl({}, 'break'), new ScriptError('OUTPUT_LIMIT', 'output', '', 0),
+    new PartialModerationError('ban', '2', new Error('offline'))]) {
+    const name = `control${f.runtime.functions().length}`;
+    f.register(name, () => { throw error; });
+    await assert.rejects(f.run(`$try[$${name};fallback]`), actual => actual === error);
+  }
+  for (const code of ['EXECUTION_LIMIT', 'OUTPUT_LIMIT', 'EXECUTION_ABORTED']) {
+    const name = `limit${f.runtime.functions().length}`;
+    f.register(name, () => { throw new YuzuhaError(code, 'limit'); });
+    await assert.rejects(f.run(`$try[$${name};fallback]`), (error: unknown) => {
+      assert.ok(error instanceof ScriptError);
+      assert.equal(error.code, code); assert.equal(error.message, 'limit'); assert.equal(error.offset, 5);
+      return true;
+    });
+  }
+  f.register('syncStop', () => { throw new StopExecution(); });
+  assert.equal(await f.run('$try[$syncStop;fallback]unreachable'), '');
+  assert.equal(await f.run('$repeat[3;x$try[$break;fallback]unreachable]'), '');
+});
+
+test('sync scalar output limits release the call and lazy branches remain untouched', async () => {
+  const f = harness({ output: 16 }), calls: FunctionCall[] = [];
+  f.register('tooLarge', c => { calls.push(c); return 'x'.repeat(17); });
+  await assert.rejects(f.run('$try[$tooLarge;fallback]'), { code: 'OUTPUT_LIMIT', message: 'Saída excede o limite.' });
+  assert.throws(() => canvasExecution(calls[0]!), canvasError);
+  assert.equal(await f.run('$if[true;ok;$tooLarge]'), 'ok');
+  assert.equal(await f.run('$if[false;$tooLarge;ok]'), 'ok');
+  assert.equal(calls.length, 1);
+});
+
+test('objects, promises, thenables and functions take the async result path without duplicate execution', async () => {
+  const f = harness();
+  const callable = Object.assign(() => '', { then: (resolve: (value: string) => void) => resolve('callable') });
+  for (const value of [{ value: 1 }, Promise.resolve('promise'), { then: (resolve: (value: string) => void) => resolve('thenable') }, callable, () => 'function']) {
+    let calls = 0;
+    const name = `result${f.runtime.functions().length}`;
+    f.register(name, () => { calls++; return value; });
+    assert.equal(await f.run(`$${name}`), await value);
+    assert.equal(calls, 1);
+  }
 });
