@@ -144,7 +144,7 @@
         "ClientCluster",
         "ClientClusterEvents"
       ],
-      "note": "Fora deste lote. O Yuzuha expõe shardCount e shardIds em clientOptions; o wrapper yuzuha/sharding fica como seguimento."
+      "note": "Suporte nativo entregue em yuzuha/sharding e yuzuha/cluster. Script usa classificações explícitas da área resources; eval, transporte e ciclo de vida continuam excluídos."
     },
     "Constantes e bitfields puros": {
       "exports": [
@@ -237,7 +237,7 @@
         "^canSend$",
         "^cascading$"
       ],
-      "reason": "membro interno, helper estático ou helper de sessão do SDK; fora da superfície pública ou acessível por `bot.client`"
+      "reason": "Catálogo nativo histórico, não regra semântica: classificar cada ID nos JSONL; helpers públicos seguros ficam pending e internals ficam excluded com categoria."
     },
     "Helpers puros do SDK": {
       "match": [
@@ -252,5 +252,16 @@
       ],
       "reason": "propriedade de dado do objeto do SDK, acessível por `bot.client` e pelos `*Info` do recurso quando normalizada"
     }
+  },
+  "contract": {
+    "mappings": "scripts/parity/*.jsonl",
+    "statuses": [
+      "function",
+      "equivalent",
+      "excluded",
+      "pending"
+    ],
+    "release": "node scripts/parity-matrix.mjs --check --release",
+    "note": "Este catálogo de exports nativos é histórico e não define cobertura de script; a fonte semântica única são os JSONL."
   }
 }
