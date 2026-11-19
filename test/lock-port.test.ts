@@ -357,7 +357,12 @@ test('Scheduler heartbeat renews LockLease, aborts on lost lease, and tolerates 
     heartbeatMs: 10,
   });
   await scheduler2.add(taskInput(1_000));
-  await scheduler2.tick(1_000);
+  let deadline!: ReturnType<typeof setTimeout>;
+  const timeout = new Promise<never>((_, reject) => {
+    deadline = setTimeout(() => reject(new Error('Lost lease did not abort execution')), 5_000);
+  });
+  try { await Promise.race([scheduler2.tick(1_000), timeout]); }
+  finally { clearTimeout(deadline); }
   assert.equal(await abortedSignal.promise, true);
 
   // Optional renew omitted on LockLease works without errors.

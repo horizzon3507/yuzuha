@@ -249,7 +249,12 @@ test('JsonStore com flushMs > 0 coalesciona janelas no timer, flush() força esc
   ]);
   assert.equal(realTimerStore.commits, 0);
   const done = realTimerStore.waitCommit();
-  await done;
+  let deadline!: ReturnType<typeof setTimeout>;
+  const timeout = new Promise<never>((_, reject) => {
+    deadline = setTimeout(() => reject(new Error('Background flush did not complete')), 5_000);
+  });
+  try { await Promise.race([done, timeout]); }
+  finally { clearTimeout(deadline); }
   assert.equal(realTimerStore.commits, 1);
   assert.deepEqual(await new JsonStore(realPath).read(state => state.variables), { a: 1, b: 2 });
   await realTimerStore.close();
