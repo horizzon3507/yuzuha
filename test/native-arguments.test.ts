@@ -13,6 +13,61 @@ function parse(schema: Parameters<typeof argumentDefinitions>[0], input: string)
   return parseArguments(definitions, tokenize(input));
 }
 
+test('tokenizer preserves quote, escape, apostrophe and whitespace semantics', () => {
+  const cases: [string, string[]][] = [
+    ['', []], ['  \t\n ', []], ['  one two  ', ['one', 'two']],
+    [`don't mix 'single words' "double words"`, ["don't", 'mix', 'single words', 'double words']],
+    [`"" '' a"b a'b`, ['', '', 'a"b', "a'b"]],
+    [`--label="two words" end`, ['--label=two words', 'end']],
+    [`"a'b" 'a"b'`, ["a'b", 'a"b']],
+    ['a\\ b \\"quoted\\" tail\\', ['a b', '"quoted"', 'tail\\']],
+    ['"a"b "a"\'b', ['ab', "a'b"]],
+    ['a\\=\'b c\'', ['a=b c']],
+  ];
+  for (const whitespace of ['\u00a0', '\u2003', '\u3000', '\t', '\n', '\r', '\v', '\f', '\ufeff']) {
+    cases.push([`${whitespace}"one"${whitespace}two${whitespace}`, ['one', 'two']]);
+    cases.push([`"one${whitespace}two"`, [`one${whitespace}two`]]);
+  }
+  for (const [input, expected] of cases) assert.deepEqual(tokenize(input), expected, JSON.stringify(input));
+  for (const input of ['"', "'", '"unfinished', "--label='unfinished", '"escaped\\"']) {
+    assert.throws(() => tokenize(input), error => error instanceof GuardError && error.reason === 'INVALID_ARGUMENT');
+  }
+});
+
+test('middleware additions and plugin removal affect warmed command dispatch', async () => {
+  const bot = new Yuzuha({ transport: new MockTransport(), store: new MemoryStore(), scheduler: false, http: false });
+  const calls: string[] = [];
+  bot.command({ name: 'warm', middleware: [async (_ctx, next) => { calls.push('local'); await next(); }], run() { calls.push('run'); } });
+  try {
+    await bot.handle(mockMessage('!warm'));
+    assert.deepEqual(calls.splice(0), ['local', 'run']);
+    bot.use(async (_ctx, next) => { calls.push('global'); await next(); });
+    await bot.handle(mockMessage('!warm'));
+    assert.deepEqual(calls.splice(0), ['global', 'local', 'run']);
+    bot.plugin({ name: 'late', middleware: [async (_ctx, next) => { calls.push('plugin'); await next(); }] });
+    await bot.handle(mockMessage('!warm'));
+    assert.deepEqual(calls.splice(0), ['global', 'plugin', 'local', 'run']);
+    await bot.unplugin('late');
+    await bot.handle(mockMessage('!warm'));
+    assert.deepEqual(calls, ['global', 'local', 'run']);
+  } finally { await bot.destroy(); }
+});
+
+test('middleware composition observes command middleware mutations', async () => {
+  const bot = new Yuzuha({ transport: new MockTransport(), store: new MemoryStore(), scheduler: false, http: false });
+  const calls: string[] = [];
+  bot.use(async (_ctx, next) => { calls.push('global'); await next(); });
+  bot.command({ name: 'mutate', middleware: [async (_ctx, next) => { calls.push('old'); await next(); }], run(ctx) {
+    calls.push('run');
+    ctx.command.middleware![0] = async (_ctx, next) => { calls.push('new'); await next(); };
+  } });
+  try {
+    await bot.handle(mockMessage('!mutate'));
+    await bot.handle(mockMessage('!mutate'));
+    assert.deepEqual(calls, ['global', 'old', 'run', 'global', 'new', 'run']);
+  } finally { await bot.destroy(); }
+});
+
 test('native argument schemas normalize to existing positional definitions', () => {
   const args = parse({
     member: arg.user().required(),
