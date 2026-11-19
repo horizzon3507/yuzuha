@@ -1,5 +1,5 @@
-import { AttachmentBuilder, Message } from '@fluxerjs/core';
-import type { Client, MessageEmbed, MessageEmbedMedia } from '@fluxerjs/core';
+import { AttachmentBuilder, Message, MessageAttachmentFlags } from '@fluxerjs/core';
+import type { Client, MessageAttachment, MessageEmbed, MessageEmbedMedia } from '@fluxerjs/core';
 import { Routes } from '@fluxerjs/types';
 import type { ReceivedEmbed, ReceivedEmbedMedia } from '../../../domain/messages.js';
 import { limitOf } from '../../../ports/resources/common.js';
@@ -8,6 +8,8 @@ import { YuzuhaError } from '../../../errors.js';
 import type { BulkFetchRawChannel, MessageInfo, MessageSearchInput, MessageSearchPage, MessagesResources, PurgeResult } from '../../../ports/resources/messages.js';
 import { preloadChannels } from '../../../domain/resource-batches.js';
 import { messageSearchInput, pinnedMessagesInput, purgeInput, reactionUsersInput } from '../../../domain/message-query.js';
+import { toUserInfo } from './users.js';
+import { toThreadInfo } from './threads.js';
 
 function receivedMedia(media: MessageEmbedMedia | null): ReceivedEmbedMedia | null {
   return media && { url: media.url, proxyURL: media.proxyUrl, contentType: media.contentType,
@@ -29,14 +31,37 @@ function receivedEmbed(embed: MessageEmbed): ReceivedEmbed {
 }
 
 export function toMessageInfo(message: Message): MessageInfo {
+  const sticker = (item: Message['stickers'][number]) => ({ id: item.id, name: item.name, description: item.description,
+    tags: [...item.tags], animated: item.animated, url: item.url, createdTimestamp: item.createdTimestamp,
+    createdAt: item.createdAt.toISOString() });
+  const attachment = (item: MessageAttachment) => ({
+    id: item.id, name: item.filename, url: item.url ?? '', size: item.size, contentType: item.contentType,
+    description: item.description, spoiler: (item.flags & MessageAttachmentFlags.IS_SPOILER) !== 0,
+  });
   return {
+    guildID: message.guildId ?? null,
+    author: toUserInfo(message.author), partial: message.partial ?? false,
+    flags: message.flags?.bitfield.toString() ?? '0', type: message.type ?? 0, tts: message.tts ?? false,
+    nonce: message.nonce ?? null, webhookId: message.webhookId ?? null,
+    editedAt: message.editedAt?.toISOString() ?? null, mentionEveryone: message.mentionEveryone ?? false,
+    mentionRoles: [...message.mentionRoles ?? []], mentions: (message.mentions ?? []).map(toUserInfo),
+    nsfwEmojis: [...message.nsfwEmojis ?? []], messageReference: message.messageReference ? { ...message.messageReference } : null,
+    stickers: (message.stickers ?? []).map(sticker),
+    reactions: [...message.reactions?.cache.values() ?? []].map(item => ({ messageID: item.messageId,
+      channelID: item.channelId, guildID: item.guildId, count: item.count, me: item.me,
+      emoji: { ...item.emoji }, emojiIdentifier: item.emojiIdentifier })),
+    call: message.call ? { participants: [...message.call.participants], endedAt: message.call.endedAt?.toISOString() ?? null } : null,
+    thread: message.thread ? toThreadInfo(message.thread) : null,
+    referencedMessage: message.referencedMessage ? { id: message.referencedMessage.id, channelID: message.referencedMessage.channelId,
+      authorID: message.referencedMessage.author.id, content: message.referencedMessage.content } : null,
+    messageSnapshots: (message.messageSnapshots ?? []).map(item => ({ content: item.content,
+      createdAt: item.createdAt.toISOString(), editedAt: item.editedAt?.toISOString() ?? null,
+      mentionUserIds: [...item.mentionUserIds], mentionRoles: [...item.mentionRoles], type: item.type,
+      embeds: item.embeds.map(receivedEmbed), attachments: item.attachments.map(attachment), stickers: item.stickers.map(sticker) })),
     id: message.id, channelID: message.channelId, authorID: message.author.id,
     authorName: message.author.username, content: message.content,
     createdTimestamp: message.createdAt.getTime(), pinned: message.pinned,
-    attachments: [...message.attachments.values()].map(attachment => ({
-      id: attachment.id, name: attachment.filename, url: attachment.url ?? '',
-      size: attachment.size, contentType: attachment.contentType,
-    })),
+    attachments: [...message.attachments.values()].map(attachment),
     embeds: message.embeds.map(receivedEmbed),
   };
 }

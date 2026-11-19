@@ -11,7 +11,7 @@ Paridade significa toda operação segura do SDK alcançável por scripts, com e
 - **excluded**: fora da linguagem por segurança ou por não representar operação; categoria e motivo visíveis.
 - **pending**: operação segura reservada à área indicada; permitida durante desenvolvimento, não no gate de release.
 
-**Function-mode safe coverage: 39.75%** (386/971). Denominador = function + equivalent + pending; excluded não entra. Cada linha é uma unidade, inclusive reexports em pacotes distintos; não é uma medição de testes ou completude de parâmetros.
+**Function-mode safe coverage: 51.29%** (498/971). Denominador = function + equivalent + pending; excluded não entra. Cada linha é uma unidade, inclusive reexports em pacotes distintos; não é uma medição de testes ou completude de parâmetros.
 
 Inventário: todos os exports (inclusive tipos), membros próprios não privados de classes, construtores e eventos dos contratos exportados *Events. Membros herdados aparecem no export de origem. Enums/constantes de runtime precisam de classificação operacional; interfaces e aliases são data-only. APIs novas exigem revisão explícita.
 
@@ -20,9 +20,9 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types, @fluxerjs/voice, @
 | Status | Itens |
 |---|---:|
 | function | 82 |
-| equivalent | 304 |
+| equivalent | 416 |
 | excluded | 834 |
-| pending | 585 |
+| pending | 473 |
 
 ## Pendências por área
 
@@ -30,7 +30,7 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types, @fluxerjs/voice, @
 |---|---:|
 | pure | 199 |
 | resources | 120 |
-| entities | 163 |
+| entities | 51 |
 | events | 59 |
 | voice | 44 |
 
@@ -1122,12 +1122,12 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types, @fluxerjs/voice, @
 | `@fluxerjs/core#Channel.acknowledgePins` | method | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
 | `@fluxerjs/core#Channel.bulkDelete` | method | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
 | `@fluxerjs/core#Channel.bulkDeleteMyMessages` | method | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
-| `@fluxerjs/core#Channel.canSendMessage` | method | pending |  | channelPermsOf retorna bitfield, mas falta composição declarativa que preserve todos os checks canSend do SDK; não inferir cobertura só por permissionsFor. |
+| `@fluxerjs/core#Channel.canSendMessage` | method | equivalent | $canSend | Consulta permissões efetivas de envio em canal do servidor atual. |
 | `@fluxerjs/core#Channel.clearReadState` | method | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
 | `@fluxerjs/core#Channel.client` | property | excluded | raw-transport | Referência ao client/transporte SDK não é valor de script; usar recursos autorizados. |
 | `@fluxerjs/core#Channel.completeAttachmentUploads` | method | equivalent | $sendAttachments | Uploads são resolvidos dentro do envio de anexos declarativos, sem expor URLs de sessão. |
 | `@fluxerjs/core#Channel.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
-| `@fluxerjs/core#Channel.createdAt` | accessor | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Channel.createdAt` | accessor | equivalent | $channel | O leitor $channel expõe createdAt pelo contrato normalizado; objetos e arrays novos são JSON, ausências são vazias. |
 | `@fluxerjs/core#Channel.createdTimestamp` | accessor | equivalent | $channel | $channel expõe createdTimestamp no objeto normalizado e na leitura por propriedade; objetos/arrays são JSON, null é vazio. |
 | `@fluxerjs/core#Channel.delete` | method | function | $deleteChannel | Operação por builtin e recurso/serviço compartilhado; ver contrato de argumentos na referência. |
 | `@fluxerjs/core#Channel.icon` | property | equivalent | $channel | $channel expõe icon no objeto normalizado e na leitura por propriedade; objetos/arrays são JSON, null é vazio. |
@@ -1151,7 +1151,7 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types, @fluxerjs/voice, @
 | `@fluxerjs/core#Channel.static:createDM` | method | excluded | internal | Fábrica de instâncias/configuração nativa; script usa operações e valores normalizados. |
 | `@fluxerjs/core#Channel.static:from` | method | excluded | internal | Fábrica de instâncias/configuração nativa; script usa operações e valores normalizados. |
 | `@fluxerjs/core#Channel.static:fromOrCreate` | method | excluded | internal | Helper interno, backing state ou patch de sessão; usar a operação pública autorizada. |
-| `@fluxerjs/core#Channel.toString` | method | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Channel.toString` | method | equivalent | $mention | Formata a menção pelo ID numérico. |
 | `@fluxerjs/core#Channel.type` | property | equivalent | $channel, $prop | Valor normalizado pelo recurso da entidade; $prop seleciona o campo (IDs usam sufixo ID). |
 | `@fluxerjs/core#Channel.uploadAttachmentsForSend` | method | equivalent | $sendAttachments | Uploads são resolvidos dentro do envio de anexos declarativos, sem expor URLs de sessão. |
 | `@fluxerjs/core#ChannelManager` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
@@ -1170,7 +1170,7 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types, @fluxerjs/voice, @
 | `@fluxerjs/core#DMChannel.ownerId` | property | equivalent | $channel, $prop | Valor normalizado pelo recurso da entidade; $prop seleciona o campo (IDs usam sufixo ID). |
 | `@fluxerjs/core#DMChannel.pinInList` | method | excluded | internal | Helper interno, backing state ou patch de sessão; usar a operação pública autorizada. |
 | `@fluxerjs/core#DMChannel.purgeMessages` | method | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
-| `@fluxerjs/core#DMChannel.recipients` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#DMChannel.recipients` | property | equivalent | $channel, $user | recipientIDs fornece IDs; $user resolve os dados públicos de cada destinatário. |
 | `@fluxerjs/core#DMChannel.removeRecipient` | method | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
 | `@fluxerjs/core#DMChannel.unpinFromList` | method | excluded | internal | Helper interno, backing state ou patch de sessão; usar a operação pública autorizada. |
 | `@fluxerjs/core#EmbedBuilder` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
@@ -1261,7 +1261,7 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types, @fluxerjs/voice, @
 | `@fluxerjs/core#Guild.nsfwLevel` | property | equivalent | $guild | $guild expõe nsfwLevel no objeto normalizado e na leitura por propriedade; objetos/arrays são JSON, null é vazio. |
 | `@fluxerjs/core#Guild.onlineCount` | property | equivalent | $guild | $guild expõe onlineCount no objeto normalizado e na leitura por propriedade; objetos/arrays são JSON, null é vazio. |
 | `@fluxerjs/core#Guild.ownerId` | property | equivalent | $guild, $prop | Valor normalizado pelo recurso da entidade; $prop seleciona o campo (IDs usam sufixo ID). |
-| `@fluxerjs/core#Guild.permissions` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Guild.permissions` | property | equivalent | $guild | O leitor $guild expõe permissions pelo contrato normalizado; objetos e arrays novos são JSON, ausências são vazias. |
 | `@fluxerjs/core#Guild.resetRoleHoistPositions` | method | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
 | `@fluxerjs/core#Guild.resolveRoleId` | method | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
 | `@fluxerjs/core#Guild.roles` | property | equivalent | $roles | Listar cargos normalizados em vez do manager mutável. |
@@ -1277,7 +1277,7 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types, @fluxerjs/voice, @
 | `@fluxerjs/core#Guild.stickers` | property | equivalent | $stickers | Listar stickers normalizados em vez do manager mutável. |
 | `@fluxerjs/core#Guild.systemChannelFlags` | property | equivalent | $guild | $guild expõe systemChannelFlags no objeto normalizado e na leitura por propriedade; objetos/arrays são JSON, null é vazio. |
 | `@fluxerjs/core#Guild.systemChannelId` | property | equivalent | $guild | $guild expõe systemChannelId no objeto normalizado e na leitura por propriedade; objetos/arrays são JSON, null é vazio. |
-| `@fluxerjs/core#Guild.toString` | method | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Guild.toString` | method | equivalent | $guild | A propriedade name retorna o nome textual do servidor. |
 | `@fluxerjs/core#Guild.transferOwnership` | method | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
 | `@fluxerjs/core#Guild.unban` | method | function | $unban | Operação por builtin e recurso/serviço compartilhado; ver contrato de argumentos na referência. |
 | `@fluxerjs/core#Guild.vanityURLCode` | property | equivalent | $guild | $guild expõe vanityURLCode no objeto normalizado e na leitura por propriedade; objetos/arrays são JSON, null é vazio. |
@@ -1286,16 +1286,16 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types, @fluxerjs/voice, @
 | `@fluxerjs/core#GuildBan` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
 | `@fluxerjs/core#GuildBan.client` | property | excluded | raw-transport | Referência ao client/transporte SDK não é valor de script; usar recursos autorizados. |
 | `@fluxerjs/core#GuildBan.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
-| `@fluxerjs/core#GuildBan.expiresAt` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
-| `@fluxerjs/core#GuildBan.guildId` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#GuildBan.expiresAt` | property | equivalent | $banInfo | O leitor $banInfo expõe expiresAt pelo contrato normalizado; objetos e arrays novos são JSON, ausências são vazias. |
+| `@fluxerjs/core#GuildBan.guildId` | property | equivalent | $banInfo | O leitor $banInfo expõe guildID pelo contrato normalizado; objetos e arrays novos são JSON, ausências são vazias. |
 | `@fluxerjs/core#GuildBan.reason` | property | equivalent | $bans, $prop, $arrayFind | BanInfo.reason acessível na listagem de bans autorizada. |
 | `@fluxerjs/core#GuildBan.unban` | method | function | $unban | Operação por builtin e recurso/serviço compartilhado; ver contrato de argumentos na referência. |
-| `@fluxerjs/core#GuildBan.user` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#GuildBan.user` | property | equivalent | $banInfo | O leitor $banInfo expõe user pelo contrato normalizado; objetos e arrays novos são JSON, ausências são vazias. |
 | `@fluxerjs/core#GuildChannel` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
 | `@fluxerjs/core#GuildChannel._patch` | method | excluded | internal | Helper interno, backing state ou patch de sessão; usar a operação pública autorizada. |
 | `@fluxerjs/core#GuildChannel.applyEditPatch` | method | excluded | internal | Helper interno, backing state ou patch de sessão; usar a operação pública autorizada. |
-| `@fluxerjs/core#GuildChannel.canSend` | method | pending |  | channelPermsOf retorna bitfield, mas falta composição declarativa que preserve todos os checks canSend do SDK; não inferir cobertura só por permissionsFor. |
-| `@fluxerjs/core#GuildChannel.canSendMessage` | method | pending |  | channelPermsOf retorna bitfield, mas falta composição declarativa que preserve todos os checks canSend do SDK; não inferir cobertura só por permissionsFor. |
+| `@fluxerjs/core#GuildChannel.canSend` | method | equivalent | $canSend | Verifica permissões efetivas do bot para enviar no canal atual ou informado. |
+| `@fluxerjs/core#GuildChannel.canSendMessage` | method | equivalent | $canSend | Consulta efetiva assíncrona em vez do estado de cache do SDK. |
 | `@fluxerjs/core#GuildChannel.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
 | `@fluxerjs/core#GuildChannel.createInvite` | method | equivalent | $createInvite | Acesso por builtin ao recurso autorizado correspondente; resolve/fetch usa busca normalizada, não instância SDK. |
 | `@fluxerjs/core#GuildChannel.createWebhook` | method | equivalent | $createWebhook | Acesso por builtin ao recurso autorizado correspondente; resolve/fetch usa busca normalizada, não instância SDK. |
@@ -1312,16 +1312,16 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types, @fluxerjs/voice, @
 | `@fluxerjs/core#GuildEmoji.animated` | property | equivalent | $emoji, $prop | Valor normalizado pelo recurso da entidade; $prop seleciona o campo (IDs usam sufixo ID). |
 | `@fluxerjs/core#GuildEmoji.client` | property | excluded | raw-transport | Referência ao client/transporte SDK não é valor de script; usar recursos autorizados. |
 | `@fluxerjs/core#GuildEmoji.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
-| `@fluxerjs/core#GuildEmoji.createdAt` | accessor | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
-| `@fluxerjs/core#GuildEmoji.createdTimestamp` | accessor | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#GuildEmoji.createdAt` | accessor | equivalent | $emoji | O leitor $emoji expõe createdAt pelo contrato normalizado; objetos e arrays novos são JSON, ausências são vazias. |
+| `@fluxerjs/core#GuildEmoji.createdTimestamp` | accessor | equivalent | $emoji | O leitor $emoji expõe createdTimestamp pelo contrato normalizado; objetos e arrays novos são JSON, ausências são vazias. |
 | `@fluxerjs/core#GuildEmoji.delete` | method | function | $deleteEmoji | Operação por builtin e recurso/serviço compartilhado; ver contrato de argumentos na referência. |
 | `@fluxerjs/core#GuildEmoji.edit` | method | function | $editEmoji | Operação por builtin e recurso/serviço compartilhado; ver contrato de argumentos na referência. |
-| `@fluxerjs/core#GuildEmoji.guildId` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#GuildEmoji.guildId` | property | equivalent | $emoji | O leitor $emoji expõe guildID pelo contrato normalizado; objetos e arrays novos são JSON, ausências são vazias. |
 | `@fluxerjs/core#GuildEmoji.id` | property | equivalent | $emoji, $prop | Valor normalizado pelo recurso da entidade; $prop seleciona o campo (IDs usam sufixo ID). |
-| `@fluxerjs/core#GuildEmoji.identifier` | accessor | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#GuildEmoji.identifier` | accessor | equivalent | $emoji | O leitor $emoji expõe identifier pelo contrato normalizado; objetos e arrays novos são JSON, ausências são vazias. |
 | `@fluxerjs/core#GuildEmoji.name` | property | equivalent | $emoji, $prop | Valor normalizado pelo recurso da entidade; $prop seleciona o campo (IDs usam sufixo ID). |
-| `@fluxerjs/core#GuildEmoji.toString` | method | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
-| `@fluxerjs/core#GuildEmoji.url` | accessor | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#GuildEmoji.toString` | method | equivalent | $emoji | O leitor $emoji expõe mention pelo contrato normalizado; objetos e arrays novos são JSON, ausências são vazias. |
+| `@fluxerjs/core#GuildEmoji.url` | accessor | equivalent | $emoji | O leitor $emoji expõe url pelo contrato normalizado; objetos e arrays novos são JSON, ausências são vazias. |
 | `@fluxerjs/core#GuildManager` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
 | `@fluxerjs/core#GuildManager.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
 | `@fluxerjs/core#GuildManager.delete` | method | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
@@ -1334,7 +1334,7 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types, @fluxerjs/voice, @
 | `@fluxerjs/core#GuildMember.avatar` | property | equivalent | $member | $member expõe avatar no objeto normalizado e na leitura por propriedade; objetos/arrays são JSON, null é vazio. |
 | `@fluxerjs/core#GuildMember.avatarURL` | method | function | $avatar | Avatar por usuário/servidor, sem expor a instância. |
 | `@fluxerjs/core#GuildMember.ban` | method | function | $ban | Operação por builtin e recurso/serviço compartilhado; ver contrato de argumentos na referência. |
-| `@fluxerjs/core#GuildMember.bannable` | accessor | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#GuildMember.bannable` | accessor | equivalent | $member | O leitor $member expõe bannable pelo contrato normalizado; objetos e arrays novos são JSON, ausências são vazias. |
 | `@fluxerjs/core#GuildMember.banner` | property | equivalent | $userProfile, $prop | Perfil de servidor/global normalizado por $userProfile; propriedades nullable. |
 | `@fluxerjs/core#GuildMember.bannerURL` | method | function | $userBanner | Banner por usuário/servidor, com retorno nulo quando ausente. |
 | `@fluxerjs/core#GuildMember.bio` | property | equivalent | $userProfile, $prop | Perfil de servidor/global normalizado por $userProfile; propriedades nullable. |
@@ -1345,24 +1345,24 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types, @fluxerjs/voice, @
 | `@fluxerjs/core#GuildMember.displayAvatarURL` | method | function | $avatar | Avatar por usuário/servidor, sem expor a instância. |
 | `@fluxerjs/core#GuildMember.displayName` | accessor | equivalent | $member, $prop | MemberInfo.displayName preserva member.displayName, inclusive apelido. |
 | `@fluxerjs/core#GuildMember.edit` | method | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
-| `@fluxerjs/core#GuildMember.guild` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#GuildMember.guild` | property | equivalent | $member, $guild | Resolve guildID pelo leitor normalizado e consulta a entidade no contexto atual; sem expor instâncias SDK. |
 | `@fluxerjs/core#GuildMember.id` | property | equivalent | $member, $prop | Valor normalizado pelo recurso da entidade; $prop seleciona o campo (IDs usam sufixo ID). |
 | `@fluxerjs/core#GuildMember.joinedAt` | property | equivalent | $member, $prop, $date | Derivar data de MemberInfo.joinedTimestamp. |
 | `@fluxerjs/core#GuildMember.kick` | method | function | $kick | Operação por builtin e recurso/serviço compartilhado; ver contrato de argumentos na referência. |
-| `@fluxerjs/core#GuildMember.kickable` | accessor | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#GuildMember.kickable` | accessor | equivalent | $member | O leitor $member expõe kickable pelo contrato normalizado; objetos e arrays novos são JSON, ausências são vazias. |
 | `@fluxerjs/core#GuildMember.mentionFlags` | property | equivalent | $member | $member expõe mentionFlags no objeto normalizado e na leitura por propriedade; objetos/arrays são JSON, null é vazio. |
-| `@fluxerjs/core#GuildMember.moderatable` | accessor | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#GuildMember.moderatable` | accessor | equivalent | $member | O leitor $member expõe moderatable pelo contrato normalizado; objetos e arrays novos são JSON, ausências são vazias. |
 | `@fluxerjs/core#GuildMember.move` | method | function | $moveMember | Operação por builtin e recurso/serviço compartilhado; ver contrato de argumentos na referência. |
 | `@fluxerjs/core#GuildMember.mute` | property | function | $muteMember | Operação por builtin e recurso/serviço compartilhado; ver contrato de argumentos na referência. |
 | `@fluxerjs/core#GuildMember.nick` | property | equivalent | $member, $prop | MemberInfo.nickname contém o apelido; null sem apelido. |
 | `@fluxerjs/core#GuildMember.partial` | property | equivalent | $member | $member expõe partial no objeto normalizado e na leitura por propriedade; objetos/arrays são JSON, null é vazio. |
 | `@fluxerjs/core#GuildMember.permissions` | accessor | equivalent | $member, $prop | Valor normalizado pelo recurso da entidade; $prop seleciona o campo (IDs usam sufixo ID). |
-| `@fluxerjs/core#GuildMember.permissionsIn` | method | pending |  | Falta consulta de permissões de membro por canal com shape normalizado. |
+| `@fluxerjs/core#GuildMember.permissionsIn` | method | equivalent | $channelPermsOf | Obtém permissões efetivas do membro no canal do servidor atual. |
 | `@fluxerjs/core#GuildMember.profileFlags` | property | equivalent | $member | $member expõe profileFlags no objeto normalizado e na leitura por propriedade; objetos/arrays são JSON, null é vazio. |
 | `@fluxerjs/core#GuildMember.pronouns` | property | equivalent | $userProfile, $prop | Perfil de servidor/global normalizado por $userProfile; propriedades nullable. |
 | `@fluxerjs/core#GuildMember.roles` | property | equivalent | $member, $prop | MemberInfo.roles é a lista normalizada de IDs; objetos de cargo são resolvidos por $role. |
 | `@fluxerjs/core#GuildMember.timeout` | method | function | $timeout | Operação por builtin e recurso/serviço compartilhado; ver contrato de argumentos na referência. |
-| `@fluxerjs/core#GuildMember.toString` | method | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#GuildMember.toString` | method | equivalent | $mention | Formata a menção pelo ID numérico. |
 | `@fluxerjs/core#GuildMember.user` | property | equivalent | $member, $prop, $user | Consultar UserInfo por ID do membro; não expor referência mutável. |
 | `@fluxerjs/core#GuildMemberManager` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
 | `@fluxerjs/core#GuildMemberManager.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
@@ -1385,41 +1385,41 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types, @fluxerjs/voice, @
 | `@fluxerjs/core#GuildRoleManager.everyone` | accessor | equivalent | $roles, $arrayFind, $prop, $eq | Buscar em $roles o cargo cujo id é o guildID. |
 | `@fluxerjs/core#GuildSticker` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
 | `@fluxerjs/core#GuildSticker._patch` | method | excluded | internal | Helper interno, backing state ou patch de sessão; usar a operação pública autorizada. |
-| `@fluxerjs/core#GuildSticker.animated` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#GuildSticker.animated` | property | equivalent | $sticker | O leitor $sticker expõe animated pelo contrato normalizado; objetos e arrays novos são JSON, ausências são vazias. |
 | `@fluxerjs/core#GuildSticker.client` | property | excluded | raw-transport | Referência ao client/transporte SDK não é valor de script; usar recursos autorizados. |
 | `@fluxerjs/core#GuildSticker.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
-| `@fluxerjs/core#GuildSticker.createdAt` | accessor | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
-| `@fluxerjs/core#GuildSticker.createdTimestamp` | accessor | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#GuildSticker.createdAt` | accessor | equivalent | $sticker | O leitor $sticker expõe createdAt pelo contrato normalizado; objetos e arrays novos são JSON, ausências são vazias. |
+| `@fluxerjs/core#GuildSticker.createdTimestamp` | accessor | equivalent | $sticker | O leitor $sticker expõe createdTimestamp pelo contrato normalizado; objetos e arrays novos são JSON, ausências são vazias. |
 | `@fluxerjs/core#GuildSticker.delete` | method | function | $deleteSticker | Operação por builtin e recurso/serviço compartilhado; ver contrato de argumentos na referência. |
 | `@fluxerjs/core#GuildSticker.description` | property | equivalent | $sticker, $prop | Valor normalizado pelo recurso da entidade; $prop seleciona o campo (IDs usam sufixo ID). |
 | `@fluxerjs/core#GuildSticker.edit` | method | function | $editSticker | Operação por builtin e recurso/serviço compartilhado; ver contrato de argumentos na referência. |
-| `@fluxerjs/core#GuildSticker.guildId` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#GuildSticker.guildId` | property | equivalent | $sticker | O leitor $sticker expõe guildID pelo contrato normalizado; objetos e arrays novos são JSON, ausências são vazias. |
 | `@fluxerjs/core#GuildSticker.id` | property | equivalent | $sticker, $prop | Valor normalizado pelo recurso da entidade; $prop seleciona o campo (IDs usam sufixo ID). |
 | `@fluxerjs/core#GuildSticker.name` | property | equivalent | $sticker, $prop | Valor normalizado pelo recurso da entidade; $prop seleciona o campo (IDs usam sufixo ID). |
-| `@fluxerjs/core#GuildSticker.nsfw` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#GuildSticker.nsfw` | property | equivalent | $sticker | O leitor $sticker expõe nsfw pelo contrato normalizado; objetos e arrays novos são JSON, ausências são vazias. |
 | `@fluxerjs/core#GuildSticker.tags` | property | equivalent | $sticker, $prop | Valor normalizado pelo recurso da entidade; $prop seleciona o campo (IDs usam sufixo ID). |
-| `@fluxerjs/core#GuildSticker.url` | accessor | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#GuildSticker.url` | accessor | equivalent | $sticker | O leitor $sticker expõe url pelo contrato normalizado; objetos e arrays novos são JSON, ausências são vazias. |
 | `@fluxerjs/core#Invite` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
-| `@fluxerjs/core#Invite.channelSnapshot` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Invite.channelSnapshot` | property | equivalent | $inviteInfo | O leitor $inviteInfo expõe channelSnapshot pelo contrato normalizado; objetos e arrays novos são JSON, ausências são vazias. |
 | `@fluxerjs/core#Invite.client` | property | excluded | raw-transport | Referência ao client/transporte SDK não é valor de script; usar recursos autorizados. |
 | `@fluxerjs/core#Invite.code` | property | equivalent | $invite, $prop | Valor normalizado pelo recurso da entidade; $prop seleciona o campo (IDs usam sufixo ID). |
 | `@fluxerjs/core#Invite.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
-| `@fluxerjs/core#Invite.createdAt` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Invite.createdAt` | property | equivalent | $inviteInfo | O leitor $inviteInfo expõe createdAt pelo contrato normalizado; objetos e arrays novos são JSON, ausências são vazias. |
 | `@fluxerjs/core#Invite.delete` | method | function | $deleteInvite | Operação por builtin e recurso/serviço compartilhado; ver contrato de argumentos na referência. |
-| `@fluxerjs/core#Invite.expiresAt` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
-| `@fluxerjs/core#Invite.guildSnapshot` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
-| `@fluxerjs/core#Invite.inviter` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
-| `@fluxerjs/core#Invite.isGroupDM` | method | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
-| `@fluxerjs/core#Invite.isGuild` | method | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
-| `@fluxerjs/core#Invite.maxAge` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Invite.expiresAt` | property | equivalent | $inviteInfo | O leitor $inviteInfo expõe expiresAt pelo contrato normalizado; objetos e arrays novos são JSON, ausências são vazias. |
+| `@fluxerjs/core#Invite.guildSnapshot` | property | equivalent | $inviteInfo | O leitor $inviteInfo expõe guildSnapshot pelo contrato normalizado; objetos e arrays novos são JSON, ausências são vazias. |
+| `@fluxerjs/core#Invite.inviter` | property | equivalent | $inviteInfo | O leitor $inviteInfo expõe inviter pelo contrato normalizado; objetos e arrays novos são JSON, ausências são vazias. |
+| `@fluxerjs/core#Invite.isGroupDM` | method | equivalent | $inviteInfo | O leitor $inviteInfo expõe isGroupDM pelo contrato normalizado; objetos e arrays novos são JSON, ausências são vazias. |
+| `@fluxerjs/core#Invite.isGuild` | method | equivalent | $inviteInfo | O leitor $inviteInfo expõe isGuild pelo contrato normalizado; objetos e arrays novos são JSON, ausências são vazias. |
+| `@fluxerjs/core#Invite.maxAge` | property | equivalent | $inviteInfo | O leitor $inviteInfo expõe maxAge pelo contrato normalizado; objetos e arrays novos são JSON, ausências são vazias. |
 | `@fluxerjs/core#Invite.maxUses` | property | equivalent | $invite, $prop | Valor normalizado pelo recurso da entidade; $prop seleciona o campo (IDs usam sufixo ID). |
-| `@fluxerjs/core#Invite.memberCount` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
-| `@fluxerjs/core#Invite.presenceCount` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Invite.memberCount` | property | equivalent | $inviteInfo | O leitor $inviteInfo expõe memberCount pelo contrato normalizado; objetos e arrays novos são JSON, ausências são vazias. |
+| `@fluxerjs/core#Invite.presenceCount` | property | equivalent | $inviteInfo | O leitor $inviteInfo expõe presenceCount pelo contrato normalizado; objetos e arrays novos são JSON, ausências são vazias. |
 | `@fluxerjs/core#Invite.resolveChannel` | method | equivalent | $invite, $prop, $channel | channelID do convite resolve por $channel. |
 | `@fluxerjs/core#Invite.resolveGuild` | method | equivalent | $invite, $prop, $guild | guildID do convite resolve por $guild. |
-| `@fluxerjs/core#Invite.static:fetch` | method | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
-| `@fluxerjs/core#Invite.temporary` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
-| `@fluxerjs/core#Invite.type` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Invite.static:fetch` | method | equivalent | $inviteInfo | Busca explícita por código de convite do servidor atual. |
+| `@fluxerjs/core#Invite.temporary` | property | equivalent | $inviteInfo | O leitor $inviteInfo expõe temporary pelo contrato normalizado; objetos e arrays novos são JSON, ausências são vazias. |
+| `@fluxerjs/core#Invite.type` | property | equivalent | $inviteInfo | O leitor $inviteInfo expõe type pelo contrato normalizado; objetos e arrays novos são JSON, ausências são vazias. |
 | `@fluxerjs/core#Invite.url` | accessor | equivalent | $invite, $prop | InviteInfo.url é calculada pelo adaptador. |
 | `@fluxerjs/core#Invite.uses` | property | equivalent | $invite, $prop | Valor normalizado pelo recurso da entidade; $prop seleciona o campo (IDs usam sufixo ID). |
 | `@fluxerjs/core#LinkChannel` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
@@ -1431,9 +1431,9 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types, @fluxerjs/voice, @
 | `@fluxerjs/core#Message._patch` | method | excluded | internal | Helper interno, backing state ou patch de sessão; usar a operação pública autorizada. |
 | `@fluxerjs/core#Message._send` | method | excluded | internal | Helper interno, backing state ou patch de sessão; usar a operação pública autorizada. |
 | `@fluxerjs/core#Message.attachments` | property | equivalent | $fetchMessage, $prop | Valor normalizado pelo recurso da entidade; $prop seleciona o campo (IDs usam sufixo ID). |
-| `@fluxerjs/core#Message.author` | property | pending |  | MessageInfo só fornece authorID/authorName; falta shape completo equivalente de autor. |
-| `@fluxerjs/core#Message.call` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
-| `@fluxerjs/core#Message.channel` | accessor | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Message.author` | property | equivalent | $fetchMessage | O leitor $fetchMessage expõe author pelo contrato normalizado; objetos e arrays novos são JSON, ausências são vazias. |
+| `@fluxerjs/core#Message.call` | property | equivalent | $fetchMessage | O leitor $fetchMessage expõe call pelo contrato normalizado; objetos e arrays novos são JSON, ausências são vazias. |
+| `@fluxerjs/core#Message.channel` | accessor | equivalent | $fetchMessage, $channel | Resolve channelID pelo leitor normalizado e consulta a entidade no contexto atual; sem expor instâncias SDK. |
 | `@fluxerjs/core#Message.channelId` | property | equivalent | $fetchMessage, $prop | Valor normalizado pelo recurso da entidade; $prop seleciona o campo (IDs usam sufixo ID). |
 | `@fluxerjs/core#Message.client` | property | excluded | raw-transport | Referência ao client/transporte SDK não é valor de script; usar recursos autorizados. |
 | `@fluxerjs/core#Message.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
@@ -1442,46 +1442,46 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types, @fluxerjs/voice, @
 | `@fluxerjs/core#Message.delete` | method | function | $deleteMessage | Operação por builtin e recurso/serviço compartilhado; ver contrato de argumentos na referência. |
 | `@fluxerjs/core#Message.deleteAttachment` | method | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
 | `@fluxerjs/core#Message.edit` | method | function | $editMessage | Operação por builtin e recurso/serviço compartilhado; ver contrato de argumentos na referência. |
-| `@fluxerjs/core#Message.editedAt` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Message.editedAt` | property | equivalent | $fetchMessage | O leitor $fetchMessage expõe editedAt pelo contrato normalizado; objetos e arrays novos são JSON, ausências são vazias. |
 | `@fluxerjs/core#Message.embeds` | property | equivalent | $fetchMessage, $prop | Valor normalizado pelo recurso da entidade; $prop seleciona o campo (IDs usam sufixo ID). |
 | `@fluxerjs/core#Message.fetch` | method | equivalent | $fetchMessage | Acesso por builtin ao recurso autorizado correspondente; resolve/fetch usa busca normalizada, não instância SDK. |
 | `@fluxerjs/core#Message.fetchReactionUsers` | method | equivalent | $reactionUsers | Acesso por builtin ao recurso autorizado correspondente; resolve/fetch usa busca normalizada, não instância SDK. |
 | `@fluxerjs/core#Message.fetchReactionUsersPage` | method | equivalent | $reactionUsersPage | Acesso por builtin ao recurso autorizado correspondente; resolve/fetch usa busca normalizada, não instância SDK. |
-| `@fluxerjs/core#Message.flags` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
-| `@fluxerjs/core#Message.guild` | accessor | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
-| `@fluxerjs/core#Message.guildId` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Message.flags` | property | equivalent | $fetchMessage | O leitor $fetchMessage expõe flags pelo contrato normalizado; objetos e arrays novos são JSON, ausências são vazias. |
+| `@fluxerjs/core#Message.guild` | accessor | equivalent | $fetchMessage, $guild | Resolve guildID pelo leitor normalizado e consulta a entidade no contexto atual; sem expor instâncias SDK. |
+| `@fluxerjs/core#Message.guildId` | property | equivalent | $fetchMessage | O leitor $fetchMessage expõe guildID pelo contrato normalizado; objetos e arrays novos são JSON, ausências são vazias. |
 | `@fluxerjs/core#Message.id` | property | equivalent | $fetchMessage, $prop | Valor normalizado pelo recurso da entidade; $prop seleciona o campo (IDs usam sufixo ID). |
-| `@fluxerjs/core#Message.member` | accessor | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
-| `@fluxerjs/core#Message.mentionEveryone` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
-| `@fluxerjs/core#Message.mentionRoles` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
-| `@fluxerjs/core#Message.mentions` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
-| `@fluxerjs/core#Message.messageReference` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
-| `@fluxerjs/core#Message.messageSnapshots` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
-| `@fluxerjs/core#Message.nonce` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
-| `@fluxerjs/core#Message.nsfwEmojis` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
-| `@fluxerjs/core#Message.partial` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Message.member` | accessor | equivalent | $fetchMessage, $member | Resolve authorID pelo leitor normalizado e consulta a entidade no contexto atual; sem expor instâncias SDK. |
+| `@fluxerjs/core#Message.mentionEveryone` | property | equivalent | $fetchMessage | O leitor $fetchMessage expõe mentionEveryone pelo contrato normalizado; objetos e arrays novos são JSON, ausências são vazias. |
+| `@fluxerjs/core#Message.mentionRoles` | property | equivalent | $fetchMessage | O leitor $fetchMessage expõe mentionRoles pelo contrato normalizado; objetos e arrays novos são JSON, ausências são vazias. |
+| `@fluxerjs/core#Message.mentions` | property | equivalent | $fetchMessage | O leitor $fetchMessage expõe mentions pelo contrato normalizado; objetos e arrays novos são JSON, ausências são vazias. |
+| `@fluxerjs/core#Message.messageReference` | property | equivalent | $fetchMessage | O leitor $fetchMessage expõe messageReference pelo contrato normalizado; objetos e arrays novos são JSON, ausências são vazias. |
+| `@fluxerjs/core#Message.messageSnapshots` | property | equivalent | $fetchMessage | O leitor $fetchMessage expõe messageSnapshots pelo contrato normalizado; objetos e arrays novos são JSON, ausências são vazias. |
+| `@fluxerjs/core#Message.nonce` | property | equivalent | $fetchMessage | O leitor $fetchMessage expõe nonce pelo contrato normalizado; objetos e arrays novos são JSON, ausências são vazias. |
+| `@fluxerjs/core#Message.nsfwEmojis` | property | equivalent | $fetchMessage | O leitor $fetchMessage expõe nsfwEmojis pelo contrato normalizado; objetos e arrays novos são JSON, ausências são vazias. |
+| `@fluxerjs/core#Message.partial` | property | equivalent | $fetchMessage | O leitor $fetchMessage expõe partial pelo contrato normalizado; objetos e arrays novos são JSON, ausências são vazias. |
 | `@fluxerjs/core#Message.pin` | method | function | $pin | Operação por builtin e recurso/serviço compartilhado; ver contrato de argumentos na referência. |
 | `@fluxerjs/core#Message.pinned` | property | equivalent | $fetchMessage, $prop | Valor normalizado pelo recurso da entidade; $prop seleciona o campo (IDs usam sufixo ID). |
 | `@fluxerjs/core#Message.react` | method | function | $react | Operação por builtin e recurso/serviço compartilhado; ver contrato de argumentos na referência. |
-| `@fluxerjs/core#Message.reactions` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
-| `@fluxerjs/core#Message.referencedMessage` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Message.reactions` | property | equivalent | $fetchMessage | O leitor $fetchMessage expõe reactions pelo contrato normalizado; objetos e arrays novos são JSON, ausências são vazias. |
+| `@fluxerjs/core#Message.referencedMessage` | property | equivalent | $fetchMessage | O leitor $fetchMessage expõe referencedMessage pelo contrato normalizado; objetos e arrays novos são JSON, ausências são vazias. |
 | `@fluxerjs/core#Message.removeAllReactions` | method | equivalent | $clearReactions | Acesso por builtin ao recurso autorizado correspondente; resolve/fetch usa busca normalizada, não instância SDK. |
 | `@fluxerjs/core#Message.removeReaction` | method | equivalent | $removeReaction | Acesso por builtin ao recurso autorizado correspondente; resolve/fetch usa busca normalizada, não instância SDK. |
 | `@fluxerjs/core#Message.removeReactionEmoji` | method | equivalent | $clearReactions | Acesso por builtin ao recurso autorizado correspondente; resolve/fetch usa busca normalizada, não instância SDK. |
 | `@fluxerjs/core#Message.reply` | method | function | $reply | Operação por builtin e recurso/serviço compartilhado; ver contrato de argumentos na referência. |
 | `@fluxerjs/core#Message.resolveChannel` | method | equivalent | $fetchMessage, $prop, $channel | channelID da mensagem resolve por $channel. |
-| `@fluxerjs/core#Message.resolveGuild` | method | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Message.resolveGuild` | method | equivalent | $fetchMessage, $guild | Resolve guildID pelo leitor normalizado e consulta a entidade no contexto atual; sem expor instâncias SDK. |
 | `@fluxerjs/core#Message.send` | method | excluded | raw-transport | Objeto/transporte cru ou introspecção arbitrária pode contornar guards ou revelar estado da sessão. |
 | `@fluxerjs/core#Message.sendTo` | method | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
 | `@fluxerjs/core#Message.startThread` | method | equivalent | $createThread | Acesso por builtin ao recurso autorizado correspondente; resolve/fetch usa busca normalizada, não instância SDK. |
 | `@fluxerjs/core#Message.static:_createMessageBody` | method | excluded | internal | Helper interno, backing state ou patch de sessão; usar a operação pública autorizada. |
-| `@fluxerjs/core#Message.static:resolve` | method | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
-| `@fluxerjs/core#Message.stickers` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
-| `@fluxerjs/core#Message.thread` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
-| `@fluxerjs/core#Message.tts` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
-| `@fluxerjs/core#Message.type` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Message.static:resolve` | method | equivalent | $fetchMessage | Busca explícita pelo canal e ID em vez de resolução implícita pelo cache. |
+| `@fluxerjs/core#Message.stickers` | property | equivalent | $fetchMessage | O leitor $fetchMessage expõe stickers pelo contrato normalizado; objetos e arrays novos são JSON, ausências são vazias. |
+| `@fluxerjs/core#Message.thread` | property | equivalent | $fetchMessage | O leitor $fetchMessage expõe thread pelo contrato normalizado; objetos e arrays novos são JSON, ausências são vazias. |
+| `@fluxerjs/core#Message.tts` | property | equivalent | $fetchMessage | O leitor $fetchMessage expõe tts pelo contrato normalizado; objetos e arrays novos são JSON, ausências são vazias. |
+| `@fluxerjs/core#Message.type` | property | equivalent | $fetchMessage | O leitor $fetchMessage expõe type pelo contrato normalizado; objetos e arrays novos são JSON, ausências são vazias. |
 | `@fluxerjs/core#Message.unpin` | method | function | $unpin | Operação por builtin e recurso/serviço compartilhado; ver contrato de argumentos na referência. |
-| `@fluxerjs/core#Message.webhookId` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Message.webhookId` | property | equivalent | $fetchMessage | O leitor $fetchMessage expõe webhookId pelo contrato normalizado; objetos e arrays novos são JSON, ausências são vazias. |
 | `@fluxerjs/core#MessageManager` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
 | `@fluxerjs/core#MessageManager.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
 | `@fluxerjs/core#MessageManager.fetch` | method | function | $fetchMessage, $messages | Overload por ID via fetchMessage; overload de consulta paginada via messages. |
@@ -1500,59 +1500,59 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types, @fluxerjs/voice, @
 | `@fluxerjs/core#MessagePayload.toJSON` | method | equivalent | $object, $jsonMerge, $reply | Payload declarativo validado no envio em vez de instância mutável. |
 | `@fluxerjs/core#MessageReaction` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
 | `@fluxerjs/core#MessageReaction._data` | property | excluded | internal | Helper interno, backing state ou patch de sessão; usar a operação pública autorizada. |
-| `@fluxerjs/core#MessageReaction.channel` | accessor | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
-| `@fluxerjs/core#MessageReaction.channelId` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#MessageReaction.channel` | accessor | equivalent | $reactionInfo, $channel | Resolve channelID pelo leitor normalizado e consulta a entidade no contexto atual; sem expor instâncias SDK. |
+| `@fluxerjs/core#MessageReaction.channelId` | property | equivalent | $reactionInfo | O leitor $reactionInfo expõe channelID pelo contrato normalizado; objetos e arrays novos são JSON, ausências são vazias. |
 | `@fluxerjs/core#MessageReaction.client` | property | excluded | raw-transport | Referência ao client/transporte SDK não é valor de script; usar recursos autorizados. |
 | `@fluxerjs/core#MessageReaction.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
-| `@fluxerjs/core#MessageReaction.count` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
-| `@fluxerjs/core#MessageReaction.emoji` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
-| `@fluxerjs/core#MessageReaction.emojiIdentifier` | accessor | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#MessageReaction.count` | property | equivalent | $reactionInfo | O leitor $reactionInfo expõe count pelo contrato normalizado; objetos e arrays novos são JSON, ausências são vazias. |
+| `@fluxerjs/core#MessageReaction.emoji` | property | equivalent | $reactionInfo | O leitor $reactionInfo expõe emoji pelo contrato normalizado; objetos e arrays novos são JSON, ausências são vazias. |
+| `@fluxerjs/core#MessageReaction.emojiIdentifier` | accessor | equivalent | $reactionInfo | O leitor $reactionInfo expõe emojiIdentifier pelo contrato normalizado; objetos e arrays novos são JSON, ausências são vazias. |
 | `@fluxerjs/core#MessageReaction.fetchMessage` | method | equivalent | $fetchMessage | Acesso por builtin ao recurso autorizado correspondente; resolve/fetch usa busca normalizada, não instância SDK. |
-| `@fluxerjs/core#MessageReaction.guild` | accessor | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
-| `@fluxerjs/core#MessageReaction.guildId` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
-| `@fluxerjs/core#MessageReaction.me` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
-| `@fluxerjs/core#MessageReaction.message` | accessor | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
-| `@fluxerjs/core#MessageReaction.messageId` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#MessageReaction.guild` | accessor | equivalent | $reactionInfo, $guild | Resolve guildID pelo leitor normalizado e consulta a entidade no contexto atual; sem expor instâncias SDK. |
+| `@fluxerjs/core#MessageReaction.guildId` | property | equivalent | $reactionInfo | O leitor $reactionInfo expõe guildID pelo contrato normalizado; objetos e arrays novos são JSON, ausências são vazias. |
+| `@fluxerjs/core#MessageReaction.me` | property | equivalent | $reactionInfo | O leitor $reactionInfo expõe me pelo contrato normalizado; objetos e arrays novos são JSON, ausências são vazias. |
+| `@fluxerjs/core#MessageReaction.message` | accessor | equivalent | $reactionInfo, $fetchMessage | Resolve messageID pelo leitor normalizado e consulta a entidade no contexto atual; sem expor instâncias SDK. |
+| `@fluxerjs/core#MessageReaction.messageId` | property | equivalent | $reactionInfo | O leitor $reactionInfo expõe messageID pelo contrato normalizado; objetos e arrays novos são JSON, ausências são vazias. |
 | `@fluxerjs/core#MessageReaction.static:fromMessage` | method | excluded | internal | Helper interno, backing state ou patch de sessão; usar a operação pública autorizada. |
 | `@fluxerjs/core#MessageReactionManager` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
 | `@fluxerjs/core#MessageReactionManager._patch` | method | excluded | internal | Helper interno, backing state ou patch de sessão; usar a operação pública autorizada. |
 | `@fluxerjs/core#MessageReactionManager.[Symbol.iterator]` | method | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
-| `@fluxerjs/core#MessageReactionManager.cache` | accessor | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#MessageReactionManager.cache` | accessor | equivalent | $fetchMessage | A propriedade reactions retorna agregados normalizados em JSON, sem expor o cache mutável. |
 | `@fluxerjs/core#MessageReactionManager.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
-| `@fluxerjs/core#MessageReactionManager.size` | accessor | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#MessageReactionManager.size` | accessor | equivalent | $fetchMessage, $jsonDecode, $arrayLength | Decodifica o JSON da propriedade reactions e conta o array de agregados, sem acessar o cache nativo. |
 | `@fluxerjs/core#MessageSticker` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
-| `@fluxerjs/core#MessageSticker.animated` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#MessageSticker.animated` | property | equivalent | $fetchMessage | A propriedade stickers contém animated de cada figurinha de mensagem em JSON normalizado. |
 | `@fluxerjs/core#MessageSticker.client` | property | excluded | raw-transport | Referência ao client/transporte SDK não é valor de script; usar recursos autorizados. |
 | `@fluxerjs/core#MessageSticker.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
-| `@fluxerjs/core#MessageSticker.createdAt` | accessor | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
-| `@fluxerjs/core#MessageSticker.createdTimestamp` | accessor | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
-| `@fluxerjs/core#MessageSticker.description` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
-| `@fluxerjs/core#MessageSticker.id` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
-| `@fluxerjs/core#MessageSticker.name` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
-| `@fluxerjs/core#MessageSticker.tags` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
-| `@fluxerjs/core#MessageSticker.url` | accessor | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#MessageSticker.createdAt` | accessor | equivalent | $fetchMessage | A propriedade stickers contém createdAt de cada figurinha de mensagem em JSON normalizado. |
+| `@fluxerjs/core#MessageSticker.createdTimestamp` | accessor | equivalent | $fetchMessage | A propriedade stickers contém createdTimestamp de cada figurinha de mensagem em JSON normalizado. |
+| `@fluxerjs/core#MessageSticker.description` | property | equivalent | $fetchMessage | A propriedade stickers contém description de cada figurinha de mensagem em JSON normalizado. |
+| `@fluxerjs/core#MessageSticker.id` | property | equivalent | $fetchMessage | A propriedade stickers contém id de cada figurinha de mensagem em JSON normalizado. |
+| `@fluxerjs/core#MessageSticker.name` | property | equivalent | $fetchMessage | A propriedade stickers contém name de cada figurinha de mensagem em JSON normalizado. |
+| `@fluxerjs/core#MessageSticker.tags` | property | equivalent | $fetchMessage | A propriedade stickers contém tags de cada figurinha de mensagem em JSON normalizado. |
+| `@fluxerjs/core#MessageSticker.url` | accessor | equivalent | $fetchMessage | A propriedade stickers contém url de cada figurinha de mensagem em JSON normalizado. |
 | `@fluxerjs/core#PartialGuildMember` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
 | `@fluxerjs/core#PartialGuildMember.client` | property | excluded | raw-transport | Referência ao client/transporte SDK não é valor de script; usar recursos autorizados. |
 | `@fluxerjs/core#PartialGuildMember.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
 | `@fluxerjs/core#PartialGuildMember.fetch` | method | equivalent | $member | Acesso por builtin ao recurso autorizado correspondente; resolve/fetch usa busca normalizada, não instância SDK. |
-| `@fluxerjs/core#PartialGuildMember.guild` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
-| `@fluxerjs/core#PartialGuildMember.guildId` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
-| `@fluxerjs/core#PartialGuildMember.id` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
-| `@fluxerjs/core#PartialGuildMember.partial` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
-| `@fluxerjs/core#PartialGuildMember.user` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#PartialGuildMember.guild` | property | equivalent | $member, $guild | Resolve guildID pelo leitor normalizado e consulta a entidade no contexto atual; sem expor instâncias SDK. |
+| `@fluxerjs/core#PartialGuildMember.guildId` | property | equivalent | $member | O leitor $member expõe guildID pelo contrato normalizado; objetos e arrays novos são JSON, ausências são vazias. |
+| `@fluxerjs/core#PartialGuildMember.id` | property | equivalent | $member | O leitor $member expõe id pelo contrato normalizado; objetos e arrays novos são JSON, ausências são vazias. |
+| `@fluxerjs/core#PartialGuildMember.partial` | property | equivalent | $member | O leitor $member expõe partial pelo contrato normalizado; objetos e arrays novos são JSON, ausências são vazias. |
+| `@fluxerjs/core#PartialGuildMember.user` | property | equivalent | $member, $user | Resolve id pelo leitor normalizado e consulta a entidade no contexto atual; sem expor instâncias SDK. |
 | `@fluxerjs/core#PartialMessage` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
-| `@fluxerjs/core#PartialMessage.author` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
-| `@fluxerjs/core#PartialMessage.authorId` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
-| `@fluxerjs/core#PartialMessage.channel` | accessor | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#PartialMessage.author` | property | equivalent | $fetchMessage | O leitor $fetchMessage expõe author pelo contrato normalizado; objetos e arrays novos são JSON, ausências são vazias. |
+| `@fluxerjs/core#PartialMessage.authorId` | property | equivalent | $fetchMessage | O leitor $fetchMessage expõe authorID pelo contrato normalizado; objetos e arrays novos são JSON, ausências são vazias. |
+| `@fluxerjs/core#PartialMessage.channel` | accessor | equivalent | $fetchMessage, $channel | Resolve channelID pelo leitor normalizado e consulta a entidade no contexto atual; sem expor instâncias SDK. |
 | `@fluxerjs/core#PartialMessage.channelId` | property | equivalent | $fetchMessage, $prop | Valor normalizado pelo recurso da entidade; $prop seleciona o campo (IDs usam sufixo ID). |
 | `@fluxerjs/core#PartialMessage.client` | property | excluded | raw-transport | Referência ao client/transporte SDK não é valor de script; usar recursos autorizados. |
 | `@fluxerjs/core#PartialMessage.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
-| `@fluxerjs/core#PartialMessage.content` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
-| `@fluxerjs/core#PartialMessage.createdAt` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#PartialMessage.content` | property | equivalent | $fetchMessage | O leitor $fetchMessage expõe content pelo contrato normalizado; objetos e arrays novos são JSON, ausências são vazias. |
+| `@fluxerjs/core#PartialMessage.createdAt` | property | equivalent | $fetchMessage, $date | Formata createdTimestamp da mensagem buscada como ISO. |
 | `@fluxerjs/core#PartialMessage.fetch` | method | function | $fetchMessage | Operação por builtin e recurso/serviço compartilhado; ver contrato de argumentos na referência. |
-| `@fluxerjs/core#PartialMessage.guildId` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#PartialMessage.guildId` | property | equivalent | $fetchMessage | O leitor $fetchMessage expõe guildID pelo contrato normalizado; objetos e arrays novos são JSON, ausências são vazias. |
 | `@fluxerjs/core#PartialMessage.id` | property | equivalent | $fetchMessage, $prop | Valor normalizado pelo recurso da entidade; $prop seleciona o campo (IDs usam sufixo ID). |
-| `@fluxerjs/core#PartialMessage.partial` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#PartialMessage.partial` | property | equivalent | $fetchMessage | O leitor $fetchMessage expõe partial pelo contrato normalizado; objetos e arrays novos são JSON, ausências são vazias. |
 | `@fluxerjs/core#PartialMessage.resolveChannel` | method | equivalent | $fetchMessage, $prop, $channel | channelID da mensagem resolve por $channel. |
 | `@fluxerjs/core#PermissionOverwrite` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
 | `@fluxerjs/core#PermissionOverwrite._allow` | property | excluded | internal | Helper interno, backing state ou patch de sessão; usar a operação pública autorizada. |
@@ -1579,12 +1579,12 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types, @fluxerjs/voice, @
 | `@fluxerjs/core#Role.client` | property | excluded | raw-transport | Referência ao client/transporte SDK não é valor de script; usar recursos autorizados. |
 | `@fluxerjs/core#Role.color` | property | equivalent | $role, $prop | Valor normalizado pelo recurso da entidade; $prop seleciona o campo (IDs usam sufixo ID). |
 | `@fluxerjs/core#Role.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
-| `@fluxerjs/core#Role.createdAt` | accessor | pending |  | Falta timestamp normalizado de cargo ou helper Snowflake puro. |
-| `@fluxerjs/core#Role.createdTimestamp` | accessor | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Role.createdAt` | accessor | equivalent | $role | O leitor $role expõe createdAt pelo contrato normalizado; objetos e arrays novos são JSON, ausências são vazias. |
+| `@fluxerjs/core#Role.createdTimestamp` | accessor | equivalent | $role | O leitor $role expõe createdTimestamp pelo contrato normalizado; objetos e arrays novos são JSON, ausências são vazias. |
 | `@fluxerjs/core#Role.delete` | method | function | $deleteRole | Operação por builtin e recurso/serviço compartilhado; ver contrato de argumentos na referência. |
 | `@fluxerjs/core#Role.edit` | method | function | $editRole | Operação por builtin e recurso/serviço compartilhado; ver contrato de argumentos na referência. |
-| `@fluxerjs/core#Role.guildId` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
-| `@fluxerjs/core#Role.has` | method | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Role.guildId` | property | equivalent | $role | O leitor $role expõe guildID pelo contrato normalizado; objetos e arrays novos são JSON, ausências são vazias. |
+| `@fluxerjs/core#Role.has` | method | equivalent | $roleHasPermission | Verifica a permissão do cargo no servidor atual, incluindo Administrator. |
 | `@fluxerjs/core#Role.hoist` | property | equivalent | $role, $prop | Valor normalizado pelo recurso da entidade; $prop seleciona o campo (IDs usam sufixo ID). |
 | `@fluxerjs/core#Role.hoistPosition` | property | equivalent | $role, $prop | RoleInfo.hoistPosition preserva posição de destaque normalizada. |
 | `@fluxerjs/core#Role.id` | property | equivalent | $role, $prop | Valor normalizado pelo recurso da entidade; $prop seleciona o campo (IDs usam sufixo ID). |
@@ -1592,7 +1592,7 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types, @fluxerjs/voice, @
 | `@fluxerjs/core#Role.name` | property | equivalent | $role, $prop | Valor normalizado pelo recurso da entidade; $prop seleciona o campo (IDs usam sufixo ID). |
 | `@fluxerjs/core#Role.permissions` | accessor | equivalent | $role, $prop | Valor normalizado pelo recurso da entidade; $prop seleciona o campo (IDs usam sufixo ID). |
 | `@fluxerjs/core#Role.position` | property | equivalent | $role, $prop | Valor normalizado pelo recurso da entidade; $prop seleciona o campo (IDs usam sufixo ID). |
-| `@fluxerjs/core#Role.toString` | method | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Role.toString` | method | equivalent | $mention | Formata a menção pelo ID numérico. |
 | `@fluxerjs/core#Role.unicodeEmoji` | property | equivalent | $role, $prop | Valor normalizado pelo recurso da entidade; $prop seleciona o campo (IDs usam sufixo ID). |
 | `@fluxerjs/core#TextChannel` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
 | `@fluxerjs/core#TextChannel.applyEditPatch` | method | excluded | internal | Helper interno, backing state ou patch de sessão; usar a operação pública autorizada. |
@@ -1677,7 +1677,7 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types, @fluxerjs/voice, @
 | `@fluxerjs/core#User.id` | property | equivalent | $user, $prop | Valor normalizado pelo recurso da entidade; $prop seleciona o campo (IDs usam sufixo ID). |
 | `@fluxerjs/core#User.send` | method | function | $dm | Operação por builtin e recurso/serviço compartilhado; ver contrato de argumentos na referência. |
 | `@fluxerjs/core#User.system` | property | equivalent | $user | $user expõe system no objeto normalizado e na leitura por propriedade; objetos/arrays são JSON, null é vazio. |
-| `@fluxerjs/core#User.toString` | method | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#User.toString` | method | equivalent | $mention | Formata a menção pelo ID numérico. |
 | `@fluxerjs/core#User.username` | property | equivalent | $user, $prop | Valor normalizado pelo recurso da entidade; $prop seleciona o campo (IDs usam sufixo ID). |
 | `@fluxerjs/core#UserManager` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
 | `@fluxerjs/core#UserManager.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
@@ -1702,24 +1702,24 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types, @fluxerjs/voice, @
 | `@fluxerjs/core#VoiceChannel.userLimit` | property | equivalent | $channel | $channel expõe userLimit no objeto normalizado e na leitura por propriedade; objetos/arrays são JSON, null é vazio. |
 | `@fluxerjs/core#VoiceChannel.voiceConnectionLimit` | property | equivalent | $channel | $channel expõe voiceConnectionLimit no objeto normalizado e na leitura por propriedade; objetos/arrays são JSON, null é vazio. |
 | `@fluxerjs/core#Webhook` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
-| `@fluxerjs/core#Webhook.avatar` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
-| `@fluxerjs/core#Webhook.avatarURL` | method | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Webhook.avatar` | property | equivalent | $webhookInfo | O leitor $webhookInfo expõe avatar pelo contrato normalizado; objetos e arrays novos são JSON, ausências são vazias. |
+| `@fluxerjs/core#Webhook.avatarURL` | method | equivalent | $webhookInfo | O leitor $webhookInfo expõe avatarURL pelo contrato normalizado; objetos e arrays novos são JSON, ausências são vazias. |
 | `@fluxerjs/core#Webhook.channelId` | property | equivalent | $webhooks, $prop | Valor normalizado pelo recurso da entidade; $prop seleciona o campo (IDs usam sufixo ID). |
 | `@fluxerjs/core#Webhook.client` | property | excluded | raw-transport | Referência ao client/transporte SDK não é valor de script; usar recursos autorizados. |
 | `@fluxerjs/core#Webhook.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
-| `@fluxerjs/core#Webhook.createdAt` | accessor | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
-| `@fluxerjs/core#Webhook.createdTimestamp` | accessor | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Webhook.createdAt` | accessor | equivalent | $webhookInfo | O leitor $webhookInfo expõe createdAt pelo contrato normalizado; objetos e arrays novos são JSON, ausências são vazias. |
+| `@fluxerjs/core#Webhook.createdTimestamp` | accessor | equivalent | $webhookInfo | O leitor $webhookInfo expõe createdTimestamp pelo contrato normalizado; objetos e arrays novos são JSON, ausências são vazias. |
 | `@fluxerjs/core#Webhook.delete` | method | function | $deleteWebhook | Operação por builtin e recurso/serviço compartilhado; ver contrato de argumentos na referência. |
 | `@fluxerjs/core#Webhook.edit` | method | function | $editWebhook | Operação por builtin e recurso/serviço compartilhado; ver contrato de argumentos na referência. |
 | `@fluxerjs/core#Webhook.guildId` | property | equivalent | $webhooks, $prop | Valor normalizado pelo recurso da entidade; $prop seleciona o campo (IDs usam sufixo ID). |
 | `@fluxerjs/core#Webhook.id` | property | equivalent | $webhooks, $prop | Valor normalizado pelo recurso da entidade; $prop seleciona o campo (IDs usam sufixo ID). |
 | `@fluxerjs/core#Webhook.name` | property | equivalent | $webhooks, $prop | Valor normalizado pelo recurso da entidade; $prop seleciona o campo (IDs usam sufixo ID). |
 | `@fluxerjs/core#Webhook.send` | method | excluded | credentials | O builtin sendWebhook exige token de webhook; este caminho com segredo no script não conta como operação segura. Envio sem segredo requer fachada nativa. |
-| `@fluxerjs/core#Webhook.static:fetch` | method | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Webhook.static:fetch` | method | equivalent | $webhookInfo | Busca explícita por ID, com ManageWebhooks de autor e bot e sem token. |
 | `@fluxerjs/core#Webhook.static:fromToken` | method | excluded | credentials | Credenciais, segredo ou sessão autenticada não são expostos a scripts. |
 | `@fluxerjs/core#Webhook.token` | property | excluded | credentials | Credenciais, segredo ou sessão autenticada não são expostos a scripts. |
-| `@fluxerjs/core#Webhook.type` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
-| `@fluxerjs/core#Webhook.user` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Webhook.type` | property | equivalent | $webhookInfo | O leitor $webhookInfo expõe type pelo contrato normalizado; objetos e arrays novos são JSON, ausências são vazias. |
+| `@fluxerjs/core#Webhook.user` | property | equivalent | $webhookInfo | O leitor $webhookInfo expõe user pelo contrato normalizado; objetos e arrays novos são JSON, ausências são vazias. |
 
 ## events
 

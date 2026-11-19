@@ -4,6 +4,7 @@ import { GuardError, YuzuhaError } from '../../errors.js';
 import { defineFunctions } from './definition.js';
 import { userID } from '../../domain/values.js';
 import { entityProperty } from './entities-info.js';
+import { botCanModerate } from '../../services/entity-capabilities.js';
 
 const STATUSES = ['online', 'idle', 'dnd', 'invisible'] as const;
 const ACTIVITY_TYPES = ['playing', 'listening', 'watching', 'competing', 'custom'] as const;
@@ -104,6 +105,11 @@ export const userFunctions = defineFunctions(fn => {
     const guildID = c.ctx.requireGuild(), id = await c.text(0);
     const info = await found(() => c.ctx.resources.users.member(guildID, id));
     if (info === '') return '';
+    if (c.count > 1) {
+      const key = (await c.text(1)).trim();
+      const action = key === 'bannable' ? 'ban' : key === 'kickable' ? 'kick' : key === 'moderatable' ? 'timeout' : null;
+      if (action) return botCanModerate(c.ctx.transport, guildID, id, action);
+    }
     return c.count > 1 ? entityProperty(info, await c.text(1), 'member') : info;
   });
   fn('members', 'users', 0, 1, '[limite?]', 'Membros do servidor atual; padrão 50, máximo 1000.', async c => {
@@ -135,6 +141,9 @@ export const userFunctions = defineFunctions(fn => {
     return info ? info.createdTimestamp : '';
   });
   fn('guild', 'users', 0, 1, '[propriedade?]', 'Servidor atual, ou uma propriedade própria.', async c => {
+    if (c.count && (await c.text(0)).trim() === 'permissions') {
+      return (await c.ctx.transport.member(c.ctx.requireGuild(), c.ctx.transport.botID)).permissions.toString();
+    }
     const info = await c.ctx.resources.users.guild(c.ctx.requireGuild());
     return c.count ? entityProperty(info, await c.text(0), 'guild') : info;
   });

@@ -2706,5 +2706,53 @@
     "maxArgs": 2,
     "usage": "$threadInfo[propriedade;thread]",
     "description": "Lê campo público da thread no servidor atual; associações e tags são JSON."
+  },
+  {
+    "name": "inviteInfo",
+    "category": "invites",
+    "minArgs": 2,
+    "maxArgs": 2,
+    "usage": "$inviteInfo[propriedade;código]",
+    "description": "Lê campo público de convite do servidor atual; objetos são JSON e null é vazio."
+  },
+  {
+    "name": "webhookInfo",
+    "category": "webhooks",
+    "minArgs": 2,
+    "maxArgs": 2,
+    "usage": "$webhookInfo[propriedade;id]",
+    "description": "Lê webhook do servidor atual com ManageWebhooks de autor e bot; nunca expõe token."
+  },
+  {
+    "name": "banInfo",
+    "category": "users",
+    "minArgs": 2,
+    "maxArgs": 2,
+    "usage": "$banInfo[propriedade;usuário]",
+    "description": "Busca banimento no servidor atual com BanMembers de autor e bot; vazio quando ausente."
+  },
+  {
+    "name": "reactionInfo",
+    "category": "messages",
+    "minArgs": 3,
+    "maxArgs": 4,
+    "usage": "$reactionInfo[propriedade;emoji;mensagem;canal?]",
+    "description": "Lê agregado de reação de uma mensagem; vazio se ausente, objetos são JSON."
+  },
+  {
+    "name": "canSend",
+    "category": "channels",
+    "minArgs": 0,
+    "maxArgs": 2,
+    "usage": "$canSend[canal?;usuário?]",
+    "description": "Verifica ViewChannel e SendMessages efetivos do bot ou autor em canal do servidor atual."
+  },
+  {
+    "name": "roleHasPermission",
+    "category": "roles",
+    "minArgs": 2,
+    "maxArgs": 2,
+    "usage": "$roleHasPermission[cargo;permissão]",
+    "description": "Verifica uma permissão do cargo no servidor atual, respeitando Administrator."
   }
 ]

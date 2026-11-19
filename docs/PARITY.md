@@ -108,7 +108,7 @@ precisam de `overrides` para o core fixado, como no manifesto do Yuzuha.
 | Estado e casos | `ctx.data`, TTL, userFor, transaction entre chaves e stores | Variáveis, TTL, incrementos, listas, casos e dataTransaction com operações declarativas |
 | Agendamentos | `ctx.scheduler`, cron/fusos, concorrência limitada, histórico, heartbeat e controles | schedule, scheduleEvery, scheduleCron, controles, histórico, reexecução e retry com jitter |
 | HTTP | `request`, `requestBytes`, `stream`, `multipart`, `withPolicy` e cancelamento | `$http`, `$httpJson`, `$httpMultipart` e download de imagens com política de rede por comando |
-| CLI, plugins, comandos e middleware | Recursos próprios do Yuzuha; lint/catálogos/cenários e manutenção de dados | 337 funções canônicas; comandos e eventos de script |
+| CLI, plugins, comandos e middleware | Recursos próprios do Yuzuha; lint/catálogos/cenários e manutenção de dados | 343 funções canônicas; comandos e eventos de script |
 | Composição de cartões | `ctx.canvas`, `yuzuha/canvas` (napi em processo) e `yuzuha/canvas/card` (builder isolado), com peer opcional `@napi-rs/canvas`; envio pelo contexto | 12 funções `$canvas*` para cenas privadas por execução; envio sem retorno automático |
 
 A camada nativa do Yuzuha — o caminho principal — acrescenta schemas de argumentos

@@ -92,7 +92,7 @@ bot.command(script({
 }));
 ```
 
-O function mode tem **337 funções** para mensagens, guards, moderação, variáveis,
+O function mode tem **343 funções** para mensagens, guards, moderação, variáveis,
 JSON, arrays, loops, eventos e agendamentos.
 
 As funções seguem as assinaturas e regras do runtime do Yuzuha. Consulte a

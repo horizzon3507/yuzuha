@@ -1,4 +1,7 @@
 export interface RoleInfo {
+  guildID?: string;
+  createdTimestamp?: number;
+  createdAt?: string;
   id: string;
   name: string;
   color: number;

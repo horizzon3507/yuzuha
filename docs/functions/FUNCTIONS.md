@@ -1,7 +1,7 @@
 # Referência das funções
 
 Function mode opcional, importado de `yuzuha/functions`.
-Gerada do registro executável: **337 funções**. Atualize com `npm run docs:generate`.
+Gerada do registro executável: **343 funções**. Atualize com `npm run docs:generate`.
 
 Aliases não contam como funções adicionais. Índices e semântica estão em [LANGUAGE.md](LANGUAGE.md).
 
@@ -26,6 +26,7 @@ Aliases não contam como funções adicionais. Índices e semântica estão em [
 
 | Função | Descrição | Aliases |
 |---|---|---|
+| `$canSend[canal?;usuário?]` | Verifica ViewChannel e SendMessages efetivos do bot ou autor em canal do servidor atual. |  |
 | `$channel[canal;propriedade?]` | Mostra um canal; com propriedade, mostra só ela. |  |
 | `$channelPerms[canal;alvo;permitir?;negar?]` | Define permissões locais; listas separadas por vírgula. |  |
 | `$channelPermsOf[canal;usuario]` | Permissões efetivas do usuário no canal. |  |
@@ -152,6 +153,7 @@ Aliases não contam como funções adicionais. Índices e semântica estão em [
 | `$createInvite[canal;maxUsos?;duracao?]` | Cria um convite; duração como 1h, 0 nunca expira. |  |
 | `$deleteInvite[codigo]` | Apaga um convite por código ou URL. |  |
 | `$invite[codigo]` | Mostra um convite por código ou URL. |  |
+| `$inviteInfo[propriedade;código]` | Lê campo público de convite do servidor atual; objetos são JSON e null é vazio. |  |
 | `$invites` | Lista convites do servidor; exige ManageGuild de autor e bot. |  |
 | `$setVanity[código]` | Define convite personalizado; vazio remove. Exige ManageGuild. |  |
 | `$vanity` | Obtém código e usos do convite personalizado do servidor. |  |
@@ -273,6 +275,7 @@ Aliases não contam como funções adicionais. Índices e semântica estão em [
 | `$pinnedMessagesPage[canal?;limite?;before?]` | Pagina mensagens por data de fixação; retorna messages, pinnedAt, hasMore e nextBefore. Cursor ISO da página anterior. |  |
 | `$preloadMessages[canais]` | Busca a última mensagem de até 100 canais; recebe array de IDs e retorna objeto por canal. |  |
 | `$react[emoji]` | Reage à mensagem que executou o comando. |  |
+| `$reactionInfo[propriedade;emoji;mensagem;canal?]` | Lê agregado de reação de uma mensagem; vazio se ausente, objetos são JSON. |  |
 | `$reactionUsers[mensagem;emoji;limite?;após?;canal?]` | Lista IDs de usuários que reagiram; limite de 1 a 100 e cursor por usuário. |  |
 | `$reactionUsersPage[mensagem;emoji;limite?;após?;canal?]` | Retorna users com IDs, hasMore e nextAfter; limite de 1 a 100 e cursor por usuário. |  |
 | `$removeReaction[mensagem;emoji;usuário?;canal?]` | Remove a reação do bot ou de um usuário da mensagem. |  |
@@ -327,6 +330,7 @@ Aliases não contam como funções adicionais. Índices e semântica estão em [
 | `$moveRole[cargo;posição]` | Move cargo com autorização e hierarquia do autor e do bot; posição a partir de 1. |  |
 | `$removeRole[usuário;cargo]` | Remove cargo do usuário. |  |
 | `$role[cargo;propriedade?]` | Resolve cargo do servidor atual; retorna o cargo ou uma propriedade. |  |
+| `$roleHasPermission[cargo;permissão]` | Verifica uma permissão do cargo no servidor atual, respeitando Administrator. |  |
 | `$roles` | Lista cargos do servidor ordenados por posição. |  |
 
 ## schedule
@@ -394,6 +398,7 @@ Aliases não contam como funções adicionais. Índices e semântica estão em [
 |---|---|---|
 | `$auditLogs[limite?]` | Logs de auditoria do servidor atual; padrão 50, máximo 100. |  |
 | `$avatar[id;tamanho?]` | URL do avatar; tamanho de 16 a 4096; vazio se ausente. |  |
+| `$banInfo[propriedade;usuário]` | Busca banimento no servidor atual com BanMembers de autor e bot; vazio quando ausente. |  |
 | `$bans[limite?]` | Banimentos do servidor atual; padrão 50, máximo 1000. |  |
 | `$channelCounts[canal?;timeout?]` | Solicita contagens ao vivo do canal ao gateway, aguardando o evento correspondente. |  |
 | `$displayName[id]` | Nome de exibição do usuário; vazio se não existir. |  |
@@ -445,4 +450,5 @@ Aliases não contam como funções adicionais. Índices e semântica estão em [
 | `$deleteWebhook[id;token?]` | Apaga webhook do servidor atual com ManageWebhooks; token não contorna autorização. |  |
 | `$editWebhook[id;nome;token?]` | Renomeia webhook do servidor atual com ManageWebhooks; sem token usa a autenticação do bot. |  |
 | `$sendWebhook[id;token;texto]` | Envia via webhook do servidor atual com ManageWebhooks do autor e bot; token não contorna autorização. |  |
+| `$webhookInfo[propriedade;id]` | Lê webhook do servidor atual com ManageWebhooks de autor e bot; nunca expõe token. |  |
 | `$webhooks[canal?]` | Lista webhooks do canal (padrão: canal atual). |  |

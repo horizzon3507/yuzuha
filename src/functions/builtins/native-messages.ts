@@ -3,6 +3,7 @@ import { YuzuhaError } from '../../errors.js';
 import { defineFunctions } from './definition.js';
 import { preloadChannels } from '../../domain/resource-batches.js';
 import { pinnedMessagesInput, reactionUsersInput } from '../../domain/message-query.js';
+import { contextChannel, entityProperty } from './entities-info.js';
 
 const PROPERTIES: Record<string, (info: MessageInfo) => unknown> = {
   id: info => info.id,
@@ -90,6 +91,7 @@ export const resourceMessageFunctions = defineFunctions(fn => {
     const channelID = (await c.text(0)).trim(), messageID = (await c.text(1)).trim();
     if (!channelID) throw new YuzuhaError('MESSAGE_CHANNEL', 'Canal da mensagem é obrigatório.');
     if (!messageID) throw new YuzuhaError('MESSAGE_ID', 'ID da mensagem é obrigatório.');
+    await contextChannel(c, channelID);
     const info = await c.ctx.resources.messages.fetch(channelID, messageID);
     if (c.count < 3) return info;
     return lookup(info, await c.text(2));
@@ -157,6 +159,6 @@ function lookup(info: MessageInfo, raw: string): unknown {
   const key = raw.trim().toLowerCase();
   if (!key) return info;
   const property = Object.hasOwn(PROPERTIES, key) ? PROPERTIES[key] : undefined;
-  if (!property) throw new YuzuhaError('MESSAGE_PROPERTY', `Propriedade desconhecida: ${raw.trim()}.`);
+  if (!property) return entityProperty(info, raw.trim(), 'message');
   return property(info);
 }

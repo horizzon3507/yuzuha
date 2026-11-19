@@ -1,4 +1,8 @@
 export interface EmojiInfo {
+  guildID?: string;
+  identifier?: string;
+  createdTimestamp?: number;
+  createdAt?: string;
   id: string;
   name: string;
   animated: boolean;
@@ -6,6 +10,12 @@ export interface EmojiInfo {
 }
 
 export interface StickerInfo {
+  guildID?: string;
+  animated?: boolean;
+  nsfw?: boolean;
+  url?: string;
+  createdTimestamp?: number;
+  createdAt?: string;
   id: string;
   name: string;
   description: string | null;

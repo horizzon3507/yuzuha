@@ -2,6 +2,7 @@ import { Invite } from '@fluxerjs/core';
 import type { ChannelInviteCreateOptions, Client } from '@fluxerjs/core';
 import type { InviteCreateInput, InviteInfo, InvitesResources } from '../../../ports/resources/invites.js';
 import { YuzuhaError } from '../../../errors.js';
+import { toUserInfo } from './users.js';
 
 function extractCode(value: string): string {
   const path = value.trim().split(/[?#]/)[0]!.replace(/\/+$/, '');
@@ -12,6 +13,11 @@ function extractCode(value: string): string {
 
 function toInviteInfo(invite: Invite): InviteInfo {
   return {
+    type: invite.type, createdAt: invite.createdAt?.toISOString() ?? null, expiresAt: invite.expiresAt?.toISOString() ?? null,
+    temporary: invite.temporary, maxAge: invite.maxAge, memberCount: invite.memberCount, presenceCount: invite.presenceCount,
+    isGuild: invite.isGuild(), isGroupDM: invite.isGroupDM(), inviter: invite.inviter ? toUserInfo(invite.inviter) : null,
+    guildSnapshot: invite.guildSnapshot ? { ...invite.guildSnapshot, features: [...invite.guildSnapshot.features] } : null,
+    channelSnapshot: invite.channelSnapshot ? { ...invite.channelSnapshot } : null,
     code: invite.code,
     url: invite.url,
     guildID: invite.guildSnapshot?.id ?? null,

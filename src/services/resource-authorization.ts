@@ -121,6 +121,10 @@ export function bindAuthorizedResources(
   };
 
   return { users: Object.assign(Object.create(source.users), {
+    async getBan(guildID: string, userID: string) {
+      const g = guards(); g.guild(guildID); await g.allowed('BanMembers');
+      return source.users.getBan(guildID, userID);
+    },
     async transferOwnership(guildID: string, userID: string) {
       const g = guards();
       requireGuild(guildID, t);

@@ -160,8 +160,8 @@ export function toUserInfo(user: User): UserInfo {
     username: user.username,
     displayName: user.globalName ?? user.username,
     bot: user.bot,
-    avatarURL: fixAnimatedAssetUrl(user.avatarURL()),
-    bannerURL: fixAnimatedAssetUrl(user.bannerURL()),
+    avatarURL: fixAnimatedAssetUrl(user.avatarURL?.() ?? null),
+    bannerURL: fixAnimatedAssetUrl(user.bannerURL?.() ?? null),
     createdTimestamp: user.createdTimestamp,
   };
 }
@@ -314,11 +314,18 @@ export function createUsersResources(client: Client, cdn: import('../../../domai
       }
       return { status: 'ambiguous' as const, candidates: rankCandidates(match.items.map(ban => ({ id: ban.id, label: ban.label }))) };
     },
+    async getBan(guildID, userID) {
+      const guild = await client.guilds.fetch(guildID, { force: true });
+      const ban = (await guild.fetchBans()).find(item => item.user.id === userID);
+      return ban ? { userID: ban.user.id, username: ban.user.username, reason: ban.reason,
+        guildID: ban.guildId, expiresAt: ban.expiresAt?.toISOString() ?? null, user: toUserInfo(ban.user) } : null;
+    },
     async bans(guildID: string, limit?: number): Promise<BanInfo[]> {
       const guild = await client.guilds.fetch(guildID, { force: true });
       const capped = limitOf(limit, 50, 1000);
       return (await guild.fetchBans()).slice(0, capped)
-        .map(ban => ({ userID: ban.user.id, username: ban.user.username, reason: ban.reason }));
+        .map(ban => ({ userID: ban.user.id, username: ban.user.username, reason: ban.reason,
+          guildID: ban.guildId, expiresAt: ban.expiresAt?.toISOString() ?? null, user: toUserInfo(ban.user) }));
     },
     async auditLogs(guildID: string, input?: number | AuditLogQueryInput): Promise<AuditLogInfo[]> {
       const query = auditLogQueryInput(input);

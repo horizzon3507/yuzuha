@@ -26,6 +26,7 @@ export function toChannelInfo(channel: GuildChannel): ChannelInfo {
   const extras = channel as GuildChannel & ChannelExtras;
   return {
     createdTimestamp: channel.createdTimestamp,
+    createdAt: channel.createdAt?.toISOString(),
     icon: channel.icon,
     lastPinTimestamp: channel.lastPinTimestamp,
     lastMessageId: extras.lastMessageId ?? null,
@@ -109,6 +110,7 @@ export function createChannelsResources(client: Client): ChannelsResources {
       if (channel.isDM()) {
         return { id: channel.id, name: channel.name ?? '', type: Number(channel.type), guildID: null,
           createdTimestamp: channel.createdTimestamp, icon: channel.icon, lastPinTimestamp: channel.lastPinTimestamp,
+          createdAt: channel.createdAt?.toISOString(),
           lastMessageId: channel.lastMessageId ?? null, nicks: { ...channel.nicks },
           parentID: null, position: 0, topic: null, slowmode: 0, nsfw: false,
           recipientIDs: channel.recipients.map(user => user.id), ownerID: channel.ownerId };

@@ -198,7 +198,10 @@ test('embed recebido é lido de forma normalizada e somente leitura', async () =
   };
   const info: MessageInfo = { id: '1', channelID: '200', authorID: '2', authorName: 'ana', content: '', createdTimestamp: 1,
     pinned: false, attachments: [], embeds: [received] };
-  const { run } = harness('1', { messages: { async fetch() { return info; } } });
+  const { run } = harness('1', { messages: { async fetch() { return info; } }, channels: {
+    async get(id) { return { id, guildID: '100', name: 'geral', type: 0, parentID: null, position: 0,
+      topic: null, slowmode: 0, nsfw: false }; },
+  } });
   assert.deepEqual(await run('$fetchMessage[200;1;embeds]'), [received]);
   assert.equal(await run('$fetchMessage[200;1;embeds]').then(list => (list as ReceivedEmbed[])[0]!.provider?.name), 'Site');
   assert.deepEqual(await run('$embedFromObject[$jsonGet[$fetchMessage[200;1;embeds];0]]'), {

@@ -25,7 +25,10 @@ function harness(resources: Parameters<typeof mockResources>[0], overrides: Part
   const store = new MemoryStore();
   const ctx = new CommandContext({
     message: mockMessage('!test'), command: { name: 'test', code: '' },
-    transport, store, cooldown: () => 0, resources: mockResources(resources), ...overrides,
+    transport, store, cooldown: () => 0, resources: mockResources({ channels: {
+      async get(id) { return { id, guildID: '100', name: 'geral', type: 0, parentID: null, position: 0,
+        topic: null, slowmode: 0, nsfw: false }; },
+    }, ...resources }), ...overrides,
   });
   const runtime = new Runtime(defaultLimits).registerAll([...resourceMessageFunctions, ...collectorFunctions]);
   return { ctx, transport, run: (source: string) => runtime.execute(runtime.compile(source, 'command.yz'), ctx) };

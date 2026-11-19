@@ -5,7 +5,7 @@ import { userID as parseUserID } from '../../../domain/values.js';
 
 type FetchedChannel = Awaited<ReturnType<Client['channels']['fetch']>>;
 
-function toInfo(thread: ThreadChannel): ThreadInfo {
+export function toThreadInfo(thread: ThreadChannel): ThreadInfo {
   return {
     guildID: thread.guildId,
     archiveTimestamp: thread.archiveTimestamp,
@@ -28,6 +28,8 @@ function toInfo(thread: ThreadChannel): ThreadInfo {
     ownerID: thread.ownerId,
   };
 }
+
+const toInfo = toThreadInfo;
 
 function asThread(channel: FetchedChannel): ThreadChannel {
   if (!channel.isThread()) throw new YuzuhaError('THREAD_NOT_FOUND', 'O canal informado não é uma thread.');

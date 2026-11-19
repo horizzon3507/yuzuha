@@ -13,12 +13,16 @@ import { YuzuhaError } from '../../../errors.js';
 import type { WebhookInfo, WebhooksResources } from '../../../ports/resources/webhooks.js';
 import { allowedMentions, embedBuilder, wireAllowedMentions } from '../payload.js';
 import { toMessageInfo } from './messages.js';
+import { toUserInfo } from './users.js';
 
 const FILE_FETCH_TIMEOUT_MS = 30_000;
 const MAX_TOTAL_BYTES = 10_000_000;
 
 function toWebhookInfo(webhook: Webhook): WebhookInfo {
-  return { id: webhook.id, name: webhook.name, channelID: webhook.channelId, guildID: webhook.guildId, token: webhook.token };
+  return { id: webhook.id, name: webhook.name, channelID: webhook.channelId, guildID: webhook.guildId, token: webhook.token,
+    avatar: webhook.avatar, avatarURL: webhook.avatarURL?.() ?? null, createdTimestamp: webhook.createdTimestamp,
+    createdAt: webhook.createdAt?.toISOString(), type: webhook.type,
+    user: webhook.user ? toUserInfo(webhook.user) : undefined };
 }
 
 function reasonHeaders(reason: string | undefined): { headers?: Record<string, string> } {

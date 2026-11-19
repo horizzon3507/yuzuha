@@ -1,6 +1,7 @@
 import type { ThreadDefaultsInput } from './threads.js';
 export interface ChannelInfo {
   createdTimestamp?: number;
+  createdAt?: string;
   icon?: string | null;
   lastPinTimestamp?: string | null;
   lastMessageId?: string | null;

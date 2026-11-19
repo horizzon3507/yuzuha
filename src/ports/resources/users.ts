@@ -22,6 +22,9 @@ export interface UserInfo {
 }
 
 export interface MemberInfo extends UserInfo {
+  bannable?: boolean;
+  kickable?: boolean;
+  moderatable?: boolean;
   guildID?: string;
   partial?: boolean;
   deaf?: boolean;
@@ -36,6 +39,7 @@ export interface MemberInfo extends UserInfo {
 }
 
 export interface GuildInfo {
+  permissions?: string;
   available?: boolean;
   afkChannelId?: string | null;
   afkTimeout?: number;
@@ -75,6 +79,9 @@ export interface GuildInfo {
 }
 
 export interface BanInfo {
+  guildID?: string;
+  expiresAt?: string | null;
+  user?: UserInfo;
   userID: string;
   username: string;
   reason: string | null;
@@ -102,6 +109,7 @@ export interface UsersResources {
   memberCount(guildID: string): Promise<number>;
   guild(guildID: string): Promise<GuildInfo>;
   bans(guildID: string, limit?: number): Promise<BanInfo[]>;
+  getBan(guildID: string, userID: string): Promise<BanInfo | null>;
   resolveBan(guildID: string, query: string): Promise<import('../../domain/resolvers.js').ResolvedBan>;
   auditLogs(guildID: string, input?: number | AuditLogQueryInput): Promise<AuditLogInfo[]>;
   setPresence(status: PresenceStatus, activity?: ActivityInfo): Promise<void>;

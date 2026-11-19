@@ -4,6 +4,7 @@ import { YuzuhaError } from '../../../errors.js';
 
 function toInfo(role: Role): RoleInfo {
   return {
+    guildID: role.guildId, createdTimestamp: role.createdTimestamp, createdAt: role.createdAt?.toISOString(),
     id: role.id,
     name: role.name,
     color: role.color,
