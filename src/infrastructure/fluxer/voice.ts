@@ -96,7 +96,9 @@ export class FluxerVoice extends EventEmitter<{ voiceError: [error: Error, guild
         publish(voiceSDKEvents.disconnect);
         if (this.connections.get(channel.guildId)?.connection === connection) this.connections.delete(channel.guildId);
         connection.off('error', onError); connection.off('disconnect', onDisconnect);
-        connection.off('ready', onReady); connection.off('serverLeave', onServerLeave);
+        connection.off('ready', onReady);
+        if (this.closed) connection.off('serverLeave', onServerLeave);
+        else setImmediate(() => connection.off('serverLeave', onServerLeave));
         connection.off('speakerStart', onSpeakerStart); connection.off('speakerStop', onSpeakerStop);
       };
       connection.on('error', onError);

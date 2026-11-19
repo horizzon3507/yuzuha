@@ -73,6 +73,35 @@ test('eventos do driver chegam a scripts com IDs, ator e erros normalizados sem 
   assert.deepEqual(f.errors, []); unsubscribe(); unsubscribe();
 });
 
+test('LiveKit serverLeave agendado antes do disconnect chega ao script e remove listeners', async () => {
+  await using f = fixture();
+  f.bot.scriptEvent({ event: 'voiceDisconnect', channelID: '200', code: '$eventName' });
+  f.bot.scriptEvent({ event: 'voiceServerLeave', channelID: '200', code: '$eventName' });
+  await f.voice.join('300');
+  setImmediate(() => f.connection.emit('serverLeave'));
+  f.connection.emit('disconnect');
+  assert.equal(f.voice.get('100'), undefined);
+  assert.equal(f.connection.listenerCount('disconnect'), 0);
+  assert.equal(f.connection.listenerCount('serverLeave'), 1);
+  await flush();
+  assert.deepEqual(f.transport.messages.map(message => message.payload.content), ['voiceDisconnect', 'voiceServerLeave']);
+  assert.equal(f.connection.eventNames().length, 0);
+  f.connection.emit('serverLeave'); await flush();
+  assert.equal(f.transport.messages.length, 2);
+  assert.deepEqual(f.errors, []);
+});
+
+test('disconnect sem serverLeave também remove o listener adiado', async () => {
+  await using f = fixture();
+  f.bot.scriptEvent({ event: 'voiceServerLeave', channelID: '200', code: '$eventName' });
+  await f.voice.join('300');
+  f.connection.emit('disconnect');
+  await flush();
+  assert.equal(f.connection.eventNames().length, 0);
+  assert.equal(f.transport.messages.length, 0);
+  assert.deepEqual(f.errors, []);
+});
+
 test('códigos desconhecidos e mensagens com credenciais nunca são repassados', async () => {
   await using f = fixture();
   f.bot.scriptEvent({ event: 'voiceError', channelID: '200', code: '$eventErrorCode: $eventErrorMessage' });
