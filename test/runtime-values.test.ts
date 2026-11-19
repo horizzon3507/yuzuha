@@ -24,6 +24,10 @@ test('truthy preserves comparison grammar including malformed operators and line
   for (const left of operands) for (const operator of operators) for (const right of operands) {
     const value = `${left}${operator}${right}`;
     assert.equal(truthy(value), originalTruthy(value), JSON.stringify(value));
+    for (const padding of [31, 32, 33, 64]) {
+      const padded = 'x'.repeat(padding) + value;
+      assert.equal(truthy(padded), originalTruthy(padded), JSON.stringify(padded));
+    }
   }
 });
 

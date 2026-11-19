@@ -7,7 +7,7 @@ export function text(value: unknown): string {
 
 export function truthy(value: unknown): boolean {
   if (typeof value === 'string') {
-    const comparison = value.includes('==') || value.includes('!=') || value.includes('>') || value.includes('<');
+    const comparison = value.length <= 32 || /[<>=]/.test(value);
     const match = comparison ? /^(.*?)\s*(==|!=|>=|<=|>|<)\s*(.*?)$/.exec(value) : null;
     if (match) {
       const left = match[1]!.trim(), right = match[3]!.trim();
