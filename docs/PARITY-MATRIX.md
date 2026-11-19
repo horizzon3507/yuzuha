@@ -11,7 +11,7 @@ Paridade significa toda operação segura do SDK alcançável por scripts, com e
 - **excluded**: fora da linguagem por segurança ou por não representar operação; categoria e motivo visíveis.
 - **pending**: operação segura reservada à área indicada; permitida durante desenvolvimento, não no gate de release.
 
-**Function-mode safe coverage: 32.03%** (311/971). Denominador = function + equivalent + pending; excluded não entra. Cada linha é uma unidade, inclusive reexports em pacotes distintos; não é uma medição de testes ou completude de parâmetros.
+**Function-mode safe coverage: 35.90%** (345/961). Denominador = function + equivalent + pending; excluded não entra. Cada linha é uma unidade, inclusive reexports em pacotes distintos; não é uma medição de testes ou completude de parâmetros.
 
 Inventário: todos os exports (inclusive tipos), membros próprios não privados de classes, construtores e eventos dos contratos exportados *Events. Membros herdados aparecem no export de origem. Enums/constantes de runtime precisam de classificação operacional; interfaces e aliases são data-only. APIs novas exigem revisão explícita.
 
@@ -19,10 +19,10 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types, @fluxerjs/voice, @
 
 | Status | Itens |
 |---|---:|
-| function | 82 |
-| equivalent | 229 |
-| excluded | 834 |
-| pending | 660 |
+| function | 103 |
+| equivalent | 242 |
+| excluded | 844 |
+| pending | 616 |
 
 ## Pendências por área
 
@@ -32,7 +32,7 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types, @fluxerjs/voice, @
 | resources | 120 |
 | entities | 238 |
 | events | 59 |
-| voice | 44 |
+| voice | 0 |
 
 ## pure
 
@@ -1797,69 +1797,69 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types, @fluxerjs/voice, @
 
 | ID | Tipo | Status | Funções / exclusão | Justificativa |
 |---|---|---|---|---|
-| `@fluxerjs/voice#getVoiceManager` | function | pending |  | Falta contrato declarativo de voz/música com limites, cancelamento e política de mídia. |
-| `@fluxerjs/voice#joinVoiceChannel` | function | pending |  | Falta contrato declarativo de voz/música com limites, cancelamento e política de mídia. |
+| `@fluxerjs/voice#getVoiceManager` | function | equivalent | $voiceJoin, $voiceStatus | Gerenciador é obtido sob demanda pelo adaptador; scripts operam somente a conexão do servidor atual. |
+| `@fluxerjs/voice#joinVoiceChannel` | function | function | $voiceJoin | Conecta via NativeVoice com validação do servidor e Connect do autor, Connect/Speak do bot. |
 | `@fluxerjs/voice#LiveKitAudioFrame` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/voice#LiveKitReceiveSubscription` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/voice#LiveKitRtcConnection` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
-| `@fluxerjs/voice#LiveKitRtcConnection.channel` | property | pending |  | Falta contrato declarativo de voz/música com limites, cancelamento e política de mídia. |
+| `@fluxerjs/voice#LiveKitRtcConnection.channel` | property | equivalent | $botVoiceChannel | Retorna somente ID do canal da conexão do bot no servidor atual. |
 | `@fluxerjs/voice#LiveKitRtcConnection.client` | property | excluded | raw-transport | Referência ao client/transporte SDK não é valor de script; usar recursos autorizados. |
 | `@fluxerjs/voice#LiveKitRtcConnection.connect` | method | excluded | lifecycle | Ciclo de vida, emissão ou coordenação de processos é controlado pela configuração nativa, não por scripts. |
 | `@fluxerjs/voice#LiveKitRtcConnection.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
 | `@fluxerjs/voice#LiveKitRtcConnection.destroy` | method | excluded | lifecycle | Ciclo de vida, emissão ou coordenação de processos é controlado pela configuração nativa, não por scripts. |
-| `@fluxerjs/voice#LiveKitRtcConnection.disconnect` | method | pending |  | Falta contrato declarativo de voz/música com limites, cancelamento e política de mídia. |
-| `@fluxerjs/voice#LiveKitRtcConnection.getVolume` | method | pending |  | Falta contrato declarativo de voz/música com limites, cancelamento e política de mídia. |
-| `@fluxerjs/voice#LiveKitRtcConnection.guildId` | property | pending |  | Falta contrato declarativo de voz/música com limites, cancelamento e política de mídia. |
-| `@fluxerjs/voice#LiveKitRtcConnection.isConnected` | method | pending |  | Falta contrato declarativo de voz/música com limites, cancelamento e política de mídia. |
-| `@fluxerjs/voice#LiveKitRtcConnection.isSameServer` | method | pending |  | Falta contrato declarativo de voz/música com limites, cancelamento e política de mídia. |
-| `@fluxerjs/voice#LiveKitRtcConnection.play` | method | pending |  | Falta contrato declarativo de voz/música com limites, cancelamento e política de mídia. |
-| `@fluxerjs/voice#LiveKitRtcConnection.playing` | accessor | pending |  | Falta contrato declarativo de voz/música com limites, cancelamento e política de mídia. |
-| `@fluxerjs/voice#LiveKitRtcConnection.playingVideo` | accessor | pending |  | Falta contrato declarativo de voz/música com limites, cancelamento e política de mídia. |
-| `@fluxerjs/voice#LiveKitRtcConnection.playOpus` | method | pending |  | Falta contrato declarativo de voz/música com limites, cancelamento e política de mídia. |
-| `@fluxerjs/voice#LiveKitRtcConnection.playVideo` | method | pending |  | Falta contrato declarativo de voz/música com limites, cancelamento e política de mídia. |
-| `@fluxerjs/voice#LiveKitRtcConnection.setVolume` | method | pending |  | Falta contrato declarativo de voz/música com limites, cancelamento e política de mídia. |
-| `@fluxerjs/voice#LiveKitRtcConnection.stop` | method | pending |  | Falta contrato declarativo de voz/música com limites, cancelamento e política de mídia. |
-| `@fluxerjs/voice#LiveKitRtcConnection.stopVideo` | method | pending |  | Falta contrato declarativo de voz/música com limites, cancelamento e política de mídia. |
-| `@fluxerjs/voice#LiveKitRtcConnection.subscribeParticipantAudio` | method | pending |  | Falta contrato declarativo de voz/música com limites, cancelamento e política de mídia. |
+| `@fluxerjs/voice#LiveKitRtcConnection.disconnect` | method | function | $voiceLeave | Desconecta somente a conexão do servidor atual; exige mesmo canal do bot ou MoveMembers. |
+| `@fluxerjs/voice#LiveKitRtcConnection.getVolume` | method | function | $voiceVolume | Lê ou define volume inteiro entre 0 e 200; exige mesmo canal do bot ou MoveMembers. |
+| `@fluxerjs/voice#LiveKitRtcConnection.guildId` | property | equivalent | $voiceStatus | Expõe estado normalizado da conexão do servidor atual, sem conexão SDK nem segredos. |
+| `@fluxerjs/voice#LiveKitRtcConnection.isConnected` | method | equivalent | $voiceStatus | Expõe estado normalizado da conexão do servidor atual, sem conexão SDK nem segredos. |
+| `@fluxerjs/voice#LiveKitRtcConnection.isSameServer` | method | excluded | credentials | Comparação de endpoint e token autenticado é interna ao transporte; scripts não recebem nem fornecem esses segredos. |
+| `@fluxerjs/voice#LiveKitRtcConnection.play` | method | excluded | raw-transport | Mídia, streams e assinaturas de transporte bruto permanecem exclusivos do modo nativo. |
+| `@fluxerjs/voice#LiveKitRtcConnection.playing` | accessor | equivalent | $voiceStatus | Expõe estado normalizado da conexão do servidor atual, sem conexão SDK nem segredos. |
+| `@fluxerjs/voice#LiveKitRtcConnection.playingVideo` | accessor | equivalent | $voiceStatus | Expõe estado normalizado da conexão do servidor atual, sem conexão SDK nem segredos. |
+| `@fluxerjs/voice#LiveKitRtcConnection.playOpus` | method | excluded | raw-transport | Mídia, streams e assinaturas de transporte bruto permanecem exclusivos do modo nativo. |
+| `@fluxerjs/voice#LiveKitRtcConnection.playVideo` | method | excluded | raw-transport | Mídia, streams e assinaturas de transporte bruto permanecem exclusivos do modo nativo. |
+| `@fluxerjs/voice#LiveKitRtcConnection.setVolume` | method | function | $voiceVolume | Lê ou define volume inteiro entre 0 e 200; exige mesmo canal do bot ou MoveMembers. |
+| `@fluxerjs/voice#LiveKitRtcConnection.stop` | method | function | $voiceStop | Interrompe áudio e vídeo da conexão atual; exige mesmo canal do bot ou MoveMembers. |
+| `@fluxerjs/voice#LiveKitRtcConnection.stopVideo` | method | function | $voiceStop | Interrompe áudio e vídeo da conexão atual; exige mesmo canal do bot ou MoveMembers. |
+| `@fluxerjs/voice#LiveKitRtcConnection.subscribeParticipantAudio` | method | excluded | raw-transport | Mídia, streams e assinaturas de transporte bruto permanecem exclusivos do modo nativo. |
 | `@fluxerjs/voice#LiveKitRtcConnectionEvents` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
-| `@fluxerjs/voice#LiveKitRtcConnectionEvents:audioFrame` | event | pending |  | Falta contrato declarativo de voz/música com limites, cancelamento e política de mídia. |
-| `@fluxerjs/voice#LiveKitRtcConnectionEvents:disconnect` | event | pending |  | Falta contrato declarativo de voz/música com limites, cancelamento e política de mídia. |
-| `@fluxerjs/voice#LiveKitRtcConnectionEvents:error` | event | pending |  | Falta contrato declarativo de voz/música com limites, cancelamento e política de mídia. |
-| `@fluxerjs/voice#LiveKitRtcConnectionEvents:ready` | event | pending |  | Falta contrato declarativo de voz/música com limites, cancelamento e política de mídia. |
-| `@fluxerjs/voice#LiveKitRtcConnectionEvents:requestVoiceStateSync` | event | pending |  | Falta contrato declarativo de voz/música com limites, cancelamento e política de mídia. |
-| `@fluxerjs/voice#LiveKitRtcConnectionEvents:serverLeave` | event | pending |  | Falta contrato declarativo de voz/música com limites, cancelamento e política de mídia. |
-| `@fluxerjs/voice#LiveKitRtcConnectionEvents:speakerStart` | event | pending |  | Falta contrato declarativo de voz/música com limites, cancelamento e política de mídia. |
-| `@fluxerjs/voice#LiveKitRtcConnectionEvents:speakerStop` | event | pending |  | Falta contrato declarativo de voz/música com limites, cancelamento e política de mídia. |
+| `@fluxerjs/voice#LiveKitRtcConnectionEvents:audioFrame` | event | excluded | raw-transport | Mídia, streams e assinaturas de transporte bruto permanecem exclusivos do modo nativo. |
+| `@fluxerjs/voice#LiveKitRtcConnectionEvents:disconnect` | event | function | $eventName, $eventGuildID, $eventChannelID | Evento voiceDisconnect via assinatura NativeVoice, com IDs normalizados, sem credenciais ou conexão SDK. |
+| `@fluxerjs/voice#LiveKitRtcConnectionEvents:error` | event | function | $eventName, $eventGuildID, $eventChannelID, $eventErrorCode, $eventErrorMessage | Evento voiceError via assinatura NativeVoice, com IDs normalizados, sem credenciais ou conexão SDK. Erro limitado a código permitido e mensagem fixa. |
+| `@fluxerjs/voice#LiveKitRtcConnectionEvents:ready` | event | function | $eventName, $eventGuildID, $eventChannelID | Evento voiceReady via assinatura NativeVoice, com IDs normalizados, sem credenciais ou conexão SDK. |
+| `@fluxerjs/voice#LiveKitRtcConnectionEvents:requestVoiceStateSync` | event | excluded | internal | Sincronização interna do gateway, sem emissão por scripts. |
+| `@fluxerjs/voice#LiveKitRtcConnectionEvents:serverLeave` | event | function | $eventName, $eventGuildID, $eventChannelID | Evento voiceServerLeave via assinatura NativeVoice, com IDs normalizados, sem credenciais ou conexão SDK. |
+| `@fluxerjs/voice#LiveKitRtcConnectionEvents:speakerStart` | event | function | $eventName, $eventGuildID, $eventChannelID, $eventUserID | Evento voiceSpeakerStart via assinatura NativeVoice, com IDs normalizados, sem credenciais ou conexão SDK. Identidade numérica validada e limite de 20 eventos/s por conexão. |
+| `@fluxerjs/voice#LiveKitRtcConnectionEvents:speakerStop` | event | function | $eventName, $eventGuildID, $eventChannelID, $eventUserID | Evento voiceSpeakerStop via assinatura NativeVoice, com IDs normalizados, sem credenciais ou conexão SDK. Identidade numérica validada e limite de 20 eventos/s por conexão. |
 | `@fluxerjs/voice#VideoPlayOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/voice#VoiceConnection` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
-| `@fluxerjs/voice#VoiceConnection.channel` | property | pending |  | Falta contrato declarativo de voz/música com limites, cancelamento e política de mídia. |
+| `@fluxerjs/voice#VoiceConnection.channel` | property | equivalent | $botVoiceChannel | Retorna somente ID do canal da conexão do bot no servidor atual. |
 | `@fluxerjs/voice#VoiceConnection.client` | property | excluded | raw-transport | Referência ao client/transporte SDK não é valor de script; usar recursos autorizados. |
 | `@fluxerjs/voice#VoiceConnection.connect` | method | excluded | lifecycle | Ciclo de vida, emissão ou coordenação de processos é controlado pela configuração nativa, não por scripts. |
 | `@fluxerjs/voice#VoiceConnection.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
 | `@fluxerjs/voice#VoiceConnection.destroy` | method | excluded | lifecycle | Ciclo de vida, emissão ou coordenação de processos é controlado pela configuração nativa, não por scripts. |
-| `@fluxerjs/voice#VoiceConnection.disconnect` | method | pending |  | Falta contrato declarativo de voz/música com limites, cancelamento e política de mídia. |
-| `@fluxerjs/voice#VoiceConnection.guildId` | property | pending |  | Falta contrato declarativo de voz/música com limites, cancelamento e política de mídia. |
-| `@fluxerjs/voice#VoiceConnection.play` | method | pending |  | Falta contrato declarativo de voz/música com limites, cancelamento e política de mídia. |
-| `@fluxerjs/voice#VoiceConnection.playing` | accessor | pending |  | Falta contrato declarativo de voz/música com limites, cancelamento e política de mídia. |
-| `@fluxerjs/voice#VoiceConnection.playOpus` | method | pending |  | Falta contrato declarativo de voz/música com limites, cancelamento e política de mídia. |
+| `@fluxerjs/voice#VoiceConnection.disconnect` | method | function | $voiceLeave | Desconecta somente a conexão do servidor atual; exige mesmo canal do bot ou MoveMembers. |
+| `@fluxerjs/voice#VoiceConnection.guildId` | property | equivalent | $voiceStatus | Expõe estado normalizado da conexão do servidor atual, sem conexão SDK nem segredos. |
+| `@fluxerjs/voice#VoiceConnection.play` | method | excluded | raw-transport | Mídia, streams e assinaturas de transporte bruto permanecem exclusivos do modo nativo. |
+| `@fluxerjs/voice#VoiceConnection.playing` | accessor | equivalent | $voiceStatus | Expõe estado normalizado da conexão do servidor atual, sem conexão SDK nem segredos. |
+| `@fluxerjs/voice#VoiceConnection.playOpus` | method | excluded | raw-transport | Mídia, streams e assinaturas de transporte bruto permanecem exclusivos do modo nativo. |
 | `@fluxerjs/voice#VoiceConnection.sessionId` | accessor | excluded | credentials | Credenciais, segredo ou sessão autenticada não são expostos a scripts. |
-| `@fluxerjs/voice#VoiceConnection.stop` | method | pending |  | Falta contrato declarativo de voz/música com limites, cancelamento e política de mídia. |
+| `@fluxerjs/voice#VoiceConnection.stop` | method | function | $voiceStop | Interrompe áudio e vídeo da conexão atual; exige mesmo canal do bot ou MoveMembers. |
 | `@fluxerjs/voice#VoiceConnectionEvents` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
-| `@fluxerjs/voice#VoiceConnectionEvents:disconnect` | event | pending |  | Falta contrato declarativo de voz/música com limites, cancelamento e política de mídia. |
-| `@fluxerjs/voice#VoiceConnectionEvents:error` | event | pending |  | Falta contrato declarativo de voz/música com limites, cancelamento e política de mídia. |
-| `@fluxerjs/voice#VoiceConnectionEvents:ready` | event | pending |  | Falta contrato declarativo de voz/música com limites, cancelamento e política de mídia. |
+| `@fluxerjs/voice#VoiceConnectionEvents:disconnect` | event | function | $eventName, $eventGuildID, $eventChannelID | Evento voiceDisconnect via assinatura NativeVoice, com IDs normalizados, sem credenciais ou conexão SDK. |
+| `@fluxerjs/voice#VoiceConnectionEvents:error` | event | function | $eventName, $eventGuildID, $eventChannelID, $eventErrorCode, $eventErrorMessage | Evento voiceError via assinatura NativeVoice, com IDs normalizados, sem credenciais ou conexão SDK. Erro limitado a código permitido e mensagem fixa. |
+| `@fluxerjs/voice#VoiceConnectionEvents:ready` | event | function | $eventName, $eventGuildID, $eventChannelID | Evento voiceReady via assinatura NativeVoice, com IDs normalizados, sem credenciais ou conexão SDK. |
 | `@fluxerjs/voice#VoiceConnectionLike` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/voice#VoiceManager` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
 | `@fluxerjs/voice#VoiceManager.client` | property | excluded | raw-transport | Referência ao client/transporte SDK não é valor de script; usar recursos autorizados. |
 | `@fluxerjs/voice#VoiceManager.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
-| `@fluxerjs/voice#VoiceManager.getConnection` | method | pending |  | Falta contrato declarativo de voz/música com limites, cancelamento e política de mídia. |
-| `@fluxerjs/voice#VoiceManager.getVoiceChannelId` | method | pending |  | Falta contrato declarativo de voz/música com limites, cancelamento e política de mídia. |
-| `@fluxerjs/voice#VoiceManager.join` | method | pending |  | Falta contrato declarativo de voz/música com limites, cancelamento e política de mídia. |
-| `@fluxerjs/voice#VoiceManager.leave` | method | pending |  | Falta contrato declarativo de voz/música com limites, cancelamento e política de mídia. |
-| `@fluxerjs/voice#VoiceManager.leaveChannel` | method | pending |  | Falta contrato declarativo de voz/música com limites, cancelamento e política de mídia. |
-| `@fluxerjs/voice#VoiceManager.listParticipantsInChannel` | method | pending |  | Falta contrato declarativo de voz/música com limites, cancelamento e política de mídia. |
-| `@fluxerjs/voice#VoiceManager.subscribeChannelParticipants` | method | pending |  | Falta contrato declarativo de voz/música com limites, cancelamento e política de mídia. |
-| `@fluxerjs/voice#VoiceManager.updateVoiceState` | method | pending |  | Falta contrato declarativo de voz/música com limites, cancelamento e política de mídia. |
-| `@fluxerjs/voice#VoiceManager.voiceStates` | property | pending |  | Falta contrato declarativo de voz/música com limites, cancelamento e política de mídia. |
+| `@fluxerjs/voice#VoiceManager.getConnection` | method | equivalent | $voiceStatus | Expõe estado normalizado da conexão do servidor atual, sem conexão SDK nem segredos. |
+| `@fluxerjs/voice#VoiceManager.getVoiceChannelId` | method | equivalent | $botVoiceChannel | Retorna somente ID do canal da conexão do bot no servidor atual. |
+| `@fluxerjs/voice#VoiceManager.join` | method | function | $voiceJoin | Conecta via NativeVoice com validação do servidor e Connect do autor, Connect/Speak do bot. |
+| `@fluxerjs/voice#VoiceManager.leave` | method | function | $voiceLeave | Desconecta somente a conexão do servidor atual; exige mesmo canal do bot ou MoveMembers. |
+| `@fluxerjs/voice#VoiceManager.leaveChannel` | method | function | $voiceLeave | Desconecta somente a conexão do servidor atual; exige mesmo canal do bot ou MoveMembers. |
+| `@fluxerjs/voice#VoiceManager.listParticipantsInChannel` | method | equivalent | $voiceMembers | Lista snapshot normalizado do rastreador do gateway, limitado a 100 estados sem sessão autenticada. |
+| `@fluxerjs/voice#VoiceManager.subscribeChannelParticipants` | method | excluded | raw-transport | Mídia, streams e assinaturas de transporte bruto permanecem exclusivos do modo nativo. |
+| `@fluxerjs/voice#VoiceManager.updateVoiceState` | method | function | $botVoiceState | Atualiza self_mute/self_deaf via VoiceManager; exige mesmo canal do bot ou MoveMembers. |
+| `@fluxerjs/voice#VoiceManager.voiceStates` | property | equivalent | $voiceStates, $voiceState, $voiceChannelOf | Consulta snapshot normalizado do servidor atual, com listas limitadas a 100 estados e sem sessão autenticada. |
 | `@fluxerjs/voice#VoiceManagerOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 | `@fluxerjs/voice#VoiceStateMap` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |

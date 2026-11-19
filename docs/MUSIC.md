@@ -3,7 +3,8 @@
 A 0.1.8 inclui o conteúdo de música preparado na 0.1.6: `FluxerVoice` para áudio
 nativo, cliente Lavalink v4, filas e
 `FluxerLavalinkBridge` para transmitir o áudio do Lavalink ao Fluxer. Os imports vivem em `yuzuha/music`.
-São APIs JS/TS; o catálogo de 310 funções de script não inclui reprodução.
+As APIs JS/TS também estão disponíveis por funções declarativas, descritas em
+**Function mode** abaixo.
 
 | Integração | Conexão de áudio | Recursos |
 |---|---|---|
@@ -301,8 +302,141 @@ são ciclos diferentes.
 Passe `music` e/ou `voice` nas opções do bot. `ctx.music` e `ctx.voice` dão acesso
 nativo aos serviços. A ausência recebe `NATIVE_UNAVAILABLE`. Esses serviços usam
 a autoridade do bot: comandos devem validar servidor, canal e permissões antes
-de chamar a integração. Eles não acrescentam funções `$...` nem guards de
-moderação novos.
+de chamar a integração. As funções de script abaixo aplicam essas verificações;
+o acesso nativo continua sob responsabilidade do comando.
+
+## Function mode
+
+Configure `music` e/ou `voice` nas opções do bot antes de usar as funções.
+O function mode não inicia nodes, não faz login e não aceita streams, blobs
+`encoded`, tokens ou endpoints de voz. Serviço ausente produz
+`NATIVE_UNAVAILABLE`; todas as funções exigem servidor, não DM.
+
+### Estados e conexão de voz
+
+| Função | Retorno e comportamento |
+|---|---|
+| `$voiceState[usuário?]` | Estado normalizado do usuário (autor por padrão), sem `sessionID`; `null` se ausente |
+| `$voiceChannelOf[usuário?]` | ID do canal do usuário ou texto vazio |
+| `$voiceMembers[canal?]` | Até 100 estados do canal; padrão: canal de voz do autor |
+| `$voiceStates` | Até 100 estados do servidor, sem sessões autenticadas |
+| `$botVoiceChannel` | Canal da conexão do bot ou texto vazio |
+| `$voiceJoin[canal?]` | Conecta ao canal informado ou ao canal de voz do autor; retorna o ID |
+| `$voiceLeave[canal?]` | Sai da conexão atual; canal opcional deve corresponder ao do bot |
+| `$voiceStatus` | `connected`, `channelID`, `guildID`, `playing`, `playingVideo`, `volume` |
+| `$voiceStop` | Para áudio e vídeo |
+| `$voiceVolume[volume?]` | Consulta ou define volume inteiro de 0 a 200 |
+| `$botVoiceState[selfMute?;selfDeaf?]` | Atualiza flags booleanas `true`/`false` do bot |
+
+### Eventos de voz
+
+Com `voice: new FluxerVoice(client)` configurado, `bot.scriptEvent` recebe os
+eventos das conexões nativas e LiveKit pelo port `NativeVoice.subscribe`:
+
+| Evento de script | Evento do SDK | Campos disponíveis |
+|---|---|---|
+| `voiceReady` | `ready` de VoiceConnection/LiveKit | `$eventName`, `$eventGuildID`, `$eventChannelID` |
+| `voiceDisconnect` | `disconnect` de VoiceConnection/LiveKit | Os mesmos IDs |
+| `voiceError` | `error` de VoiceConnection/LiveKit | IDs, `$eventErrorCode`, `$eventErrorMessage` |
+| `voiceServerLeave` | `serverLeave` de LiveKit | IDs |
+| `voiceSpeakerStart` / `voiceSpeakerStop` | `speakerStart` / `speakerStop` de LiveKit | IDs e `$eventUserID` do participante |
+
+O join inicial publica `voiceReady` após o driver resolver: o SDK pode emitir
+`ready` antes de devolver a conexão. Eventos `ready` posteriores também são
+encaminhados. O contexto é normalizado e imutável; não contém conexão SDK,
+tokens, endpoints, session IDs ou dados de áudio. Erros expõem somente códigos
+permitidos (`ECONNRESET`, `ETIMEDOUT`, `ECONNREFUSED`, `EPIPE`; demais viram
+`VOICE_STATE`) e a mensagem fixa `Falha na conexão de voz.`; mensagens brutas
+podem conter segredos e nunca são repassadas ao script.
+
+Speaker aceita somente identidades numéricas de até 128 dígitos e encaminha
+no máximo **20 eventos por segundo por conexão**, compartilhados entre start
+e stop; excedentes são descartados, não enfileirados. Não use essa amostragem
+como registro completo de presença. Os eventos restantes seguem os limites
+normais de execução dos scripts. A assinatura é removida no encerramento do
+bot e no `close()` da voz; sem serviço de voz configurado, esses handlers ficam
+inativos, sem listeners adicionais no Client. `once` e descarte de plugins
+funcionam como nos demais eventos de script.
+
+Nos eventos speaker o participante é o ator; nos demais, não há ator implícito
+(use `actorID` explícito se necessário para operações que exigem autorização).
+O canal padrão do contexto é o canal de voz. Para enviar avisos de texto,
+configure `channelID` no handler:
+
+```ts
+bot.scriptEvent({
+  event: 'voiceError',
+  channelID: '123456789012345678',
+  code: 'Voz no servidor $eventGuildID: $eventErrorCode — $eventErrorMessage',
+});
+```
+
+`requestVoiceStateSync` é interno; `audioFrame` e assinaturas de mídia crua
+continuam fora do function mode.
+
+### Busca, reprodução e fila
+
+| Função | Retorno e comportamento |
+|---|---|
+| `$musicSearch[busca;limite?]` | Metadados de até 25 resultados (padrão 10); busca de 1 a 500 caracteres |
+| `$musicPlay[busca;índice?]` | Seleciona **uma** faixa de busca/playlist (índice de 1 a 100, padrão 1), conecta se necessário, enfileira e inicia se ocioso; retorna metadados da faixa |
+| `$musicNowPlaying` | `{current, position, paused, volume, loop}`; `current: null` quando ocioso |
+| `$musicQueue[página?]` | `{page, total, tracks}`; páginas desde 1, até 25 faixas por página; página além da fila retorna lista vazia |
+| `$musicPause` / `$musicResume` | Pausa ou retoma reprodução |
+| `$musicSkip` | Avança e retorna metadados da próxima faixa, ou `null` sem próxima |
+| `$musicStop[limparFila?]` | Para reprodução; `true` por padrão, `false` preserva a fila; não sai da voz |
+| `$musicRemove[índice;quantidade?]` | Remove e retorna até 25 faixas; quantidade padrão 1 |
+| `$musicMove[de;para]` | Move uma faixa na fila |
+| `$musicShuffle` / `$musicClear` | Embaralha ou limpa a fila, sem alterar a faixa atual |
+| `$musicLoop[off\|track\|queue?]` | Consulta ou define repetição |
+| `$musicVolume[volume?]` | Consulta ou define volume inteiro de 0 a 200 no function mode |
+| `$musicSeek[ms]` | Posição inteira em milissegundos, dentro da duração da faixa e apenas com seek disponível |
+| `$musicFilters[json?]` | Consulta ou substitui filtros padrão; `{}` remove os filtros |
+
+Índices de faixas e páginas começam em **1**. Metadados de faixas incluem
+`identifier`, `title`, `author`, `length`, `isStream`, `isSeekable`, `uri`,
+`artworkUrl` e `sourceName`; não incluem `encoded`, `pluginInfo` ou `userData`.
+As leituras de música (exceto busca) e os controles exigem player existente;
+use `$musicPlay` para criá-lo. Busca vazia retorna `[]`; play sem resultados
+gera erro sem criar player. Node indisponível e falhas do backend são propagados.
+
+`$musicFilters` aceita JSON de até 5000 caracteres, com chaves e campos
+numéricos conhecidos de `MusicFilters`: `volume`, `equalizer`, `karaoke`,
+`timescale`, `tremolo`, `vibrato`, `rotation`, `distortion`, `channelMix` e
+`lowPass`. Não aceita `pluginFilters`, pois seu formato depende de plugins
+externos sem contrato validável pelo script. Valores devem ser números finitos;
+volume do filtro fica entre 0 e 5, equalizador aceita até 15 bandas distintas
+de 0 a 14 e ganho de -0.25 a 1, timescale aceita valores positivos até 10,
+depth/channelMix ficam entre 0 e 1, frequências são positivas (vibrato até 14),
+karaoke não aceita negativos e smoothing de lowPass deve ser maior que 1.
+Objetos, arrays ou campos desconhecidos são rejeitados; JSON nunca é código.
+
+### Autorização e falhas parciais
+
+Join/play exige **Connect do autor** e **Connect + Speak do bot**, verificados
+no canal de destino. `$musicPlay` exige o autor em voz e usa seu canal ao
+conectar; não move um player já conectado a outro canal. Nesse caso, para
+enfileirar em outro canal também é necessário **MoveMembers**.
+
+Controles de voz (`leave`, `stop`, volume e estado do bot) e de música (pausa,
+retomada, skip, stop, edição da fila, loop, volume, seek e filtros, inclusive
+suas consultas) exigem o autor no canal do bot/player **ou MoveMembers** no
+servidor. As demais leituras não exigem essa permissão. Guards e limites de
+execução/saída/fila continuam sendo erros mesmo dentro de `$try`.
+
+Se a conexão falhar, o player nativo tenta desfazer o join. Se a conexão
+funcionar, mas a reprodução falhar, o erro é propagado: o player continua
+conectado e a faixa permanece na fila para recuperação, sem confirmação falsa
+de sucesso. Repetir `$musicPlay` enfileira outra faixa; não é uma operação
+idempotente. Consulte `$musicQueue` antes de tentar novamente.
+
+```text
+$musicPlay[scsearch:termo]
+$musicQueue[1]
+$musicPause
+$musicVolume[50]
+$musicResume
+```
 
 `bot.destroy()` drena comandos, encerra players/voz e destrói o client, propagando
 falhas de encerramento. Os nodes Lavalink continuam sob responsabilidade do
