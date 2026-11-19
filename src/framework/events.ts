@@ -2,6 +2,7 @@ import { Events } from '@fluxerjs/core';
 import type { Client, ClientEventName, ClientEvents, Message, PartialMessage, ReactionEmojiPayload } from '@fluxerjs/core';
 import { YuzuhaError } from '../errors.js';
 import type { EventData } from '../domain/events.js';
+import { eventPayload, freezePayload } from './event-payloads.js';
 import type { IncomingMessage } from '../domain/messages.js';
 import type { EventContext } from '../commands/event-context.js';
 import { incoming } from '../infrastructure/fluxer/messages.js';
@@ -490,6 +491,7 @@ export function adaptClientEvent<K extends ClientEventName>(name: K, args: Reado
       break;
   }
 
+  event.data = freezePayload(eventPayload(name, args as readonly unknown[]));
   return { event, ...(message ? { message } : {}) };
 }
 

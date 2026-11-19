@@ -11,7 +11,7 @@ Paridade significa toda operação segura do SDK alcançável por scripts, com e
 - **excluded**: fora da linguagem por segurança ou por não representar operação; categoria e motivo visíveis.
 - **pending**: operação segura reservada à área indicada; permitida durante desenvolvimento, não no gate de release.
 
-**Function-mode safe coverage: 89.10%** (842/945). Denominador = function + equivalent + pending; excluded não entra. Cada linha é uma unidade, inclusive reexports em pacotes distintos; não é uma medição de testes ou completude de parâmetros.
+**Function-mode safe coverage: 95.34%** (900/944). Denominador = function + equivalent + pending; excluded não entra. Cada linha é uma unidade, inclusive reexports em pacotes distintos; não é uma medição de testes ou completude de parâmetros.
 
 Inventário: todos os exports (inclusive tipos), membros próprios não privados de classes, construtores e eventos dos contratos exportados *Events. Membros herdados aparecem no export de origem. Enums/constantes de runtime precisam de classificação operacional; interfaces e aliases são data-only. APIs novas exigem revisão explícita.
 
@@ -19,10 +19,10 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types, @fluxerjs/voice, @
 
 | Status | Itens |
 |---|---:|
-| function | 331 |
+| function | 389 |
 | equivalent | 511 |
-| excluded | 860 |
-| pending | 103 |
+| excluded | 861 |
+| pending | 44 |
 
 ## Pendências por área
 
@@ -31,7 +31,7 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types, @fluxerjs/voice, @
 | pure | 0 |
 | resources | 0 |
 | entities | 0 |
-| events | 59 |
+| events | 0 |
 | voice | 44 |
 
 ## pure
@@ -1726,72 +1726,72 @@ Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types, @fluxerjs/voice, @
 | ID | Tipo | Status | Funções / exclusão | Justificativa |
 |---|---|---|---|---|
 | `@fluxerjs/core#ClientEvents` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
-| `@fluxerjs/core#ClientEvents:channelCreate` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
-| `@fluxerjs/core#ClientEvents:channelDelete` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
-| `@fluxerjs/core#ClientEvents:channelMemberCountsUpdate` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
-| `@fluxerjs/core#ClientEvents:channelPinsUpdate` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
-| `@fluxerjs/core#ClientEvents:channelRecipientAdd` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
-| `@fluxerjs/core#ClientEvents:channelRecipientRemove` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
-| `@fluxerjs/core#ClientEvents:channelUpdate` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
-| `@fluxerjs/core#ClientEvents:debug` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
-| `@fluxerjs/core#ClientEvents:entranceSoundPlay` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
-| `@fluxerjs/core#ClientEvents:error` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
-| `@fluxerjs/core#ClientEvents:forumUnreads` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
-| `@fluxerjs/core#ClientEvents:guildAuditLogEntryCreate` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
-| `@fluxerjs/core#ClientEvents:guildAvailable` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
-| `@fluxerjs/core#ClientEvents:guildBanAdd` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
-| `@fluxerjs/core#ClientEvents:guildBanRemove` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
-| `@fluxerjs/core#ClientEvents:guildCountsUpdate` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
-| `@fluxerjs/core#ClientEvents:guildCreate` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
-| `@fluxerjs/core#ClientEvents:guildDelete` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
-| `@fluxerjs/core#ClientEvents:guildEmojisUpdate` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
-| `@fluxerjs/core#ClientEvents:guildMemberAdd` | event | function | $eventName | scriptEvent adapta este evento; $eventName e os seletores $event* leem seu contexto. |
-| `@fluxerjs/core#ClientEvents:guildMemberRemove` | event | function | $eventName | scriptEvent adapta este evento; $eventName e os seletores $event* leem seu contexto. |
-| `@fluxerjs/core#ClientEvents:guildMembersChunk` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
-| `@fluxerjs/core#ClientEvents:guildMemberUpdate` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
-| `@fluxerjs/core#ClientEvents:guildRoleCreate` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
-| `@fluxerjs/core#ClientEvents:guildRoleDelete` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
-| `@fluxerjs/core#ClientEvents:guildRoleUpdate` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
-| `@fluxerjs/core#ClientEvents:guildStickersUpdate` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
-| `@fluxerjs/core#ClientEvents:guildUnavailable` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
-| `@fluxerjs/core#ClientEvents:guildUpdate` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
-| `@fluxerjs/core#ClientEvents:inviteCreate` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
-| `@fluxerjs/core#ClientEvents:inviteDelete` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
-| `@fluxerjs/core#ClientEvents:messageCreate` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
-| `@fluxerjs/core#ClientEvents:messageDelete` | event | function | $eventName | scriptEvent adapta este evento; $eventName e os seletores $event* leem seu contexto. |
-| `@fluxerjs/core#ClientEvents:messageDeleteBulk` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
-| `@fluxerjs/core#ClientEvents:messageReactionAdd` | event | function | $eventName | scriptEvent adapta este evento; $eventName e os seletores $event* leem seu contexto. |
-| `@fluxerjs/core#ClientEvents:messageReactionAddMany` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
-| `@fluxerjs/core#ClientEvents:messageReactionRemove` | event | function | $eventName | scriptEvent adapta este evento; $eventName e os seletores $event* leem seu contexto. |
-| `@fluxerjs/core#ClientEvents:messageReactionRemoveAll` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
-| `@fluxerjs/core#ClientEvents:messageReactionRemoveEmoji` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
-| `@fluxerjs/core#ClientEvents:messageUpdate` | event | function | $eventName | scriptEvent adapta este evento; $eventName e os seletores $event* leem seu contexto. |
-| `@fluxerjs/core#ClientEvents:presenceUpdate` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
-| `@fluxerjs/core#ClientEvents:presenceUpdateBulk` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
-| `@fluxerjs/core#ClientEvents:ready` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
-| `@fluxerjs/core#ClientEvents:resumed` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
-| `@fluxerjs/core#ClientEvents:shardDisconnect` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
-| `@fluxerjs/core#ClientEvents:shardError` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
-| `@fluxerjs/core#ClientEvents:shardingRequired` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
-| `@fluxerjs/core#ClientEvents:shardReady` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
-| `@fluxerjs/core#ClientEvents:shardReconnecting` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
-| `@fluxerjs/core#ClientEvents:shardResumed` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
-| `@fluxerjs/core#ClientEvents:threadCreate` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
-| `@fluxerjs/core#ClientEvents:threadDelete` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
-| `@fluxerjs/core#ClientEvents:threadListSync` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
-| `@fluxerjs/core#ClientEvents:threadMemberListUpdate` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
-| `@fluxerjs/core#ClientEvents:threadMembersUpdate` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
-| `@fluxerjs/core#ClientEvents:threadMemberUpdate` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
-| `@fluxerjs/core#ClientEvents:threadUpdate` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
-| `@fluxerjs/core#ClientEvents:typingStart` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
-| `@fluxerjs/core#ClientEvents:userConnectionsUpdate` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
-| `@fluxerjs/core#ClientEvents:userUpdate` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
-| `@fluxerjs/core#ClientEvents:voiceServerUpdate` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
-| `@fluxerjs/core#ClientEvents:voiceStateAck` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
-| `@fluxerjs/core#ClientEvents:voiceStatesSync` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
-| `@fluxerjs/core#ClientEvents:voiceStateUpdate` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
+| `@fluxerjs/core#ClientEvents:channelCreate` | event | function | $eventName, $eventData | scriptEvent adapta este evento com payload normalizado, limitado e redigido; $eventData e os seletores $event* leem seu contexto. |
+| `@fluxerjs/core#ClientEvents:channelDelete` | event | function | $eventName, $eventData | scriptEvent adapta este evento com payload normalizado, limitado e redigido; $eventData e os seletores $event* leem seu contexto. |
+| `@fluxerjs/core#ClientEvents:channelMemberCountsUpdate` | event | function | $eventName, $eventData | scriptEvent adapta este evento com payload normalizado, limitado e redigido; $eventData e os seletores $event* leem seu contexto. |
+| `@fluxerjs/core#ClientEvents:channelPinsUpdate` | event | function | $eventName, $eventData | scriptEvent adapta este evento com payload normalizado, limitado e redigido; $eventData e os seletores $event* leem seu contexto. |
+| `@fluxerjs/core#ClientEvents:channelRecipientAdd` | event | function | $eventName, $eventData | scriptEvent adapta este evento com payload normalizado, limitado e redigido; $eventData e os seletores $event* leem seu contexto. |
+| `@fluxerjs/core#ClientEvents:channelRecipientRemove` | event | function | $eventName, $eventData | scriptEvent adapta este evento com payload normalizado, limitado e redigido; $eventData e os seletores $event* leem seu contexto. |
+| `@fluxerjs/core#ClientEvents:channelUpdate` | event | function | $eventName, $eventData | scriptEvent adapta este evento com payload normalizado, limitado e redigido; $eventData e os seletores $event* leem seu contexto. |
+| `@fluxerjs/core#ClientEvents:debug` | event | excluded | internal | Log interno de diagnóstico do SDK/gateway sem contrato estável; pode conter IDs de sessão e URLs de resume. Fica disponível só em bot.on/contextEvent nativo. |
+| `@fluxerjs/core#ClientEvents:entranceSoundPlay` | event | function | $eventName, $eventData | scriptEvent adapta este evento com payload normalizado, limitado e redigido; $eventData e os seletores $event* leem seu contexto. |
+| `@fluxerjs/core#ClientEvents:error` | event | function | $eventName, $eventData | scriptEvent adapta este evento com payload normalizado, limitado e redigido; $eventData e os seletores $event* leem seu contexto. |
+| `@fluxerjs/core#ClientEvents:forumUnreads` | event | function | $eventName, $eventData | scriptEvent adapta este evento com payload normalizado, limitado e redigido; $eventData e os seletores $event* leem seu contexto. |
+| `@fluxerjs/core#ClientEvents:guildAuditLogEntryCreate` | event | function | $eventName, $eventData | scriptEvent adapta este evento com payload normalizado, limitado e redigido; $eventData e os seletores $event* leem seu contexto. |
+| `@fluxerjs/core#ClientEvents:guildAvailable` | event | function | $eventName, $eventData | scriptEvent adapta este evento com payload normalizado, limitado e redigido; $eventData e os seletores $event* leem seu contexto. |
+| `@fluxerjs/core#ClientEvents:guildBanAdd` | event | function | $eventName, $eventData | scriptEvent adapta este evento com payload normalizado, limitado e redigido; $eventData e os seletores $event* leem seu contexto. |
+| `@fluxerjs/core#ClientEvents:guildBanRemove` | event | function | $eventName, $eventData | scriptEvent adapta este evento com payload normalizado, limitado e redigido; $eventData e os seletores $event* leem seu contexto. |
+| `@fluxerjs/core#ClientEvents:guildCountsUpdate` | event | function | $eventName, $eventData | scriptEvent adapta este evento com payload normalizado, limitado e redigido; $eventData e os seletores $event* leem seu contexto. |
+| `@fluxerjs/core#ClientEvents:guildCreate` | event | function | $eventName, $eventData | scriptEvent adapta este evento com payload normalizado, limitado e redigido; $eventData e os seletores $event* leem seu contexto. |
+| `@fluxerjs/core#ClientEvents:guildDelete` | event | function | $eventName, $eventData | scriptEvent adapta este evento com payload normalizado, limitado e redigido; $eventData e os seletores $event* leem seu contexto. |
+| `@fluxerjs/core#ClientEvents:guildEmojisUpdate` | event | function | $eventName, $eventData | scriptEvent adapta este evento com payload normalizado, limitado e redigido; $eventData e os seletores $event* leem seu contexto. |
+| `@fluxerjs/core#ClientEvents:guildMemberAdd` | event | function | $eventName, $eventData | scriptEvent adapta este evento com payload normalizado, limitado e redigido; $eventData e os seletores $event* leem seu contexto. |
+| `@fluxerjs/core#ClientEvents:guildMemberRemove` | event | function | $eventName, $eventData | scriptEvent adapta este evento com payload normalizado, limitado e redigido; $eventData e os seletores $event* leem seu contexto. |
+| `@fluxerjs/core#ClientEvents:guildMembersChunk` | event | function | $eventName, $eventData | scriptEvent adapta este evento com payload normalizado, limitado e redigido; $eventData e os seletores $event* leem seu contexto. |
+| `@fluxerjs/core#ClientEvents:guildMemberUpdate` | event | function | $eventName, $eventData | scriptEvent adapta este evento com payload normalizado, limitado e redigido; $eventData e os seletores $event* leem seu contexto. |
+| `@fluxerjs/core#ClientEvents:guildRoleCreate` | event | function | $eventName, $eventData | scriptEvent adapta este evento com payload normalizado, limitado e redigido; $eventData e os seletores $event* leem seu contexto. |
+| `@fluxerjs/core#ClientEvents:guildRoleDelete` | event | function | $eventName, $eventData | scriptEvent adapta este evento com payload normalizado, limitado e redigido; $eventData e os seletores $event* leem seu contexto. |
+| `@fluxerjs/core#ClientEvents:guildRoleUpdate` | event | function | $eventName, $eventData | scriptEvent adapta este evento com payload normalizado, limitado e redigido; $eventData e os seletores $event* leem seu contexto. |
+| `@fluxerjs/core#ClientEvents:guildStickersUpdate` | event | function | $eventName, $eventData | scriptEvent adapta este evento com payload normalizado, limitado e redigido; $eventData e os seletores $event* leem seu contexto. |
+| `@fluxerjs/core#ClientEvents:guildUnavailable` | event | function | $eventName, $eventData | scriptEvent adapta este evento com payload normalizado, limitado e redigido; $eventData e os seletores $event* leem seu contexto. |
+| `@fluxerjs/core#ClientEvents:guildUpdate` | event | function | $eventName, $eventData | scriptEvent adapta este evento com payload normalizado, limitado e redigido; $eventData e os seletores $event* leem seu contexto. |
+| `@fluxerjs/core#ClientEvents:inviteCreate` | event | function | $eventName, $eventData | scriptEvent adapta este evento com payload normalizado, limitado e redigido; $eventData e os seletores $event* leem seu contexto. |
+| `@fluxerjs/core#ClientEvents:inviteDelete` | event | function | $eventName, $eventData | scriptEvent adapta este evento com payload normalizado, limitado e redigido; $eventData e os seletores $event* leem seu contexto. |
+| `@fluxerjs/core#ClientEvents:messageCreate` | event | function | $eventName, $eventData | scriptEvent adapta este evento com payload normalizado, limitado e redigido; $eventData e os seletores $event* leem seu contexto. |
+| `@fluxerjs/core#ClientEvents:messageDelete` | event | function | $eventName, $eventData | scriptEvent adapta este evento com payload normalizado, limitado e redigido; $eventData e os seletores $event* leem seu contexto. |
+| `@fluxerjs/core#ClientEvents:messageDeleteBulk` | event | function | $eventName, $eventData | scriptEvent adapta este evento com payload normalizado, limitado e redigido; $eventData e os seletores $event* leem seu contexto. |
+| `@fluxerjs/core#ClientEvents:messageReactionAdd` | event | function | $eventName, $eventData | scriptEvent adapta este evento com payload normalizado, limitado e redigido; $eventData e os seletores $event* leem seu contexto. |
+| `@fluxerjs/core#ClientEvents:messageReactionAddMany` | event | function | $eventName, $eventData | scriptEvent adapta este evento com payload normalizado, limitado e redigido; $eventData e os seletores $event* leem seu contexto. |
+| `@fluxerjs/core#ClientEvents:messageReactionRemove` | event | function | $eventName, $eventData | scriptEvent adapta este evento com payload normalizado, limitado e redigido; $eventData e os seletores $event* leem seu contexto. |
+| `@fluxerjs/core#ClientEvents:messageReactionRemoveAll` | event | function | $eventName, $eventData | scriptEvent adapta este evento com payload normalizado, limitado e redigido; $eventData e os seletores $event* leem seu contexto. |
+| `@fluxerjs/core#ClientEvents:messageReactionRemoveEmoji` | event | function | $eventName, $eventData | scriptEvent adapta este evento com payload normalizado, limitado e redigido; $eventData e os seletores $event* leem seu contexto. |
+| `@fluxerjs/core#ClientEvents:messageUpdate` | event | function | $eventName, $eventData | scriptEvent adapta este evento com payload normalizado, limitado e redigido; $eventData e os seletores $event* leem seu contexto. |
+| `@fluxerjs/core#ClientEvents:presenceUpdate` | event | function | $eventName, $eventData | scriptEvent adapta este evento com payload normalizado, limitado e redigido; $eventData e os seletores $event* leem seu contexto. |
+| `@fluxerjs/core#ClientEvents:presenceUpdateBulk` | event | function | $eventName, $eventData | scriptEvent adapta este evento com payload normalizado, limitado e redigido; $eventData e os seletores $event* leem seu contexto. |
+| `@fluxerjs/core#ClientEvents:ready` | event | function | $eventName, $eventData | scriptEvent adapta este evento com payload normalizado, limitado e redigido; $eventData e os seletores $event* leem seu contexto. |
+| `@fluxerjs/core#ClientEvents:resumed` | event | function | $eventName, $eventData | scriptEvent adapta este evento com payload normalizado, limitado e redigido; $eventData e os seletores $event* leem seu contexto. |
+| `@fluxerjs/core#ClientEvents:shardDisconnect` | event | function | $eventName, $eventData | scriptEvent adapta este evento com payload normalizado, limitado e redigido; $eventData e os seletores $event* leem seu contexto. |
+| `@fluxerjs/core#ClientEvents:shardError` | event | function | $eventName, $eventData | scriptEvent adapta este evento com payload normalizado, limitado e redigido; $eventData e os seletores $event* leem seu contexto. |
+| `@fluxerjs/core#ClientEvents:shardingRequired` | event | function | $eventName, $eventData | scriptEvent adapta este evento com payload normalizado, limitado e redigido; $eventData e os seletores $event* leem seu contexto. |
+| `@fluxerjs/core#ClientEvents:shardReady` | event | function | $eventName, $eventData | scriptEvent adapta este evento com payload normalizado, limitado e redigido; $eventData e os seletores $event* leem seu contexto. |
+| `@fluxerjs/core#ClientEvents:shardReconnecting` | event | function | $eventName, $eventData | scriptEvent adapta este evento com payload normalizado, limitado e redigido; $eventData e os seletores $event* leem seu contexto. |
+| `@fluxerjs/core#ClientEvents:shardResumed` | event | function | $eventName, $eventData | scriptEvent adapta este evento com payload normalizado, limitado e redigido; $eventData e os seletores $event* leem seu contexto. |
+| `@fluxerjs/core#ClientEvents:threadCreate` | event | function | $eventName, $eventData | scriptEvent adapta este evento com payload normalizado, limitado e redigido; $eventData e os seletores $event* leem seu contexto. |
+| `@fluxerjs/core#ClientEvents:threadDelete` | event | function | $eventName, $eventData | scriptEvent adapta este evento com payload normalizado, limitado e redigido; $eventData e os seletores $event* leem seu contexto. |
+| `@fluxerjs/core#ClientEvents:threadListSync` | event | function | $eventName, $eventData | scriptEvent adapta este evento com payload normalizado, limitado e redigido; $eventData e os seletores $event* leem seu contexto. |
+| `@fluxerjs/core#ClientEvents:threadMemberListUpdate` | event | function | $eventName, $eventData | scriptEvent adapta este evento com payload normalizado, limitado e redigido; $eventData e os seletores $event* leem seu contexto. |
+| `@fluxerjs/core#ClientEvents:threadMembersUpdate` | event | function | $eventName, $eventData | scriptEvent adapta este evento com payload normalizado, limitado e redigido; $eventData e os seletores $event* leem seu contexto. |
+| `@fluxerjs/core#ClientEvents:threadMemberUpdate` | event | function | $eventName, $eventData | scriptEvent adapta este evento com payload normalizado, limitado e redigido; $eventData e os seletores $event* leem seu contexto. |
+| `@fluxerjs/core#ClientEvents:threadUpdate` | event | function | $eventName, $eventData | scriptEvent adapta este evento com payload normalizado, limitado e redigido; $eventData e os seletores $event* leem seu contexto. |
+| `@fluxerjs/core#ClientEvents:typingStart` | event | function | $eventName, $eventData | scriptEvent adapta este evento com payload normalizado, limitado e redigido; $eventData e os seletores $event* leem seu contexto. |
+| `@fluxerjs/core#ClientEvents:userConnectionsUpdate` | event | function | $eventName, $eventData | scriptEvent adapta este evento com payload normalizado, limitado e redigido; $eventData e os seletores $event* leem seu contexto. |
+| `@fluxerjs/core#ClientEvents:userUpdate` | event | function | $eventName, $eventData | scriptEvent adapta este evento com payload normalizado, limitado e redigido; $eventData e os seletores $event* leem seu contexto. |
+| `@fluxerjs/core#ClientEvents:voiceServerUpdate` | event | function | $eventName, $eventData | scriptEvent adapta este evento com payload normalizado, limitado e redigido; $eventData e os seletores $event* leem seu contexto. |
+| `@fluxerjs/core#ClientEvents:voiceStateAck` | event | function | $eventName, $eventData | scriptEvent adapta este evento com payload normalizado, limitado e redigido; $eventData e os seletores $event* leem seu contexto. |
+| `@fluxerjs/core#ClientEvents:voiceStatesSync` | event | function | $eventName, $eventData | scriptEvent adapta este evento com payload normalizado, limitado e redigido; $eventData e os seletores $event* leem seu contexto. |
+| `@fluxerjs/core#ClientEvents:voiceStateUpdate` | event | function | $eventName, $eventData | scriptEvent adapta este evento com payload normalizado, limitado e redigido; $eventData e os seletores $event* leem seu contexto. |
 | `@fluxerjs/core#ClientEvents:webauthnCredentialsUpdate` | event | excluded | credentials | Evento contém material de autenticação WebAuthn; não deve ser encaminhado a scripts. |
-| `@fluxerjs/core#ClientEvents:webhooksUpdate` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
+| `@fluxerjs/core#ClientEvents:webhooksUpdate` | event | function | $eventName, $eventData | scriptEvent adapta este evento com payload normalizado, limitado e redigido; $eventData e os seletores $event* leem seu contexto. |
 
 ## voice
 

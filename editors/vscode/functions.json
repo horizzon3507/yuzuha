@@ -2700,6 +2700,14 @@
     "description": "Consulta o campo do evento; requer contexto de evento e preserva ausências como null."
   },
   {
+    "name": "eventData",
+    "category": "events",
+    "minArgs": 0,
+    "maxArgs": 2,
+    "usage": "$eventData[caminho?;padrão?]",
+    "description": "Lê o payload normalizado e redigido do evento por caminho com pontos e índices, ex. \"old.name\"; sem caminho retorna o objeto inteiro e ausências retornam o padrão ou null."
+  },
+  {
     "name": "cdnURL",
     "category": "sdk",
     "minArgs": 1,

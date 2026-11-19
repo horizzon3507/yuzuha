@@ -14,10 +14,28 @@ export interface ScriptEventDefinition {
   ignoreBots?: boolean;
   http?: HttpPolicy;
 }
-export const scriptEventNames: readonly ScriptEventName[] = ['guildMemberAdd', 'guildMemberRemove', 'messageUpdate', 'messageDelete', 'messageReactionAdd', 'messageReactionRemove'];
+export const scriptEventNames = [
+  'ready', 'resumed', 'error', 'shardReady', 'shardResumed', 'shardDisconnect', 'shardReconnecting', 'shardError',
+  'shardingRequired', 'messageCreate', 'messageUpdate', 'messageDelete', 'messageDeleteBulk', 'messageReactionAdd',
+  'messageReactionAddMany', 'messageReactionRemove', 'messageReactionRemoveAll', 'messageReactionRemoveEmoji',
+  'guildCreate', 'guildAvailable', 'guildUnavailable', 'guildUpdate', 'guildDelete', 'guildCountsUpdate',
+  'guildAuditLogEntryCreate', 'channelCreate', 'channelUpdate', 'channelDelete', 'channelPinsUpdate',
+  'channelRecipientAdd', 'channelRecipientRemove', 'channelMemberCountsUpdate', 'threadCreate', 'threadUpdate',
+  'threadDelete', 'threadListSync', 'threadMemberUpdate', 'threadMembersUpdate', 'threadMemberListUpdate',
+  'forumUnreads', 'guildMemberAdd', 'guildMemberUpdate', 'guildMemberRemove', 'guildMembersChunk', 'guildBanAdd',
+  'guildBanRemove', 'guildEmojisUpdate', 'guildStickersUpdate', 'guildRoleCreate', 'guildRoleUpdate',
+  'guildRoleDelete', 'voiceStateUpdate', 'voiceStateAck', 'voiceServerUpdate', 'entranceSoundPlay', 'voiceStatesSync',
+  'inviteCreate', 'inviteDelete', 'typingStart', 'userUpdate', 'userConnectionsUpdate', 'presenceUpdate',
+  'presenceUpdateBulk', 'webhooksUpdate',
+] as const satisfies readonly ScriptEventName[];
+
+/** Falha a compilação se um evento seguro do SDK ficar sem adaptação de script. */
+export type MissingScriptEvents = Exclude<ScriptEventName, typeof scriptEventNames[number]>;
+const scriptEventsComplete: [MissingScriptEvents] extends [never] ? true : never = true;
+void scriptEventsComplete;
 
 export function validateScriptEvent(value: ScriptEventDefinition): void {
-  if (!scriptEventNames.includes(value.event) || typeof value.code !== 'string'
+  if (!(scriptEventNames as readonly string[]).includes(value.event) || typeof value.code !== 'string'
     || (value.once !== undefined && typeof value.once !== 'boolean')
     || (value.ignoreBots !== undefined && typeof value.ignoreBots !== 'boolean')
     || [value.channelID, value.actorID].some(id => id !== undefined && (typeof id !== 'string' || !/^\d+$/.test(id)))) {

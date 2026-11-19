@@ -225,7 +225,7 @@ test('evento pode pedir destroy sem aguardar a si mesmo', { timeout: 3000 }, asy
 
 test('funções de evento recusam contexto de comando e validação rejeita opções inválidas', async t => {
   const f = fixture(); t.after(() => f.bot.destroy());
-  for (const definition of [{ event: 'ready', code: '' }, { event: 'guildMemberAdd', code: '', actorID: 'x' },
+  for (const definition of [{ event: 'debug', code: '' }, { event: 'webauthnCredentialsUpdate', code: '' }, { event: 'guildMemberAdd', code: '', actorID: 'x' },
     { event: 'guildMemberAdd', code: '', channelID: '' }]) {
     assert.throws(() => f.bot.scriptEvent(definition as Parameters<Yuzuha['scriptEvent']>[0]), /inválid/);
   }
