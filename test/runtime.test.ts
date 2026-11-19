@@ -50,6 +50,32 @@ test('lazy branches and boolean short circuit never execute discarded effects', 
   assert.equal(transport.messages.length, 0);
 });
 
+test('plain-text condition fast path preserves lazy effects, errors and guard propagation', async () => {
+  const { run, transport } = harness();
+  assert.equal(await run(`$if[${'x'.repeat(4096)};yes;$throw[unused]]`), 'yes');
+  assert.equal(await run('$if[;unused;empty]'), 'empty');
+  assert.equal(await run('$if[ FALSE ;unused;false]'), 'false');
+  assert.equal(await run('$try[$if[plain;$throw[failure];unused];fallback]'), 'fallback');
+  await assert.rejects(run('$try[$onlyIf[;negado];fallback]'), /negado/);
+  assert.equal(await run('$or[plain;$reply[unused]]'), true);
+  assert.equal(await run('$and[false;$reply[unused]]'), false);
+  assert.equal(transport.messages.length, 0);
+});
+
+test('plain-text conditions cannot bypass output limits, including typed objects', async () => {
+  const { run, runtime } = harness({ output: 16 });
+  runtime.register({ name: 'largeObject', category: 'test', description: '', usage: '$largeObject', minArgs: 0, maxArgs: 0,
+    execute: () => ({ value: 'x'.repeat(16) }) });
+  for (const source of ['$try[$if[plain;$largeObject;];fallback]', `$try[$if[${'x'.repeat(17)};yes;no];fallback]`]) {
+    await assert.rejects(run(source), (error: unknown) => {
+      assert.ok(error instanceof ScriptError);
+      assert.equal(error.code, 'OUTPUT_LIMIT');
+      assert.equal(error.message, 'Saída excede o limite.');
+      return true;
+    });
+  }
+});
+
 test('data from messages is never compiled as code', async () => {
   const { run, ctx, transport } = harness();
   ctx.message.authorName = '$ban[2;injetado]';
