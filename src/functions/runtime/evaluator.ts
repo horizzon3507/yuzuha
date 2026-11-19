@@ -13,6 +13,7 @@ export class Evaluator {
   private deadline: number;
   private waits = 0;
   private waitStarted = 0;
+  private lastOutput: { value: object; text: string } | undefined;
   private readonly canvasExecution = createCanvasExecutionState();
 
   constructor(
@@ -38,7 +39,9 @@ export class Evaluator {
   }
 
   private checkOutput(value: unknown, offset: number): void {
-    if (text(value).length > this.limits.output) throw this.error('OUTPUT_LIMIT', 'Saída excede o limite.', offset);
+    const output = text(value);
+    if (output.length > this.limits.output) throw this.error('OUTPUT_LIMIT', 'Saída excede o limite.', offset);
+    if (value !== null && typeof value === 'object') this.lastOutput = { value, text: output };
   }
 
   private error(code: string, message: string, offset: number): ScriptError {
@@ -69,7 +72,12 @@ export class Evaluator {
     let result = '';
     for (const node of nodes) {
       this.check(node.offset, depth);
-      result += node.kind === 'text' ? node.value : text(node === soleCall ? soleValue : await this.invoke(node, depth));
+      if (node.kind === 'text') result += node.value;
+      else {
+        const value = node === soleCall ? soleValue : await this.invoke(node, depth);
+        const checked = this.lastOutput;
+        result += checked && value === checked.value ? checked.text : text(value);
+      }
       this.checkOutput(result, node.offset);
     }
     return result;

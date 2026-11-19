@@ -129,3 +129,43 @@ test('objects, promises, thenables and functions take the async result path with
     assert.equal(calls, 1);
   }
 });
+
+test('interpolated objects reuse the checked serialization once per function result', async () => {
+  const f = harness();
+  let serializations = 0;
+  const value = { toJSON: () => ({ value: ++serializations }) };
+  f.register('serialized', () => value);
+  assert.equal(await f.run('before$serialized after$serialized'), 'before{"value":1} after{"value":2}');
+  assert.equal(serializations, 2);
+  assert.equal(await f.run('$serialized'), value);
+  assert.equal(serializations, 3);
+  const ordinary = { value: 'original', nested: [1, true, null] };
+  f.register('ordinary', () => ordinary);
+  assert.equal(await f.run('before$ordinary after'), `before${JSON.stringify(ordinary)} after`);
+});
+
+test('interpolation output limits measure the exact serialized text emitted', async () => {
+  const f = harness({ output: 16 });
+  let serializations = 0;
+  f.register('serialized', () => ({ toJSON: () => { serializations++; return 'x'.repeat(14); } }));
+  await assert.rejects(f.run('$try[prefix$serialized;fallback]'), { code: 'OUTPUT_LIMIT', message: 'Saída excede o limite.' });
+  assert.equal(serializations, 1);
+  f.register('oversize', () => ({ value: 'x'.repeat(16) }));
+  await assert.rejects(f.run('$try[prefix$oversize;fallback]'), { code: 'OUTPUT_LIMIT' });
+});
+
+test('empty and failed object serialization preserve output and error handling', async () => {
+  const f = harness();
+  let serializations = 0;
+  f.register('emptyObject', () => ({ toJSON: () => { serializations++; return undefined; } }));
+  assert.equal(await f.run('before$emptyObject after'), 'before after');
+  assert.equal(serializations, 1);
+  const failure = new Error('serialization');
+  f.register('badObject', () => ({ toJSON: () => { throw failure; } }));
+  await assert.rejects(f.run('prefix$badObject'), (error: unknown) => {
+    assert.ok(error instanceof ScriptError);
+    assert.equal(error.code, 'FUNCTION_ERROR'); assert.equal(error.cause, failure);
+    return true;
+  });
+  assert.equal(await f.run('$try[prefix$badObject;fallback]'), 'fallback');
+});
