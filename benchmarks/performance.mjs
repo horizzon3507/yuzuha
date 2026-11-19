@@ -54,6 +54,12 @@ try {
     await measure(`dispatch/ignored-${name}`, async () => { assert.equal(await dispatch.handle(message), 'ignored'); });
   }
   const payload = 'x'.repeat(config.payloadSize);
+  const heavy = bot();
+  for (let index = 0; index < 16; index++) heavy.use(async (_ctx, next) => { await next(); });
+  heavy.command({ name: 'bench', middleware: Array.from({ length: 16 }, () => async (_ctx, next) => { await next(); }), run() {} });
+  await measure('dispatch/middleware-heavy', async () => {
+    assert.equal(await heavy.handle(mockMessage('!bench')), 'success');
+  });
   for (const [name, input] of [['long-input', payload], ['quoted-long-input', `"${payload}"`], ['apostrophe-long-input', `${payload}'suffix`]]) {
     const long = `!bench ${input}`;
     await measure(`dispatch/${name}`, async () => {

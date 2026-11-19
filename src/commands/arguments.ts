@@ -473,19 +473,26 @@ export async function parseArgumentsAsync(
 export function tokenize(input: string, t: MessageTranslator = defaultTranslator): string[] {
   if (!/[\\"']/.test(input)) return input.match(/\S+/g) ?? [];
   const result: string[] = [];
-  let token = '', quote = '', last = '', started = false;
+  let token = '', quote = '', last = '', started = false, start = 0;
   for (let index = 0; index < input.length; index++) {
     const character = input[index]!;
-    if (character === '\\' && index + 1 < input.length) { last = input[++index]!; token += last; started = true; }
-    else if (quote && character === quote) quote = '';
-    else if (!quote && (!started || last === '=') && (character === '"' || character === "'")) { quote = character; started = true; }
-    else if (!quote && /\s/.test(character)) {
-      if (started) result.push(token);
-      token = ''; last = ''; started = false;
-    } else { token += character; last = character; started = true; }
+    if (character === '\\' && index + 1 < input.length) {
+      token += input.slice(start, index);
+      start = ++index;
+      last = input[index]!; started = true;
+    } else if (quote && character === quote) {
+      token += input.slice(start, index); start = index + 1; quote = '';
+    } else if (!quote && (!started || last === '=') && (character === '"' || character === "'")) {
+      token += input.slice(start, index); start = index + 1; quote = character; started = true;
+    } else if (!quote && (input.charCodeAt(index) <= 0x7f
+      ? character === ' ' || (input.charCodeAt(index) >= 9 && input.charCodeAt(index) <= 13)
+      : /\s/.test(character))) {
+      if (started) result.push(token + input.slice(start, index));
+      token = ''; last = ''; started = false; start = index + 1;
+    } else { last = character; started = true; }
   }
   if (quote) throw new GuardError(t('quoteUnclosed'), 'INVALID_ARGUMENT');
-  if (started) result.push(token);
+  if (started) result.push(token + input.slice(start));
   return result;
 }
 
