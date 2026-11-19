@@ -6,7 +6,7 @@ import type { FunctionRegistry } from './registry.js';
 import type { FunctionCall, Limits } from './types.js';
 import { text } from './values.js';
 import { LoopControl } from './control-flow.js';
-import { associateCanvasExecution, clearCanvasExecution, createCanvasExecutionState, releaseCanvasExecutionCall } from './canvas-execution.js';
+import { ScriptCall, clearCanvasExecution, createCanvasExecutionState, releaseCanvasExecutionCall } from './canvas-execution.js';
 
 export class Evaluator {
   private calls = 0;
@@ -88,19 +88,19 @@ export class Evaluator {
       values ??= [];
       return values[index] ??= fresh(index);
     };
-    const call: FunctionCall = {
-        ctx: this.ctx,
-        count: node.args.length,
+    const call = new ScriptCall(
+        this.ctx,
+        node.args.length,
         arg,
         fresh,
-        checkOutput: value => this.checkOutput(value, node.offset),
-        text: async index => text(await arg(index)),
-        all: async () => {
+        value => this.checkOutput(value, node.offset),
+        async index => text(await arg(index)),
+        async () => {
           const result: unknown[] = [];
           for (let i = 0; i < node.args.length; i++) result.push(await arg(i));
           return result;
         },
-        wait: async <T>(operation: Promise<T>): Promise<T> => {
+        async <T>(operation: Promise<T>): Promise<T> => {
           if (this.waits++ === 0) this.waitStarted = performance.now();
           try { return await operation; }
           finally {
@@ -110,8 +110,8 @@ export class Evaluator {
             this.waits--;
           }
         },
-      };
-    associateCanvasExecution(call, this.canvasExecution);
+        this.canvasExecution,
+      );
     try {
       const result = await fn.execute(call);
       this.check(node.offset, depth);
