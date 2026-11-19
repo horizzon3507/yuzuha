@@ -1,7 +1,7 @@
 # Referência das funções
 
 Function mode opcional, importado de `yuzuha/functions`.
-Gerada do registro executável: **336 funções**. Atualize com `npm run docs:generate`.
+Gerada do registro executável: **347 funções**. Atualize com `npm run docs:generate`.
 
 Aliases não contam como funções adicionais. Índices e semântica estão em [LANGUAGE.md](LANGUAGE.md).
 
@@ -344,6 +344,22 @@ Aliases não contam como funções adicionais. Índices e semântica estão em [
 | `$scheduleHistory` | Lista o histórico dos seus agendamentos no servidor atual. |  |
 | `$schedules` | Lista agendamentos do servidor atual. |  |
 | `$unschedule[id]` | Cancela um agendamento; retorna true/false. |  |
+
+## sdk
+
+| Função | Descrição | Aliases |
+|---|---|---|
+| `$cdnURL[tipo;id?;idDoMembroOuHashOuTamanho?;hashOuTamanhoOuFormato?;tamanhoOuFormato?;formato?]` | Usa a instância atual, sem rede. Tipos: media/static (só a base); defaultAvatar (ID/índice); avatar/displayAvatar/banner (ID;hash?;tamanho?;formato?); memberAvatar/memberBanner (servidor;usuário;hash?;tamanho?;formato?); guildIcon/guildBanner/guildSplash (servidor;hash?;tamanho?); emoji/sticker (ID;tamanho?;animado?). Hash ausente retorna null ou o avatar padrão para displayAvatar. |  |
+| `$flags[família;operação;máscara?;outra?]` | Famílias: bits, permissions, message, user, publicUser, systemChannel, threadMember, memberProfile, attachment, embedMedia, gatewayIdentify, guildOperations. Operações: table, resolve, add, remove, equals, has, any, missing, names, serialize. Máscaras até 128 bits: nome, decimal ou lista (128 valores, 4 níveis); máscaras retornam texto decimal. Em permissions, Administrator implica todas nas consultas. |  |
+| `$instanceValue[operação;valor?]` | Calcula valores sem discovery de rede: normalize/discoveryURL (URL base), parse (documento), resolve (documento ou endpoints parciais; omitido usa padrões). Não altera o client. |  |
+| `$inviteURL[código;base?]` | Monta URL de convite sem consultar a rede. Usa a base da instância se omitida. |  |
+| `$sdkCacheLimit[normalizeOuResolve;valor?;padrão?]` | Calcula limites de cache sem ler ou alterar o cache real: normalize (valor ou vazio;padrão) ou resolve (objeto opcional). null representa limite infinito. |  |
+| `$sdkCollection[operação;pares;arg1?;arg2?;arg3?]` | Coleção local de até 1000 pares únicos [chave, valor], sem acesso ao cache real. Operações: clone, concat (outros pares), first/last/random (quantidade?), values, text, describe (capacidade?), set (chave;valor;capacidade?), partition (predicado), sweep (predicado?). Predicados usam $loopValue (par) e $loopIndex. set retorna entries/evicted (par removido em FIFO ou null); sweep retorna entries/removed. |  |
+| `$sdkConstant[nome;chave?]` | Lê uma constante ou chave própria da lista permitida do SDK (ex.: ChannelType, ErrorCodes, DEFAULT_INSTANCE_ENDPOINTS). BigInt vira texto decimal; chave ausente retorna null. |  |
+| `$sdkError[infoOuTextoOuIsFluxer;operação]` | Executa uma vez e captura só erros reais do SDK. info retorna metadados permitidos, text resume tipo/código e isFluxer testa FluxerError. Em caso de sucesso retorna null ou false. Nunca expõe mensagem, URL, corpo ou causa; outros erros se propagam. |  |
+| `$sdkFormat[operação;valor;opção?;sufixo?]` | Formata valores: color (inteiro→hex), resolveColor (hex, RGB ou inteiro tipado), timestamp (epoch em ms;estilo?), emoji (objeto de parseEmoji), truncate (texto;limite;sufixo?). |  |
+| `$sdkParse[operação;valor;prefixo?]` | Analisa valores sem rede. Operações: prefix (texto;prefixo), userMention, roleMention, emoji, shortcode, guildInvite, groupDmInvite, uploadedAttachment, isRecord, record, number e string. Tipos incompatíveis retornam null ou false. |  |
+| `$snowflake[operação;valor]` | Operações: valid, parse (decimal exato como texto), timestamp (ms), date (ISO), deconstruct (campos e data ISO), fromTimestamp (ms→decimal). Use texto para IDs grandes. |  |
 
 ## storage
 
