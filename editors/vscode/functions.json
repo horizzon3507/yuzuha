@@ -2754,5 +2754,85 @@
     "maxArgs": 2,
     "usage": "$roleHasPermission[cargo;permissão]",
     "description": "Verifica uma permissão do cargo no servidor atual, respeitando Administrator."
+  },
+  {
+    "name": "applyForDiscovery",
+    "category": "users",
+    "minArgs": 1,
+    "maxArgs": 1,
+    "usage": "$applyForDiscovery[opções]",
+    "description": "Envia candidatura à descoberta; description, primaryCategoryId, keywords e primaryLanguage. Exige ManageGuild de autor e bot."
+  },
+  {
+    "name": "editDiscoveryApplication",
+    "category": "users",
+    "minArgs": 1,
+    "maxArgs": 1,
+    "usage": "$editDiscoveryApplication[opções]",
+    "description": "Edita candidatura à descoberta com validação completa e ManageGuild de autor e bot."
+  },
+  {
+    "name": "discoveryStatus",
+    "category": "users",
+    "minArgs": 0,
+    "maxArgs": 0,
+    "usage": "$discoveryStatus",
+    "description": "Consulta candidatura, elegibilidade e mínimo de membros; exige ManageGuild de autor e bot."
+  },
+  {
+    "name": "withdrawDiscoveryApplication",
+    "category": "users",
+    "minArgs": 0,
+    "maxArgs": 0,
+    "usage": "$withdrawDiscoveryApplication",
+    "description": "Retira candidatura do servidor atual; exige ManageGuild de autor e bot."
+  },
+  {
+    "name": "transferOwnership",
+    "category": "users",
+    "minArgs": 2,
+    "maxArgs": 2,
+    "usage": "$transferOwnership[usuário;confirmação]",
+    "description": "Transfere propriedade com confirmação TRANSFERIR; autor e bot devem ser donos, destino deve ser membro humano."
+  },
+  {
+    "name": "setRolePositions",
+    "category": "roles",
+    "minArgs": 1,
+    "maxArgs": 1,
+    "usage": "$setRolePositions[posições]",
+    "description": "Reposiciona de 1 a 100 cargos por id/position; valida lote, permissões e hierarquia inteira antes da API."
+  },
+  {
+    "name": "setRoleHoistPositions",
+    "category": "roles",
+    "minArgs": 1,
+    "maxArgs": 1,
+    "usage": "$setRoleHoistPositions[posições]",
+    "description": "Define separadores de 1 a 100 cargos por id/position; null equivale a zero. Exige ManageRoles e hierarquia."
+  },
+  {
+    "name": "resetRoleHoistPositions",
+    "category": "roles",
+    "minArgs": 0,
+    "maxArgs": 0,
+    "usage": "$resetRoleHoistPositions",
+    "description": "Zera separadores de cargos; exige ManageRoles e hierarquia em todos os cargos afetados."
+  },
+  {
+    "name": "setChannelPositions",
+    "category": "channels",
+    "minArgs": 1,
+    "maxArgs": 1,
+    "usage": "$setChannelPositions[posições]",
+    "description": "Reposiciona de 1 a 100 canais por id/position; valida todos no servidor atual com ManageChannels de autor e bot."
+  },
+  {
+    "name": "createStickersBulk",
+    "category": "expressions",
+    "minArgs": 1,
+    "maxArgs": 1,
+    "usage": "$createStickersBulk[figurinhas]",
+    "description": "Cria de 1 a 50 figurinhas base64, até 10 MB; valida o lote inteiro, exige ManageExpressions e preserva success/failed."
   }
 ]

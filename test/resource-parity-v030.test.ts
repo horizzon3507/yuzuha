@@ -263,7 +263,7 @@ test('discovery consulta e edita a candidatura do servidor', async () => {
       editDiscoveryApplication: async () => { calls.push('edit'); return { guildID: '100', status: 'pending', description: '', categoryType: 0 }; },
     },
   });
-  const bound = bindAuthorizedResources(source, new MockTransport(), { guildID: '100', authorID: '2' });
+  const bound = bindAuthorizedResources(source, new MockTransport(), { guildID: '100', authorID: '1' });
   assert.equal((await bound.users.discoveryStatus('100')).minMemberCount, 1000);
   await bound.users.applyForDiscovery('100', { primaryLanguage: 'pt-BR' });
   await bound.users.editDiscoveryApplication('100', { description: 'nova' });
@@ -348,6 +348,7 @@ test('hoist positions exige ManageRoles e hierarquia', async () => {
     member(id, PermissionFlags.ManageRoles) as never;
   const source = mockResources({ roles: {
     resolve: async () => role,
+    list: async () => [role],
     setRoleHoistPositions: async (_g: string, u: { id: string }[]) => { calls.push(...u.map(x => x.id)); return [role]; },
     resetRoleHoistPositions: async () => { calls.push('reset'); return [role]; },
   } });

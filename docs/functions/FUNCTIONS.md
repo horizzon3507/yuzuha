@@ -1,7 +1,7 @@
 # Referência das funções
 
 Function mode opcional, importado de `yuzuha/functions`.
-Gerada do registro executável: **343 funções**. Atualize com `npm run docs:generate`.
+Gerada do registro executável: **353 funções**. Atualize com `npm run docs:generate`.
 
 Aliases não contam como funções adicionais. Índices e semântica estão em [LANGUAGE.md](LANGUAGE.md).
 
@@ -38,6 +38,7 @@ Aliases não contam como funções adicionais. Índices e semântica estão em [
 | `$editLinkChannel[canal;url;motivo?]` | Altera a URL de um canal de link do servidor atual. |  |
 | `$moveChannel[canal;posição]` | Move um canal para a posição indicada, a partir de 0. |  |
 | `$setCategory[canal;categoria;motivo?]` | Define a categoria do canal; categoria vazia remove o vínculo. |  |
+| `$setChannelPositions[posições]` | Reposiciona de 1 a 100 canais por id/position; valida todos no servidor atual com ManageChannels de autor e bot. |  |
 | `$setContentWarning[canal;nível;texto?;motivo?]` | Define aviso de conteúdo: 0 herda, 1 ativa, vazio remove o override. |  |
 | `$slowmode[segundos;canal?]` | Define o modo lento (0 a 21600s). |  |
 
@@ -116,6 +117,7 @@ Aliases não contam como funções adicionais. Índices e semântica estão em [
 | `$createEmoji[nome;url]` | Exige ManageExpressions de autor e bot antes de baixar a imagem por HTTP, converter para base64 e criar emoji no servidor. |  |
 | `$createEmojisBulk[emojis]` | Cria de 1 a 50 emojis com name e image em base64; retorna success e failed sem ocultar falhas parciais. |  |
 | `$createSticker[nome;imagemBase64;descrição?;tags?;motivo?]` | Cria sticker com imagem em base64; tags separadas por vírgula. |  |
+| `$createStickersBulk[figurinhas]` | Cria de 1 a 50 figurinhas base64, até 10 MB; valida o lote inteiro, exige ManageExpressions e preserva success/failed. |  |
 | `$deleteEmoji[nomeOuID]` | Apaga emoji do servidor. |  |
 | `$deleteSticker[nomeOuID;motivo?]` | Apaga um sticker do servidor. |  |
 | `$editEmoji[nomeOuID;novoNome;motivo?]` | Renomeia um emoji do servidor e retorna suas informações. |  |
@@ -329,9 +331,12 @@ Aliases não contam como funções adicionais. Índices e semântica estão em [
 | `$hasRole[usuário;cargo]` | Verifica se o usuário possui o cargo. |  |
 | `$moveRole[cargo;posição]` | Move cargo com autorização e hierarquia do autor e do bot; posição a partir de 1. |  |
 | `$removeRole[usuário;cargo]` | Remove cargo do usuário. |  |
+| `$resetRoleHoistPositions` | Zera separadores de cargos; exige ManageRoles e hierarquia em todos os cargos afetados. |  |
 | `$role[cargo;propriedade?]` | Resolve cargo do servidor atual; retorna o cargo ou uma propriedade. |  |
 | `$roleHasPermission[cargo;permissão]` | Verifica uma permissão do cargo no servidor atual, respeitando Administrator. |  |
 | `$roles` | Lista cargos do servidor ordenados por posição. |  |
+| `$setRoleHoistPositions[posições]` | Define separadores de 1 a 100 cargos por id/position; null equivale a zero. Exige ManageRoles e hierarquia. |  |
+| `$setRolePositions[posições]` | Reposiciona de 1 a 100 cargos por id/position; valida lote, permissões e hierarquia inteira antes da API. |  |
 
 ## schedule
 
@@ -396,12 +401,15 @@ Aliases não contam como funções adicionais. Índices e semântica estão em [
 
 | Função | Descrição | Aliases |
 |---|---|---|
+| `$applyForDiscovery[opções]` | Envia candidatura à descoberta; description, primaryCategoryId, keywords e primaryLanguage. Exige ManageGuild de autor e bot. |  |
 | `$auditLogs[limite?]` | Logs de auditoria do servidor atual; padrão 50, máximo 100. |  |
 | `$avatar[id;tamanho?]` | URL do avatar; tamanho de 16 a 4096; vazio se ausente. |  |
 | `$banInfo[propriedade;usuário]` | Busca banimento no servidor atual com BanMembers de autor e bot; vazio quando ausente. |  |
 | `$bans[limite?]` | Banimentos do servidor atual; padrão 50, máximo 1000. |  |
 | `$channelCounts[canal?;timeout?]` | Solicita contagens ao vivo do canal ao gateway, aguardando o evento correspondente. |  |
+| `$discoveryStatus` | Consulta candidatura, elegibilidade e mínimo de membros; exige ManageGuild de autor e bot. |  |
 | `$displayName[id]` | Nome de exibição do usuário; vazio se não existir. |  |
+| `$editDiscoveryApplication[opções]` | Edita candidatura à descoberta com validação completa e ManageGuild de autor e bot. |  |
 | `$editGuild[opções]` | Edita nome, ícone, banner, canal de sistema/AFK e timeout AFK; exige ManageGuild de autor e bot. |  |
 | `$guild[propriedade?]` | Servidor atual, ou uma propriedade própria. |  |
 | `$guildBanner[tamanho?]` | URL do banner do servidor atual; vazio se ausente. |  |
@@ -417,10 +425,12 @@ Aliases não contam como funções adicionais. Índices e semântica estão em [
 | `$setActivity[atividade;tipo?]` | Define a atividade com status online. |  |
 | `$setPresence[status;atividade?;tipo?]` | Define presença: status e atividade opcional (playing por padrão). |  |
 | `$setStatus[status]` | Define o status da presença; limpa a atividade. |  |
+| `$transferOwnership[usuário;confirmação]` | Transfere propriedade com confirmação TRANSFERIR; autor e bot devem ser donos, destino deve ser membro humano. |  |
 | `$user[id;propriedade?]` | Usuário por ID, ou uma propriedade própria; vazio se não existir. |  |
 | `$userBanner[id;tamanho?]` | URL do banner do usuário; tamanho de 16 a 4096; vazio se ausente. |  |
 | `$userCreated[id]` | Criação da conta em milissegundos; vazio se não existir. |  |
 | `$userProfile[usuário]` | Busca usuário, perfil global e perfil/membro do servidor atual quando disponível. |  |
+| `$withdrawDiscoveryApplication` | Retira candidatura do servidor atual; exige ManageGuild de autor e bot. |  |
 
 ## values
 

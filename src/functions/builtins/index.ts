@@ -25,6 +25,7 @@ import { resourceExtras } from './resource-extras.js';
 import { eventFunctions } from './events.js';
 import { canvasFunctions } from './canvas.js';
 import { entityInfoFunctions } from './entities-info.js';
+import { entityGuildFunctions } from './entities-guild.js';
 
 export const builtinFunctions: FunctionDefinition[] = [
   ...contextFunctions, ...flowFunctions, ...guardFunctions, ...valueFunctions,
@@ -36,6 +37,7 @@ export const builtinFunctions: FunctionDefinition[] = [
   ...canvasFunctions,
   ...eventFunctions,
   ...entityInfoFunctions,
+  ...entityGuildFunctions,
 ];
 
 export function registerBuiltins(runtime: Runtime): Runtime {

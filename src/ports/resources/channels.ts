@@ -91,6 +91,7 @@ export interface ChannelsResources {
   setDefaultForumLayout(channelID: string, layout: 'default' | 'list' | 'grid' | null, reason?: string): Promise<void>;
   move(channelID: string, position: number): Promise<void>;
   setCategory(channelID: string, parentID: string | null, reason?: string): Promise<ChannelInfo>;
+  setChannelPositions(guildID: string, updates: { id: string; position: number }[]): Promise<void>;
 }
 
 export interface RtcRegionInfo { id: string; name: string; emoji: string }

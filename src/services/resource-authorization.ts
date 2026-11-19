@@ -4,7 +4,8 @@ import { auditLogQueryInput } from '../domain/audit-log.js';
 import type { AuditLogQueryInput } from '../domain/audit-log.js';
 import { normalizeWebhookEditInput, normalizeWebhookMessageOptions } from '../domain/webhooks.js';
 import { hasPermission, permission } from '../domain/permissions.js';
-import { emojiBatch } from '../domain/resource-batches.js';
+import { emojiBatch, stickerBatch } from '../domain/resource-batches.js';
+import { discoveryInput, positionBatch } from '../domain/entity-operations.js';
 import type { Resources } from '../ports/resources.js';
 import type { RoleInfo } from '../ports/resources/roles.js';
 import type { ThreadDefaultsInput, ThreadSelfEditInput } from '../ports/resources/threads.js';
@@ -121,15 +122,33 @@ export function bindAuthorizedResources(
   };
 
   return { users: Object.assign(Object.create(source.users), {
+    async discoveryStatus(guildID: string) {
+      const g = guards(); g.guild(guildID); await g.allowed('ManageGuild');
+      return source.users.discoveryStatus(guildID);
+    },
+    async applyForDiscovery(guildID: string, input: import('../ports/resources/users.js').DiscoveryApplicationInput) {
+      const g = guards(); g.guild(guildID); await g.allowed('ManageGuild');
+      return source.users.applyForDiscovery(guildID, discoveryInput(input));
+    },
+    async editDiscoveryApplication(guildID: string, input: import('../ports/resources/users.js').DiscoveryApplicationInput) {
+      const g = guards(); g.guild(guildID); await g.allowed('ManageGuild');
+      return source.users.editDiscoveryApplication(guildID, discoveryInput(input));
+    },
+    async withdrawDiscoveryApplication(guildID: string) {
+      const g = guards(); g.guild(guildID); await g.allowed('ManageGuild');
+      return source.users.withdrawDiscoveryApplication(guildID);
+    },
     async getBan(guildID: string, userID: string) {
       const g = guards(); g.guild(guildID); await g.allowed('BanMembers');
       return source.users.getBan(guildID, userID);
     },
     async transferOwnership(guildID: string, userID: string) {
       const g = guards();
-      requireGuild(guildID, t);
-      const [author] = await g.actors();
+      g.guild(guildID);
+      const [author, bot] = await g.actors();
       if (!author.owner) throw new GuardError('Apenas o dono do servidor pode transferir a propriedade.', 'PERMISSION_MISSING_AUTHOR');
+      if (!bot.owner) throw new GuardError('O bot precisa ser dono do servidor para transferir a propriedade.', 'PERMISSION_MISSING_BOT');
+      if (userID === transport.botID) throw new GuardError('O destino não pode ser o próprio bot.', 'BOT_TARGET');
       const target = await source.users.member(guildID, userID);
       if (target.bot) throw new GuardError('A propriedade não pode ser transferida para um bot.', 'BOT_TARGET');
       return mutate(() => source.users.transferOwnership(guildID, userID));
@@ -218,10 +237,10 @@ export function bindAuthorizedResources(
       await g.expressions(args[0]);
       return source.expressions.createSticker(...args);
     },
-    async createStickersBulk(...args) {
+    async createStickersBulk(guildID, inputs) {
       const g = guards();
-      await g.expressions(args[0]);
-      return source.expressions.createStickersBulk(...args);
+      await g.expressions(guildID);
+      return source.expressions.createStickersBulk(guildID, stickerBatch(inputs));
     },
     async editSticker(...args) {
       const g = guards();
@@ -287,14 +306,27 @@ export function bindAuthorizedResources(
       const g = guards();
       g.guild(guildID);
       await g.allowed('ManageRoles');
-      for (const update of updates) await g.roleHierarchy(await g.role(guildID, update.id));
-      return mutate(() => source.roles.setRoleHoistPositions(guildID, updates));
+      const batch = positionBatch(updates, true);
+      for (const update of batch) await g.role(guildID, update.id);
+      return mutate(() => source.roles.setRoleHoistPositions(guildID, batch));
     },
     async resetRoleHoistPositions(guildID: string) {
       const g = guards();
       g.guild(guildID);
       await g.allowed('ManageRoles');
+      for (const role of await source.roles.list(guildID)) {
+        if (role.hoistPosition) await g.roleHierarchy(role);
+      }
       return mutate(() => source.roles.resetRoleHoistPositions(guildID));
+    },
+    async setRolePositions(guildID, updates) {
+      const g = guards(); g.guild(guildID); await g.allowed('ManageRoles');
+      const batch = positionBatch(updates);
+      for (const update of batch) {
+        const role = await g.role(guildID, update.id);
+        await g.roleHierarchy({ ...role, position: update.position });
+      }
+      return mutate(() => source.roles.setRolePositions(guildID, batch));
     },
     async move(guildID, query, position) {
       const g = guards();
@@ -304,6 +336,12 @@ export function bindAuthorizedResources(
       return mutate(() => source.roles.move(guildID, target.id, position));
     },
   }, channels: {
+    async setChannelPositions(guildID, updates) {
+      const g = guards(); g.guild(guildID); await g.allowed('ManageChannels');
+      const batch = positionBatch(updates);
+      for (const update of batch) await g.channel(update.id);
+      return source.channels.setChannelPositions(guildID, batch);
+    },
     get: source.channels.get.bind(source.channels), list: source.channels.list.bind(source.channels),
     permissionsFor: source.channels.permissionsFor.bind(source.channels),
     async create(guildID, input) {

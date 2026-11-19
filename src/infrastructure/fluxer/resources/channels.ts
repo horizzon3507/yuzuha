@@ -105,6 +105,9 @@ async function overwriteKind(client: Client, channel: GuildChannel, targetID: st
 
 export function createChannelsResources(client: Client): ChannelsResources {
   return {
+    async setChannelPositions(guildID, updates) {
+      await (await client.guilds.resolve(guildID)).setChannelPositions(updates);
+    },
     async get(channelID): Promise<ChannelInfo> {
       const channel = await client.channels.fetch(channelID);
       if (channel.isDM()) {
