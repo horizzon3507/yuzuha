@@ -3,12 +3,13 @@ import type { VariableQueryOptions, VariablePage } from '../domain/variable-quer
 import { cloneValue } from '../shared/clone.js';
 import type { JsonValue, State, VariableScope } from '../domain/state.js';
 import { assertSynchronous, variableKey } from '../domain/state.js';
-import type { Store } from '../ports/store.js';
+import { validateExpiration, validateVariableValue } from '../domain/state-validation.js';
+import type { Store, VariableAccess } from '../ports/store.js';
 import { requireActor, requireGuild } from './authorization.js';
 import type { ActorScope } from './authorization.js';
 import { defaultTranslator } from '../domain/i18n.js';
 import type { MessageTranslator } from '../domain/i18n.js';
-import { YuzuhaError } from '../shared/errors.js';
+import { StoreError, YuzuhaError } from '../shared/errors.js';
 
 export interface VariableOptions {
   /** Milliseconds until expiry; omitted or null stores a persistent value. */
@@ -61,21 +62,15 @@ function present(state: Readonly<State>, key: string, now: number): boolean {
   return Object.hasOwn(state.variables, key) && (expiry === undefined || expiry > now);
 }
 
-function presentOrPurge(state: State, key: string, now: number): boolean {
-  const expiry = state.variableExpirations?.[key];
-  if (expiry !== undefined && expiry <= now) {
-    remove(state, key);
-    return false;
-  }
-  return Object.hasOwn(state.variables, key);
-}
-
 function remove(state: State, key: string): void {
   delete state.variables[key];
   if (state.variableExpirations) delete state.variableExpirations[key];
 }
 
 function write(state: State, key: string, value: JsonValue, expiry: number | null): void {
+  if (!validateVariableValue(value) || (expiry !== null && !validateExpiration(expiry))) {
+    throw new StoreError('STORE_INVALID', 'A transação produziu estado inválido; nenhuma alteração foi salva.');
+  }
   state.variables[key] = cloneValue(value);
   if (expiry === null) {
     if (state.variableExpirations) delete state.variableExpirations[key];
@@ -134,6 +129,11 @@ export class VariableService {
 
   ttl(scope: VariableScope, name: string): Promise<number> {
     const key = this.key(scope, name);
+    if (this.store.readVariableEntry) {
+      let now: number;
+      return this.store.readVariableEntry(key, () => now = this.now())
+        .then(entry => entry === undefined ? -2 : entry.expiresAt === null ? -1 : entry.expiresAt - now);
+    }
     return this.store.read(state => {
       const now = this.now();
       if (!present(state, key, now)) return -2;
@@ -143,8 +143,16 @@ export class VariableService {
   }
 
   transaction<T>(writer: (data: DataTransaction) => T): Promise<T> {
-    return this.store.update(state => {
+    const run = (variables: VariableAccess): T => {
       const now = this.now();
+      const entry = (id: string) => {
+        const value = variables.get(id);
+        if (value && value.expiresAt !== null && value.expiresAt <= now) {
+          variables.delete(id);
+          return undefined;
+        }
+        return value;
+      };
       let active = true;
       const key = (scope: VariableScope, name: string, targetUserID?: string) => {
         if (!active) throw new YuzuhaError('TRANSACTION_CLOSED', 'A transação já terminou.');
@@ -153,35 +161,31 @@ export class VariableService {
       const scope = (name: VariableScope, targetUserID?: string): TransactionScope => Object.freeze({
         get: (property: string, fallback: JsonValue = null) => {
           const id = key(name, property, targetUserID);
-          return cloneValue(presentOrPurge(state, id, now) ? state.variables[id]! : fallback);
+          const current = entry(id);
+          return cloneValue(current ? current.value : fallback);
         },
         set: (property: string, value: JsonValue, options: VariableOptions = {}) => {
-          write(state, key(name, property, targetUserID), value, expiresAt(options.ttlMs, now));
+          variables.set(key(name, property, targetUserID), cloneValue(value), expiresAt(options.ttlMs, now));
         },
-        delete: (property: string) => { remove(state, key(name, property, targetUserID)); },
+        delete: (property: string) => { variables.delete(key(name, property, targetUserID)); },
         update: <V extends JsonValue>(property: string, updater: (current: JsonValue) => V, fallback: JsonValue = null): V => {
-          const id = key(name, property, targetUserID), exists = presentOrPurge(state, id, now);
-          const value = updater(cloneValue(exists ? state.variables[id]! : fallback));
+          const id = key(name, property, targetUserID), current = entry(id);
+          const value = updater(cloneValue(current ? current.value : fallback));
           assertSynchronous(value);
-          write(state, id, value, exists ? state.variableExpirations?.[id] ?? null : null);
+          variables.set(id, cloneValue(value), current?.expiresAt ?? null);
           return value;
         },
         expire: (property: string, ttlMs: number | null) => {
           const expiry = expiresAt(ttlMs, now), id = key(name, property, targetUserID);
-          if (!presentOrPurge(state, id, now)) { remove(state, id); return false; }
-          if (expiry === null) {
-            if (state.variableExpirations) delete state.variableExpirations[id];
-          } else {
-            state.variableExpirations ??= {};
-            state.variableExpirations[id] = expiry;
-          }
+          const current = entry(id);
+          if (!current) { variables.delete(id); return false; }
+          variables.set(id, current.value, expiry);
           return true;
         },
         ttl: (property: string) => {
           const id = key(name, property, targetUserID);
-          if (!presentOrPurge(state, id, now)) return -2;
-          const expiry = state.variableExpirations?.[id];
-          return expiry === undefined ? -1 : expiry - now;
+          const current = entry(id);
+          return !current ? -2 : current.expiresAt === null ? -1 : current.expiresAt - now;
         },
       });
       let guildScope: TransactionScope | undefined, userScope: TransactionScope | undefined, globalScope: TransactionScope | undefined;
@@ -196,7 +200,14 @@ export class VariableService {
       });
       try { return writer(data); }
       finally { active = false; }
-    });
+    };
+    if (this.store.updateVariables) return this.store.updateVariables(run);
+    return this.store.update(state => run({
+      get: key => Object.hasOwn(state.variables, key)
+        ? { value: state.variables[key]!, expiresAt: state.variableExpirations?.[key] ?? null } : undefined,
+      set: (key, value, expiry) => write(state, key, value, expiry),
+      delete: key => remove(state, key),
+    }));
   }
 }
 

@@ -213,6 +213,11 @@ export class JsonStore extends MemoryStore {
     return super.readVariable(key, now);
   }
 
+  override readVariableEntry(key: string, now: () => number) {
+    if (this.closing || this.closed) return Promise.reject(closedError());
+    return super.readVariableEntry(key, now);
+  }
+
   override update<T>(writer: (state: State) => T): Promise<T> {
     if (this.closing || this.closed) return Promise.reject(closedError());
 

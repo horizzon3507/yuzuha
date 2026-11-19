@@ -215,11 +215,15 @@ test('gateway.fetchMembers limpa listener e timer em timeout, AbortSignal, valid
   await assert.rejects(gateway.fetchMembers({ guildID: 'g1', limit: -1 }), err => isYuzuhaError(err, 'LIMIT'));
   await assert.rejects(gateway.fetchMembers({ guildID: 'g1', nonce: '   ' }), err => isYuzuhaError(err, 'GUILD_OPTIONS'));
 
-  // Timeout real curto
-  await assert.rejects(
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  const timedOut = assert.rejects(
     gateway.fetchMembers({ guildID: 'g1', timeoutMs: 25 }),
     err => isYuzuhaError(err, 'GATEWAY_TIMEOUT'),
   );
+  t.mock.timers.tick(24);
+  assert.equal(client.listenerCount(Events.GuildMembersChunk), 1);
+  t.mock.timers.tick(1);
+  await timedOut;
   assert.equal(client.listenerCount(Events.GuildMembersChunk), 0);
 
   // Signal já abortado antes da chamada

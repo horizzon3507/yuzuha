@@ -1,5 +1,5 @@
 export type { AllowedMentionsPolicy, Embed, EmbedAuthor, EmbedField, EmbedFooter, EmbedMedia, EmbedType, IncomingMessage, MentionParse, Payload, ReceivedEmbed, ReceivedEmbedMedia, ReplyTarget } from './domain/messages.js';
 export type { CaseRecord, ModerationAction, ModerationMember, ModerationOptions, VoiceModerationOptions } from './domain/moderation.js';
 export type { JsonValue, State, VariableScope } from './domain/state.js';
-export type { ScheduleClaimRequest, ScheduleClaimResult, ScheduleRecoveryResult, Store } from './ports/store.js';
+export type { ScheduleClaimRequest, ScheduleClaimResult, ScheduleRecoveryResult, Store, VariableAccess, StoredVariable } from './ports/store.js';
 export type { Transport } from './ports/transport.js';

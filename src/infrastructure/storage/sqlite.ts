@@ -2,6 +2,9 @@ import { nextCron } from '../../domain/cron.js';
 import { variableIdentity, variableNameKey, variablePage } from '../../domain/variable-query.js';
 import type { VariableQuery, VariablePage } from '../../domain/variable-query.js';
 import type { JsonValue, ScheduleRecord } from '../../domain/state.js';
+import type { CaseRecord } from '../../domain/moderation.js';
+import type { VariableAccess, StoredVariable } from '../../ports/store.js';
+import { validateCaseRecord, validateExpiration, validateVariableValue } from '../../domain/state-validation.js';
 import { cloneValue } from '../../shared/clone.js';
 import { chmod, mkdir } from 'node:fs/promises';
 import { dirname } from 'node:path';
@@ -105,6 +108,93 @@ export class SQLiteStore implements Store {
         : this.statements!.selectRawVariable.get(key, now);
       if (!row) return undefined;
       return parseStoredJson(String(row['value_json'])) as JsonValue;
+    });
+  }
+
+  private variableAccess(): VariableAccess {
+    const stmts = this.statements!;
+    return {
+      get: key => {
+        const parts = variableIdentity(key);
+        const row = parts ? stmts.selectVariableEntry.get(parts[0], parts[1], variableNameKey(parts[2]))
+          : stmts.selectRawVariableEntry.get(key);
+        if (!row || row['value_json'] === null) return undefined;
+        return { value: parseStoredJson(String(row['value_json'])) as JsonValue,
+          expiresAt: row['expires_at'] === null ? null : Number(row['expires_at']) };
+      },
+      set: (key, value, expiry) => {
+        if (!validateVariableValue(value) || (expiry !== null && !validateExpiration(expiry))) {
+          throw new StoreError('STORE_INVALID', 'A transação produziu estado inválido; nenhuma alteração foi salva.');
+        }
+        const parts = variableIdentity(key);
+        if (expiry !== null) stmts.markExpirations.run();
+        if (parts) {
+          stmts.deleteRawVariable.run(key);
+          stmts.insertVariable.run(parts[0], parts[1], variableNameKey(parts[2]), JSON.stringify(parts[2]), JSON.stringify(value), expiry);
+        } else stmts.insertRawVariable.run(key, JSON.stringify(value), expiry);
+      },
+      delete: key => {
+        const parts = variableIdentity(key);
+        if (parts) stmts.deleteVariable.run(parts[0], parts[1], variableNameKey(parts[2]));
+        stmts.deleteRawVariable.run(key);
+      },
+    };
+  }
+
+  updateVariables<T>(writer: (variables: VariableAccess) => T): Promise<T> {
+    return this.queue.run(async () => {
+      const db = await this.open();
+      db.exec('BEGIN IMMEDIATE');
+      let active = true;
+      const access = this.variableAccess();
+      const check = () => {
+        if (!active) throw new StoreError('TRANSACTION_CLOSED', 'A transação já terminou.');
+      };
+      try {
+        const value = writer({
+          get: key => { check(); return access.get(key); },
+          set: (key, value, expiry) => { check(); access.set(key, value, expiry); },
+          delete: key => { check(); access.delete(key); },
+        });
+        active = false;
+        assertSynchronous(value);
+        const result = cloneValue(value);
+        db.exec('COMMIT');
+        return result;
+      } catch (error) { db.exec('ROLLBACK'); throw error; }
+      finally { active = false; }
+    });
+  }
+
+  readVariableEntry(key: string, clock: () => number): Promise<StoredVariable | undefined> {
+    return this.queue.run(async () => {
+      await this.open();
+      const now = clock(), entry = this.variableAccess().get(key);
+      return entry && (entry.expiresAt === null || entry.expiresAt > now) ? entry : undefined;
+    });
+  }
+
+  appendCase(input: Omit<CaseRecord, 'id' | 'createdAt'>, createdAt: string): Promise<CaseRecord> {
+    return this.queue.run(async () => {
+      const db = await this.open();
+      db.exec('BEGIN IMMEDIATE');
+      try {
+        const id = Number(this.statements!.nextCaseID.get(input.guildID)!['id']);
+        const record: CaseRecord = { id, guildID: input.guildID, action: input.action, targetID: input.targetID,
+          moderatorID: input.moderatorID, reason: input.reason, createdAt };
+        if (input.duration !== undefined) record.duration = input.duration;
+        if (input.channelID !== undefined) record.channelID = input.channelID;
+        if (input.enabled !== undefined) record.enabled = input.enabled;
+        if (!validateCaseRecord(input.guildID, record, id)) {
+          throw new StoreError('STORE_INVALID', 'A transação produziu estado inválido; nenhuma alteração foi salva.');
+        }
+        const result = cloneValue(record);
+        this.statements!.insertCase.run(record.guildID, id, record.action, record.targetID, record.moderatorID,
+          record.reason, createdAt, record.channelID ?? null, record.channelID !== undefined ? 1 : 0,
+          record.duration ?? null, record.enabled === undefined ? null : Number(record.enabled));
+        db.exec('COMMIT');
+        return result;
+      } catch (error) { db.exec('ROLLBACK'); throw error; }
     });
   }
 

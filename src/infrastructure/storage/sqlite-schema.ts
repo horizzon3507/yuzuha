@@ -122,6 +122,10 @@ export interface SQLiteStatements {
   deleteHistorySeq: StatementSync;
   selectScopedVariable: StatementSync;
   selectRawVariable: StatementSync;
+  selectVariableEntry: StatementSync;
+  selectRawVariableEntry: StatementSync;
+  nextCaseID: StatementSync;
+  markExpirations: StatementSync;
   queryVariables: StatementSync;
   selectNextDue: StatementSync;
   countRunningSchedules: StatementSync;
@@ -134,6 +138,10 @@ export interface SQLiteStatements {
 
 export function prepareSQLiteStatements(db: DatabaseSync): SQLiteStatements {
   return {
+    selectVariableEntry: db.prepare('SELECT value_json, expires_at FROM yuzuha_variables WHERE scope=? AND subject=? AND name_key=?'),
+    selectRawVariableEntry: db.prepare('SELECT value_json, expires_at FROM yuzuha_raw_variables WHERE key=?'),
+    nextCaseID: db.prepare('SELECT COALESCE(MAX(id), 0) + 1 AS id FROM yuzuha_cases WHERE guild_id=?'),
+    markExpirations: db.prepare('UPDATE yuzuha_meta SET has_expirations=1 WHERE id=1 AND has_expirations=0'),
     selectMeta: db.prepare('SELECT schema_version, has_expirations, has_history FROM yuzuha_meta WHERE id=1'),
     selectVariables: db.prepare('SELECT scope, subject, name_key, name_json, value_json, expires_at FROM yuzuha_variables'),
     selectRawVariables: db.prepare('SELECT key, value_json, expires_at FROM yuzuha_raw_variables'),

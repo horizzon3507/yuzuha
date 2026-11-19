@@ -18,7 +18,7 @@ const tsxLoader = pathToFileURL(createRequire(import.meta.url).resolve('tsx')).h
 interface StoreScenarioResult {
   name: string;
   store: 'memory' | 'json' | 'sqlite';
-  operation: 'updateSingle' | 'readVariable' | 'queryPrefix';
+  operation: 'updateSingle' | 'updateValue' | 'createCase' | 'readVariable' | 'queryPrefix';
   entries: number;
   iterations: number;
   totalMs: number;
@@ -63,12 +63,18 @@ interface StoreBenchmarkModule {
 const bench = await import(new URL('../benchmarks/store-throughput.mjs', import.meta.url).href) as StoreBenchmarkModule;
 
 const EXPECTED_SCENARIOS = [
+  'memory.updateValue',
+  'memory.createCase',
   'memory.updateSingle',
   'memory.readVariable',
   'memory.queryPrefix',
+  'json.updateValue',
+  'json.createCase',
   'json.updateSingle',
   'json.readVariable',
   'json.queryPrefix',
+  'sqlite.updateValue',
+  'sqlite.createCase',
   'sqlite.updateSingle',
   'sqlite.readVariable',
   'sqlite.queryPrefix',
