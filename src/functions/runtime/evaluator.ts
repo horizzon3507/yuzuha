@@ -6,13 +6,14 @@ import type { FunctionRegistry } from './registry.js';
 import type { FunctionCall, Limits } from './types.js';
 import { text } from './values.js';
 import { LoopControl } from './control-flow.js';
-import { associateCanvasExecution, clearCanvasExecution, createCanvasExecutionState, releaseCanvasExecutionCall } from './canvas-execution.js';
+import { ScriptCall, clearCanvasExecution, createCanvasExecutionState, releaseCanvasExecutionCall } from './canvas-execution.js';
 
 export class Evaluator {
   private calls = 0;
   private deadline: number;
   private waits = 0;
   private waitStarted = 0;
+  private lastOutput: { value: object; text: string } | undefined;
   private readonly canvasExecution = createCanvasExecutionState();
 
   constructor(
@@ -38,7 +39,9 @@ export class Evaluator {
   }
 
   private checkOutput(value: unknown, offset: number): void {
-    if (text(value).length > this.limits.output) throw this.error('OUTPUT_LIMIT', 'Saída excede o limite.', offset);
+    const output = text(value);
+    if (output.length > this.limits.output) throw this.error('OUTPUT_LIMIT', 'Saída excede o limite.', offset);
+    if (value !== null && typeof value === 'object') this.lastOutput = { value, text: output };
   }
 
   private error(code: string, message: string, offset: number): ScriptError {
@@ -60,7 +63,7 @@ export class Evaluator {
   private async sequence(nodes: Node[], depth: number): Promise<unknown> {
     let soleCall: CallNode | undefined;
     for (const node of nodes) {
-      if (node.kind === 'text' && !node.value.trim()) continue;
+      if (node.kind === 'text' && !/\S/.test(node.value)) continue;
       if (node.kind === 'text' || soleCall) { soleCall = undefined; break; }
       soleCall = node;
     }
@@ -69,13 +72,18 @@ export class Evaluator {
     let result = '';
     for (const node of nodes) {
       this.check(node.offset, depth);
-      result += node.kind === 'text' ? node.value : text(node === soleCall ? soleValue : await this.invoke(node, depth));
+      if (node.kind === 'text') result += node.value;
+      else {
+        const value = node === soleCall ? soleValue : await this.invoke(node, depth);
+        const checked = this.lastOutput;
+        result += checked && value === checked.value ? checked.text : text(value);
+      }
       this.checkOutput(result, node.offset);
     }
     return result;
   }
 
-  private async invoke(node: CallNode, depth: number): Promise<unknown> {
+  private invoke(node: CallNode, depth: number): unknown | Promise<unknown> {
     this.calls++;
     this.check(node.offset, depth);
     const fn = this.registry.resolve(node, this.program);
@@ -88,19 +96,19 @@ export class Evaluator {
       values ??= [];
       return values[index] ??= fresh(index);
     };
-    const call: FunctionCall = {
-        ctx: this.ctx,
-        count: node.args.length,
+    const call = new ScriptCall(
+        this.ctx,
+        node.args.length,
         arg,
         fresh,
-        checkOutput: value => this.checkOutput(value, node.offset),
-        text: async index => text(await arg(index)),
-        all: async () => {
+        value => this.checkOutput(value, node.offset),
+        async index => text(await arg(index)),
+        async () => {
           const result: unknown[] = [];
           for (let i = 0; i < node.args.length; i++) result.push(await arg(i));
           return result;
         },
-        wait: async <T>(operation: Promise<T>): Promise<T> => {
+        async <T>(operation: Promise<T>): Promise<T> => {
           if (this.waits++ === 0) this.waitStarted = performance.now();
           try { return await operation; }
           finally {
@@ -110,23 +118,43 @@ export class Evaluator {
             this.waits--;
           }
         },
-      };
-    associateCanvasExecution(call, this.canvasExecution);
+        this.canvasExecution,
+      );
     try {
-      const result = await fn.execute(call);
+      const result = fn.execute(call);
+      if (result === null || typeof result !== 'object' && typeof result !== 'function') {
+        this.check(node.offset, depth);
+        this.checkOutput(result, node.offset);
+        releaseCanvasExecutionCall(call);
+        return result;
+      }
+      return this.awaitResult(result, call, node, depth);
+    } catch (error) {
+      releaseCanvasExecutionCall(call);
+      throw this.wrapError(error, node);
+    }
+  }
+
+  private async awaitResult(value: unknown, call: FunctionCall, node: CallNode, depth: number): Promise<unknown> {
+    try {
+      const result = await value;
       this.check(node.offset, depth);
       this.checkOutput(result, node.offset);
       return result;
     } catch (error) {
-      if (error instanceof GuardError || error instanceof StopExecution || error instanceof ScriptError || error instanceof PartialModerationError || error instanceof LoopControl) throw error;
-      if (error instanceof YuzuhaError && ['EXECUTION_LIMIT', 'OUTPUT_LIMIT', 'EXECUTION_ABORTED'].includes(error.code)) {
-        throw this.error(error.code, error.message, node.offset);
-      }
-      if (error instanceof YuzuhaError && error.code.startsWith('CANVAS_')) {
-        throw new ScriptError(error.code, error.message, this.program.source, node.offset, this.program.file, { cause: error });
-      }
-      throw new ScriptError('FUNCTION_ERROR', `Falha em $${node.name}: ${error instanceof YuzuhaError ? error.message : 'a operação não pôde ser concluída'}.`,
-        this.program.source, node.offset, this.program.file, { cause: error });
+      throw this.wrapError(error, node);
     } finally { releaseCanvasExecutionCall(call); }
+  }
+
+  private wrapError(error: unknown, node: CallNode): Error {
+    if (error instanceof GuardError || error instanceof StopExecution || error instanceof ScriptError || error instanceof PartialModerationError || error instanceof LoopControl) return error;
+    if (error instanceof YuzuhaError && ['EXECUTION_LIMIT', 'OUTPUT_LIMIT', 'EXECUTION_ABORTED'].includes(error.code)) {
+      return this.error(error.code, error.message, node.offset);
+    }
+    if (error instanceof YuzuhaError && error.code.startsWith('CANVAS_')) {
+      return new ScriptError(error.code, error.message, this.program.source, node.offset, this.program.file, { cause: error });
+    }
+    return new ScriptError('FUNCTION_ERROR', `Falha em $${node.name}: ${error instanceof YuzuhaError ? error.message : 'a operação não pôde ser concluída'}.`,
+      this.program.source, node.offset, this.program.file, { cause: error });
   }
 }
