@@ -36,6 +36,8 @@ import { entityGuildFunctions } from './entities-guild.js';
 import { entityChannelFunctions } from './entities-channels.js';
 import { entityMessageFunctions } from './entities-messages.js';
 import { entityMemberFunctions } from './entities-members.js';
+import { voiceFunctions } from './voice.js';
+import { musicFunctions } from './music.js';
 
 export const builtinFunctions: FunctionDefinition[] = [
   ...contextFunctions, ...flowFunctions, ...guardFunctions, ...valueFunctions,
@@ -55,6 +57,8 @@ export const builtinFunctions: FunctionDefinition[] = [
   ...entityChannelFunctions,
   ...entityMessageFunctions,
   ...entityMemberFunctions,
+  ...voiceFunctions,
+  ...musicFunctions,
 ];
 
 export function registerBuiltins(runtime: Runtime): Runtime {

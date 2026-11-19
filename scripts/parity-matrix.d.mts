@@ -36,6 +36,7 @@ export interface ParityMatrix extends Validation {
   rows: (SDKItem & Mapping)[];
   sdkEvents: string[];
   modeEvents: string[];
+  voiceEvents: Record<string, string>;
   summary: Summary;
 }
 export const ROOT: string;
@@ -44,7 +45,8 @@ export const AREAS: string[];
 export function inventorySDK(): SDKItem[];
 export function loadMappings(directory?: string): Promise<Mapping[]>;
 export function functionModeEvents(): Promise<string[]>;
-export function validateMappings(items: SDKItem[], entries: Mapping[], functions: Set<string>, events?: string[]): Validation;
+export function voiceFunctionModeEvents(): Promise<Record<string, string>>;
+export function validateMappings(items: SDKItem[], entries: Mapping[], functions: Set<string>, events?: string[], voiceEvents?: Record<string, string>): Validation;
 export function summarize(items: Pick<Mapping, 'area' | 'status'>[]): Summary;
 export function assertComplete(matrix: Pick<ParityMatrix, 'errors' | 'unclassified' | 'summary'>, release?: boolean): void;
 export function buildParityMatrix(): Promise<ParityMatrix>;

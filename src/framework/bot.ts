@@ -52,6 +52,7 @@ import { EventContext } from '../commands/event-context.js';
 import type { EventContextOptions } from '../commands/event-context.js';
 import { adaptScriptEvent, validateScriptEvent } from './script-events.js';
 import type { ScriptEventDefinition } from './script-events.js';
+import type { FrameworkEventName, VoiceEventName, VoiceEvent } from '../domain/events.js';
 import type { ScriptEngine } from '../ports/script-engine.js';
 import type { MusicManager } from '../services/music.js';
 import type { NativeVoice } from '../ports/voice.js';
@@ -603,7 +604,7 @@ export class Yuzuha {
     this.registry = new CommandRegistry(() => this.scriptEngine, command => {
       if (command.http) (this.http ?? new HttpService()).withPolicy(command.http);
     });
-    this.events = new NativeEvents(this.client, (work, event) => this.scheduleEvent(work, event));
+    this.events = new NativeEvents(this.client, (work, event) => this.scheduleEvent(work, event), this.voice);
     if (typeof options.prefix !== 'function') this.resolvePrefixes(options.prefix ?? '!');
     this.listener = message => {
       if (this.closing || (!this.allowBots && message.author.bot) || message.author.id === this.transport.botID) return;
@@ -1183,7 +1184,7 @@ export class Yuzuha {
         if ((ignoreBots ?? true) && source.event.userBot) return;
         const baseEventOptions: EventContextOptions<K> = {
           ...source,
-          eventArgs: typedArgs,
+          eventArgs: typedArgs as unknown as EventContextOptions<K>['eventArgs'],
           channelID,
           actorID,
           policy: http,
@@ -1250,7 +1251,7 @@ export class Yuzuha {
     };
   }
 
-  private async resolveEventLocale<K extends ClientEventName>(
+  private async resolveEventLocale<K extends FrameworkEventName>(
     options: EventContextOptions<K>,
     executionID: string,
   ): Promise<{ readonly locale: string; readonly translator: MessageTranslator }> {
@@ -1295,7 +1296,7 @@ export class Yuzuha {
     const signal = this.shutdown.signal;
     const baseEventOptions: EventContextOptions<ScriptEventDefinition['event']> = {
       ...source,
-      eventArgs: args as ClientEvents[ScriptEventDefinition['event']],
+      eventArgs: args as ClientEvents[Exclude<ScriptEventDefinition['event'], VoiceEventName>] | [Readonly<VoiceEvent>],
       channelID: definition.channelID,
       actorID: definition.actorID,
       policy: definition.http,
@@ -1352,7 +1353,7 @@ export class Yuzuha {
     });
   }
 
-  private scheduleEvent(work: () => unknown | Promise<unknown>, event: ClientEventName): void {
+  private scheduleEvent(work: () => unknown | Promise<unknown>, event: FrameworkEventName): void {
     if (this.closing) return;
     const task = runInExecution(this, { executionID: randomUUID(), source: 'event', event }, async () => {
       try { await Promise.resolve().then(work); }

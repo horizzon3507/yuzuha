@@ -23,8 +23,8 @@ test('docs/PARITY-MATRIX.md corresponde ao que o gerador produz', async () => {
 test('eventos do function mode existem no SDK e a matriz registra as lacunas', async () => {
   const matrix = await currentMatrix;
   assert.ok(matrix.modeEvents.length > 0);
-  for (const event of matrix.modeEvents) assert.ok(matrix.sdkEvents.includes(event), event);
-  assert.ok(matrix.sdkEvents.length > matrix.modeEvents.length);
+  for (const event of matrix.modeEvents) assert.ok(matrix.sdkEvents.includes(event) || Object.values(matrix.voiceEvents).includes(event), event);
+  assert.ok(matrix.sdkEvents.length > matrix.modeEvents.filter(event => matrix.sdkEvents.includes(event)).length);
   assert.equal(matrix.items.find(item => item.id === '@fluxerjs/core#Message.reply')?.status, 'function');
   assert.equal(matrix.items.find(item => item.id === '@fluxerjs/builders#EmbedBuilder.setTitle')?.status, 'equivalent');
   assert.equal(matrix.items.find(item => item.id === '@fluxerjs/core#Client.login')?.reason, 'lifecycle');
@@ -76,6 +76,10 @@ test('itens novos, removidos, duplicados e eventos sem adaptação bloqueiam che
   const entry = { ...mapping, status: 'function' as const, functions: ['$eventName'] };
   assert.match(validateMappings([event], [entry], new Set(['$eventName'])).errors.join('\n'), /Evento sem adaptação/);
   assert.deepEqual(validateMappings([event], [entry], new Set(['$eventName']), ['channelCreate']).errors, []);
+  const voiceEvent = { ...event, package: '@fluxerjs/voice', name: 'LiveKitRtcConnectionEvents', event: 'speakerStart' };
+  assert.match(validateMappings([voiceEvent], [entry], new Set(['$eventName']), ['voiceSpeakerStart']).errors.join('\n'), /Evento sem adaptação/);
+  assert.deepEqual(validateMappings([voiceEvent], [entry], new Set(['$eventName']), ['voiceSpeakerStart'], { speakerStart: 'voiceSpeakerStart' }).errors, []);
+  assert.match(validateMappings([voiceEvent], [entry], new Set(['$eventName']), [], { speakerStart: 'voiceSpeakerStart' }).errors.join('\n'), /Evento sem adaptação/);
 });
 
 test('safe coverage exclui exclusões e gate de release exige zero pending', () => {

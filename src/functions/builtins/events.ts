@@ -19,10 +19,10 @@ function readPath(value: unknown, segments: readonly string[]): { found: boolean
 export const eventFunctions = defineFunctions(fn => {
   for (const [name, key] of [['eventName', 'name'], ['eventUserID', 'userID'], ['eventGuildID', 'guildID'],
     ['eventChannelID', 'channelID'], ['eventMessageID', 'messageID'], ['eventContent', 'content'],
-    ['eventOldContent', 'oldContent'], ['eventEmoji', 'emoji']] as const) {
+    ['eventOldContent', 'oldContent'], ['eventEmoji', 'emoji'], ['eventErrorCode', 'errorCode'], ['eventErrorMessage', 'errorMessage']] as const) {
     fn(name, 'events', 0, 0, '', 'Consulta o campo do evento; requer contexto de evento e preserva ausências como null.', c => {
       if (!c.ctx.event) throw new GuardError('Esta função exige um contexto de evento.');
-      return c.ctx.event[key];
+      return c.ctx.event[key] ?? null;
     });
   }
   fn('eventData', 'events', 0, 2, '[caminho?;padrão?]',

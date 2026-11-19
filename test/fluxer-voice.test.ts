@@ -6,6 +6,7 @@ import { FluxerVoice } from '../src/music.js';
 
 class Connection extends EventEmitter {
   playing = false;
+  playingVideo = false;
   volume = 100;
   readonly sources: (string | NodeJS.ReadableStream)[] = [];
   failPlay = false;
@@ -14,6 +15,9 @@ class Connection extends EventEmitter {
     this.sources.push(source); this.playing = true;
   }
   stop(): void { this.playing = false; }
+  stopVideo(): void { this.playingVideo = false; }
+  getVolume(): number { return this.volume; }
+  isConnected(): boolean { return true; }
   setVolume(value: number): void { this.volume = value; }
 }
 
@@ -33,6 +37,33 @@ test('native voice uses an injected official-style driver, joins once and forwar
   voice.stop('100'); assert.equal(connection.playing, false);
   await voice.close(); assert.deepEqual(left, ['100']); assert.equal(connection.listenerCount('error'), 0);
   await assert.rejects(voice.join('200'), { code: 'VOICE_CLOSED' }); await client.destroy();
+});
+
+test('voz expõe canal, leitura de volume, parada de vídeo e atualização de estado sem transporte real', async () => {
+  const client = new Client(), connection = new Connection(), updates: unknown[] = [];
+  Reflect.set(client.channels, 'fetch', async () => new VoiceChannel(client, { id: '200', guild_id: '100', type: 2, name: 'voz' }));
+  const voice = new FluxerVoice(client, { async join() { return connection; }, leave() {},
+    updateVoiceState(channelID, partial) { updates.push({ channelID, partial }); } });
+  assert.equal(voice.channelID('100'), undefined);
+  await assert.rejects(voice.updateVoiceState('100', { self_mute: true }), { code: 'VOICE_NOT_CONNECTED' });
+  await voice.join('200', { guildID: '100' });
+  assert.equal(voice.channelID('100'), '200');
+  assert.equal(voice.get('100')?.getVolume?.(), 100);
+  assert.equal(voice.get('100')?.isConnected?.(), true);
+  connection.playing = true; connection.playingVideo = true;
+  voice.stop('100'); assert.equal(connection.playing || connection.playingVideo, false);
+  await voice.updateVoiceState('100', { self_mute: true, self_deaf: false });
+  assert.deepEqual(updates, [{ channelID: '200', partial: { self_mute: true, self_deaf: false } }]);
+  await voice.close(); assert.equal(voice.channelID('100'), undefined); await client.destroy();
+});
+
+test('atualização de estado informa driver sem suporte', async () => {
+  const client = new Client();
+  Reflect.set(client.channels, 'fetch', async () => new VoiceChannel(client, { id: '200', guild_id: '100', type: 2, name: 'voz' }));
+  const voice = new FluxerVoice(client, { async join() { return new Connection(); }, leave() {} });
+  await voice.join('200');
+  await assert.rejects(voice.updateVoiceState('100', { self_deaf: true }), { code: 'VOICE_UNSUPPORTED' });
+  await voice.close(); await client.destroy();
 });
 
 test('voice validates channel kind and refuses simultaneous channels in the same guild', async () => {

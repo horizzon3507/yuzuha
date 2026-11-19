@@ -2,14 +2,16 @@ import { EventEmitter } from 'node:events';
 import type { Client } from '@fluxerjs/core';
 import { YuzuhaError } from '../../shared/errors.js';
 import type { FluxerVoiceConnection, FluxerVoiceDriver, NativeVoice } from '../../ports/voice.js';
-type Connection = { channelID: string; connection: FluxerVoiceConnection; onError: (error: Error) => void; onDisconnect: () => void };
+import type { VoiceEvent, VoiceEventName } from '../../domain/events.js';
+import { voiceSDKEvents } from '../../domain/events.js';
+type Connection = { channelID: string; connection: FluxerVoiceConnection; onDisconnect: () => void };
 
 function leave(driver: FluxerVoiceDriver, guildID: string, channelID: string): void {
   if (driver.leaveChannel) driver.leaveChannel(channelID); else driver.leave(guildID);
 }
 
 /** Loads the official voice package only when a native voice channel is joined. */
-export class FluxerVoice extends EventEmitter<{ voiceError: [error: Error, guildID: string] }> implements NativeVoice {
+export class FluxerVoice extends EventEmitter<{ voiceError: [error: Error, guildID: string]; voiceEvent: [event: Readonly<VoiceEvent>] }> implements NativeVoice {
   private driver?: Promise<FluxerVoiceDriver>;
   private readonly connections = new Map<string, Connection>();
   private readonly pending = new Map<string, { channelID: string; task: Promise<FluxerVoiceConnection> }>();
@@ -28,6 +30,18 @@ export class FluxerVoice extends EventEmitter<{ voiceError: [error: Error, guild
     })();
   }
   get size(): number { return this.connections.size; }
+  subscribe(listener: (event: Readonly<VoiceEvent>) => void): () => void {
+    if (this.closed) return () => {};
+    this.on('voiceEvent', listener);
+    return () => { this.off('voiceEvent', listener); };
+  }
+  channelID(guildID: string): string | undefined { return this.connections.get(guildID)?.channelID; }
+  async updateVoiceState(guildID: string, partial: { self_mute?: boolean; self_deaf?: boolean }): Promise<void> {
+    this.connection(guildID);
+    const driver = await this.getDriver();
+    if (!driver.updateVoiceState) throw new YuzuhaError('VOICE_UNSUPPORTED', 'O driver não permite atualizar o estado de voz.');
+    driver.updateVoiceState(this.channelID(guildID)!, partial);
+  }
   get(guildID: string): FluxerVoiceConnection | undefined { return this.connections.get(guildID)?.connection; }
   async join(channelID: string, options: { guildID?: string } = {}): Promise<FluxerVoiceConnection> {
     if (this.closed) throw new YuzuhaError('VOICE_CLOSED', 'A voz está encerrada.');
@@ -48,16 +62,43 @@ export class FluxerVoice extends EventEmitter<{ voiceError: [error: Error, guild
     const task = (async () => {
       const driver = await this.getDriver();
       if (this.closed) throw new YuzuhaError('VOICE_CLOSED', 'A voz está encerrada.');
-      const connection = await driver.join(channel);
+      const publish = (name: VoiceEventName, userID: string | null = null, errorCode: string | null = null) => {
+        if (!this.closed) this.emit('voiceEvent', Object.freeze({ name, guildID: channel.guildId, channelID, userID,
+          errorCode, errorMessage: name === 'voiceError' ? 'Falha na conexão de voz.' : null }));
+      };
+      const onError = (error: Error) => {
+        const code = (error as { code?: unknown })?.code;
+        publish(voiceSDKEvents.error, null, typeof code === 'string' && ['ECONNRESET', 'ETIMEDOUT', 'ECONNREFUSED', 'EPIPE'].includes(code) ? code : 'VOICE_STATE');
+        this.emit('voiceError', error, channel.guildId);
+      };
+      const connection = await driver.join(channel).catch(error => { onError(error); throw error; });
       if (this.closed) { leave(driver, channel.guildId, channelID); throw new YuzuhaError('VOICE_CLOSED', 'A voz foi encerrada durante a conexão.'); }
-      const onError = (error: Error) => { this.emit('voiceError', error, channel.guildId); };
+      const onReady = () => publish(voiceSDKEvents.ready);
+      const onServerLeave = () => publish(voiceSDKEvents.serverLeave);
+      let speakerWindow = performance.now(), speakerCount = 0;
+      const speaker = (name: 'voiceSpeakerStart' | 'voiceSpeakerStop', payload: { participantId: string }) => {
+        if (typeof payload?.participantId !== 'string' || !/^\d{1,128}$/.test(payload.participantId)) return;
+        const now = performance.now();
+        if (now - speakerWindow >= 1000) { speakerWindow = now; speakerCount = 0; }
+        if (speakerCount++ >= 20) return;
+        publish(name, payload.participantId);
+      };
+      const onSpeakerStart = (payload: { participantId: string }) => speaker(voiceSDKEvents.speakerStart, payload);
+      const onSpeakerStop = (payload: { participantId: string }) => speaker(voiceSDKEvents.speakerStop, payload);
       const onDisconnect = () => {
+        if (this.connections.get(channel.guildId)?.connection !== connection) return;
+        publish(voiceSDKEvents.disconnect);
         if (this.connections.get(channel.guildId)?.connection === connection) this.connections.delete(channel.guildId);
         connection.off('error', onError); connection.off('disconnect', onDisconnect);
+        connection.off('ready', onReady); connection.off('serverLeave', onServerLeave);
+        connection.off('speakerStart', onSpeakerStart); connection.off('speakerStop', onSpeakerStop);
       };
       connection.on('error', onError);
       connection.on('disconnect', onDisconnect);
-      this.connections.set(channel.guildId, { channelID, connection, onError, onDisconnect });
+      connection.on('ready', onReady); connection.on('serverLeave', onServerLeave);
+      connection.on('speakerStart', onSpeakerStart); connection.on('speakerStop', onSpeakerStop);
+      this.connections.set(channel.guildId, { channelID, connection, onDisconnect });
+      onReady();
       return connection;
     })();
     this.pending.set(channel.guildId, { channelID, task });
@@ -78,7 +119,10 @@ export class FluxerVoice extends EventEmitter<{ voiceError: [error: Error, guild
     try { await connection.play(source); if (setupError) throw setupError; }
     finally { connection.off('error', capture); }
   }
-  stop(guildID: string): void { this.connection(guildID).stop(); }
+  stop(guildID: string): void {
+    const connection = this.connection(guildID);
+    try { connection.stop(); } finally { connection.stopVideo?.(); }
+  }
   setVolume(guildID: string, volume: number): void {
     const connection = this.connection(guildID);
     if (!connection.setVolume) throw new YuzuhaError('VOICE_UNSUPPORTED', 'Esta conexão de voz não fornece controle de volume.');
@@ -90,12 +134,13 @@ export class FluxerVoice extends EventEmitter<{ voiceError: [error: Error, guild
     const entry = this.connections.get(guildID); if (!entry) return false;
     const driver = await this.getDriver();
     try { try { entry.connection.stop(); } finally { leave(driver, guildID, entry.channelID); } }
-    finally { entry.connection.off('error', entry.onError); entry.connection.off('disconnect', entry.onDisconnect); this.connections.delete(guildID); }
+    finally { entry.onDisconnect(); }
     return true;
   }
   close(): Promise<void> {
     if (this.closeTask) return this.closeTask;
     this.closed = true;
+    this.removeAllListeners('voiceEvent');
     this.closeTask = (async () => {
       await Promise.allSettled([...this.pending.values()].map(entry => entry.task));
       const results = await Promise.allSettled([...this.connections.keys()].map(guildID => this.leave(guildID)));
