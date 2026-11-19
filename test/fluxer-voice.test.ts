@@ -66,6 +66,39 @@ test('atualização de estado informa driver sem suporte', async () => {
   await voice.close(); await client.destroy();
 });
 
+test('partial voice state preserves omitted flags, failed updates and resets on rejoin', async t => {
+  const client = new Client(), connection = new Connection();
+  const updates: { self_mute: boolean; self_deaf: boolean }[] = [];
+  let fail = false;
+  Reflect.set(client.channels, 'fetch', async () => new VoiceChannel(client, { id: '200', guild_id: '100', type: 2, name: 'voice' }));
+  const voice = new FluxerVoice(client, { async join() { return connection; }, leave() {},
+    updateVoiceState(channelID, partial) {
+      assert.equal(channelID, '200');
+      if (fail) throw new Error('update failed');
+      updates.push({ self_mute: partial.self_mute ?? false, self_deaf: partial.self_deaf ?? false });
+    } });
+  t.after(async () => { await voice.close(); await client.destroy(); });
+  await voice.join('200');
+  await voice.updateVoiceState('100', { self_mute: true });
+  await voice.updateVoiceState('100', { self_deaf: true });
+  await voice.updateVoiceState('100', {});
+  fail = true;
+  await assert.rejects(voice.updateVoiceState('100', { self_mute: false }), /update failed/);
+  fail = false;
+  await voice.updateVoiceState('100', { self_deaf: false });
+  await voice.updateVoiceState('100', { self_mute: false });
+  await voice.leave('100'); await voice.join('200');
+  await voice.updateVoiceState('100', { self_deaf: true });
+  assert.deepEqual(updates, [
+    { self_mute: true, self_deaf: false },
+    { self_mute: true, self_deaf: true },
+    { self_mute: true, self_deaf: true },
+    { self_mute: true, self_deaf: false },
+    { self_mute: false, self_deaf: false },
+    { self_mute: false, self_deaf: true },
+  ]);
+});
+
 test('voice validates channel kind and refuses simultaneous channels in the same guild', async () => {
   const client = new Client(), connection = new Connection();
   Reflect.set(client.channels, 'fetch', async (id: string) => id === 'bad' ? { isVoice: () => false }

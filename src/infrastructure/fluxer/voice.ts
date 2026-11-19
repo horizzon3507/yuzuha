@@ -4,7 +4,8 @@ import { YuzuhaError } from '../../shared/errors.js';
 import type { FluxerVoiceConnection, FluxerVoiceDriver, NativeVoice } from '../../ports/voice.js';
 import type { VoiceEvent, VoiceEventName } from '../../domain/events.js';
 import { voiceSDKEvents } from '../../domain/events.js';
-type Connection = { channelID: string; connection: FluxerVoiceConnection; onDisconnect: () => void };
+type Connection = { channelID: string; connection: FluxerVoiceConnection; onDisconnect: () => void;
+  state: { self_mute: boolean; self_deaf: boolean } };
 
 function leave(driver: FluxerVoiceDriver, guildID: string, channelID: string): void {
   if (driver.leaveChannel) driver.leaveChannel(channelID); else driver.leave(guildID);
@@ -40,7 +41,12 @@ export class FluxerVoice extends EventEmitter<{ voiceError: [error: Error, guild
     this.connection(guildID);
     const driver = await this.getDriver();
     if (!driver.updateVoiceState) throw new YuzuhaError('VOICE_UNSUPPORTED', 'O driver não permite atualizar o estado de voz.');
-    driver.updateVoiceState(this.channelID(guildID)!, partial);
+    this.connection(guildID);
+    const entry = this.connections.get(guildID)!;
+    const state = { self_mute: partial.self_mute ?? entry.state.self_mute,
+      self_deaf: partial.self_deaf ?? entry.state.self_deaf };
+    driver.updateVoiceState(entry.channelID, state);
+    entry.state = state;
   }
   get(guildID: string): FluxerVoiceConnection | undefined { return this.connections.get(guildID)?.connection; }
   async join(channelID: string, options: { guildID?: string } = {}): Promise<FluxerVoiceConnection> {
@@ -97,7 +103,7 @@ export class FluxerVoice extends EventEmitter<{ voiceError: [error: Error, guild
       connection.on('disconnect', onDisconnect);
       connection.on('ready', onReady); connection.on('serverLeave', onServerLeave);
       connection.on('speakerStart', onSpeakerStart); connection.on('speakerStop', onSpeakerStop);
-      this.connections.set(channel.guildId, { channelID, connection, onDisconnect });
+      this.connections.set(channel.guildId, { channelID, connection, onDisconnect, state: { self_mute: false, self_deaf: false } });
       onReady();
       return connection;
     })();
