@@ -560,7 +560,19 @@ export class YuzuhaCluster<TMeta = unknown> extends EventEmitter {
     try {
       await this.clusterOptions.setup?.(bot, runtime, meta);
       await recipe?.setup?.(bot, runtime, meta);
-      bot.bindClusterRuntime();
+      bot.bindClusterRuntime(id => {
+        const runtimes = [];
+        if (id !== undefined) {
+          const runtime = this.cluster.get(id);
+          if (runtime) runtimes.push({ id: runtime.id, status: runtime.status });
+        } else {
+          for (const runtime of this.cluster.runtimeValues()) {
+            runtimes.push({ id: runtime.id, status: runtime.status });
+            if (runtimes.length >= 100) break;
+          }
+        }
+        return { size: this.cluster.size, runtimes };
+      });
     } catch (error) {
       await bot.destroy().catch(() => {});
       if (staged) staged.createdBot = undefined;

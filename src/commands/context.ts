@@ -10,6 +10,7 @@ import type { Transport } from '../ports/transport.js';
 import type { NativeAccess } from '../ports/native.js';
 import type { BotShard } from '../ports/sharding.js';
 import type { Resources } from '../ports/resources.js';
+import type { RuntimeInfo } from '../ports/runtime-info.js';
 import { assertServiceKey } from '../ports/services.js';
 import type { ServiceKey, ServiceLookup } from '../ports/services.js';
 import type { AwaitReactionInput, AwaitReactionOptions, CollectorsResources, ReactionVote } from '../ports/resources/collectors.js';
@@ -89,6 +90,7 @@ export interface ContextOptions {
   isOwner?: (userID: string) => boolean;
   isDevGuild?: (guildID: string) => boolean;
   services?: ServiceLookup;
+  runtimeInfo?: RuntimeInfo;
 }
 
 export class CommandContext {
@@ -116,6 +118,7 @@ export class CommandContext {
   private readonly checkOwner?: (userID: string) => boolean;
   private readonly checkDevGuild?: (guildID: string) => boolean;
   readonly transport: Transport;
+  readonly runtimeInfo?: RuntimeInfo;
   readonly store: Store;
   readonly shard?: BotShard;
   readonly command: Command;
@@ -184,6 +187,7 @@ export class CommandContext {
     this.help = options.help ?? (() => '');
     this.native = options.native;
     this.shard = options.shard;
+    this.runtimeInfo = options.runtimeInfo;
     this.schedulerService = options.scheduler;
     this.signal = options.signal ?? new AbortController().signal;
     this.now = options.now ?? Date.now;
@@ -222,6 +226,10 @@ export class CommandContext {
     const guildID = await this.authorization.requireGuildDeparture();
     if (!this.resources.users.leaveGuild) throw new YuzuhaError('NATIVE_UNAVAILABLE', 'O recurso de servidor não implementa leaveGuild.');
     await this.resources.users.leaveGuild(guildID);
+  }
+  async leaveGuildAsSelf(): Promise<void> {
+    const guildID = await this.authorization.requireGuildDeparture();
+    await this.resources.self.leaveGuild(guildID);
   }
   get cdn() { return this.cdnService; }
   /** Mapa nome → emoji configurado no bot (`YuzuhaOptions.emoji`). */
@@ -422,8 +430,8 @@ export class CommandContext {
     return this.transport.react(requireChannel(channelID, this.t), messageID, emoji);
   }
 
-  requirePermission(name: string, bot = false, message?: string): Promise<void> {
-    return this.authorization.requirePermission(name, bot, message);
+  requirePermission(name: string, bot = false, message?: string, channelID?: string): Promise<void> {
+    return this.authorization.requirePermission(name, bot, message, channelID);
   }
 
   private cooldownKey(commandName: string, scope?: CooldownScope): string {

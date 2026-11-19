@@ -27,6 +27,7 @@ export interface MessageInfo {
 
 export interface MessagesResources {
   preload(channelIDs: string[]): Promise<Record<string, MessageInfo | null>>;
+  cached?(channelID: string, messageID: string): Promise<MessageInfo | null>;
   fetch(channelID: string, messageID: string): Promise<MessageInfo>;
   list(channelID: string, limit?: number, cursor?: MessageCursor): Promise<MessageInfo[]>;
   pin(channelID: string, messageID: string): Promise<void>;

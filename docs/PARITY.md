@@ -92,19 +92,19 @@ precisam de `overrides` para o core fixado, como no manifesto do Yuzuha.
 | Gateway, conexão, heartbeat e reconexão | Herdado do SDK; `ctx.resources.gateway.fetchMembers` aguarda chunks de membros e os pedidos brutos (`request*`, assinatura de threads, envio por shard) seguem pelo mesmo recurso | Via inicialização do bot |
 | Eventos | `bot.on/once/off`, `bot.event`, `bot.contextEvent` (qualquer `ClientEventName` com `EventContext` e `adaptClientEvent`), `bot.scriptEvent` e `bot.client.on` | Eventos de membros, edição/exclusão de mensagens e reações, com contexto próprio |
 | Mensagens e replies | API completa do SDK | reply, sendMessage, editMessage, deleteMessage, fetchMessage, messages com cursores, pin/unpin, pinnedMessagesPage, dm, forward, searchMessages, searchMessagesAdvanced e preloadMessages |
-| Reações e collectors | API do SDK; `awaitMessage`, `awaitReaction` e streams `collectMessages`/`collectReactions` como `AsyncIterable` com `filter` síncrono e metadados completos de `IncomingMessage` | react, removeReaction, clearReactions, reactionUsers e reactionUsersPage com metadados de paginação, awaitMessage, awaitReaction, confirm |
+| Reações e collectors | API do SDK; `awaitMessage`, `awaitReaction` e streams `collectMessages`/`collectReactions` como `AsyncIterable` com `filter` síncrono e metadados completos de `IncomingMessage` | react, removeReaction, clearReactions, reactionUsers, reactionUsersPage, awaitMessage, awaitReaction, confirm e lotes declarativos collectMessages/collectReactions |
 | Embeds e anexos | Builders do SDK, sendBytes e sendAttachments | Embeds completos (autor, link, data, campos, alt text e rodapé com ícone), até 10 embeds, opções de envio com autorização, anexos URL/base64 e múltiplos anexos; leitura normalizada em `$fetchMessage` |
 | Membros, cargos, canais e permissões | API do SDK e `ctx.members` | User/member, perfil completo, contagens ao vivo, nickname, roles, canais de link, avisos, posição, categorias e overwrites |
 | Ban, kick, timeout, unban e moderação de voz | SDK + `ctx.mod` e `ctx.moderate` | Versões simples e mod* com casos, incluindo move/mute/deafen |
 | Servidor, convites, webhooks e expressões | API do SDK e auxiliares autorizados | guildFeatures, leaveGuild, editGuild, convites/vanity, clonagem e mutações de emojis/stickers, createEmojisBulk; CRUD e envio de webhooks |
 | Threads e fóruns | API do SDK | Criação, edição, busca, posts, membros, threadMember e listagens ativas/arquivadas com paginação |
 | Presença | `bot.setPresence`, `bot.rotatePresence`, `users.setPresence` (`PresenceInput` com `activities[]`, `customStatus` e `afk`) e `client.user.setPresence` | setPresence, setStatus e setActivity |
-| Cache e presença | `ctx.resources.cache` (estatísticas, limites e limpezas), `cacheSweepers` periódicos (`messages`, `members`, `users`) e opções do SDK | Acesso nativo |
-| Usuário autenticado | `ctx.resources.self` (fetch, guilds, saída e limpeza com verificação sudo) | setPresence, setStatus, setActivity e leaveGuild |
-| Instância e aplicação | `ctx.resources.instance` (describe, gatewayInfo, application, oauthApplications, metadados de emoji/sticker, resolveEmoji); `discovery` em `YuzuhaOptions`/`defineConfig`, `Yuzuha.fromDiscovery`, `Client.fromDiscovery` e client injetado | Pending em resources; o adaptador nativo não implica acesso por scripts |
+| Cache e presença | `ctx.resources.cache` (estatísticas, limites e limpezas), `cacheSweepers` periódicos (`messages`, `members`, `users`) e opções do SDK | cacheStats, sweepCache, cascadeCache e evictCachedChannel, somente para donos do bot |
+| Usuário autenticado | `ctx.resources.self` (fetch, guilds, saída e limpeza com verificação sudo) | selfUser, selfGuilds, selfLeaveGuild e deleteMyMessages sem aceitar segredos sudo; setPresence, setStatus, setActivity e leaveGuild |
+| Instância e aplicação | `ctx.resources.instance` (describe, gatewayInfo, application, oauthApplications, metadados de emoji/sticker, resolveEmoji); `discovery` em `YuzuhaOptions`/`defineConfig`, `Yuzuha.fromDiscovery`, `Client.fromDiscovery` e client injetado | instanceInfo, gatewayInfo, applicationInfo e oauthApplications para donos do bot, sem clientSecret; emojiMetadata, stickerMetadata e resolveEmoji |
 | Áudio em voz | `bot.voiceStates` / `ctx.voiceStates` (`VoiceStateTracker`) para estados de voz; `FluxerVoice` sobre `@fluxerjs/voice` opcional; Lavalink v4 com plugin de áudio, `FluxerLavalinkBridge`, filas editáveis e recuperação em `yuzuha/music` | Sem wrappers de reprodução; moderação de membros usa o SDK core |
-| Sharding | `bot.shard`, `ctx.shard`, `shardIdForGuild`, scheduler líder por padrão e `yuzuha/sdk/sharding` sobre `@fluxerjs/sharding` (peer opcional) | Sem coordenação própria |
-| Cluster/subpaths | `YuzuhaCluster` e `YuzuhaClusterEvents` sobre `ClientCluster`; `yuzuha/sdk/cluster` e demais subpaths `yuzuha/sdk/*` espelham `@fluxerjs/core/*` e os pacotes satélites | Sem coordenação própria |
+| Sharding | `bot.shard`, `ctx.shard`, `shardIdForGuild`, scheduler líder por padrão e `yuzuha/sdk/sharding` sobre `@fluxerjs/sharding` (peer opcional) | shardInfo, shardIdForGuild, botReadiness e gatewayStatus; somente consultas |
+| Cluster/subpaths | `YuzuhaCluster` e `YuzuhaClusterEvents` sobre `ClientCluster`; `yuzuha/sdk/cluster` e demais subpaths `yuzuha/sdk/*` espelham `@fluxerjs/core/*` e os pacotes satélites | clusterInfo para donos do bot, sem controle de processos |
 | Estado e casos | `ctx.data`, TTL, userFor, transaction entre chaves e stores | Variáveis, TTL, incrementos, listas, casos e dataTransaction com operações declarativas |
 | Agendamentos | `ctx.scheduler`, cron/fusos, concorrência limitada, histórico, heartbeat e controles | schedule, scheduleEvery, scheduleCron, controles, histórico, reexecução e retry com jitter |
 | HTTP | `request`, `requestBytes`, `stream`, `multipart`, `withPolicy` e cancelamento | `$http`, `$httpJson`, `$httpMultipart` e download de imagens com política de rede por comando |
@@ -159,6 +159,21 @@ servidor atual e valida filtros/cursores antes de consultar o port. Criação, e
 ambos antes do download, e o contexto revalida antes da mutação.
 `bot.resources` e `bot.client` preservam a autoridade direta do
 SDK; seu uso é uma decisão explícita do código nativo confiável.
+
+Em scripts, `$fetchWebhookMessage`, `$editWebhookMessage` e
+`$deleteWebhookMessage` obtêm o token pelo recurso autorizado; não aceitam
+nem retornam o token. Uma thread explícita precisa pertencer ao canal do webhook
+e também exige `ManageWebhooks` de autor e bot. Edições de texto não interpretam
+menções. `$deleteMyMessages` exige dono do bot e `ManageMessages` de ambos no
+servidor atual. Se a instância exigir verificação sudo, a requisição falha:
+scripts não podem informar senha, MFA ou WebAuthn.
+
+Pedidos de membros pelo gateway exigem `ManageGuild` de autor e bot e
+limitam a resposta pretendida a 100 membros. Pedidos por canal e de não lidos
+validam servidor, visibilidade e, para não lidos, histórico do canal e dos
+posts. `$subscribeThreads` também exige dono do bot. `$collectMessages` e
+`$collectReactions` operam no canal atual com filtros declarativos, até 20
+itens e 30 segundos por chamada; não retornam objetos brutos do SDK.
 
 `messages.preload` recebe de 1 a 100 IDs e retorna a última mensagem normalizada
 por canal, ou `null`. `expressions.createEmojisBulk` recebe de 1 a 50 imagens em

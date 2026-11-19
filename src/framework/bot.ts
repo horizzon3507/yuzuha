@@ -415,6 +415,24 @@ export class Yuzuha {
   private readonly contextHelp = (command?: string, prefix = '') => this.help(command, prefix);
   private readonly contextDeleteLater = (channelID: string, messageID: string, ttlMs: number) => this.deleteLater(channelID, messageID, ttlMs);
   private readonly contextIsOwner = (userID: string) => this.isOwner(userID);
+  private clusterRuntimeInfo?: NonNullable<ContextOptions['runtimeInfo']>['cluster'];
+  private readonly contextRuntimeInfo: NonNullable<ContextOptions['runtimeInfo']> = {
+    readiness: () => {
+      const { ready, uptimeMs } = this.health();
+      return { ready, uptimeMs, readyAt: ready ? this.client.readyAt?.getTime() ?? null : null };
+    },
+    gateway: async () => {
+      if (!this.isReady() || this.closing) return null;
+      const ws = this.client.ws;
+      const statuses = await ws.fetchStatus();
+      const ping = (value: number | undefined) => value !== undefined && Number.isFinite(value) && value >= 0 ? value : null;
+      const raw = ws.getGatewayUrl();
+      const url = raw ? new URL(raw) : null;
+      return { url: url ? `${url.origin}${url.pathname}` : null, count: ws.getShardCount(), ping: ping(ws.ping),
+        shards: [...statuses].map(([id, status]) => ({ id, status, ping: ping(ws.getShard(id)?.ping) })) };
+    },
+    cluster: id => this.clusterRuntimeInfo?.(id) ?? null,
+  };
   private readonly contextIsDevGuild = (guildID: string) => this.devGuildIDs.has(guildID);
   private readonly canvasContext: ContextOptions['canvas'];
 
@@ -1196,6 +1214,7 @@ export class Yuzuha {
           emoji: this.emojiMap,
           deleteLater: this.contextDeleteLater,
           isOwner: this.contextIsOwner,
+          runtimeInfo: this.contextRuntimeInfo,
           isDevGuild: this.contextIsDevGuild,
           services: this.services,
           locale: this.messagesRuntime.defaultLocale,
@@ -1296,6 +1315,7 @@ export class Yuzuha {
       canvas: this.canvasContext, now: this.options.now, help: this.contextHelp, cooldown: this.contextCooldown, signal,
       cdn: this.cdnService, disableResourceAuthorization: this.options.unsafeDisableResourceAuthorization === true, emoji: this.emojiMap,
       deleteLater: this.contextDeleteLater, isOwner: this.contextIsOwner, isDevGuild: this.contextIsDevGuild,
+      runtimeInfo: this.contextRuntimeInfo,
       services: this.services, locale: this.messagesRuntime.defaultLocale, translator: this.messagesRuntime.defaultTranslator };
     const prelim = new EventContext(baseEventOptions);
     await runInExecution(this, {
@@ -1392,8 +1412,9 @@ export class Yuzuha {
   }
 
   /** @internal Prepara o bot quando o ciclo de login do Client é conduzido por YuzuhaCluster. */
-  bindClusterRuntime(): void {
+  bindClusterRuntime(info?: NonNullable<ContextOptions['runtimeInfo']>['cluster']): void {
     if (this.closing) throw new YuzuhaError('BOT_CLOSED', 'O bot está encerrado.');
+    this.clusterRuntimeInfo = info;
     if (this.listening) return;
     if (this.memberCache && !this.detachMemberCache && !this.options.transport && this.transport instanceof FluxerTransport) {
       this.detachMemberCache = this.transport.attachCacheInvalidation(this.client);
@@ -1918,6 +1939,7 @@ export class Yuzuha {
             canvas: this.canvasContext, now: this.options.now, signal, executionID,
             cdn: this.cdnService, disableResourceAuthorization: this.options.unsafeDisableResourceAuthorization === true, emoji: this.emojiMap,
             deleteLater: this.contextDeleteLater, isOwner: this.contextIsOwner, isDevGuild: this.contextIsDevGuild,
+            runtimeInfo: this.contextRuntimeInfo,
             services: this.services, locale: activeLocale, translator: activeTranslator };
           if (typeof this.options.locale === 'function') {
             const probe = createLocaleProbeContext(baseContextOptions);

@@ -1,15 +1,15 @@
 {"id":"@fluxerjs/core#CacheController","area":"resources","status":"excluded","note":"Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK.","reason":"data-only"}
-{"id":"@fluxerjs/core#CacheController.cascadeChannel","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
-{"id":"@fluxerjs/core#CacheController.cascadeGuild","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
-{"id":"@fluxerjs/core#CacheController.cascading","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
+{"id":"@fluxerjs/core#CacheController.cascadeChannel","area":"resources","status":"function","note":"Cascata no cache local por ID; exige dono do bot.","functions":["$cascadeCache"]}
+{"id":"@fluxerjs/core#CacheController.cascadeGuild","area":"resources","status":"function","note":"Cascata no cache local por ID; exige dono do bot.","functions":["$cascadeCache"]}
+{"id":"@fluxerjs/core#CacheController.cascading","area":"resources","status":"equivalent","note":"Campos retornados em limits do snapshot do cache.","functions":["$cacheStats"]}
 {"id":"@fluxerjs/core#CacheController.constructor","area":"resources","status":"excluded","note":"Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados.","reason":"internal"}
-{"id":"@fluxerjs/core#CacheController.limits","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
-{"id":"@fluxerjs/core#CacheController.stats","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
-{"id":"@fluxerjs/core#CacheController.sweepChannels","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
-{"id":"@fluxerjs/core#CacheController.sweepGuilds","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
-{"id":"@fluxerjs/core#CacheController.sweepMembers","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
-{"id":"@fluxerjs/core#CacheController.sweepMessages","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
-{"id":"@fluxerjs/core#CacheController.sweepUsers","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
+{"id":"@fluxerjs/core#CacheController.limits","area":"resources","status":"equivalent","note":"Campos retornados em limits do snapshot do cache.","functions":["$cacheStats"]}
+{"id":"@fluxerjs/core#CacheController.stats","area":"resources","status":"function","note":"Snapshot normalizado do cache local; exige dono do bot.","functions":["$cacheStats"]}
+{"id":"@fluxerjs/core#CacheController.sweepChannels","area":"resources","status":"function","note":"Limpeza no bucket selecionado, por escopo/idade quando aplicável; sem callbacks do script.","functions":["$sweepCache"]}
+{"id":"@fluxerjs/core#CacheController.sweepGuilds","area":"resources","status":"function","note":"Limpeza no bucket selecionado, por escopo/idade quando aplicável; sem callbacks do script.","functions":["$sweepCache"]}
+{"id":"@fluxerjs/core#CacheController.sweepMembers","area":"resources","status":"function","note":"Limpeza no bucket selecionado, por escopo/idade quando aplicável; sem callbacks do script.","functions":["$sweepCache"]}
+{"id":"@fluxerjs/core#CacheController.sweepMessages","area":"resources","status":"function","note":"Limpeza no bucket selecionado, por escopo/idade quando aplicável; sem callbacks do script.","functions":["$sweepCache"]}
+{"id":"@fluxerjs/core#CacheController.sweepUsers","area":"resources","status":"function","note":"Limpeza no bucket selecionado, por escopo/idade quando aplicável; sem callbacks do script.","functions":["$sweepCache"]}
 {"id":"@fluxerjs/core#Client","area":"resources","status":"excluded","note":"Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK.","reason":"data-only"}
 {"id":"@fluxerjs/core#Client._addMessageToCache","area":"resources","status":"excluded","note":"Helper interno, backing state ou patch de sessão; usar a operação pública autorizada.","reason":"internal"}
 {"id":"@fluxerjs/core#Client._clearMessageCache","area":"resources","status":"excluded","note":"Helper interno, backing state ou patch de sessão; usar a operação pública autorizada.","reason":"internal"}
@@ -24,111 +24,111 @@
 {"id":"@fluxerjs/core#Client._removeMessageFromCache","area":"resources","status":"excluded","note":"Helper interno, backing state ou patch de sessão; usar a operação pública autorizada.","reason":"internal"}
 {"id":"@fluxerjs/core#Client._sendToAllShards","area":"resources","status":"excluded","note":"Helper interno, backing state ou patch de sessão; usar a operação pública autorizada.","reason":"internal"}
 {"id":"@fluxerjs/core#Client._ws","area":"resources","status":"excluded","note":"Helper interno, backing state ou patch de sessão; usar a operação pública autorizada.","reason":"internal"}
-{"id":"@fluxerjs/core#Client.assertReady","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
-{"id":"@fluxerjs/core#Client.bulkFetchMessages","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
-{"id":"@fluxerjs/core#Client.cache","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
-{"id":"@fluxerjs/core#Client.channels","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
+{"id":"@fluxerjs/core#Client.assertReady","area":"resources","status":"function","note":"Guard não capturável por $try quando o runtime não está pronto.","functions":["$requireBotReady"]}
+{"id":"@fluxerjs/core#Client.bulkFetchMessages","area":"resources","status":"equivalent","note":"Compõe listagens autorizadas por canal; a rota de lote do SDK é restrita a contas de usuário.","functions":["$bulkFetchMessages"]}
+{"id":"@fluxerjs/core#Client.cache","area":"resources","status":"equivalent","note":"Fachada com leituras, limpezas e cascatas autorizadas; não expõe CacheController.","functions":["$cacheStats","$sweepCache","$cascadeCache"]}
+{"id":"@fluxerjs/core#Client.channels","area":"resources","status":"equivalent","note":"Consultas normalizadas, sem expor o gerenciador SDK.","functions":["$channel","$channels"]}
 {"id":"@fluxerjs/core#Client.constructor","area":"resources","status":"excluded","note":"Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados.","reason":"internal"}
 {"id":"@fluxerjs/core#Client.destroy","area":"resources","status":"excluded","note":"Ciclo de vida, emissão ou coordenação de processos é controlado pela configuração nativa, não por scripts.","reason":"lifecycle"}
 {"id":"@fluxerjs/core#Client.emit","area":"resources","status":"excluded","note":"Ciclo de vida, emissão ou coordenação de processos é controlado pela configuração nativa, não por scripts.","reason":"lifecycle"}
 {"id":"@fluxerjs/core#Client.events","area":"resources","status":"excluded","note":"Objeto/transporte cru ou introspecção arbitrária pode contornar guards ou revelar estado da sessão.","reason":"raw-transport"}
-{"id":"@fluxerjs/core#Client.fetchApplication","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
-{"id":"@fluxerjs/core#Client.fetchEmojiMetadata","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
-{"id":"@fluxerjs/core#Client.fetchGatewayInfo","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
-{"id":"@fluxerjs/core#Client.fetchInstance","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
-{"id":"@fluxerjs/core#Client.fetchOAuthApplications","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
-{"id":"@fluxerjs/core#Client.fetchStickerMetadata","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
+{"id":"@fluxerjs/core#Client.fetchApplication","area":"resources","status":"function","note":"Retorna a aplicação autenticada sem clientSecret, com guarda de dono.","functions":["$applicationInfo"]}
+{"id":"@fluxerjs/core#Client.fetchEmojiMetadata","area":"resources","status":"function","note":"Retorna metadados normalizados pelo ID do emoji.","functions":["$emojiMetadata"]}
+{"id":"@fluxerjs/core#Client.fetchGatewayInfo","area":"resources","status":"function","note":"Consulta informações normalizadas do gateway, com guarda de dono.","functions":["$gatewayInfo"]}
+{"id":"@fluxerjs/core#Client.fetchInstance","area":"resources","status":"function","note":"Consulta a descoberta da instância configurada, com guarda de dono.","functions":["$instanceInfo"]}
+{"id":"@fluxerjs/core#Client.fetchOAuthApplications","area":"resources","status":"function","note":"Consulta aplicações sob guarda de dono e remove clientSecret de cada item.","functions":["$oauthApplications"]}
+{"id":"@fluxerjs/core#Client.fetchStickerMetadata","area":"resources","status":"function","note":"Retorna metadados normalizados pelo ID do sticker.","functions":["$stickerMetadata"]}
 {"id":"@fluxerjs/core#Client.getOrCreateUser","area":"resources","status":"excluded","note":"Helper interno, backing state ou patch de sessão; usar a operação pública autorizada.","reason":"internal"}
-{"id":"@fluxerjs/core#Client.guilds","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
-{"id":"@fluxerjs/core#Client.instance","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
-{"id":"@fluxerjs/core#Client.isReady","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
+{"id":"@fluxerjs/core#Client.guilds","area":"resources","status":"equivalent","note":"Leitura normalizada do servidor atual ou dos servidores do bot sob guarda de dono.","functions":["$guild","$selfGuilds"]}
+{"id":"@fluxerjs/core#Client.instance","area":"resources","status":"equivalent","note":"Descrição normalizada da instância resolvida, com descoberta e endpoints.","functions":["$instanceInfo"]}
+{"id":"@fluxerjs/core#Client.isReady","area":"resources","status":"function","note":"Retorna ready, readyAt e uptimeMs do runtime atual.","functions":["$botReadiness"]}
 {"id":"@fluxerjs/core#Client.logger","area":"resources","status":"excluded","note":"Objeto/transporte cru ou introspecção arbitrária pode contornar guards ou revelar estado da sessão.","reason":"raw-transport"}
 {"id":"@fluxerjs/core#Client.login","area":"resources","status":"excluded","note":"Ciclo de vida, emissão ou coordenação de processos é controlado pela configuração nativa, não por scripts.","reason":"lifecycle"}
-{"id":"@fluxerjs/core#Client.off","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
-{"id":"@fluxerjs/core#Client.on","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
-{"id":"@fluxerjs/core#Client.once","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
+{"id":"@fluxerjs/core#Client.off","area":"resources","status":"excluded","note":"Listeners arbitrários do objeto SDK ficam no lifecycle nativo; os scripts usam eventos declarativos mapeados na área events.","reason":"lifecycle"}
+{"id":"@fluxerjs/core#Client.on","area":"resources","status":"excluded","note":"Listeners arbitrários do objeto SDK ficam no lifecycle nativo; os scripts usam eventos declarativos mapeados na área events.","reason":"lifecycle"}
+{"id":"@fluxerjs/core#Client.once","area":"resources","status":"excluded","note":"Listeners arbitrários do objeto SDK ficam no lifecycle nativo; os scripts usam eventos declarativos mapeados na área events.","reason":"lifecycle"}
 {"id":"@fluxerjs/core#Client.options","area":"resources","status":"excluded","note":"Configuração do client pode conter token e estado de autenticação; não expor ao script.","reason":"credentials"}
 {"id":"@fluxerjs/core#Client.preloadMessages","area":"resources","status":"function","note":"Operação por builtin e recurso/serviço compartilhado; ver contrato de argumentos na referência.","functions":["$preloadMessages"]}
 {"id":"@fluxerjs/core#Client.preloadMessagesAlt","area":"resources","status":"excluded","note":"Helper interno, backing state ou patch de sessão; usar a operação pública autorizada.","reason":"internal"}
-{"id":"@fluxerjs/core#Client.readyAt","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
+{"id":"@fluxerjs/core#Client.readyAt","area":"resources","status":"function","note":"Retorna ready, readyAt e uptimeMs do runtime atual.","functions":["$botReadiness"]}
 {"id":"@fluxerjs/core#Client.requestChannelMemberCounts","area":"resources","status":"function","note":"Operação por builtin e recurso/serviço compartilhado; ver contrato de argumentos na referência.","functions":["$channelCounts"]}
-{"id":"@fluxerjs/core#Client.requestForumUnreads","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
-{"id":"@fluxerjs/core#Client.requestGuildCounts","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
-{"id":"@fluxerjs/core#Client.requestGuildMembers","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
-{"id":"@fluxerjs/core#Client.resolveEmoji","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
+{"id":"@fluxerjs/core#Client.requestForumUnreads","area":"resources","status":"function","note":"Pedido validado por fórum/post e leitura autorizada no servidor atual.","functions":["$requestForumUnreads"]}
+{"id":"@fluxerjs/core#Client.requestGuildCounts","area":"resources","status":"function","note":"Pedido para o servidor atual com ManageGuild de autor e bot.","functions":["$requestGuildCounts"]}
+{"id":"@fluxerjs/core#Client.requestGuildMembers","area":"resources","status":"function","note":"Pedido validado e limitado, com ManageGuild de autor e bot; inclui versão aguardável.","functions":["$requestGatewayMembers","$fetchGatewayMembers"]}
+{"id":"@fluxerjs/core#Client.resolveEmoji","area":"resources","status":"function","note":"Resolve emoji textual e considera o servidor quando disponível.","functions":["$resolveEmoji"]}
 {"id":"@fluxerjs/core#Client.rest","area":"resources","status":"excluded","note":"Referência ao client/transporte SDK não é valor de script; usar recursos autorizados.","reason":"raw-transport"}
 {"id":"@fluxerjs/core#Client.searchMessages","area":"resources","status":"equivalent","note":"Acesso por builtin ao recurso autorizado correspondente; resolve/fetch usa busca normalizada, não instância SDK.","functions":["$searchMessagesAdvanced"]}
 {"id":"@fluxerjs/core#Client.sendToGateway","area":"resources","status":"excluded","note":"Objeto/transporte cru ou introspecção arbitrária pode contornar guards ou revelar estado da sessão.","reason":"raw-transport"}
 {"id":"@fluxerjs/core#Client.static:fromDiscovery","area":"resources","status":"excluded","note":"Fábrica de instâncias/configuração nativa; script usa operações e valores normalizados.","reason":"internal"}
 {"id":"@fluxerjs/core#Client.static:Routes","area":"resources","status":"excluded","note":"Rotas REST autenticadas arbitrárias contornariam os ports e guards; usar operações tipadas.","reason":"raw-transport"}
-{"id":"@fluxerjs/core#Client.subscribeThreads","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
-{"id":"@fluxerjs/core#Client.sweepMembers","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
-{"id":"@fluxerjs/core#Client.sweepMessages","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
-{"id":"@fluxerjs/core#Client.uptime","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
-{"id":"@fluxerjs/core#Client.user","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
-{"id":"@fluxerjs/core#Client.users","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
+{"id":"@fluxerjs/core#Client.subscribeThreads","area":"resources","status":"function","note":"Assinatura declarativa no servidor atual, autorizada por dono do bot e ManageGuild de autor e bot.","functions":["$subscribeThreads"]}
+{"id":"@fluxerjs/core#Client.sweepMembers","area":"resources","status":"function","note":"Limpeza local com filtros declarativos de escopo/idade conforme o bucket.","functions":["$sweepCache"]}
+{"id":"@fluxerjs/core#Client.sweepMessages","area":"resources","status":"function","note":"Limpeza local com filtros declarativos de escopo/idade conforme o bucket.","functions":["$sweepCache"]}
+{"id":"@fluxerjs/core#Client.uptime","area":"resources","status":"function","note":"Retorna ready, readyAt e uptimeMs do runtime atual.","functions":["$botReadiness"]}
+{"id":"@fluxerjs/core#Client.user","area":"resources","status":"equivalent","note":"Consulta normalizada do usuário autenticado; não retorna ClientUser.","functions":["$selfUser"]}
+{"id":"@fluxerjs/core#Client.users","area":"resources","status":"equivalent","note":"Consultas normalizadas, sem expor o gerenciador SDK.","functions":["$user","$userProfile"]}
 {"id":"@fluxerjs/core#Client.ws","area":"resources","status":"excluded","note":"Referência ao client/transporte SDK não é valor de script; usar recursos autorizados.","reason":"raw-transport"}
 {"id":"@fluxerjs/core#ClientCluster","area":"resources","status":"excluded","note":"Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK.","reason":"data-only"}
-{"id":"@fluxerjs/core#ClientCluster.add","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
-{"id":"@fluxerjs/core#ClientCluster.addAll","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
+{"id":"@fluxerjs/core#ClientCluster.add","area":"resources","status":"excluded","note":"Inicializar ou desligar runtimes requer credenciais e coordenação do processo; exclusivamente nativo.","reason":"lifecycle"}
+{"id":"@fluxerjs/core#ClientCluster.addAll","area":"resources","status":"excluded","note":"Inicializar ou desligar runtimes requer credenciais e coordenação do processo; exclusivamente nativo.","reason":"lifecycle"}
 {"id":"@fluxerjs/core#ClientCluster.constructor","area":"resources","status":"excluded","note":"Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados.","reason":"internal"}
 {"id":"@fluxerjs/core#ClientCluster.destroy","area":"resources","status":"excluded","note":"Ciclo de vida, emissão ou coordenação de processos é controlado pela configuração nativa, não por scripts.","reason":"lifecycle"}
 {"id":"@fluxerjs/core#ClientCluster.emit","area":"resources","status":"excluded","note":"Ciclo de vida, emissão ou coordenação de processos é controlado pela configuração nativa, não por scripts.","reason":"lifecycle"}
-{"id":"@fluxerjs/core#ClientCluster.get","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
-{"id":"@fluxerjs/core#ClientCluster.has","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
-{"id":"@fluxerjs/core#ClientCluster.off","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
-{"id":"@fluxerjs/core#ClientCluster.on","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
-{"id":"@fluxerjs/core#ClientCluster.once","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
-{"id":"@fluxerjs/core#ClientCluster.remove","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
+{"id":"@fluxerjs/core#ClientCluster.get","area":"resources","status":"equivalent","note":"Filtra o snapshot por ID; a presença de um resultado equivale a has, sem retornar bot, client ou erros.","functions":["$clusterInfo"]}
+{"id":"@fluxerjs/core#ClientCluster.has","area":"resources","status":"equivalent","note":"Filtra o snapshot por ID; a presença de um resultado equivale a has, sem retornar bot, client ou erros.","functions":["$clusterInfo"]}
+{"id":"@fluxerjs/core#ClientCluster.off","area":"resources","status":"excluded","note":"Listeners arbitrários do supervisor pertencem ao lifecycle nativo.","reason":"lifecycle"}
+{"id":"@fluxerjs/core#ClientCluster.on","area":"resources","status":"excluded","note":"Listeners arbitrários do supervisor pertencem ao lifecycle nativo.","reason":"lifecycle"}
+{"id":"@fluxerjs/core#ClientCluster.once","area":"resources","status":"excluded","note":"Listeners arbitrários do supervisor pertencem ao lifecycle nativo.","reason":"lifecycle"}
+{"id":"@fluxerjs/core#ClientCluster.remove","area":"resources","status":"excluded","note":"Inicializar ou desligar runtimes requer credenciais e coordenação do processo; exclusivamente nativo.","reason":"lifecycle"}
 {"id":"@fluxerjs/core#ClientCluster.restart","area":"resources","status":"excluded","note":"Ciclo de vida, emissão ou coordenação de processos é controlado pela configuração nativa, não por scripts.","reason":"lifecycle"}
-{"id":"@fluxerjs/core#ClientCluster.runtimeValues","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
-{"id":"@fluxerjs/core#ClientCluster.size","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
-{"id":"@fluxerjs/core#ClientCluster.values","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
+{"id":"@fluxerjs/core#ClientCluster.runtimeValues","area":"resources","status":"equivalent","note":"Snapshot limitado de IDs e status; não cria iteradores nem expõe runtimes SDK.","functions":["$clusterInfo"]}
+{"id":"@fluxerjs/core#ClientCluster.size","area":"resources","status":"function","note":"Total no snapshot sanitizado, com guarda de dono.","functions":["$clusterInfo"]}
+{"id":"@fluxerjs/core#ClientCluster.values","area":"resources","status":"equivalent","note":"Snapshot limitado de IDs e status; não cria iteradores nem expõe runtimes SDK.","functions":["$clusterInfo"]}
 {"id":"@fluxerjs/core#ClientUser","area":"resources","status":"excluded","note":"Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK.","reason":"data-only"}
-{"id":"@fluxerjs/core#ClientUser.bulkDeleteMyMessagesInGuild","area":"resources","status":"excluded","note":"Operação de conta autenticada com verificação sudo; segredos sudo não entram em scripts.","reason":"credentials"}
+{"id":"@fluxerjs/core#ClientUser.bulkDeleteMyMessagesInGuild","area":"resources","status":"function","note":"Pedido sem senha/MFA/WebAuthn; exige dono do bot e ManageMessages de autor e bot no servidor atual. Se o servidor exigir sudo, a operação falha.","functions":["$deleteMyMessages"]}
 {"id":"@fluxerjs/core#ClientUser.client","area":"resources","status":"excluded","note":"Referência ao client/transporte SDK não é valor de script; usar recursos autorizados.","reason":"raw-transport"}
-{"id":"@fluxerjs/core#ClientUser.fetch","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
-{"id":"@fluxerjs/core#ClientUser.fetchGuilds","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
-{"id":"@fluxerjs/core#ClientUser.leaveGuild","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
+{"id":"@fluxerjs/core#ClientUser.fetch","area":"resources","status":"function","note":"Usuário autenticado normalizado, com guarda de dono do bot.","functions":["$selfUser"]}
+{"id":"@fluxerjs/core#ClientUser.fetchGuilds","area":"resources","status":"function","note":"Servidores autenticados com contagens opcionais sob guarda de dono do bot.","functions":["$selfGuilds"]}
+{"id":"@fluxerjs/core#ClientUser.leaveGuild","area":"resources","status":"function","note":"Saída do servidor atual sem credenciais sudo; exige dono do servidor e do bot.","functions":["$selfLeaveGuild"]}
 {"id":"@fluxerjs/core#ClientUser.setPresence","area":"resources","status":"function","note":"Operação por builtin e recurso/serviço compartilhado; ver contrato de argumentos na referência.","functions":["$setPresence"]}
 {"id":"@fluxerjs/core#MessageCollector","area":"resources","status":"excluded","note":"Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK.","reason":"data-only"}
-{"id":"@fluxerjs/core#MessageCollector.channelId","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
+{"id":"@fluxerjs/core#MessageCollector.channelId","area":"resources","status":"equivalent","note":"Canal atual, filtros declarativos e resultado final; encerra por prazo, máximo ou cancelamento do contexto.","functions":["$collectMessages"]}
 {"id":"@fluxerjs/core#MessageCollector.client","area":"resources","status":"excluded","note":"Referência ao client/transporte SDK não é valor de script; usar recursos autorizados.","reason":"raw-transport"}
-{"id":"@fluxerjs/core#MessageCollector.collected","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
+{"id":"@fluxerjs/core#MessageCollector.collected","area":"resources","status":"equivalent","note":"Canal atual, filtros declarativos e resultado final; encerra por prazo, máximo ou cancelamento do contexto.","functions":["$collectMessages"]}
 {"id":"@fluxerjs/core#MessageCollector.constructor","area":"resources","status":"excluded","note":"Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados.","reason":"internal"}
 {"id":"@fluxerjs/core#MessageCollector.emit","area":"resources","status":"excluded","note":"Ciclo de vida, emissão ou coordenação de processos é controlado pela configuração nativa, não por scripts.","reason":"lifecycle"}
-{"id":"@fluxerjs/core#MessageCollector.on","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
-{"id":"@fluxerjs/core#MessageCollector.options","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
-{"id":"@fluxerjs/core#MessageCollector.static:awaitMessages","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
-{"id":"@fluxerjs/core#MessageCollector.stop","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
+{"id":"@fluxerjs/core#MessageCollector.on","area":"resources","status":"excluded","note":"Não executa listeners arbitrários da instância SDK; a coleta delimitada retorna itens sem callbacks.","reason":"lifecycle"}
+{"id":"@fluxerjs/core#MessageCollector.options","area":"resources","status":"equivalent","note":"Canal atual, filtros declarativos e resultado final; encerra por prazo, máximo ou cancelamento do contexto.","functions":["$collectMessages"]}
+{"id":"@fluxerjs/core#MessageCollector.static:awaitMessages","area":"resources","status":"equivalent","note":"Canal atual, filtros declarativos e resultado final; encerra por prazo, máximo ou cancelamento do contexto.","functions":["$collectMessages"]}
+{"id":"@fluxerjs/core#MessageCollector.stop","area":"resources","status":"equivalent","note":"Canal atual, filtros declarativos e resultado final; encerra por prazo, máximo ou cancelamento do contexto.","functions":["$collectMessages"]}
 {"id":"@fluxerjs/core#ReactionCollector","area":"resources","status":"excluded","note":"Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK.","reason":"data-only"}
-{"id":"@fluxerjs/core#ReactionCollector.channelId","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
+{"id":"@fluxerjs/core#ReactionCollector.channelId","area":"resources","status":"equivalent","note":"Canal atual, filtros declarativos e resultado final; encerra por prazo, máximo ou cancelamento do contexto.","functions":["$collectReactions"]}
 {"id":"@fluxerjs/core#ReactionCollector.client","area":"resources","status":"excluded","note":"Referência ao client/transporte SDK não é valor de script; usar recursos autorizados.","reason":"raw-transport"}
-{"id":"@fluxerjs/core#ReactionCollector.collected","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
+{"id":"@fluxerjs/core#ReactionCollector.collected","area":"resources","status":"equivalent","note":"Canal atual, filtros declarativos e resultado final; encerra por prazo, máximo ou cancelamento do contexto.","functions":["$collectReactions"]}
 {"id":"@fluxerjs/core#ReactionCollector.constructor","area":"resources","status":"excluded","note":"Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados.","reason":"internal"}
 {"id":"@fluxerjs/core#ReactionCollector.emit","area":"resources","status":"excluded","note":"Ciclo de vida, emissão ou coordenação de processos é controlado pela configuração nativa, não por scripts.","reason":"lifecycle"}
-{"id":"@fluxerjs/core#ReactionCollector.messageId","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
-{"id":"@fluxerjs/core#ReactionCollector.on","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
-{"id":"@fluxerjs/core#ReactionCollector.options","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
-{"id":"@fluxerjs/core#ReactionCollector.static:awaitReactions","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
-{"id":"@fluxerjs/core#ReactionCollector.stop","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
+{"id":"@fluxerjs/core#ReactionCollector.messageId","area":"resources","status":"equivalent","note":"Canal atual, filtros declarativos e resultado final; encerra por prazo, máximo ou cancelamento do contexto.","functions":["$collectReactions"]}
+{"id":"@fluxerjs/core#ReactionCollector.on","area":"resources","status":"excluded","note":"Não executa listeners arbitrários da instância SDK; a coleta delimitada retorna itens sem callbacks.","reason":"lifecycle"}
+{"id":"@fluxerjs/core#ReactionCollector.options","area":"resources","status":"equivalent","note":"Canal atual, filtros declarativos e resultado final; encerra por prazo, máximo ou cancelamento do contexto.","functions":["$collectReactions"]}
+{"id":"@fluxerjs/core#ReactionCollector.static:awaitReactions","area":"resources","status":"equivalent","note":"Canal atual, filtros declarativos e resultado final; encerra por prazo, máximo ou cancelamento do contexto.","functions":["$collectReactions"]}
+{"id":"@fluxerjs/core#ReactionCollector.stop","area":"resources","status":"equivalent","note":"Canal atual, filtros declarativos e resultado final; encerra por prazo, máximo ou cancelamento do contexto.","functions":["$collectReactions"]}
 {"id":"@fluxerjs/rest#AttachmentData","area":"resources","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/rest#AttachmentPayload","area":"resources","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/rest#buildFormData","area":"resources","status":"excluded","note":"Helper de transporte HTTP cru; usar operações tipadas e políticas de anexos/HTTP.","reason":"raw-transport"}
 {"id":"@fluxerjs/rest#closeSharedFetch","area":"resources","status":"excluded","note":"Ciclo de vida, emissão ou coordenação de processos é controlado pela configuração nativa, não por scripts.","reason":"lifecycle"}
-{"id":"@fluxerjs/rest#DEFAULT_API","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
-{"id":"@fluxerjs/rest#DEFAULT_LOCALE","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
-{"id":"@fluxerjs/rest#DEFAULT_USER_AGENT","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
-{"id":"@fluxerjs/rest#DEFAULT_VERSION","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
+{"id":"@fluxerjs/rest#DEFAULT_API","area":"resources","status":"function","note":"Snapshot dos padrões do SDK sem acesso ao transporte REST.","functions":["$restDefaults"]}
+{"id":"@fluxerjs/rest#DEFAULT_LOCALE","area":"resources","status":"function","note":"Snapshot dos padrões do SDK sem acesso ao transporte REST.","functions":["$restDefaults"]}
+{"id":"@fluxerjs/rest#DEFAULT_USER_AGENT","area":"resources","status":"function","note":"Snapshot dos padrões do SDK sem acesso ao transporte REST.","functions":["$restDefaults"]}
+{"id":"@fluxerjs/rest#DEFAULT_VERSION","area":"resources","status":"function","note":"Snapshot dos padrões do SDK sem acesso ao transporte REST.","functions":["$restDefaults"]}
 {"id":"@fluxerjs/rest#RateLimitManager","area":"resources","status":"excluded","note":"Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK.","reason":"data-only"}
-{"id":"@fluxerjs/rest#RateLimitManager.getBucket","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
-{"id":"@fluxerjs/rest#RateLimitManager.getGlobalReset","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
-{"id":"@fluxerjs/rest#RateLimitManager.getWaitTime","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
-{"id":"@fluxerjs/rest#RateLimitManager.prune","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
-{"id":"@fluxerjs/rest#RateLimitManager.setBucket","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
-{"id":"@fluxerjs/rest#RateLimitManager.setGlobalReset","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
-{"id":"@fluxerjs/rest#RateLimitManager.size","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
-{"id":"@fluxerjs/rest#RateLimitManager.updateFromHeaders","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
+{"id":"@fluxerjs/rest#RateLimitManager.getBucket","area":"resources","status":"equivalent","note":"Simulação isolada e limitada; não lê nem altera os limites do transporte do bot.","functions":["$restRateLimits"]}
+{"id":"@fluxerjs/rest#RateLimitManager.getGlobalReset","area":"resources","status":"equivalent","note":"Simulação isolada e limitada; não lê nem altera os limites do transporte do bot.","functions":["$restRateLimits"]}
+{"id":"@fluxerjs/rest#RateLimitManager.getWaitTime","area":"resources","status":"equivalent","note":"Simulação isolada e limitada; não lê nem altera os limites do transporte do bot.","functions":["$restRateLimits"]}
+{"id":"@fluxerjs/rest#RateLimitManager.prune","area":"resources","status":"equivalent","note":"Simulação isolada e limitada; não lê nem altera os limites do transporte do bot.","functions":["$restRateLimits"]}
+{"id":"@fluxerjs/rest#RateLimitManager.setBucket","area":"resources","status":"equivalent","note":"Simulação isolada e limitada; não lê nem altera os limites do transporte do bot.","functions":["$restRateLimits"]}
+{"id":"@fluxerjs/rest#RateLimitManager.setGlobalReset","area":"resources","status":"equivalent","note":"Simulação isolada e limitada; não lê nem altera os limites do transporte do bot.","functions":["$restRateLimits"]}
+{"id":"@fluxerjs/rest#RateLimitManager.size","area":"resources","status":"equivalent","note":"Simulação isolada e limitada; não lê nem altera os limites do transporte do bot.","functions":["$restRateLimits"]}
+{"id":"@fluxerjs/rest#RateLimitManager.updateFromHeaders","area":"resources","status":"equivalent","note":"Simulação isolada e limitada; não lê nem altera os limites do transporte do bot.","functions":["$restRateLimits"]}
 {"id":"@fluxerjs/rest#RateLimitState","area":"resources","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/rest#RequestManager","area":"resources","status":"excluded","note":"Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK.","reason":"data-only"}
 {"id":"@fluxerjs/rest#RequestManager.baseUrl","area":"resources","status":"excluded","note":"Requisição autenticada genérica contorna guards; scripts usam ports de operações autorizadas.","reason":"raw-transport"}
@@ -172,26 +172,26 @@
 {"id":"@fluxerjs/sharding#ShardClientUtil","area":"resources","status":"excluded","note":"Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK.","reason":"data-only"}
 {"id":"@fluxerjs/sharding#ShardClientUtil.broadcastEval","area":"resources","status":"excluded","note":"Executa JavaScript arbitrário; viola a linguagem sem eval.","reason":"eval"}
 {"id":"@fluxerjs/sharding#ShardClientUtil.constructor","area":"resources","status":"excluded","note":"Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados.","reason":"internal"}
-{"id":"@fluxerjs/sharding#ShardClientUtil.count","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
+{"id":"@fluxerjs/sharding#ShardClientUtil.count","area":"resources","status":"function","note":"Snapshot dos shards do runtime atual, sem utilitário IPC.","functions":["$shardInfo"]}
 {"id":"@fluxerjs/sharding#ShardClientUtil.fetchClientValues","area":"resources","status":"excluded","note":"Objeto/transporte cru ou introspecção arbitrária pode contornar guards ou revelar estado da sessão.","reason":"raw-transport"}
-{"id":"@fluxerjs/sharding#ShardClientUtil.id","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
-{"id":"@fluxerjs/sharding#ShardClientUtil.ids","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
+{"id":"@fluxerjs/sharding#ShardClientUtil.id","area":"resources","status":"function","note":"Snapshot dos shards do runtime atual, sem utilitário IPC.","functions":["$shardInfo"]}
+{"id":"@fluxerjs/sharding#ShardClientUtil.ids","area":"resources","status":"function","note":"Snapshot dos shards do runtime atual, sem utilitário IPC.","functions":["$shardInfo"]}
 {"id":"@fluxerjs/sharding#ShardClientUtil.notifyReady","area":"resources","status":"excluded","note":"Ciclo de vida, emissão ou coordenação de processos é controlado pela configuração nativa, não por scripts.","reason":"lifecycle"}
 {"id":"@fluxerjs/sharding#ShardClientUtil.requestSpawnToken","area":"resources","status":"excluded","note":"Credenciais, segredo ou sessão autenticada não são expostos a scripts.","reason":"credentials"}
 {"id":"@fluxerjs/sharding#ShardClientUtil.respawn","area":"resources","status":"excluded","note":"Ciclo de vida, emissão ou coordenação de processos é controlado pela configuração nativa, não por scripts.","reason":"lifecycle"}
 {"id":"@fluxerjs/sharding#ShardClientUtil.send","area":"resources","status":"excluded","note":"Objeto/transporte cru ou introspecção arbitrária pode contornar guards ou revelar estado da sessão.","reason":"raw-transport"}
-{"id":"@fluxerjs/sharding#ShardClientUtil.shardIdForGuildId","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
+{"id":"@fluxerjs/sharding#ShardClientUtil.shardIdForGuildId","area":"resources","status":"function","note":"Roteamento por snowflake e total dos shards.","functions":["$shardIdForGuild"]}
 {"id":"@fluxerjs/sharding#ShardClientUtilOptions","area":"resources","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/sharding#ShardingManager","area":"resources","status":"excluded","note":"Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK.","reason":"data-only"}
 {"id":"@fluxerjs/sharding#ShardingManager.broadcastEval","area":"resources","status":"excluded","note":"Executa JavaScript arbitrário; viola a linguagem sem eval.","reason":"eval"}
 {"id":"@fluxerjs/sharding#ShardingManager.constructor","area":"resources","status":"excluded","note":"Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados.","reason":"internal"}
 {"id":"@fluxerjs/sharding#ShardingManager.destroy","area":"resources","status":"excluded","note":"Ciclo de vida, emissão ou coordenação de processos é controlado pela configuração nativa, não por scripts.","reason":"lifecycle"}
 {"id":"@fluxerjs/sharding#ShardingManager.fetchClientValues","area":"resources","status":"excluded","note":"Objeto/transporte cru ou introspecção arbitrária pode contornar guards ou revelar estado da sessão.","reason":"raw-transport"}
-{"id":"@fluxerjs/sharding#ShardingManager.file","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
+{"id":"@fluxerjs/sharding#ShardingManager.file","area":"resources","status":"excluded","note":"Caminho de entrada do supervisor, potencialmente sensível e desnecessário ao roteamento.","reason":"internal"}
 {"id":"@fluxerjs/sharding#ShardingManager.respawnAll","area":"resources","status":"excluded","note":"Ciclo de vida, emissão ou coordenação de processos é controlado pela configuração nativa, não por scripts.","reason":"lifecycle"}
 {"id":"@fluxerjs/sharding#ShardingManager.respawnShard","area":"resources","status":"excluded","note":"Ciclo de vida, emissão ou coordenação de processos é controlado pela configuração nativa, não por scripts.","reason":"lifecycle"}
-{"id":"@fluxerjs/sharding#ShardingManager.shardCount","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
-{"id":"@fluxerjs/sharding#ShardingManager.shards","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
+{"id":"@fluxerjs/sharding#ShardingManager.shardCount","area":"resources","status":"equivalent","note":"Total lógico publicado no contexto, sem expor o supervisor.","functions":["$shardInfo"]}
+{"id":"@fluxerjs/sharding#ShardingManager.shards","area":"resources","status":"excluded","note":"Tabela do supervisor contém objetos de processo e controle IPC; scripts veem IDs locais via $shardInfo.","reason":"raw-transport"}
 {"id":"@fluxerjs/sharding#ShardingManager.spawn","area":"resources","status":"excluded","note":"Ciclo de vida, emissão ou coordenação de processos é controlado pela configuração nativa, não por scripts.","reason":"lifecycle"}
 {"id":"@fluxerjs/sharding#ShardingManager.token","area":"resources","status":"excluded","note":"Credenciais, segredo ou sessão autenticada não são expostos a scripts.","reason":"credentials"}
 {"id":"@fluxerjs/sharding#ShardingManagerOptions","area":"resources","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
@@ -201,39 +201,39 @@
 {"id":"@fluxerjs/sharding#ShardProcess.constructor","area":"resources","status":"excluded","note":"Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados.","reason":"internal"}
 {"id":"@fluxerjs/sharding#ShardProcess.eval","area":"resources","status":"excluded","note":"Executa JavaScript arbitrário; viola a linguagem sem eval.","reason":"eval"}
 {"id":"@fluxerjs/sharding#ShardProcess.fetchClientValue","area":"resources","status":"excluded","note":"Objeto/transporte cru ou introspecção arbitrária pode contornar guards ou revelar estado da sessão.","reason":"raw-transport"}
-{"id":"@fluxerjs/sharding#ShardProcess.id","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
+{"id":"@fluxerjs/sharding#ShardProcess.id","area":"resources","status":"equivalent","note":"ID e shards publicados para o processo atual, sem enumerar objetos de processos irmãos.","functions":["$shardInfo"]}
 {"id":"@fluxerjs/sharding#ShardProcess.kill","area":"resources","status":"excluded","note":"Ciclo de vida, emissão ou coordenação de processos é controlado pela configuração nativa, não por scripts.","reason":"lifecycle"}
-{"id":"@fluxerjs/sharding#ShardProcess.readyAt","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
+{"id":"@fluxerjs/sharding#ShardProcess.readyAt","area":"resources","status":"excluded","note":"Timestamp do supervisor não é publicado ao worker; $botReadiness expõe somente o timestamp local.","reason":"internal"}
 {"id":"@fluxerjs/sharding#ShardProcess.respawn","area":"resources","status":"excluded","note":"Ciclo de vida, emissão ou coordenação de processos é controlado pela configuração nativa, não por scripts.","reason":"lifecycle"}
 {"id":"@fluxerjs/sharding#ShardProcess.send","area":"resources","status":"excluded","note":"Objeto/transporte cru ou introspecção arbitrária pode contornar guards ou revelar estado da sessão.","reason":"raw-transport"}
-{"id":"@fluxerjs/sharding#ShardProcess.shardIds","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
+{"id":"@fluxerjs/sharding#ShardProcess.shardIds","area":"resources","status":"equivalent","note":"ID e shards publicados para o processo atual, sem enumerar objetos de processos irmãos.","functions":["$shardInfo"]}
 {"id":"@fluxerjs/sharding#ShardProcess.spawn","area":"resources","status":"excluded","note":"Ciclo de vida, emissão ou coordenação de processos é controlado pela configuração nativa, não por scripts.","reason":"lifecycle"}
 {"id":"@fluxerjs/sharding#ShardProcessOptions","area":"resources","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/ws#BuildShardingStrategy","area":"resources","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/ws#BuildShardingStrategyFn","area":"resources","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
-{"id":"@fluxerjs/ws#DEFAULT_GUILDS_PER_SHARD","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
-{"id":"@fluxerjs/ws#DEFAULT_RESUME_TTL_MS","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
-{"id":"@fluxerjs/ws#GatewayCloseCodes","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
+{"id":"@fluxerjs/ws#DEFAULT_GUILDS_PER_SHARD","area":"resources","status":"function","note":"Constantes públicas do SDK sem acesso ao gateway ativo.","functions":["$gatewayConstants"]}
+{"id":"@fluxerjs/ws#DEFAULT_RESUME_TTL_MS","area":"resources","status":"function","note":"Constantes públicas do SDK sem acesso ao gateway ativo.","functions":["$gatewayConstants"]}
+{"id":"@fluxerjs/ws#GatewayCloseCodes","area":"resources","status":"function","note":"Constantes públicas do SDK sem acesso ao gateway ativo.","functions":["$gatewayConstants"]}
 {"id":"@fluxerjs/ws#getDefaultWebSocket","area":"resources","status":"excluded","note":"Objeto/transporte cru ou introspecção arbitrária pode contornar guards ou revelar estado da sessão.","reason":"raw-transport"}
 {"id":"@fluxerjs/ws#getDefaultWebSocketSync","area":"resources","status":"excluded","note":"Objeto/transporte cru ou introspecção arbitrária pode contornar guards ou revelar estado da sessão.","reason":"raw-transport"}
-{"id":"@fluxerjs/ws#guildMatchesShard","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
+{"id":"@fluxerjs/ws#guildMatchesShard","area":"resources","status":"function","note":"Compara roteamento para servidor e shard usando números.","functions":["$guildMatchesShard"]}
 {"id":"@fluxerjs/ws#IIdentifyThrottler","area":"resources","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/ws#ISessionStore","area":"resources","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/ws#IShardingStrategy","area":"resources","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
-{"id":"@fluxerjs/ws#isSessionInfoFresh","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
-{"id":"@fluxerjs/ws#MAX_GUILDS_PER_SHARD","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
-{"id":"@fluxerjs/ws#MAX_SHARD_COUNT","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
+{"id":"@fluxerjs/ws#isSessionInfoFresh","area":"resources","status":"equivalent","note":"Janela de resume calculada com timestamps, sem ler sessão ou credenciais.","functions":["$gatewaySessionFresh"]}
+{"id":"@fluxerjs/ws#MAX_GUILDS_PER_SHARD","area":"resources","status":"function","note":"Constantes públicas do SDK sem acesso ao gateway ativo.","functions":["$gatewayConstants"]}
+{"id":"@fluxerjs/ws#MAX_SHARD_COUNT","area":"resources","status":"function","note":"Constantes públicas do SDK sem acesso ao gateway ativo.","functions":["$gatewayConstants"]}
 {"id":"@fluxerjs/ws#MemorySessionStore","area":"resources","status":"excluded","note":"Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK.","reason":"data-only"}
 {"id":"@fluxerjs/ws#MemorySessionStore.clear","area":"resources","status":"excluded","note":"Armazenamento de sessão/resume pertence ao gateway nativo e não ao script.","reason":"credentials"}
 {"id":"@fluxerjs/ws#MemorySessionStore.constructor","area":"resources","status":"excluded","note":"Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados.","reason":"internal"}
 {"id":"@fluxerjs/ws#MemorySessionStore.retrieveSessionInfo","area":"resources","status":"excluded","note":"Armazenamento de sessão/resume pertence ao gateway nativo e não ao script.","reason":"credentials"}
 {"id":"@fluxerjs/ws#MemorySessionStore.updateSessionInfo","area":"resources","status":"excluded","note":"Armazenamento de sessão/resume pertence ao gateway nativo e não ao script.","reason":"credentials"}
-{"id":"@fluxerjs/ws#narrowGatewayPayload","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
-{"id":"@fluxerjs/ws#recommendedShardCount","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
+{"id":"@fluxerjs/ws#narrowGatewayPayload","area":"resources","status":"function","note":"Normaliza somente valores do próprio script; não recebe nem envia tráfego do gateway.","functions":["$normalizeGatewayPayload"]}
+{"id":"@fluxerjs/ws#recommendedShardCount","area":"resources","status":"function","note":"Calcula a quantidade recomendada de shards com argumentos limitados.","functions":["$recommendedShardCount"]}
 {"id":"@fluxerjs/ws#SessionInfo","area":"resources","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
-{"id":"@fluxerjs/ws#shardIdForGuild","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
+{"id":"@fluxerjs/ws#shardIdForGuild","area":"resources","status":"function","note":"Roteamento por snowflake e total dos shards.","functions":["$shardIdForGuild"]}
 {"id":"@fluxerjs/ws#ShardStatus","area":"resources","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
-{"id":"@fluxerjs/ws#shouldReconnectOnClose","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
+{"id":"@fluxerjs/ws#shouldReconnectOnClose","area":"resources","status":"function","note":"Classifica código de fechamento sem reconectar.","functions":["$gatewayShouldReconnect"]}
 {"id":"@fluxerjs/ws#SimpleIdentifyThrottler","area":"resources","status":"excluded","note":"Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK.","reason":"data-only"}
 {"id":"@fluxerjs/ws#SimpleIdentifyThrottler.constructor","area":"resources","status":"excluded","note":"Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados.","reason":"internal"}
 {"id":"@fluxerjs/ws#SimpleIdentifyThrottler.destroy","area":"resources","status":"excluded","note":"Ciclo de vida, emissão ou coordenação de processos é controlado pela configuração nativa, não por scripts.","reason":"lifecycle"}
@@ -243,8 +243,8 @@
 {"id":"@fluxerjs/ws#SimpleShardingStrategy.connect","area":"resources","status":"excluded","note":"Ciclo de vida, emissão ou coordenação de processos é controlado pela configuração nativa, não por scripts.","reason":"lifecycle"}
 {"id":"@fluxerjs/ws#SimpleShardingStrategy.constructor","area":"resources","status":"excluded","note":"Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados.","reason":"internal"}
 {"id":"@fluxerjs/ws#SimpleShardingStrategy.destroy","area":"resources","status":"excluded","note":"Ciclo de vida, emissão ou coordenação de processos é controlado pela configuração nativa, não por scripts.","reason":"lifecycle"}
-{"id":"@fluxerjs/ws#SimpleShardingStrategy.fetchStatus","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
-{"id":"@fluxerjs/ws#SimpleShardingStrategy.getPing","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
+{"id":"@fluxerjs/ws#SimpleShardingStrategy.fetchStatus","area":"resources","status":"equivalent","note":"Snapshot de IDs, status e latência disponível da estratégia ativa, sem sockets nem processos.","functions":["$gatewayStatus"]}
+{"id":"@fluxerjs/ws#SimpleShardingStrategy.getPing","area":"resources","status":"equivalent","note":"Snapshot de IDs, status e latência disponível da estratégia ativa, sem sockets nem processos.","functions":["$gatewayStatus"]}
 {"id":"@fluxerjs/ws#SimpleShardingStrategy.getShard","area":"resources","status":"excluded","note":"Objeto/transporte cru ou introspecção arbitrária pode contornar guards ou revelar estado da sessão.","reason":"raw-transport"}
 {"id":"@fluxerjs/ws#SimpleShardingStrategy.getShards","area":"resources","status":"excluded","note":"Objeto/transporte cru ou introspecção arbitrária pode contornar guards ou revelar estado da sessão.","reason":"raw-transport"}
 {"id":"@fluxerjs/ws#SimpleShardingStrategy.send","area":"resources","status":"excluded","note":"Objeto/transporte cru ou introspecção arbitrária pode contornar guards ou revelar estado da sessão.","reason":"raw-transport"}
@@ -256,15 +256,15 @@
 {"id":"@fluxerjs/ws#WebSocketManager.connect","area":"resources","status":"excluded","note":"Ciclo de vida, emissão ou coordenação de processos é controlado pela configuração nativa, não por scripts.","reason":"lifecycle"}
 {"id":"@fluxerjs/ws#WebSocketManager.constructor","area":"resources","status":"excluded","note":"Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados.","reason":"internal"}
 {"id":"@fluxerjs/ws#WebSocketManager.destroy","area":"resources","status":"excluded","note":"Ciclo de vida, emissão ou coordenação de processos é controlado pela configuração nativa, não por scripts.","reason":"lifecycle"}
-{"id":"@fluxerjs/ws#WebSocketManager.fetchStatus","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
-{"id":"@fluxerjs/ws#WebSocketManager.getGatewayUrl","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
+{"id":"@fluxerjs/ws#WebSocketManager.fetchStatus","area":"resources","status":"function","note":"Snapshot autorizado de status, URL, total e latência sem expor WebSocketManager.","functions":["$gatewayStatus"]}
+{"id":"@fluxerjs/ws#WebSocketManager.getGatewayUrl","area":"resources","status":"function","note":"Snapshot autorizado de status, URL, total e latência sem expor WebSocketManager.","functions":["$gatewayStatus"]}
 {"id":"@fluxerjs/ws#WebSocketManager.getIdentifyThrottler","area":"resources","status":"excluded","note":"Objeto/transporte cru ou introspecção arbitrária pode contornar guards ou revelar estado da sessão.","reason":"raw-transport"}
 {"id":"@fluxerjs/ws#WebSocketManager.getOptions","area":"resources","status":"excluded","note":"Objeto/transporte cru ou introspecção arbitrária pode contornar guards ou revelar estado da sessão.","reason":"raw-transport"}
 {"id":"@fluxerjs/ws#WebSocketManager.getSessionStore","area":"resources","status":"excluded","note":"Objeto/transporte cru ou introspecção arbitrária pode contornar guards ou revelar estado da sessão.","reason":"raw-transport"}
 {"id":"@fluxerjs/ws#WebSocketManager.getShard","area":"resources","status":"excluded","note":"Objeto/transporte cru ou introspecção arbitrária pode contornar guards ou revelar estado da sessão.","reason":"raw-transport"}
-{"id":"@fluxerjs/ws#WebSocketManager.getShardCount","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
+{"id":"@fluxerjs/ws#WebSocketManager.getShardCount","area":"resources","status":"function","note":"Snapshot autorizado de status, URL, total e latência sem expor WebSocketManager.","functions":["$gatewayStatus"]}
 {"id":"@fluxerjs/ws#WebSocketManager.getShards","area":"resources","status":"excluded","note":"Objeto/transporte cru ou introspecção arbitrária pode contornar guards ou revelar estado da sessão.","reason":"raw-transport"}
-{"id":"@fluxerjs/ws#WebSocketManager.ping","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
+{"id":"@fluxerjs/ws#WebSocketManager.ping","area":"resources","status":"function","note":"Snapshot autorizado de status, URL, total e latência sem expor WebSocketManager.","functions":["$gatewayStatus"]}
 {"id":"@fluxerjs/ws#WebSocketManager.send","area":"resources","status":"excluded","note":"Objeto/transporte cru ou introspecção arbitrária pode contornar guards ou revelar estado da sessão.","reason":"raw-transport"}
 {"id":"@fluxerjs/ws#WebSocketManagerOptions","area":"resources","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/ws#WebSocketManagerRest","area":"resources","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
@@ -273,31 +273,31 @@
 {"id":"@fluxerjs/ws#WebSocketShard.constructor","area":"resources","status":"excluded","note":"Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados.","reason":"internal"}
 {"id":"@fluxerjs/ws#WebSocketShard.destroy","area":"resources","status":"excluded","note":"Ciclo de vida, emissão ou coordenação de processos é controlado pela configuração nativa, não por scripts.","reason":"lifecycle"}
 {"id":"@fluxerjs/ws#WebSocketShard.handlePayload","area":"resources","status":"excluded","note":"Objeto/transporte cru ou introspecção arbitrária pode contornar guards ou revelar estado da sessão.","reason":"raw-transport"}
-{"id":"@fluxerjs/ws#WebSocketShard.id","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
-{"id":"@fluxerjs/ws#WebSocketShard.ping","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
+{"id":"@fluxerjs/ws#WebSocketShard.id","area":"resources","status":"equivalent","note":"Snapshot de IDs, status e latência disponível da estratégia ativa, sem sockets nem processos.","functions":["$gatewayStatus"]}
+{"id":"@fluxerjs/ws#WebSocketShard.ping","area":"resources","status":"equivalent","note":"Snapshot de IDs, status e latência disponível da estratégia ativa, sem sockets nem processos.","functions":["$gatewayStatus"]}
 {"id":"@fluxerjs/ws#WebSocketShard.send","area":"resources","status":"excluded","note":"Objeto/transporte cru ou introspecção arbitrária pode contornar guards ou revelar estado da sessão.","reason":"raw-transport"}
 {"id":"@fluxerjs/ws#WebSocketShard.sequence","area":"resources","status":"excluded","note":"Sequência de resume do protocolo é mantida pelo gateway.","reason":"internal"}
 {"id":"@fluxerjs/ws#WebSocketShard.session","area":"resources","status":"excluded","note":"Objeto/transporte cru ou introspecção arbitrária pode contornar guards ou revelar estado da sessão.","reason":"raw-transport"}
-{"id":"@fluxerjs/ws#WebSocketShard.status","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
+{"id":"@fluxerjs/ws#WebSocketShard.status","area":"resources","status":"equivalent","note":"Snapshot de IDs, status e latência disponível da estratégia ativa, sem sockets nem processos.","functions":["$gatewayStatus"]}
 {"id":"@fluxerjs/ws#WebSocketShardOptions","area":"resources","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
 {"id":"@fluxerjs/ws#WorkerShardingStrategy","area":"resources","status":"excluded","note":"Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK.","reason":"data-only"}
 {"id":"@fluxerjs/ws#WorkerShardingStrategy.connect","area":"resources","status":"excluded","note":"Ciclo de vida, emissão ou coordenação de processos é controlado pela configuração nativa, não por scripts.","reason":"lifecycle"}
 {"id":"@fluxerjs/ws#WorkerShardingStrategy.constructor","area":"resources","status":"excluded","note":"Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados.","reason":"internal"}
 {"id":"@fluxerjs/ws#WorkerShardingStrategy.destroy","area":"resources","status":"excluded","note":"Ciclo de vida, emissão ou coordenação de processos é controlado pela configuração nativa, não por scripts.","reason":"lifecycle"}
-{"id":"@fluxerjs/ws#WorkerShardingStrategy.fetchStatus","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
-{"id":"@fluxerjs/ws#WorkerShardingStrategy.getPing","area":"resources","status":"pending","note":"Operação nativa: expor por recurso autorizado ou fachada declarativa limitada."}
+{"id":"@fluxerjs/ws#WorkerShardingStrategy.fetchStatus","area":"resources","status":"equivalent","note":"Snapshot de IDs, status e latência disponível da estratégia ativa, sem sockets nem processos.","functions":["$gatewayStatus"]}
+{"id":"@fluxerjs/ws#WorkerShardingStrategy.getPing","area":"resources","status":"equivalent","note":"Snapshot de IDs, status e latência disponível da estratégia ativa, sem sockets nem processos.","functions":["$gatewayStatus"]}
 {"id":"@fluxerjs/ws#WorkerShardingStrategy.send","area":"resources","status":"excluded","note":"Objeto/transporte cru ou introspecção arbitrária pode contornar guards ou revelar estado da sessão.","reason":"raw-transport"}
 {"id":"@fluxerjs/ws#WorkerShardingStrategy.spawn","area":"resources","status":"excluded","note":"Ciclo de vida, emissão ou coordenação de processos é controlado pela configuração nativa, não por scripts.","reason":"lifecycle"}
 {"id":"@fluxerjs/ws#WorkerShardingStrategyOptions","area":"resources","status":"excluded","note":"Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias.","reason":"data-only"}
-{"id":"@fluxerjs/core#Channel.awaitMessages","area":"resources","status":"pending","note":"Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial."}
-{"id":"@fluxerjs/core#Channel.createMessageCollector","area":"resources","status":"pending","note":"Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial."}
-{"id":"@fluxerjs/core#Channel.fetchRtcRegions","area":"resources","status":"pending","note":"Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial."}
-{"id":"@fluxerjs/core#Channel.fetchSlowmode","area":"resources","status":"pending","note":"Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial."}
-{"id":"@fluxerjs/core#Channel.sendTyping","area":"resources","status":"pending","note":"Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial."}
-{"id":"@fluxerjs/core#ChannelManager.delete","area":"resources","status":"pending","note":"Remove só do cache; deleteChannel apagaria via API e não é equivalente. Falta wrapper de cache."}
-{"id":"@fluxerjs/core#Message.awaitReactions","area":"resources","status":"pending","note":"Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial."}
-{"id":"@fluxerjs/core#Message.createReactionCollector","area":"resources","status":"pending","note":"Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial."}
-{"id":"@fluxerjs/core#MessageManager.get","area":"resources","status":"pending","note":"Consulta apenas cache e pode retornar undefined; fetchMessage faz rede e não preserva essa semântica."}
-{"id":"@fluxerjs/core#Webhook.deleteMessage","area":"resources","status":"pending","note":"Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial."}
-{"id":"@fluxerjs/core#Webhook.editMessage","area":"resources","status":"pending","note":"Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial."}
-{"id":"@fluxerjs/core#Webhook.fetchMessage","area":"resources","status":"pending","note":"Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial."}
+{"id":"@fluxerjs/core#Channel.awaitMessages","area":"resources","status":"equivalent","note":"Janela finita com filtros declarativos e resultado normalizado; sem instância SDK.","functions":["$collectMessages"]}
+{"id":"@fluxerjs/core#Channel.createMessageCollector","area":"resources","status":"equivalent","note":"Janela finita com filtros declarativos e resultado normalizado; sem instância SDK.","functions":["$collectMessages"]}
+{"id":"@fluxerjs/core#Channel.fetchRtcRegions","area":"resources","status":"function","note":"Consulta regiões de canal visível do servidor atual.","functions":["$channelRtcRegions"]}
+{"id":"@fluxerjs/core#Channel.fetchSlowmode","area":"resources","status":"function","note":"Consulta modo lento de canal visível do servidor atual.","functions":["$channelSlowmode"]}
+{"id":"@fluxerjs/core#Channel.sendTyping","area":"resources","status":"function","note":"Indica digitação no servidor atual com SendMessages de autor e bot.","functions":["$sendTyping"]}
+{"id":"@fluxerjs/core#ChannelManager.delete","area":"resources","status":"equivalent","note":"Remove ID do cache local; não apaga canal na API.","functions":["$evictCachedChannel"]}
+{"id":"@fluxerjs/core#Message.awaitReactions","area":"resources","status":"equivalent","note":"Janela finita com filtros declarativos e resultado normalizado; sem instância SDK.","functions":["$collectReactions"]}
+{"id":"@fluxerjs/core#Message.createReactionCollector","area":"resources","status":"equivalent","note":"Janela finita com filtros declarativos e resultado normalizado; sem instância SDK.","functions":["$collectReactions"]}
+{"id":"@fluxerjs/core#MessageManager.get","area":"resources","status":"function","note":"Consulta mensagem normalizada no cache do canal atual, com controle de leitura.","functions":["$cachedMessage"]}
+{"id":"@fluxerjs/core#Webhook.deleteMessage","area":"resources","status":"function","note":"Mensagem de webhook sob ManageWebhooks de autor e bot, sem expor o token ao script.","functions":["$deleteWebhookMessage"]}
+{"id":"@fluxerjs/core#Webhook.editMessage","area":"resources","status":"function","note":"Mensagem de webhook sob ManageWebhooks de autor e bot, sem expor o token ao script.","functions":["$editWebhookMessage"]}
+{"id":"@fluxerjs/core#Webhook.fetchMessage","area":"resources","status":"function","note":"Mensagem de webhook sob ManageWebhooks de autor e bot, sem expor o token ao script.","functions":["$fetchWebhookMessage"]}

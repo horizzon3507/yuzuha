@@ -18,6 +18,7 @@ const newFunctions = ['arrayUnion', 'arrayIntersection', 'arrayDifference', 'for
   'editField', 'embedFromObject', 'embeds', 'addEmbed', 'messageOptions'];
 newFunctions.push('canvasCreate', 'canvasFont', 'canvasRect', 'canvasCircle', 'canvasLine', 'canvasImage',
   'canvasAvatar', 'canvasText', 'canvasBadges', 'canvasProgress', 'canvasSend', 'canvasDispose');
+newFunctions.push('instanceInfo', 'cacheStats', 'fetchGatewayMembers', 'collectMessages', 'editWebhookMessage', 'shardInfo', 'botReadiness');
 const options = cwd => ({ cwd, env: { ...process.env, FLUXER_BOT_TOKEN: '' }, timeout: 120_000, maxBuffer: 4_000_000 });
 async function run(binary, args, cwd) {
   try { return (await exec(binary, args, options(cwd))).stdout; }
@@ -318,7 +319,8 @@ try {
   const editor = (await run(process.execPath, [cli, 'editor'], consumer)).trim();
   const metadata = JSON.parse(await readFile(join(editor, 'functions.json'), 'utf8'));
   assert.ok(metadata.some(fn => fn.name === 'searchMessages'));
-  assert.equal(metadata.length, 336);
+  const sourceMetadata = JSON.parse(await readFile(join(root, 'editors/vscode/functions.json'), 'utf8'));
+  assert.equal(metadata.length, sourceMetadata.length);
   for (const name of newFunctions) assert.ok(metadata.some(fn => fn.name === name), name);
   assert.ok(metadata.some(fn => fn.name === 'modMuteMember'));
   const catalog = JSON.parse(await run(process.execPath, [cli, 'functions', '--catalog'], consumer));
