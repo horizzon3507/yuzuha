@@ -726,10 +726,10 @@ test('defineContextEvent, plugin.contextEvents atômico, bot.off e isolamento de
   await flush();
   assert.deepEqual(calls, ['shard:0', 'resumed']);
 
-  // scriptEvent continua restrito aos 6 eventos seguros do function mode
+  // scriptEvent aceita todo evento seguro; debug e WebAuthn ficam só no modo nativo
   const scripted = new Yuzuha({ transport, store: new MemoryStore(), scheduler: false, http: false, engine: functions() });
   t.after(() => scripted.destroy());
-  for (const unsupported of ['ready', 'messageCreate', 'voiceStateUpdate', 'typingStart']) {
+  for (const unsupported of ['debug', 'webauthnCredentialsUpdate', 'clientReady']) {
     assert.throws(
       () => scripted.scriptEvent({ event: unsupported as never, code: 'oi' }),
       (err: unknown) => err instanceof YuzuhaError && err.code === 'SCRIPT_EVENT',

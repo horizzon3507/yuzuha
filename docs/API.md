@@ -287,7 +287,8 @@ Aceita overrides parciais por método, tipados por `MockResourceOverrides`.
 ### Contratos acrescentados na 0.1.4
 
 - `bot.scriptEvent(ScriptEventDefinition)` e `plugin.scriptEvents` registram
-  seis eventos do SDK. `EventContext` estende o contexto com `event` imutável;
+  todo evento seguro do SDK (exceto `debug` e `webauthnCredentialsUpdate`).
+  `EventContext` estende o contexto com `event` imutável;
   `ScriptEventData`, `ScriptEventName` e `EventContextOptions` são públicos.
   Campos ausentes são `null`; acesso à mensagem depende do payload real.
   Veja [EVENTS.md](EVENTS.md).

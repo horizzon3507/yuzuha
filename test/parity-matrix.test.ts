@@ -28,7 +28,8 @@ test('eventos do function mode existem no SDK e a matriz registra as lacunas', a
   assert.equal(matrix.items.find(item => item.id === '@fluxerjs/core#Message.reply')?.status, 'function');
   assert.equal(matrix.items.find(item => item.id === '@fluxerjs/builders#EmbedBuilder.setTitle')?.status, 'equivalent');
   assert.equal(matrix.items.find(item => item.id === '@fluxerjs/core#Client.login')?.reason, 'lifecycle');
-  assert.equal(matrix.items.find(item => item.id === '@fluxerjs/core#ClientEvents:channelCreate')?.status, 'pending');
+  assert.equal(matrix.items.find(item => item.id === '@fluxerjs/core#ClientEvents:channelCreate')?.status, 'function');
+  assert.equal(matrix.items.find(item => item.id === '@fluxerjs/core#ClientEvents:debug')?.reason, 'internal');
 });
 
 test('bot.on aceita todo nome de evento do SDK', async () => {

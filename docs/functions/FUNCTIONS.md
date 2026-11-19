@@ -1,7 +1,7 @@
 # Referência das funções
 
 Function mode opcional, importado de `yuzuha/functions`.
-Gerada do registro executável: **336 funções**. Atualize com `npm run docs:generate`.
+Gerada do registro executável: **337 funções**. Atualize com `npm run docs:generate`.
 
 Aliases não contam como funções adicionais. Índices e semântica estão em [LANGUAGE.md](LANGUAGE.md).
 
@@ -99,6 +99,7 @@ Aliases não contam como funções adicionais. Índices e semântica estão em [
 |---|---|---|
 | `$eventChannelID` | Consulta o campo do evento; requer contexto de evento e preserva ausências como null. |  |
 | `$eventContent` | Consulta o campo do evento; requer contexto de evento e preserva ausências como null. |  |
+| `$eventData[caminho?;padrão?]` | Lê o payload normalizado e redigido do evento por caminho com pontos e índices, ex. "old.name"; sem caminho retorna o objeto inteiro e ausências retornam o padrão ou null. |  |
 | `$eventEmoji` | Consulta o campo do evento; requer contexto de evento e preserva ausências como null. |  |
 | `$eventGuildID` | Consulta o campo do evento; requer contexto de evento e preserva ausências como null. |  |
 | `$eventMessageID` | Consulta o campo do evento; requer contexto de evento e preserva ausências como null. |  |

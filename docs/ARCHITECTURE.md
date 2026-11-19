@@ -142,7 +142,7 @@ uma API pode confirmar uma ação antes de o disco falhar.
 ## Percurso de um evento de script
 
 `scriptEvent` valida e compila a definição antes de instalar um listener em
-`NativeEvents`. `adaptScriptEvent` converte um dos seis payloads do SDK em
+`NativeEvents`. `adaptScriptEvent` converte qualquer payload seguro do SDK em
 metadados explícitos; `EventContext` preserva ausências como `null` e só oferece
 helpers de mensagem quando há uma mensagem completa. A autorização usa o usuário
 do evento ou `actorID` configurado, sem assumir a autoridade do bot. A execução
