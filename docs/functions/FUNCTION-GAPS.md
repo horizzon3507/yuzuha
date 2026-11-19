@@ -1,7 +1,7 @@
-# Funções que ainda faltam
+# Cobertura segura e exclusões
 
-Contrato para a meta v0.8.0, sobre o SDK fixado no lockfile; não é uma declaração
-de paridade já concluída. As funções canônicas e seus aliases estão na
+Contrato da v0.8.0 sobre o SDK fixado no lockfile: **100,00% de cobertura
+segura (934/934), zero pending** no inventário atual. As funções canônicas e seus aliases estão na
 [referência gerada](FUNCTIONS.md).
 
 A fonte de verdade é a [matriz semântica](../PARITY-MATRIX.md), gerada dos
@@ -9,18 +9,18 @@ JSONL por área em `scripts/parity/`. Ela inclui core/builders/types e os
 satélites voice/sharding/rest/ws/collection/util. Contagens e porcentagem
 atualizadas estão na matriz, não duplicadas neste documento.
 
-## Pendências divididas para PRs paralelos
+## Áreas entregues
 
-| Área / arquivo JSONL | Escopo seguro ainda a implementar | Base existente |
+| Área / arquivo JSONL | Escopo seguro coberto | Base existente |
 |---|---|---|
 | pure | CDN, inviteUrl, constantes/flags/bitfields, parsing/guards, erros, helpers de instância e operações declarativas de coleção | ctx.cdn, helpers SDK e funções de arrays/texto; não é acesso JS arbitrário |
 | resources | Sem entradas pendentes; operações administrativas usam guardas de dono e retornos normalizados | ctx.resources.instance/cache/self/gateway/webhooks/collectors e snapshots de shard/cluster |
 | entities | Campos normalizados e operações de guild/canal/thread/membro/mensagem: discovery, transferência de dono, role hoist, grupo de DM, acks/read-state, self settings de thread, stickers em lote | Ports users/channels/threads/messages/roles/expressions; autorização e mocks compartilhados |
-| events | Eventos ClientEvents ainda sem scriptEvent, com ator, contexto parcial e redação de dados sensíveis | Eventos contextuais nativos já abrangem o SDK; script-events.ts adapta seis eventos |
+| events | Eventos seguros de ClientEvents com ator, contexto parcial e redação de dados sensíveis | Eventos contextuais nativos já abrangem o SDK; script-events.ts adapta os eventos seguros do SDK e seis eventos de voz |
 | voice | Estados de voz, participantes e controle declarativo de áudio/música | VoiceStateTracker, ports voice/music, FluxerVoice, plugin Lavalink e filas |
 
-Os nomes acima são áreas, não novos nomes de funções. Consulte cada linha
-pending antes de implementar; não invente um segundo registro. Eventos de voz
+As cinco áreas estão sem pendências nesta release. Para novas APIs do SDK,
+acrescente classificação explícita antes de implementar; não invente um segundo registro. Eventos de voz
 do pacote voice pertencem à área voice; eventos ClientEvents, inclusive estados
 de voz, pertencem à área events.
 
@@ -62,7 +62,8 @@ com zero pending.
 
 ## Limites da própria linguagem
 
-Persistência ainda requer desenho para índices por propriedades e escritas
-incrementais; upload de rede sem acumular bytes depende de suporte do SDK.
+Persistência ainda requer desenho para índices por propriedades; SQLite já
+usa escritas pontuais de variáveis/casos. Upload de rede sem acumular bytes
+depende de suporte do SDK.
 São evoluções de contrato próprias, não justificativas para expor transporte cru.
 Para operações nativas complexas, use o [guia JS/TS](../NATIVE.md).

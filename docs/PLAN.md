@@ -73,6 +73,13 @@ recursos. O runtime de scripts só é registrado quando o function mode é usado
 
 ## Entregas e dependências
 
+A atualização 0.8.0 fecha o contrato de paridade segura por funções sobre nove
+pacotes do SDK: 934/934 itens seguros cobertos, zero pending e 459 funções
+canônicas. Integra operações puras, recursos administrativos autorizados,
+entidades, eventos redigidos e controles de voz/música, além de otimizações de
+tokenização, execução de scripts e escritas pontuais de SQLite. O SDK continua
+fixado em 3.3.0 e o schema SQLite permanece em 3.
+
 A atualização 0.7.0 aprofunda a cobertura nativa do SDK, sharding, clusters e
 operação contínua sobre o Fluxer.js 3.3.0: expõe contexto de shard nativo
 (`bot.shard`, `ctx.shard`, `shardIdForGuild`, coordenação leader-only padrão do
@@ -158,10 +165,10 @@ text em imagem e miniatura, campos incrementais e `$embedFromObject`. Mensagens
 passam a aceitar até 10 embeds, `tts`, `stickerIds`, `flags` e `allowedMentions`
 com autorização (`MentionEveryone` e `SendTtsMessages`). `$fetchMessage` e
 `$messages` devolvem os embeds recebidos em formato normalizado, com campos de
-resposta somente leitura. O catálogo passa a 336 funções. Detalhes em
+resposta somente leitura. O catálogo atual tem 459 funções. Detalhes em
 [EMBEDS.md](EMBEDS.md). Gerada por `scripts/parity-matrix.mjs`, a
-[matriz de paridade](PARITY-MATRIX.md) marca as lacunas restantes; eventos do
-function mode e reprodução de áudio ficam para o próximo lote.
+[matriz de paridade](PARITY-MATRIX.md) registra a cobertura segura e as exclusões;
+eventos do function mode e controles de áudio estão integrados na 0.8.0.
 
 A atualização 0.1.9 acrescenta `yuzuha/canvas`, um peer opcional baseado em
 `@napi-rs/canvas` para cartões em JS/TS e function mode. O builder compõe texto,

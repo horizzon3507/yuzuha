@@ -21,6 +21,63 @@ documentos. Veja a [política completa](VERSIONING.md).
 
 </details>
 
+## v0.8.0 · 19/11/2026
+
+Paridade segura do SDK no function mode, 459 funções, eventos redigidos,
+controles de voz e música e menor custo de despacho, execução de scripts e
+persistência — a atualização da biblioteca Yuzuha foi preparada em 19/11/2026
+(v0.8.0).
+
+**Notas de comportamento**
+- Paridade significa toda operação segura alcançável por funções, com exclusões
+  documentadas; não autoriza login/destroy/emit, eval, internals, iteradores,
+  transporte cru, Routes ou credenciais/sudo em scripts. O inventário cobre nove
+  pacotes do SDK: 934/934 itens seguros, 100,00% e zero pending.
+- Operações administrativas de instância, cache, self, gateway e diagnóstico
+  exigem autorização compartilhada e, quando aplicável, dono do bot. Eventos
+  normalizam/redigem payloads; debug e WebAuthn não são eventos de script.
+  O SDK continua em 3.3.0 e o schema persistido do SQLiteStore permanece em 3.
+
+- **Contrato semântico de paridade (#107):** classificações explícitas function,
+  equivalent, excluded e pending em JSONL por área, sem inferência por nomes;
+  inventário de core/builders/types e voice/sharding/rest/ws/collection/util,
+  porcentagem de cobertura segura, validação de IDs e funções, gate de release
+  com zero pending e receita para manter os mapeamentos.
+- **Persistência e testes Node 22 (#111):** escritas pontuais atômicas de
+  variáveis e casos no SQLite, com validação, rollback e fallback para stores
+  próprios; benchmarks com estados grandes e comparações registradas;
+  testes de timers de JsonStore, heartbeat/leases e gateway deixam de depender
+  de timers sem referência ou de tempo real para manter a execução viva.
+- **Despacho nativo e de funções (#106):** tokenização de argumentos entre
+  aspas/escapes com menos alocações, preservando apóstrofos, whitespace e
+  gramática existente, com novos testes e benchmarks de entradas longas.
+- **Runtime de scripts (#108):** resultados escalares síncronos sem passagem
+  assíncrona desnecessária, reutilização de serialização já validada na
+  interpolação, estado privado de canvas por execução e varredura de texto sem
+  trim; comparação de condições mantém o caminho curto, com testes de limites,
+  erros e cancelamento e benchmarks de workloads tipados.
+- **Operações puras (#110):** CDN, URLs de convite, constantes, flags/bitfields,
+  Snowflake, parsing/formatação, erros, helpers de instância/cache e coleções
+  por valores limitados; documentação de SDK values, sem instâncias mutáveis,
+  callbacks JavaScript ou acesso REST arbitrário.
+- **Recursos de contexto (#112):** funções autorizadas de instância/aplicação,
+  cache, self sem segredos sudo, gateway aguardável, mensagens de webhook,
+  coletores limitados e snapshots de shard/cluster; diagnósticos de prontidão e
+  gateway, normalização de dados e restrições administrativas.
+- **Entidades (#114):** leitura normalizada ampliada de guild, usuário, membro,
+  canal, mensagem, thread, convite, cargo e webhook; discovery, transferência de
+  dono, posições de cargos/canais, stickers em lote, grupos de DM, read-state,
+  pins e self settings de threads, preservando guards, hierarquia, contexto
+  parcial e falhas de lote. Exclusões de lifecycle/sessão permanecem explícitas.
+- **Eventos de script (#109):** cobertura dos eventos seguros de ClientEvents,
+  com ator/canal, payload imutável e redigido em `$eventData`, remoção simétrica
+  de listeners e documentação de contextos sem mensagem; debug e credenciais
+  WebAuthn ficam apenas no modo nativo.
+- **Voz e música (#113):** funções de estados/participantes, entrada/saída e
+  reprodução autorizada por adaptadores opcionais; busca, fila e controles de
+  música, seis eventos de voz normalizados, limpeza de listeners e integração
+  ao contexto sem expor áudio bruto, sessão ou processos.
+
 ## v0.7.0 · 17/11/2026
 
 Sharding nativo na biblioteca e na CLI, supervisor multi-bot `YuzuhaCluster`, eventos com contexto generalizados para todo o SDK, logs de gateway, busca aguardável de membros, rastreamento de estados de voz, auditoria filtrada e protegida, webhooks ricos, filtros em collectors, rotação de presença, sweepers de cache e descoberta de instância — a atualização da biblioteca Yuzuha foi preparada em 17/11/2026 (v0.7.0).

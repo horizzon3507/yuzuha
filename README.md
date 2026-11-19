@@ -10,7 +10,7 @@ pacotes satélites por `yuzuha/sdk/*` (client, errors, message, cluster, interna
 types, rest, ws, builders, collection e util, além de voice e sharding como peers
 opcionais).
 
-[0.7.0](CHANGELOG.md) · Node **22.13+** · ESM · [MIT](LICENSE)
+[0.8.0](CHANGELOG.md) · Node **22.13+** · ESM · [MIT](LICENSE)
 
 [Começar](#começar) · [Comandos](#escrever-comandos) · [Recursos](#recursos) · [Testes](#testar-sem-token) · [Documentação](#documentação)
 
@@ -19,7 +19,7 @@ opcionais).
 ### Criar um bot
 
 ```sh
-npx yuzuha@0.7.0 init ./meu-bot --ts
+npx yuzuha@0.8.0 init ./meu-bot --ts
 cd meu-bot
 npm install
 npm run check
@@ -45,7 +45,7 @@ para incluir um comando de exemplo com scripts.
 ### Usar em um projeto existente
 
 ```sh
-npm install yuzuha@0.7.0
+npm install yuzuha@0.8.0
 ```
 
 Use `"type": "module"` no `package.json`. O [guia inicial](docs/QUICKSTART.md)
@@ -92,7 +92,7 @@ bot.command(script({
 }));
 ```
 
-O function mode tem **373 funções** para mensagens, guards, moderação, variáveis,
+O function mode tem **459 funções** para mensagens, guards, moderação, variáveis,
 JSON, arrays, loops, eventos e agendamentos.
 
 As funções seguem as assinaturas e regras do runtime do Yuzuha. Consulte a

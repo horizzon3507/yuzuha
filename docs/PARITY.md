@@ -10,8 +10,10 @@ Yuzuha. Os dois modos usam o mesmo contexto e os mesmos serviços.
 
 ## O que significa paridade
 
-A meta da v0.8.0 é **toda operação segura do SDK alcançável pelo function mode,
-com exclusões documentadas**. Este contrato não declara a meta já entregue.
+A v0.8.0 entrega **toda operação segura do SDK alcançável pelo function mode,
+com exclusões documentadas**. A cobertura segura é **100,00% (934/934)**,
+com **zero pending**, 410 itens function, 524 equivalent e 871 excluded,
+no inventário de 1.805 itens. O registro contém **459 funções canônicas**.
 A [matriz automática](PARITY-MATRIX.md) inventaria os exports (inclusive tipos),
 membros próprios não privados de classes e eventos dos contratos `*Events` de
 `@fluxerjs/core`, `builders`, `types`, `voice`, `sharding`, `rest`, `ws`,
@@ -117,7 +119,7 @@ precisam de `overrides` para o core fixado, como no manifesto do Yuzuha.
 | Estado e casos | `ctx.data`, TTL, userFor, transaction entre chaves e stores | Variáveis, TTL, incrementos, listas, casos e dataTransaction com operações declarativas |
 | Agendamentos | `ctx.scheduler`, cron/fusos, concorrência limitada, histórico, heartbeat e controles | schedule, scheduleEvery, scheduleCron, controles, histórico, reexecução e retry com jitter |
 | HTTP | `request`, `requestBytes`, `stream`, `multipart`, `withPolicy` e cancelamento | `$http`, `$httpJson`, `$httpMultipart` e download de imagens com política de rede por comando |
-| CLI, plugins, comandos e middleware | Recursos próprios do Yuzuha; lint/catálogos/cenários e manutenção de dados | 373 funções canônicas; comandos e eventos de script |
+| CLI, plugins, comandos e middleware | Recursos próprios do Yuzuha; lint/catálogos/cenários e manutenção de dados | 459 funções canônicas; comandos e eventos de script |
 | Composição de cartões | `ctx.canvas`, `yuzuha/canvas` (napi em processo) e `yuzuha/canvas/card` (builder isolado), com peer opcional `@napi-rs/canvas`; envio pelo contexto | 12 funções `$canvas*` para cenas privadas por execução; envio sem retorno automático |
 
 A camada nativa do Yuzuha — o caminho principal — acrescenta schemas de argumentos

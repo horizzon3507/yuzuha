@@ -35,7 +35,7 @@ function fixture() {
 
 test('todo evento seguro do SDK é aceito por scriptEvent; debug e WebAuthn ficam fora', async t => {
   const f = fixture(); t.after(() => f.bot.destroy());
-  assert.equal(scriptEventNames.length, 64);
+  assert.equal(scriptEventNames.length, 70);
   for (const event of scriptEventNames) f.bot.scriptEvent({ event, code: '' });
   for (const event of ['debug', 'webauthnCredentialsUpdate']) {
     assert.throws(() => f.bot.scriptEvent({ event: event as never, code: '' }),

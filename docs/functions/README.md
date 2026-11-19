@@ -28,6 +28,6 @@ não exigem configuração extra.
 ## Documentos
 
 - [LANGUAGE.md](LANGUAGE.md): sintaxe da linguagem de scripts.
-- [FUNCTIONS.md](FUNCTIONS.md): referência gerada das 336 funções.
+- [FUNCTIONS.md](FUNCTIONS.md): referência gerada das 459 funções.
 - [LANGUAGE-EXTENSIONS.md](LANGUAGE-EXTENSIONS.md): operações de dados e extensões.
 - [FUNCTION-GAPS.md](FUNCTION-GAPS.md): lacunas conhecidas e como contorná-las.

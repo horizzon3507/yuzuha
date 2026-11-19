@@ -1,16 +1,16 @@
 # Versionamento
 
 O Yuzuha aplica o formato Hory ao histórico e usa **SemVer simples** no pacote.
-A versão desta atualização é **0.7.0**.
+A versão desta atualização é **0.8.0**.
 
 ## Pacote e histórico
 
 | Lugar | Formato nesta versão |
 |---|---|
-| `package.json` e entrada raiz de `package-lock.json` | `0.7.0` |
-| Pacote npm e saída de `yuzuha --version` | `0.7.0` |
-| Título do changelog | `## v0.7.0 · 17/11/2026` |
-| Tag Git | `v0.7.0` |
+| `package.json` e entrada raiz de `package-lock.json` | `0.8.0` |
+| Pacote npm e saída de `yuzuha --version` | `0.8.0` |
+| Título do changelog | `## v0.8.0 · 19/11/2026` |
+| Tag Git | `v0.8.0` |
 
 O SDK e a CLI pertencem ao mesmo pacote. Para bibliotecas, a convenção Hory mantém
 SemVer sem `m`, sem seções por superfície e sem sufixos de canal.
@@ -41,6 +41,27 @@ A versão do SDK é fixada separadamente. Atualizá-la exige revisar
 gerado por `init` pertence ao consumidor e não precisa acompanhar a biblioteca.
 
 ## Preparar uma atualização
+
+### Migrar para 0.8.0
+
+A 0.8.0 integra 459 funções e o contrato de paridade segura de nove pacotes do
+SDK: 934/934 itens seguros cobertos, zero pending. As exclusões de lifecycle,
+internals, credenciais, eval e transporte cru continuam em
+[PARITY.md](docs/PARITY.md). O SDK permanece em 3.3.0 e o schema SQLite em 3.
+
+- Operações administrativas de cache, instância, gateway e snapshots de
+  shard/cluster exigem dono do bot; não encaminhe tokens ou segredos sudo.
+- Eventos de script passam a aceitar os eventos seguros do SDK e seis eventos
+  de voz. `$eventData` retorna payload normalizado/redigido; debug e WebAuthn
+  continuam fora dos scripts. Revise contexto parcial, ator e canal explícito.
+- Voz/música depende dos adaptadores/plugins opcionais. Controles respeitam
+  permissões de autor/bot, canal e cancelamento; não recebem streams JS crus.
+- Stores próprios podem manter o caminho genérico de transação. SQLite usa
+  escritas pontuais opcionais de variáveis/casos sem alterar schema nem backup.
+
+```sh
+npm install yuzuha@0.8.0
+```
 
 ### Migrar para 0.7.0
 

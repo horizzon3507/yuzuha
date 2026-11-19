@@ -322,6 +322,7 @@ try {
   const metadata = JSON.parse(await readFile(join(editor, 'functions.json'), 'utf8'));
   assert.ok(metadata.some(fn => fn.name === 'searchMessages'));
   const sourceMetadata = JSON.parse(await readFile(join(root, 'editors/vscode/functions.json'), 'utf8'));
+  assert.equal(metadata.length, 459);
   assert.equal(metadata.length, sourceMetadata.length);
   for (const name of newFunctions) assert.ok(metadata.some(fn => fn.name === name), name);
   assert.ok(metadata.some(fn => fn.name === 'modMuteMember'));

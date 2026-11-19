@@ -154,7 +154,9 @@ test('sdkError redige erros do SDK sem engolir guards, limites ou falhas parciai
   let failure: unknown = new RateLimitError({ code: APIErrorCode.RateLimited, message: 'secret', retry_after: 2, global: true },
     429, { method: 'GET', path: '/channels/?secret=value' });
   let calls = 0;
-  const { run } = harness({ resources: mockResources({
+  const { run } = harness({ messageAvailable: true, resources: mockResources({
+    channels: { async get(id) { return { id, name: 'dm', type: 1, guildID: null, parentID: null,
+      position: 0, topic: null, slowmode: 0, nsfw: false }; } },
     messages: { async fetch() { calls++; throw failure; } },
   }) });
   const read = '$fetchMessage[200;1]';
