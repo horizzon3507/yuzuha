@@ -1,961 +1,1865 @@
 # Matriz automática de paridade
 
-Gerada por `scripts/parity-matrix.mjs` a partir dos `.d.ts` de `@fluxerjs/core`, `@fluxerjs/builders` e `@fluxerjs/types` instalados. Atualize com `npm run docs:generate`. Não edite à mão.
+Gerada de declarações instaladas e de `scripts/parity/*.jsonl`. Atualize com `npm run docs:generate`; não edite à mão.
 
-## Como ler
+## Contrato semântico do function mode
 
-- **coberto-nativo**: o código do Yuzuha usa o nome do SDK, mas nenhuma função `$` o alcança.
-- **coberto-recurso**: o nome é alcançado pelo caminho `builtins → ports → adaptador do SDK`.
-- **só-SDK**: exceção intencional, com motivo em `scripts/parity-areas.json`.
-- **lacuna**: nenhum dos caminhos acima alcança o nome. Vira candidato a função ou a recurso.
-- **dados**: tipos e enums, sem comportamento próprio.
+Paridade significa toda operação segura do SDK alcançável por scripts, com exclusões justificadas. Não é inferida por nomes usados no código nativo. Cada ID inclui pacote, export e membro ou evento.
 
-A cobertura é por nome: um método `send` de uma classe conta como coberto se qualquer adaptador usar `send`. O function mode é uma camada fina sobre os mesmos recursos — `coberto-recurso` não indica lacuna nativa. Use a matriz como lista de revisão, não como prova de cobertura.
+- **function**: operação alcançada pelas funções listadas.
+- **equivalent**: comportamento equivalente por composição de funções existentes, descrito na justificativa.
+- **excluded**: fora da linguagem por segurança ou por não representar operação; categoria e motivo visíveis.
+- **pending**: operação segura reservada à área indicada; permitida durante desenvolvimento, não no gate de release.
 
-## Resumo por export
+**Function-mode safe coverage: 32.03%** (311/971). Denominador = function + equivalent + pending; excluded não entra. Cada linha é uma unidade, inclusive reexports em pacotes distintos; não é uma medição de testes ou completude de parâmetros.
 
-| Status | Exports de runtime | Membros |
-|---|---:|---:|
-| coberto-recurso | 51 | 435 |
-| coberto-nativo | 10 | 132 |
-| coberto-equivalente | 0 | 55 |
-| só-SDK | 51 | 100 |
-| lacuna | 5 | 0 |
+Inventário: todos os exports (inclusive tipos), membros próprios não privados de classes, construtores e eventos dos contratos exportados *Events. Membros herdados aparecem no export de origem. Enums/constantes de runtime precisam de classificação operacional; interfaces e aliases são data-only. APIs novas exigem revisão explícita.
 
-Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types. Tipos e enums são listados, mas não contam como lacuna.
+Pacotes: @fluxerjs/core, @fluxerjs/builders, @fluxerjs/types, @fluxerjs/voice, @fluxerjs/sharding, @fluxerjs/rest, @fluxerjs/ws, @fluxerjs/collection, @fluxerjs/util.
 
-## Exports de runtime
+| Status | Itens |
+|---|---:|
+| function | 82 |
+| equivalent | 229 |
+| excluded | 834 |
+| pending | 660 |
 
-| Pacote | Export | Tipo | Área | Status | Evidência |
-|---|---|---|---|---|---|
-| @fluxerjs/builders | `AttachmentBuilder` | class | Embeds e payloads | coberto-recurso | builtins |
-| @fluxerjs/builders | `AttachmentMeta` | class | Embeds e payloads | coberto-recurso | builtins |
-| @fluxerjs/builders | `EmbedBuilder` | class | Embeds e payloads | coberto-recurso | builtins |
-| @fluxerjs/builders | `MessagePayload` | class | Embeds e payloads | coberto-recurso | builtins |
-| @fluxerjs/core | `AllowedMentions` | variable | Embeds e payloads | coberto-nativo | código nativo |
-| @fluxerjs/core | `AnnouncementChannel` | class | Canais | só-SDK |  |
-| @fluxerjs/core | `AttachmentBuilder` | class | Embeds e payloads | coberto-recurso | builtins |
-| @fluxerjs/core | `AttachmentMeta` | class | Embeds e payloads | coberto-recurso | builtins |
-| @fluxerjs/core | `Base` | class | Cliente e eventos | coberto-recurso | builtins |
-| @fluxerjs/core | `BETA_CLIENT_CLUSTER_WARNING` | variable | só SDK | só-SDK |  |
-| @fluxerjs/core | `CacheController` | class | Cliente e eventos | coberto-nativo | código nativo |
-| @fluxerjs/core | `CategoryChannel` | class | Canais | só-SDK |  |
-| @fluxerjs/core | `CDN_URL` | variable | CDN | lacuna |  |
-| @fluxerjs/core | `cdnAvatarURL` | function | CDN | coberto-nativo | código nativo |
-| @fluxerjs/core | `cdnBannerURL` | function | CDN | coberto-nativo | código nativo |
-| @fluxerjs/core | `cdnDefaultAvatarURL` | function | CDN | lacuna |  |
-| @fluxerjs/core | `cdnDisplayAvatarURL` | function | CDN | lacuna |  |
-| @fluxerjs/core | `cdnEmojiURL` | function | CDN | coberto-nativo | código nativo |
-| @fluxerjs/core | `cdnGuildAssetURL` | function | CDN | coberto-nativo | código nativo |
-| @fluxerjs/core | `cdnMemberAvatarURL` | function | CDN | coberto-nativo | código nativo |
-| @fluxerjs/core | `cdnMemberBannerURL` | function | CDN | coberto-nativo | código nativo |
-| @fluxerjs/core | `cdnStickerURL` | function | CDN | coberto-nativo | código nativo |
-| @fluxerjs/core | `Channel` | class | Canais | coberto-recurso | builtins |
-| @fluxerjs/core | `ChannelManager` | class | Canais | coberto-recurso | builtins |
-| @fluxerjs/core | `Client` | class | Cliente e eventos | coberto-recurso | builtins |
-| @fluxerjs/core | `ClientCluster` | class | só SDK | só-SDK | builtins |
-| @fluxerjs/core | `ClientClusterEvents` | variable | só SDK | só-SDK | código nativo |
-| @fluxerjs/core | `ClientUser` | class | Cliente e eventos | coberto-recurso | builtins |
-| @fluxerjs/core | `createLogger` | function | Erros e logs | só-SDK |  |
-| @fluxerjs/core | `DEFAULT_CACHE_LIMITS` | variable | Cliente e eventos | só-SDK |  |
-| @fluxerjs/core | `DEFAULT_INSTANCE_ENDPOINTS` | variable | Instância e discovery | só-SDK |  |
-| @fluxerjs/core | `DMChannel` | class | Canais | coberto-recurso | builtins |
-| @fluxerjs/core | `EmbedBuilder` | class | Embeds e payloads | coberto-recurso | builtins |
-| @fluxerjs/core | `ErrorCodes` | variable | Erros e logs | só-SDK |  |
-| @fluxerjs/core | `Events` | variable | Cliente e eventos | coberto-nativo | código nativo |
-| @fluxerjs/core | `fetchActiveThreads` | function | Threads | coberto-recurso | builtins |
-| @fluxerjs/core | `FluxerError` | class | Erros e logs | coberto-recurso | builtins |
-| @fluxerjs/core | `ForumChannel` | class | Canais | só-SDK | código nativo |
-| @fluxerjs/core | `Guild` | class | Servidores e bans | coberto-recurso | builtins |
-| @fluxerjs/core | `GuildBan` | class | Servidores e bans | coberto-recurso | builtins |
-| @fluxerjs/core | `GuildChannel` | class | Canais | coberto-recurso | builtins |
-| @fluxerjs/core | `GuildEmoji` | class | Expressões | coberto-recurso | builtins |
-| @fluxerjs/core | `GuildManager` | class | Servidores e bans | coberto-recurso | builtins |
-| @fluxerjs/core | `GuildMember` | class | Usuários e membros | coberto-recurso | builtins |
-| @fluxerjs/core | `GuildMemberManager` | class | Usuários e membros | coberto-recurso | builtins |
-| @fluxerjs/core | `GuildMemberProfileFlags` | variable | Constantes e bitfields | só-SDK |  |
-| @fluxerjs/core | `GuildMemberRoleManager` | class | Usuários e membros | coberto-recurso | builtins |
-| @fluxerjs/core | `GuildOperations` | variable | Constantes e bitfields | só-SDK |  |
-| @fluxerjs/core | `GuildRoleManager` | class | Cargos | só-SDK |  |
-| @fluxerjs/core | `GuildSticker` | class | Expressões | coberto-recurso | builtins |
-| @fluxerjs/core | `INSTANCE_DISCOVERY_PATH` | variable | Instância e discovery | só-SDK |  |
-| @fluxerjs/core | `instanceDiscoveryUrl` | function | Instância e discovery | só-SDK |  |
-| @fluxerjs/core | `Invite` | class | Convites | coberto-recurso | builtins |
-| @fluxerjs/core | `inviteUrl` | function | Convites | lacuna |  |
-| @fluxerjs/core | `LinkChannel` | class | Canais | coberto-recurso | builtins |
-| @fluxerjs/core | `MediaChannel` | class | Canais | só-SDK |  |
-| @fluxerjs/core | `Message` | class | Mensagens e reações | coberto-recurso | builtins |
-| @fluxerjs/core | `MessageAttachmentFlags` | variable | Constantes e bitfields | só-SDK | builtins |
-| @fluxerjs/core | `MessageCollector` | class | Coletores | coberto-recurso | builtins |
-| @fluxerjs/core | `MessageFlags` | variable | Constantes e bitfields | só-SDK |  |
-| @fluxerjs/core | `MessageFlagsBitField` | class | Constantes e bitfields | só-SDK |  |
-| @fluxerjs/core | `MessageFlagsBits` | variable | Constantes e bitfields | só-SDK |  |
-| @fluxerjs/core | `MessageManager` | class | Mensagens e reações | coberto-recurso | builtins |
-| @fluxerjs/core | `MessagePayload` | class | Embeds e payloads | coberto-recurso | builtins |
-| @fluxerjs/core | `MessageReaction` | class | Mensagens e reações | coberto-recurso | builtins |
-| @fluxerjs/core | `MessageReactionManager` | class | Mensagens e reações | coberto-recurso | builtins |
-| @fluxerjs/core | `MessageSticker` | class | Mensagens e reações | coberto-recurso | builtins |
-| @fluxerjs/core | `normalizeApiOrigin` | function | Instância e discovery | só-SDK |  |
-| @fluxerjs/core | `normalizeCacheLimit` | function | Cliente e eventos | só-SDK |  |
-| @fluxerjs/core | `parseInstanceDiscovery` | function | Instância e discovery | só-SDK |  |
-| @fluxerjs/core | `parsePrefixCommand` | function | Texto e guards | só-SDK |  |
-| @fluxerjs/core | `parseUserMention` | function | Texto e guards | só-SDK |  |
-| @fluxerjs/core | `PartialGuildMember` | class | Usuários e membros | coberto-recurso | builtins |
-| @fluxerjs/core | `PartialMessage` | class | Mensagens e reações | coberto-recurso | builtins |
-| @fluxerjs/core | `PermissionFlags` | variable | Constantes e bitfields | coberto-recurso | builtins |
-| @fluxerjs/core | `PermissionOverwrite` | class | Canais | coberto-recurso | builtins |
-| @fluxerjs/core | `PermissionOverwriteManager` | class | Canais | coberto-recurso | builtins |
-| @fluxerjs/core | `PermissionsBitField` | class | Constantes e bitfields | coberto-recurso | builtins |
-| @fluxerjs/core | `PublicUserFlags` | variable | Constantes e bitfields | só-SDK |  |
-| @fluxerjs/core | `ReactionCollector` | class | Coletores | coberto-recurso | builtins |
-| @fluxerjs/core | `resolveCacheLimits` | function | Cliente e eventos | só-SDK |  |
-| @fluxerjs/core | `resolveInstanceEndpoints` | function | Instância e discovery | só-SDK |  |
-| @fluxerjs/core | `resolveKlipyToImageUrl` | function | Texto e guards | só-SDK |  |
-| @fluxerjs/core | `resolvePermissionsToBitfield` | function | Constantes e bitfields | só-SDK |  |
-| @fluxerjs/core | `Role` | class | Cargos | coberto-recurso | builtins |
-| @fluxerjs/core | `Routes` | variable | Constantes e bitfields | só-SDK | builtins |
-| @fluxerjs/core | `serializeError` | function | Erros e logs | só-SDK |  |
-| @fluxerjs/core | `STATIC_CDN_URL` | variable | CDN | lacuna |  |
-| @fluxerjs/core | `SystemChannelFlags` | variable | Constantes e bitfields | só-SDK |  |
-| @fluxerjs/core | `TextChannel` | class | Canais | coberto-recurso | builtins |
-| @fluxerjs/core | `ThreadChannel` | class | Threads | coberto-recurso | builtins |
-| @fluxerjs/core | `ThreadManager` | class | Threads | coberto-recurso | builtins |
-| @fluxerjs/core | `ThreadMember` | class | Threads | coberto-recurso | builtins |
-| @fluxerjs/core | `ThreadMemberFlags` | variable | Constantes e bitfields | só-SDK |  |
-| @fluxerjs/core | `ThreadMemberManager` | class | Threads | coberto-recurso | builtins |
-| @fluxerjs/core | `User` | class | Usuários e membros | coberto-recurso | builtins |
-| @fluxerjs/core | `UserFlagsBitField` | class | Constantes e bitfields | só-SDK |  |
-| @fluxerjs/core | `UserFlagsBits` | variable | Constantes e bitfields | só-SDK |  |
-| @fluxerjs/core | `UserManager` | class | Usuários e membros | coberto-recurso | builtins |
-| @fluxerjs/core | `VoiceChannel` | class | Canais | coberto-recurso | builtins |
-| @fluxerjs/core | `Webhook` | class | Webhooks | coberto-recurso | builtins |
-| @fluxerjs/types | `EmbedMediaFlags` | variable | Constantes e bitfields | só-SDK |  |
-| @fluxerjs/types | `FLUXER_EPOCH` | variable | Constantes e bitfields | coberto-recurso | builtins |
-| @fluxerjs/types | `GatewayDispatchEvents` | variable | Constantes e bitfields | só-SDK |  |
-| @fluxerjs/types | `GatewayErrorCodes` | variable | Constantes e bitfields | só-SDK |  |
-| @fluxerjs/types | `GatewayIdentifyFlags` | variable | Constantes e bitfields | só-SDK |  |
-| @fluxerjs/types | `GuildMemberProfileFlags` | variable | Constantes e bitfields | só-SDK |  |
-| @fluxerjs/types | `GuildOperations` | variable | Constantes e bitfields | só-SDK |  |
-| @fluxerjs/types | `isGroupDmInvite` | function | Texto e guards | só-SDK |  |
-| @fluxerjs/types | `isGuildInvite` | function | Texto e guards | só-SDK |  |
-| @fluxerjs/types | `isUploadedAttachment` | function | Texto e guards | só-SDK |  |
-| @fluxerjs/types | `MessageAttachmentFlags` | variable | Constantes e bitfields | só-SDK | builtins |
-| @fluxerjs/types | `MessageFlags` | variable | Constantes e bitfields | só-SDK |  |
-| @fluxerjs/types | `PublicUserFlags` | variable | Constantes e bitfields | só-SDK |  |
-| @fluxerjs/types | `Routes` | variable | Constantes e bitfields | só-SDK | builtins |
-| @fluxerjs/types | `SystemChannelFlags` | variable | Constantes e bitfields | só-SDK |  |
-| @fluxerjs/types | `ThreadMemberFlags` | variable | Constantes e bitfields | só-SDK |  |
+## Pendências por área
 
-## Métodos e propriedades de classes
+| Área | Itens pending |
+|---|---:|
+| pure | 199 |
+| resources | 120 |
+| entities | 238 |
+| events | 59 |
+| voice | 44 |
 
-| Classe | Membro | Tipo | Status |
-|---|---|---|---|
-| `AttachmentBuilder` | `attachment` | propriedade | coberto-recurso |
-| `AttachmentBuilder` | `attachment` | propriedade | coberto-recurso |
-| `AttachmentBuilder` | `description` | propriedade | coberto-recurso |
-| `AttachmentBuilder` | `description` | propriedade | coberto-recurso |
-| `AttachmentBuilder` | `filename` | acessor | coberto-recurso |
-| `AttachmentBuilder` | `filename` | acessor | coberto-recurso |
-| `AttachmentBuilder` | `name` | propriedade | coberto-recurso |
-| `AttachmentBuilder` | `name` | propriedade | coberto-recurso |
-| `AttachmentBuilder` | `setDescription` | método | coberto-nativo |
-| `AttachmentBuilder` | `setDescription` | método | coberto-nativo |
-| `AttachmentBuilder` | `setName` | método | coberto-equivalente |
-| `AttachmentBuilder` | `setName` | método | coberto-equivalente |
-| `AttachmentBuilder` | `setSpoiler` | método | coberto-recurso |
-| `AttachmentBuilder` | `setSpoiler` | método | coberto-recurso |
-| `AttachmentBuilder` | `spoiler` | propriedade | coberto-recurso |
-| `AttachmentBuilder` | `spoiler` | propriedade | coberto-recurso |
-| `AttachmentBuilder` | `toFileData` | método | coberto-equivalente |
-| `AttachmentBuilder` | `toFileData` | método | coberto-equivalente |
-| `AttachmentBuilder` | `toJSON` | método | coberto-recurso |
-| `AttachmentBuilder` | `toJSON` | método | coberto-recurso |
-| `AttachmentBuilder` | `url` | propriedade | coberto-recurso |
-| `AttachmentBuilder` | `url` | propriedade | coberto-recurso |
-| `AttachmentMeta` | `description` | propriedade | coberto-recurso |
-| `AttachmentMeta` | `description` | propriedade | coberto-recurso |
-| `AttachmentMeta` | `filename` | propriedade | coberto-recurso |
-| `AttachmentMeta` | `filename` | propriedade | coberto-recurso |
-| `AttachmentMeta` | `id` | propriedade | coberto-recurso |
-| `AttachmentMeta` | `id` | propriedade | coberto-recurso |
-| `AttachmentMeta` | `setDescription` | método | coberto-nativo |
-| `AttachmentMeta` | `setDescription` | método | coberto-nativo |
-| `AttachmentMeta` | `setName` | método | coberto-equivalente |
-| `AttachmentMeta` | `setName` | método | coberto-equivalente |
-| `AttachmentMeta` | `setSpoiler` | método | coberto-recurso |
-| `AttachmentMeta` | `setSpoiler` | método | coberto-recurso |
-| `AttachmentMeta` | `spoiler` | propriedade | coberto-recurso |
-| `AttachmentMeta` | `spoiler` | propriedade | coberto-recurso |
-| `AttachmentMeta` | `toJSON` | método | coberto-recurso |
-| `AttachmentMeta` | `toJSON` | método | coberto-recurso |
-| `Base` | `client` | propriedade | coberto-recurso |
-| `CacheController` | `cascadeChannel` | método | coberto-nativo |
-| `CacheController` | `cascadeGuild` | método | coberto-nativo |
-| `CacheController` | `cascading` | acessor | coberto-nativo |
-| `CacheController` | `limits` | propriedade | coberto-nativo |
-| `CacheController` | `stats` | método | coberto-nativo |
-| `CacheController` | `sweepChannels` | método | coberto-nativo |
-| `CacheController` | `sweepGuilds` | método | coberto-nativo |
-| `CacheController` | `sweepMembers` | método | coberto-nativo |
-| `CacheController` | `sweepMessages` | método | coberto-nativo |
-| `CacheController` | `sweepUsers` | método | coberto-nativo |
-| `Channel` | `_patch` | método | só-SDK |
-| `Channel` | `acknowledgePins` | método | coberto-nativo |
-| `Channel` | `awaitMessages` | método | coberto-equivalente |
-| `Channel` | `bulkDelete` | método | coberto-nativo |
-| `Channel` | `bulkDeleteMyMessages` | método | coberto-nativo |
-| `Channel` | `canSendMessage` | método | coberto-equivalente |
-| `Channel` | `clearReadState` | método | coberto-nativo |
-| `Channel` | `client` | propriedade | coberto-recurso |
-| `Channel` | `completeAttachmentUploads` | método | coberto-equivalente |
-| `Channel` | `createdAt` | acessor | coberto-recurso |
-| `Channel` | `createDM` | método | coberto-nativo |
-| `Channel` | `createdTimestamp` | acessor | coberto-recurso |
-| `Channel` | `createMessageCollector` | método | coberto-equivalente |
-| `Channel` | `delete` | método | coberto-recurso |
-| `Channel` | `fetchRtcRegions` | método | coberto-nativo |
-| `Channel` | `fetchSlowmode` | método | coberto-nativo |
-| `Channel` | `from` | método | coberto-recurso |
-| `Channel` | `fromOrCreate` | método | só-SDK |
-| `Channel` | `icon` | propriedade | coberto-nativo |
-| `Channel` | `id` | propriedade | coberto-recurso |
-| `Channel` | `isAnnouncement` | método | coberto-equivalente |
-| `Channel` | `isCategory` | método | coberto-recurso |
-| `Channel` | `isDM` | método | coberto-recurso |
-| `Channel` | `isForum` | método | coberto-recurso |
-| `Channel` | `isGuild` | método | coberto-recurso |
-| `Channel` | `isLink` | método | coberto-equivalente |
-| `Channel` | `isMedia` | método | coberto-recurso |
-| `Channel` | `isPersonalNotes` | método | coberto-equivalente |
-| `Channel` | `isText` | método | coberto-nativo |
-| `Channel` | `isTextBased` | método | coberto-recurso |
-| `Channel` | `isThread` | método | coberto-recurso |
-| `Channel` | `isVoice` | método | coberto-nativo |
-| `Channel` | `lastPinTimestamp` | propriedade | só-SDK |
-| `Channel` | `messages` | acessor | coberto-recurso |
-| `Channel` | `name` | propriedade | coberto-recurso |
-| `Channel` | `requestAttachmentUploads` | método | coberto-equivalente |
-| `Channel` | `sendTyping` | método | coberto-nativo |
-| `Channel` | `toString` | método | coberto-recurso |
-| `Channel` | `type` | propriedade | coberto-recurso |
-| `Channel` | `uploadAttachmentsForSend` | método | coberto-equivalente |
-| `ChannelManager` | `delete` | método | coberto-recurso |
-| `ChannelManager` | `fetch` | método | coberto-recurso |
-| `ChannelManager` | `fetchMessage` | método | coberto-recurso |
-| `ChannelManager` | `resolve` | método | coberto-recurso |
-| `ChannelManager` | `send` | método | coberto-recurso |
-| `Client` | `_addMessageToCache` | método | coberto-recurso |
-| `Client` | `_clearMessageCache` | método | só-SDK |
-| `Client` | `_deferredGatewayDispatches` | propriedade | só-SDK |
-| `Client` | `_finalizeReady` | método | só-SDK |
-| `Client` | `_getMessageCache` | método | só-SDK |
-| `Client` | `_guildStreamSettleTimeout` | propriedade | só-SDK |
-| `Client` | `_messageCacheStats` | método | coberto-nativo |
-| `Client` | `_onGuildReceived` | método | só-SDK |
-| `Client` | `_pendingGuildIds` | propriedade | só-SDK |
-| `Client` | `_readyStubGuildIds` | propriedade | só-SDK |
-| `Client` | `_removeMessageFromCache` | método | coberto-recurso |
-| `Client` | `_sendToAllShards` | método | só-SDK |
-| `Client` | `_ws` | propriedade | só-SDK |
-| `Client` | `assertReady` | método | coberto-nativo |
-| `Client` | `bulkFetchMessages` | método | coberto-nativo |
-| `Client` | `cache` | propriedade | coberto-recurso |
-| `Client` | `channels` | propriedade | coberto-recurso |
-| `Client` | `destroy` | método | coberto-nativo |
-| `Client` | `emit` | método | coberto-nativo |
-| `Client` | `events` | propriedade | coberto-nativo |
-| `Client` | `fetchApplication` | método | coberto-nativo |
-| `Client` | `fetchEmojiMetadata` | método | coberto-nativo |
-| `Client` | `fetchGatewayInfo` | método | coberto-nativo |
-| `Client` | `fetchInstance` | método | coberto-nativo |
-| `Client` | `fetchOAuthApplications` | método | coberto-nativo |
-| `Client` | `fetchStickerMetadata` | método | coberto-nativo |
-| `Client` | `fromDiscovery` | método | coberto-nativo |
-| `Client` | `getOrCreateUser` | método | só-SDK |
-| `Client` | `guilds` | propriedade | coberto-recurso |
-| `Client` | `instance` | propriedade | coberto-nativo |
-| `Client` | `isReady` | método | coberto-nativo |
-| `Client` | `logger` | propriedade | coberto-nativo |
-| `Client` | `login` | método | coberto-nativo |
-| `Client` | `off` | método | coberto-recurso |
-| `Client` | `on` | método | coberto-recurso |
-| `Client` | `once` | método | coberto-recurso |
-| `Client` | `options` | propriedade | coberto-recurso |
-| `Client` | `preloadMessages` | método | coberto-recurso |
-| `Client` | `preloadMessagesAlt` | método | só-SDK |
-| `Client` | `readyAt` | propriedade | coberto-nativo |
-| `Client` | `requestChannelMemberCounts` | método | coberto-recurso |
-| `Client` | `requestForumUnreads` | método | coberto-nativo |
-| `Client` | `requestGuildCounts` | método | coberto-recurso |
-| `Client` | `requestGuildMembers` | método | coberto-nativo |
-| `Client` | `resolveEmoji` | método | coberto-recurso |
-| `Client` | `rest` | propriedade | coberto-recurso |
-| `Client` | `Routes` | acessor | coberto-recurso |
-| `Client` | `searchMessages` | método | coberto-recurso |
-| `Client` | `sendToGateway` | método | coberto-nativo |
-| `Client` | `subscribeThreads` | método | coberto-nativo |
-| `Client` | `sweepMembers` | método | coberto-nativo |
-| `Client` | `sweepMessages` | método | coberto-nativo |
-| `Client` | `uptime` | acessor | coberto-nativo |
-| `Client` | `user` | propriedade | coberto-recurso |
-| `Client` | `users` | propriedade | coberto-recurso |
-| `Client` | `ws` | acessor | coberto-nativo |
-| `ClientCluster` | `add` | método | coberto-recurso |
-| `ClientCluster` | `addAll` | método | coberto-nativo |
-| `ClientCluster` | `destroy` | método | coberto-nativo |
-| `ClientCluster` | `emit` | método | coberto-nativo |
-| `ClientCluster` | `get` | método | coberto-recurso |
-| `ClientCluster` | `has` | método | coberto-recurso |
-| `ClientCluster` | `off` | método | coberto-recurso |
-| `ClientCluster` | `on` | método | coberto-recurso |
-| `ClientCluster` | `once` | método | coberto-recurso |
-| `ClientCluster` | `remove` | método | coberto-recurso |
-| `ClientCluster` | `restart` | método | coberto-nativo |
-| `ClientCluster` | `runtimeValues` | método | coberto-nativo |
-| `ClientCluster` | `size` | acessor | coberto-recurso |
-| `ClientCluster` | `values` | método | coberto-recurso |
-| `ClientUser` | `bulkDeleteMyMessagesInGuild` | método | coberto-nativo |
-| `ClientUser` | `client` | propriedade | coberto-recurso |
-| `ClientUser` | `fetch` | método | coberto-recurso |
-| `ClientUser` | `fetchGuilds` | método | coberto-nativo |
-| `ClientUser` | `leaveGuild` | método | coberto-nativo |
-| `ClientUser` | `setPresence` | método | coberto-recurso |
-| `DMChannel` | `_patch` | método | só-SDK |
-| `DMChannel` | `addRecipient` | método | coberto-nativo |
-| `DMChannel` | `edit` | método | coberto-recurso |
-| `DMChannel` | `lastMessageId` | propriedade | só-SDK |
-| `DMChannel` | `nicks` | propriedade | só-SDK |
-| `DMChannel` | `ownerId` | propriedade | coberto-recurso |
-| `DMChannel` | `pinInList` | método | coberto-equivalente |
-| `DMChannel` | `purgeMessages` | método | coberto-nativo |
-| `DMChannel` | `recipients` | propriedade | coberto-recurso |
-| `DMChannel` | `removeRecipient` | método | coberto-nativo |
-| `DMChannel` | `unpinFromList` | método | coberto-equivalente |
-| `EmbedBuilder` | `addFields` | método | coberto-equivalente |
-| `EmbedBuilder` | `addFields` | método | coberto-equivalente |
-| `EmbedBuilder` | `data` | propriedade | coberto-recurso |
-| `EmbedBuilder` | `data` | propriedade | coberto-recurso |
-| `EmbedBuilder` | `from` | método | coberto-recurso |
-| `EmbedBuilder` | `from` | método | coberto-recurso |
-| `EmbedBuilder` | `setAuthor` | método | coberto-nativo |
-| `EmbedBuilder` | `setAuthor` | método | coberto-nativo |
-| `EmbedBuilder` | `setColor` | método | coberto-nativo |
-| `EmbedBuilder` | `setColor` | método | coberto-nativo |
-| `EmbedBuilder` | `setDescription` | método | coberto-nativo |
-| `EmbedBuilder` | `setDescription` | método | coberto-nativo |
-| `EmbedBuilder` | `setFields` | método | coberto-nativo |
-| `EmbedBuilder` | `setFields` | método | coberto-nativo |
-| `EmbedBuilder` | `setFooter` | método | coberto-nativo |
-| `EmbedBuilder` | `setFooter` | método | coberto-nativo |
-| `EmbedBuilder` | `setImage` | método | coberto-nativo |
-| `EmbedBuilder` | `setImage` | método | coberto-nativo |
-| `EmbedBuilder` | `setThumbnail` | método | coberto-nativo |
-| `EmbedBuilder` | `setThumbnail` | método | coberto-nativo |
-| `EmbedBuilder` | `setTimestamp` | método | coberto-nativo |
-| `EmbedBuilder` | `setTimestamp` | método | coberto-nativo |
-| `EmbedBuilder` | `setTitle` | método | coberto-nativo |
-| `EmbedBuilder` | `setTitle` | método | coberto-nativo |
-| `EmbedBuilder` | `setURL` | método | coberto-nativo |
-| `EmbedBuilder` | `setURL` | método | coberto-nativo |
-| `EmbedBuilder` | `spliceFields` | método | coberto-equivalente |
-| `EmbedBuilder` | `spliceFields` | método | coberto-equivalente |
-| `EmbedBuilder` | `toJSON` | método | coberto-recurso |
-| `EmbedBuilder` | `toJSON` | método | coberto-recurso |
-| `FluxerError` | `code` | propriedade | coberto-recurso |
-| `FluxerError` | `isFluxerError` | método | só-SDK |
-| `FluxerError` | `toJSON` | método | coberto-recurso |
-| `FluxerError` | `toString` | método | coberto-recurso |
-| `ForumChannel` | `_patch` | método | só-SDK |
-| `ForumChannel` | `defaultForumLayout` | propriedade | só-SDK |
-| `ForumChannel` | `setDefaultForumLayout` | método | coberto-nativo |
-| `Guild` | `_patch` | método | só-SDK |
-| `Guild` | `adjustMemberCount` | método | só-SDK |
-| `Guild` | `afkChannelId` | propriedade | coberto-recurso |
-| `Guild` | `afkTimeout` | propriedade | só-SDK |
-| `Guild` | `applyForDiscovery` | método | coberto-nativo |
-| `Guild` | `available` | propriedade | só-SDK |
-| `Guild` | `ban` | método | coberto-recurso |
-| `Guild` | `banner` | propriedade | coberto-recurso |
-| `Guild` | `bannerHeight` | propriedade | só-SDK |
-| `Guild` | `bannerURL` | método | coberto-recurso |
-| `Guild` | `bannerWidth` | propriedade | só-SDK |
-| `Guild` | `channels` | propriedade | coberto-recurso |
-| `Guild` | `client` | propriedade | coberto-recurso |
-| `Guild` | `cloneEmoji` | método | coberto-nativo |
-| `Guild` | `cloneSticker` | método | coberto-nativo |
-| `Guild` | `contentWarningLevel` | propriedade | coberto-recurso |
-| `Guild` | `contentWarningText` | propriedade | coberto-recurso |
-| `Guild` | `createChannel` | método | coberto-recurso |
-| `Guild` | `createdAt` | acessor | coberto-recurso |
-| `Guild` | `createdTimestamp` | acessor | coberto-recurso |
-| `Guild` | `createEmoji` | método | coberto-recurso |
-| `Guild` | `createEmojisBulk` | método | coberto-recurso |
-| `Guild` | `createRole` | método | coberto-recurso |
-| `Guild` | `createSticker` | método | coberto-recurso |
-| `Guild` | `createStickersBulk` | método | coberto-nativo |
-| `Guild` | `defaultMessageNotifications` | propriedade | só-SDK |
-| `Guild` | `delete` | método | coberto-recurso |
-| `Guild` | `disabledOperations` | propriedade | só-SDK |
-| `Guild` | `edit` | método | coberto-recurso |
-| `Guild` | `editDiscoveryApplication` | método | coberto-nativo |
-| `Guild` | `editVanityURL` | método | coberto-recurso |
-| `Guild` | `embedSplash` | propriedade | só-SDK |
-| `Guild` | `emojis` | propriedade | coberto-recurso |
-| `Guild` | `explicitContentFilter` | propriedade | só-SDK |
-| `Guild` | `features` | propriedade | coberto-recurso |
-| `Guild` | `fetchActiveThreads` | método | coberto-recurso |
-| `Guild` | `fetchAuditLogs` | método | coberto-recurso |
-| `Guild` | `fetchBans` | método | coberto-recurso |
-| `Guild` | `fetchChannels` | método | coberto-nativo |
-| `Guild` | `fetchDiscoveryStatus` | método | coberto-nativo |
-| `Guild` | `fetchEmoji` | método | coberto-recurso |
-| `Guild` | `fetchEmojis` | método | coberto-recurso |
-| `Guild` | `fetchInvite` | método | coberto-equivalente |
-| `Guild` | `fetchInvites` | método | coberto-recurso |
-| `Guild` | `fetchMe` | método | coberto-nativo |
-| `Guild` | `fetchMember` | método | coberto-recurso |
-| `Guild` | `fetchRole` | método | coberto-recurso |
-| `Guild` | `fetchRoles` | método | coberto-recurso |
-| `Guild` | `fetchSticker` | método | coberto-recurso |
-| `Guild` | `fetchStickers` | método | coberto-recurso |
-| `Guild` | `fetchVanityURL` | método | coberto-recurso |
-| `Guild` | `fetchWebhooks` | método | coberto-recurso |
-| `Guild` | `icon` | propriedade | coberto-nativo |
-| `Guild` | `iconURL` | método | coberto-recurso |
-| `Guild` | `id` | propriedade | coberto-recurso |
-| `Guild` | `kick` | método | coberto-nativo |
-| `Guild` | `memberCount` | propriedade | coberto-recurso |
-| `Guild` | `members` | propriedade | coberto-recurso |
-| `Guild` | `messageHistoryCutoff` | propriedade | só-SDK |
-| `Guild` | `mfaLevel` | propriedade | só-SDK |
-| `Guild` | `name` | propriedade | coberto-recurso |
-| `Guild` | `nsfw` | propriedade | coberto-recurso |
-| `Guild` | `nsfwLevel` | propriedade | só-SDK |
-| `Guild` | `onlineCount` | propriedade | coberto-recurso |
-| `Guild` | `ownerId` | propriedade | coberto-recurso |
-| `Guild` | `permissions` | propriedade | coberto-recurso |
-| `Guild` | `resetRoleHoistPositions` | método | coberto-nativo |
-| `Guild` | `resolveRoleId` | método | coberto-recurso |
-| `Guild` | `roles` | propriedade | coberto-recurso |
-| `Guild` | `rulesChannelId` | propriedade | só-SDK |
-| `Guild` | `setChannelPositions` | método | coberto-recurso |
-| `Guild` | `setRoleHoistPositions` | método | coberto-nativo |
-| `Guild` | `setRolePositions` | método | coberto-recurso |
-| `Guild` | `splash` | propriedade | só-SDK |
-| `Guild` | `splashCardAlignment` | propriedade | só-SDK |
-| `Guild` | `splashHeight` | propriedade | só-SDK |
-| `Guild` | `splashURL` | método | só-SDK |
-| `Guild` | `splashWidth` | propriedade | só-SDK |
-| `Guild` | `stickers` | propriedade | coberto-nativo |
-| `Guild` | `systemChannelFlags` | propriedade | só-SDK |
-| `Guild` | `systemChannelId` | propriedade | coberto-recurso |
-| `Guild` | `toString` | método | coberto-recurso |
-| `Guild` | `transferOwnership` | método | coberto-nativo |
-| `Guild` | `unban` | método | coberto-nativo |
-| `Guild` | `vanityURLCode` | propriedade | só-SDK |
-| `Guild` | `verificationLevel` | propriedade | só-SDK |
-| `Guild` | `withdrawDiscoveryApplication` | método | coberto-nativo |
-| `GuildBan` | `client` | propriedade | coberto-recurso |
-| `GuildBan` | `expiresAt` | propriedade | coberto-recurso |
-| `GuildBan` | `guildId` | propriedade | coberto-recurso |
-| `GuildBan` | `reason` | propriedade | coberto-recurso |
-| `GuildBan` | `unban` | método | coberto-nativo |
-| `GuildBan` | `user` | propriedade | coberto-recurso |
-| `GuildChannel` | `_patch` | método | só-SDK |
-| `GuildChannel` | `applyEditPatch` | método | só-SDK |
-| `GuildChannel` | `canSend` | método | coberto-equivalente |
-| `GuildChannel` | `canSendMessage` | método | coberto-equivalente |
-| `GuildChannel` | `createInvite` | método | coberto-recurso |
-| `GuildChannel` | `createWebhook` | método | coberto-recurso |
-| `GuildChannel` | `edit` | método | coberto-recurso |
-| `GuildChannel` | `fetchInvites` | método | coberto-recurso |
-| `GuildChannel` | `fetchWebhooks` | método | coberto-recurso |
-| `GuildChannel` | `guildId` | propriedade | coberto-recurso |
-| `GuildChannel` | `name` | propriedade | coberto-recurso |
-| `GuildChannel` | `parentId` | propriedade | coberto-recurso |
-| `GuildChannel` | `permissionOverwrites` | propriedade | coberto-recurso |
-| `GuildChannel` | `position` | propriedade | coberto-recurso |
-| `GuildEmoji` | `_patch` | método | só-SDK |
-| `GuildEmoji` | `animated` | propriedade | coberto-recurso |
-| `GuildEmoji` | `client` | propriedade | coberto-recurso |
-| `GuildEmoji` | `createdAt` | acessor | coberto-recurso |
-| `GuildEmoji` | `createdTimestamp` | acessor | coberto-recurso |
-| `GuildEmoji` | `delete` | método | coberto-recurso |
-| `GuildEmoji` | `edit` | método | coberto-recurso |
-| `GuildEmoji` | `guildId` | propriedade | coberto-recurso |
-| `GuildEmoji` | `id` | propriedade | coberto-recurso |
-| `GuildEmoji` | `identifier` | acessor | coberto-recurso |
-| `GuildEmoji` | `name` | propriedade | coberto-recurso |
-| `GuildEmoji` | `toString` | método | coberto-recurso |
-| `GuildEmoji` | `url` | acessor | coberto-recurso |
-| `GuildManager` | `delete` | método | coberto-recurso |
-| `GuildManager` | `fetch` | método | coberto-recurso |
-| `GuildManager` | `resolve` | método | coberto-recurso |
-| `GuildMember` | `_clone` | método | só-SDK |
-| `GuildMember` | `_patch` | método | só-SDK |
-| `GuildMember` | `accentColor` | propriedade | coberto-recurso |
-| `GuildMember` | `avatar` | propriedade | coberto-recurso |
-| `GuildMember` | `avatarURL` | método | coberto-recurso |
-| `GuildMember` | `ban` | método | coberto-recurso |
-| `GuildMember` | `bannable` | acessor | coberto-equivalente |
-| `GuildMember` | `banner` | propriedade | coberto-recurso |
-| `GuildMember` | `bannerURL` | método | coberto-recurso |
-| `GuildMember` | `bio` | propriedade | coberto-recurso |
-| `GuildMember` | `client` | propriedade | coberto-recurso |
-| `GuildMember` | `communicationDisabledUntil` | propriedade | coberto-recurso |
-| `GuildMember` | `deaf` | propriedade | coberto-nativo |
-| `GuildMember` | `displayAvatarURL` | método | coberto-recurso |
-| `GuildMember` | `displayName` | acessor | coberto-recurso |
-| `GuildMember` | `edit` | método | coberto-recurso |
-| `GuildMember` | `guild` | propriedade | coberto-recurso |
-| `GuildMember` | `id` | propriedade | coberto-recurso |
-| `GuildMember` | `joinedAt` | propriedade | coberto-recurso |
-| `GuildMember` | `kick` | método | coberto-nativo |
-| `GuildMember` | `kickable` | acessor | coberto-equivalente |
-| `GuildMember` | `mentionFlags` | propriedade | só-SDK |
-| `GuildMember` | `moderatable` | acessor | coberto-equivalente |
-| `GuildMember` | `move` | método | coberto-recurso |
-| `GuildMember` | `mute` | propriedade | coberto-nativo |
-| `GuildMember` | `nick` | propriedade | coberto-recurso |
-| `GuildMember` | `partial` | propriedade | coberto-nativo |
-| `GuildMember` | `permissions` | acessor | coberto-recurso |
-| `GuildMember` | `permissionsIn` | método | coberto-recurso |
-| `GuildMember` | `profileFlags` | propriedade | só-SDK |
-| `GuildMember` | `pronouns` | propriedade | coberto-recurso |
-| `GuildMember` | `roles` | propriedade | coberto-recurso |
-| `GuildMember` | `timeout` | método | coberto-recurso |
-| `GuildMember` | `toString` | método | coberto-recurso |
-| `GuildMember` | `user` | propriedade | coberto-recurso |
-| `GuildMemberManager` | `fetch` | método | coberto-recurso |
-| `GuildMemberManager` | `fetchMe` | método | coberto-nativo |
-| `GuildMemberManager` | `me` | acessor | coberto-nativo |
-| `GuildMemberManager` | `resolve` | método | coberto-recurso |
-| `GuildMemberManager` | `search` | método | coberto-recurso |
-| `GuildMemberRoleManager` | `_patch` | método | só-SDK |
-| `GuildMemberRoleManager` | `add` | método | coberto-recurso |
-| `GuildMemberRoleManager` | `cache` | acessor | coberto-recurso |
-| `GuildMemberRoleManager` | `has` | método | coberto-recurso |
-| `GuildMemberRoleManager` | `remove` | método | coberto-recurso |
-| `GuildMemberRoleManager` | `roleIds` | acessor | coberto-recurso |
-| `GuildMemberRoleManager` | `set` | método | coberto-recurso |
-| `GuildRoleManager` | `everyone` | acessor | coberto-equivalente |
-| `GuildSticker` | `_patch` | método | só-SDK |
-| `GuildSticker` | `animated` | propriedade | coberto-recurso |
-| `GuildSticker` | `client` | propriedade | coberto-recurso |
-| `GuildSticker` | `createdAt` | acessor | coberto-recurso |
-| `GuildSticker` | `createdTimestamp` | acessor | coberto-recurso |
-| `GuildSticker` | `delete` | método | coberto-recurso |
-| `GuildSticker` | `description` | propriedade | coberto-recurso |
-| `GuildSticker` | `edit` | método | coberto-recurso |
-| `GuildSticker` | `guildId` | propriedade | coberto-recurso |
-| `GuildSticker` | `id` | propriedade | coberto-recurso |
-| `GuildSticker` | `name` | propriedade | coberto-recurso |
-| `GuildSticker` | `nsfw` | propriedade | coberto-recurso |
-| `GuildSticker` | `tags` | propriedade | coberto-recurso |
-| `GuildSticker` | `url` | acessor | coberto-recurso |
-| `Invite` | `channelSnapshot` | propriedade | coberto-recurso |
-| `Invite` | `client` | propriedade | coberto-recurso |
-| `Invite` | `code` | propriedade | coberto-recurso |
-| `Invite` | `createdAt` | propriedade | coberto-recurso |
-| `Invite` | `delete` | método | coberto-recurso |
-| `Invite` | `expiresAt` | propriedade | coberto-recurso |
-| `Invite` | `fetch` | método | coberto-recurso |
-| `Invite` | `guildSnapshot` | propriedade | coberto-recurso |
-| `Invite` | `inviter` | propriedade | coberto-recurso |
-| `Invite` | `isGroupDM` | método | coberto-equivalente |
-| `Invite` | `isGuild` | método | coberto-recurso |
-| `Invite` | `maxAge` | propriedade | coberto-recurso |
-| `Invite` | `maxUses` | propriedade | coberto-recurso |
-| `Invite` | `memberCount` | propriedade | coberto-recurso |
-| `Invite` | `presenceCount` | propriedade | só-SDK |
-| `Invite` | `resolveChannel` | método | coberto-equivalente |
-| `Invite` | `resolveGuild` | método | coberto-equivalente |
-| `Invite` | `temporary` | propriedade | coberto-recurso |
-| `Invite` | `type` | propriedade | coberto-recurso |
-| `Invite` | `url` | acessor | coberto-recurso |
-| `Invite` | `uses` | propriedade | coberto-recurso |
-| `LinkChannel` | `applyEditPatch` | método | só-SDK |
-| `LinkChannel` | `url` | propriedade | coberto-recurso |
-| `Message` | `_createMessageBody` | método | só-SDK |
-| `Message` | `_patch` | método | só-SDK |
-| `Message` | `_send` | método | só-SDK |
-| `Message` | `attachments` | propriedade | coberto-recurso |
-| `Message` | `author` | propriedade | coberto-recurso |
-| `Message` | `awaitReactions` | método | coberto-equivalente |
-| `Message` | `call` | propriedade | coberto-nativo |
-| `Message` | `channel` | acessor | coberto-recurso |
-| `Message` | `channelId` | propriedade | coberto-recurso |
-| `Message` | `client` | propriedade | coberto-recurso |
-| `Message` | `content` | propriedade | coberto-recurso |
-| `Message` | `createdAt` | propriedade | coberto-recurso |
-| `Message` | `createReactionCollector` | método | coberto-equivalente |
-| `Message` | `delete` | método | coberto-recurso |
-| `Message` | `deleteAttachment` | método | coberto-nativo |
-| `Message` | `edit` | método | coberto-recurso |
-| `Message` | `editedAt` | propriedade | só-SDK |
-| `Message` | `embeds` | propriedade | coberto-recurso |
-| `Message` | `fetch` | método | coberto-recurso |
-| `Message` | `fetchReactionUsers` | método | coberto-recurso |
-| `Message` | `fetchReactionUsersPage` | método | coberto-recurso |
-| `Message` | `flags` | propriedade | coberto-recurso |
-| `Message` | `guild` | acessor | coberto-recurso |
-| `Message` | `guildId` | propriedade | coberto-recurso |
-| `Message` | `id` | propriedade | coberto-recurso |
-| `Message` | `member` | acessor | coberto-recurso |
-| `Message` | `mentionEveryone` | propriedade | coberto-recurso |
-| `Message` | `mentionRoles` | propriedade | só-SDK |
-| `Message` | `mentions` | propriedade | coberto-recurso |
-| `Message` | `messageReference` | propriedade | só-SDK |
-| `Message` | `messageSnapshots` | propriedade | só-SDK |
-| `Message` | `nonce` | propriedade | coberto-nativo |
-| `Message` | `nsfwEmojis` | propriedade | só-SDK |
-| `Message` | `partial` | propriedade | coberto-nativo |
-| `Message` | `pin` | método | coberto-recurso |
-| `Message` | `pinned` | propriedade | coberto-recurso |
-| `Message` | `react` | método | coberto-recurso |
-| `Message` | `reactions` | propriedade | coberto-nativo |
-| `Message` | `referencedMessage` | propriedade | só-SDK |
-| `Message` | `removeAllReactions` | método | coberto-recurso |
-| `Message` | `removeReaction` | método | coberto-recurso |
-| `Message` | `removeReactionEmoji` | método | coberto-recurso |
-| `Message` | `reply` | método | coberto-recurso |
-| `Message` | `resolve` | método | coberto-recurso |
-| `Message` | `resolveChannel` | método | coberto-equivalente |
-| `Message` | `resolveGuild` | método | coberto-equivalente |
-| `Message` | `send` | método | coberto-recurso |
-| `Message` | `sendTo` | método | coberto-nativo |
-| `Message` | `startThread` | método | coberto-recurso |
-| `Message` | `stickers` | propriedade | coberto-nativo |
-| `Message` | `thread` | propriedade | coberto-recurso |
-| `Message` | `tts` | propriedade | coberto-nativo |
-| `Message` | `type` | propriedade | coberto-recurso |
-| `Message` | `unpin` | método | coberto-recurso |
-| `Message` | `webhookId` | propriedade | só-SDK |
-| `MessageCollector` | `awaitMessages` | método | coberto-equivalente |
-| `MessageCollector` | `channelId` | propriedade | coberto-recurso |
-| `MessageCollector` | `client` | propriedade | coberto-recurso |
-| `MessageCollector` | `collected` | propriedade | coberto-recurso |
-| `MessageCollector` | `emit` | método | coberto-nativo |
-| `MessageCollector` | `on` | método | coberto-recurso |
-| `MessageCollector` | `options` | propriedade | coberto-recurso |
-| `MessageCollector` | `stop` | método | coberto-recurso |
-| `MessageFlagsBitField` | `Flags` | propriedade | só-SDK |
-| `MessageManager` | `fetch` | método | coberto-recurso |
-| `MessageManager` | `get` | método | coberto-recurso |
-| `MessageManager` | `resolve` | método | coberto-recurso |
-| `MessagePayload` | `addEmbed` | método | coberto-equivalente |
-| `MessagePayload` | `addEmbed` | método | coberto-equivalente |
-| `MessagePayload` | `ContentMaxLength` | propriedade | só-SDK |
-| `MessagePayload` | `ContentMaxLength` | propriedade | só-SDK |
-| `MessagePayload` | `create` | método | coberto-recurso |
-| `MessagePayload` | `create` | método | coberto-recurso |
-| `MessagePayload` | `data` | propriedade | coberto-recurso |
-| `MessagePayload` | `data` | propriedade | coberto-recurso |
-| `MessagePayload` | `setAllowedMentions` | método | coberto-equivalente |
-| `MessagePayload` | `setAllowedMentions` | método | coberto-equivalente |
-| `MessagePayload` | `setAttachments` | método | coberto-equivalente |
-| `MessagePayload` | `setAttachments` | método | coberto-equivalente |
-| `MessagePayload` | `setContent` | método | coberto-equivalente |
-| `MessagePayload` | `setContent` | método | coberto-equivalente |
-| `MessagePayload` | `setEmbeds` | método | coberto-equivalente |
-| `MessagePayload` | `setEmbeds` | método | coberto-equivalente |
-| `MessagePayload` | `setFlags` | método | coberto-equivalente |
-| `MessagePayload` | `setFlags` | método | coberto-equivalente |
-| `MessagePayload` | `setReply` | método | coberto-equivalente |
-| `MessagePayload` | `setReply` | método | coberto-equivalente |
-| `MessagePayload` | `setTTS` | método | coberto-equivalente |
-| `MessagePayload` | `setTTS` | método | coberto-equivalente |
-| `MessagePayload` | `toJSON` | método | coberto-recurso |
-| `MessagePayload` | `toJSON` | método | coberto-recurso |
-| `MessageReaction` | `_data` | propriedade | só-SDK |
-| `MessageReaction` | `channel` | acessor | coberto-recurso |
-| `MessageReaction` | `channelId` | propriedade | coberto-recurso |
-| `MessageReaction` | `client` | propriedade | coberto-recurso |
-| `MessageReaction` | `count` | propriedade | coberto-recurso |
-| `MessageReaction` | `emoji` | propriedade | coberto-recurso |
-| `MessageReaction` | `emojiIdentifier` | acessor | coberto-recurso |
-| `MessageReaction` | `fetchMessage` | método | coberto-recurso |
-| `MessageReaction` | `fromMessage` | método | só-SDK |
-| `MessageReaction` | `guild` | acessor | coberto-recurso |
-| `MessageReaction` | `guildId` | propriedade | coberto-recurso |
-| `MessageReaction` | `me` | propriedade | coberto-nativo |
-| `MessageReaction` | `message` | acessor | coberto-recurso |
-| `MessageReaction` | `messageId` | propriedade | coberto-recurso |
-| `MessageReactionManager` | `_patch` | método | só-SDK |
-| `MessageReactionManager` | `[Symbol.iterator]` | método | só-SDK |
-| `MessageReactionManager` | `cache` | acessor | coberto-recurso |
-| `MessageReactionManager` | `size` | acessor | coberto-recurso |
-| `MessageSticker` | `animated` | propriedade | coberto-recurso |
-| `MessageSticker` | `client` | propriedade | coberto-recurso |
-| `MessageSticker` | `createdAt` | acessor | coberto-recurso |
-| `MessageSticker` | `createdTimestamp` | acessor | coberto-recurso |
-| `MessageSticker` | `description` | propriedade | coberto-recurso |
-| `MessageSticker` | `id` | propriedade | coberto-recurso |
-| `MessageSticker` | `name` | propriedade | coberto-recurso |
-| `MessageSticker` | `tags` | propriedade | coberto-recurso |
-| `MessageSticker` | `url` | acessor | coberto-recurso |
-| `PartialGuildMember` | `client` | propriedade | coberto-recurso |
-| `PartialGuildMember` | `fetch` | método | coberto-recurso |
-| `PartialGuildMember` | `guild` | propriedade | coberto-recurso |
-| `PartialGuildMember` | `guildId` | propriedade | coberto-recurso |
-| `PartialGuildMember` | `id` | propriedade | coberto-recurso |
-| `PartialGuildMember` | `partial` | propriedade | coberto-nativo |
-| `PartialGuildMember` | `user` | propriedade | coberto-recurso |
-| `PartialMessage` | `author` | propriedade | coberto-recurso |
-| `PartialMessage` | `authorId` | propriedade | coberto-nativo |
-| `PartialMessage` | `channel` | acessor | coberto-recurso |
-| `PartialMessage` | `channelId` | propriedade | coberto-recurso |
-| `PartialMessage` | `client` | propriedade | coberto-recurso |
-| `PartialMessage` | `content` | propriedade | coberto-recurso |
-| `PartialMessage` | `createdAt` | propriedade | coberto-recurso |
-| `PartialMessage` | `fetch` | método | coberto-recurso |
-| `PartialMessage` | `guildId` | propriedade | coberto-recurso |
-| `PartialMessage` | `id` | propriedade | coberto-recurso |
-| `PartialMessage` | `partial` | propriedade | coberto-nativo |
-| `PartialMessage` | `resolveChannel` | método | coberto-equivalente |
-| `PermissionOverwrite` | `_allow` | propriedade | só-SDK |
-| `PermissionOverwrite` | `_deny` | propriedade | só-SDK |
-| `PermissionOverwrite` | `allow` | acessor | coberto-recurso |
-| `PermissionOverwrite` | `deny` | acessor | coberto-recurso |
-| `PermissionOverwrite` | `id` | propriedade | coberto-recurso |
-| `PermissionOverwrite` | `toJSON` | método | coberto-recurso |
-| `PermissionOverwrite` | `type` | propriedade | coberto-recurso |
-| `PermissionOverwriteManager` | `_patch` | método | só-SDK |
-| `PermissionOverwriteManager` | `[Symbol.iterator]` | método | só-SDK |
-| `PermissionOverwriteManager` | `cache` | acessor | coberto-recurso |
-| `PermissionOverwriteManager` | `delete` | método | coberto-recurso |
-| `PermissionOverwriteManager` | `edit` | método | coberto-recurso |
-| `PermissionOverwriteManager` | `size` | acessor | coberto-recurso |
-| `PermissionOverwriteManager` | `toJSON` | método | coberto-recurso |
-| `PermissionsBitField` | `any` | método | coberto-nativo |
-| `PermissionsBitField` | `Flags` | propriedade | só-SDK |
-| `PermissionsBitField` | `has` | método | coberto-recurso |
-| `PermissionsBitField` | `missing` | método | coberto-nativo |
-| `ReactionCollector` | `awaitReactions` | método | coberto-equivalente |
-| `ReactionCollector` | `channelId` | propriedade | coberto-recurso |
-| `ReactionCollector` | `client` | propriedade | coberto-recurso |
-| `ReactionCollector` | `collected` | propriedade | coberto-recurso |
-| `ReactionCollector` | `emit` | método | coberto-nativo |
-| `ReactionCollector` | `messageId` | propriedade | coberto-recurso |
-| `ReactionCollector` | `on` | método | coberto-recurso |
-| `ReactionCollector` | `options` | propriedade | coberto-recurso |
-| `ReactionCollector` | `stop` | método | coberto-recurso |
-| `Role` | `_clone` | método | só-SDK |
-| `Role` | `_patch` | método | só-SDK |
-| `Role` | `_permissions` | propriedade | só-SDK |
-| `Role` | `client` | propriedade | coberto-recurso |
-| `Role` | `color` | propriedade | coberto-recurso |
-| `Role` | `createdAt` | acessor | coberto-recurso |
-| `Role` | `createdTimestamp` | acessor | coberto-recurso |
-| `Role` | `delete` | método | coberto-recurso |
-| `Role` | `edit` | método | coberto-recurso |
-| `Role` | `guildId` | propriedade | coberto-recurso |
-| `Role` | `has` | método | coberto-recurso |
-| `Role` | `hoist` | propriedade | coberto-recurso |
-| `Role` | `hoistPosition` | propriedade | coberto-recurso |
-| `Role` | `id` | propriedade | coberto-recurso |
-| `Role` | `mentionable` | propriedade | coberto-recurso |
-| `Role` | `name` | propriedade | coberto-recurso |
-| `Role` | `permissions` | acessor | coberto-recurso |
-| `Role` | `position` | propriedade | coberto-recurso |
-| `Role` | `toString` | método | coberto-recurso |
-| `Role` | `unicodeEmoji` | propriedade | coberto-recurso |
-| `TextChannel` | `applyEditPatch` | método | só-SDK |
-| `TextChannel` | `contentWarningLevel` | propriedade | coberto-recurso |
-| `TextChannel` | `contentWarningText` | propriedade | coberto-recurso |
-| `TextChannel` | `defaultAutoArchiveDuration` | propriedade | só-SDK |
-| `TextChannel` | `defaultThreadRateLimitPerUser` | propriedade | só-SDK |
-| `TextChannel` | `editThreadDefaults` | método | coberto-nativo |
-| `TextChannel` | `lastMessageId` | propriedade | só-SDK |
-| `TextChannel` | `nsfw` | propriedade | coberto-recurso |
-| `TextChannel` | `nsfwOverride` | propriedade | só-SDK |
-| `TextChannel` | `rateLimitPerUser` | propriedade | coberto-recurso |
-| `TextChannel` | `setSlowmode` | método | coberto-recurso |
-| `TextChannel` | `threads` | acessor | coberto-recurso |
-| `TextChannel` | `topic` | propriedade | coberto-recurso |
-| `ThreadChannel` | `_patch` | método | só-SDK |
-| `ThreadChannel` | `appliedTags` | propriedade | coberto-recurso |
-| `ThreadChannel` | `archived` | propriedade | coberto-recurso |
-| `ThreadChannel` | `archiveTimestamp` | propriedade | coberto-recurso |
-| `ThreadChannel` | `autoArchiveDuration` | propriedade | coberto-recurso |
-| `ThreadChannel` | `edit` | método | coberto-recurso |
-| `ThreadChannel` | `editSelf` | método | coberto-nativo |
-| `ThreadChannel` | `flags` | propriedade | coberto-recurso |
-| `ThreadChannel` | `invitable` | propriedade | só-SDK |
-| `ThreadChannel` | `join` | método | coberto-recurso |
-| `ThreadChannel` | `lastMessageId` | propriedade | só-SDK |
-| `ThreadChannel` | `leave` | método | coberto-nativo |
-| `ThreadChannel` | `locked` | propriedade | coberto-recurso |
-| `ThreadChannel` | `member` | propriedade | coberto-recurso |
-| `ThreadChannel` | `memberCount` | propriedade | coberto-recurso |
-| `ThreadChannel` | `members` | propriedade | coberto-recurso |
-| `ThreadChannel` | `messageCount` | propriedade | coberto-recurso |
-| `ThreadChannel` | `ownerId` | propriedade | coberto-recurso |
-| `ThreadChannel` | `parentId` | propriedade | coberto-recurso |
-| `ThreadChannel` | `rateLimitPerUser` | propriedade | coberto-recurso |
-| `ThreadChannel` | `setArchived` | método | coberto-recurso |
-| `ThreadChannel` | `setLocked` | método | coberto-nativo |
-| `ThreadChannel` | `totalMessageSent` | propriedade | só-SDK |
-| `ThreadManager` | `create` | método | coberto-recurso |
-| `ThreadManager` | `createPost` | método | coberto-recurso |
-| `ThreadManager` | `editDefaults` | método | coberto-nativo |
-| `ThreadManager` | `fetchArchived` | método | coberto-nativo |
-| `ThreadManager` | `fetchJoinedPrivateArchived` | método | coberto-nativo |
-| `ThreadManager` | `search` | método | coberto-recurso |
-| `ThreadMember` | `flags` | propriedade | coberto-recurso |
-| `ThreadMember` | `id` | propriedade | coberto-recurso |
-| `ThreadMember` | `joinedAt` | propriedade | coberto-recurso |
-| `ThreadMember` | `muted` | propriedade | coberto-recurso |
-| `ThreadMember` | `muteEndTime` | propriedade | coberto-recurso |
-| `ThreadMember` | `muteWindow` | propriedade | coberto-recurso |
-| `ThreadMember` | `userId` | propriedade | coberto-recurso |
-| `ThreadMemberManager` | `add` | método | coberto-recurso |
-| `ThreadMemberManager` | `fetch` | método | coberto-recurso |
-| `ThreadMemberManager` | `fetchOne` | método | coberto-recurso |
-| `ThreadMemberManager` | `remove` | método | coberto-recurso |
-| `User` | `_patch` | método | só-SDK |
-| `User` | `avatar` | propriedade | coberto-recurso |
-| `User` | `avatarColor` | propriedade | só-SDK |
-| `User` | `avatarURL` | método | coberto-recurso |
-| `User` | `banner` | propriedade | coberto-recurso |
-| `User` | `bannerURL` | método | coberto-recurso |
-| `User` | `bot` | propriedade | coberto-recurso |
-| `User` | `client` | propriedade | coberto-recurso |
-| `User` | `createdAt` | acessor | coberto-recurso |
-| `User` | `createDM` | método | coberto-nativo |
-| `User` | `createdTimestamp` | acessor | coberto-recurso |
-| `User` | `discriminator` | propriedade | só-SDK |
-| `User` | `displayAvatarURL` | método | coberto-recurso |
-| `User` | `flags` | propriedade | coberto-recurso |
-| `User` | `globalName` | propriedade | coberto-recurso |
-| `User` | `id` | propriedade | coberto-recurso |
-| `User` | `send` | método | coberto-recurso |
-| `User` | `system` | propriedade | só-SDK |
-| `User` | `toString` | método | coberto-recurso |
-| `User` | `username` | propriedade | coberto-recurso |
-| `UserFlagsBitField` | `Flags` | propriedade | só-SDK |
-| `UserManager` | `fetch` | método | coberto-recurso |
-| `UserManager` | `fetchWithProfile` | método | coberto-recurso |
-| `UserManager` | `resolve` | método | coberto-recurso |
-| `UserManager` | `sweep` | método | coberto-equivalente |
-| `VoiceChannel` | `applyEditPatch` | método | só-SDK |
-| `VoiceChannel` | `bitrate` | propriedade | só-SDK |
-| `VoiceChannel` | `contentWarningLevel` | propriedade | coberto-recurso |
-| `VoiceChannel` | `contentWarningText` | propriedade | coberto-recurso |
-| `VoiceChannel` | `guildId` | propriedade | coberto-recurso |
-| `VoiceChannel` | `lastMessageId` | propriedade | só-SDK |
-| `VoiceChannel` | `nsfw` | propriedade | coberto-recurso |
-| `VoiceChannel` | `nsfwOverride` | propriedade | só-SDK |
-| `VoiceChannel` | `rateLimitPerUser` | propriedade | coberto-recurso |
-| `VoiceChannel` | `rtcRegion` | propriedade | só-SDK |
-| `VoiceChannel` | `setSlowmode` | método | coberto-recurso |
-| `VoiceChannel` | `topic` | propriedade | coberto-recurso |
-| `VoiceChannel` | `userLimit` | propriedade | só-SDK |
-| `VoiceChannel` | `voiceConnectionLimit` | propriedade | só-SDK |
-| `Webhook` | `avatar` | propriedade | coberto-recurso |
-| `Webhook` | `avatarURL` | método | coberto-recurso |
-| `Webhook` | `channelId` | propriedade | coberto-recurso |
-| `Webhook` | `client` | propriedade | coberto-recurso |
-| `Webhook` | `createdAt` | acessor | coberto-recurso |
-| `Webhook` | `createdTimestamp` | acessor | coberto-recurso |
-| `Webhook` | `delete` | método | coberto-recurso |
-| `Webhook` | `deleteMessage` | método | coberto-nativo |
-| `Webhook` | `edit` | método | coberto-recurso |
-| `Webhook` | `editMessage` | método | coberto-nativo |
-| `Webhook` | `fetch` | método | coberto-recurso |
-| `Webhook` | `fetchMessage` | método | coberto-recurso |
-| `Webhook` | `fromToken` | método | coberto-recurso |
-| `Webhook` | `guildId` | propriedade | coberto-recurso |
-| `Webhook` | `id` | propriedade | coberto-recurso |
-| `Webhook` | `name` | propriedade | coberto-recurso |
-| `Webhook` | `send` | método | coberto-recurso |
-| `Webhook` | `token` | propriedade | coberto-recurso |
-| `Webhook` | `type` | propriedade | coberto-recurso |
-| `Webhook` | `user` | propriedade | coberto-recurso |
+## pure
 
-## Eventos do cliente
+| ID | Tipo | Status | Funções / exclusão | Justificativa |
+|---|---|---|---|---|
+| `@fluxerjs/builders#APIAttachmentPayload` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/builders#AttachmentBuilderOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/builders#AttachmentFileInput` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/builders#AttachmentPayloadOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/builders#EmbedAuthorOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/builders#EmbedFieldData` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/builders#EmbedFooterOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/builders#EmbedMediaOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/builders#MessagePayload.static:ContentMaxLength` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/builders#MessagePayloadCreateOptions` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/builders#MessagePayloadData` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/builders#RESTPostAPIEmbed` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/collection#Collection` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
+| `@fluxerjs/collection#Collection.cache` | accessor | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/collection#Collection.clone` | method | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/collection#Collection.concat` | method | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/collection#Collection.each` | method | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/collection#Collection.every` | method | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/collection#Collection.filter` | method | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/collection#Collection.find` | method | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/collection#Collection.findKey` | method | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/collection#Collection.first` | method | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/collection#Collection.last` | method | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/collection#Collection.map` | method | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/collection#Collection.partition` | method | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/collection#Collection.random` | method | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/collection#Collection.reduce` | method | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/collection#Collection.some` | method | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/collection#Collection.sort` | method | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/collection#Collection.tap` | method | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/collection#Collection.toJSON` | method | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/collection#Collection.toString` | method | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/collection#LimitedCollection` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
+| `@fluxerjs/collection#LimitedCollection.bounded` | accessor | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/collection#LimitedCollection.clone` | method | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/collection#LimitedCollection.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
+| `@fluxerjs/collection#LimitedCollection.maxSize` | property | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/collection#LimitedCollection.onEvict` | property | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/collection#LimitedCollection.set` | method | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/collection#LimitedCollection.sweep` | method | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/collection#LimitedCollectionOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/collection#ReadonlyCollection` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#AddClientRuntimeOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#AllowedMentions` | variable | equivalent | $object, $jsonMerge, $reply | Compor allowedMentions {parse:[], repliedUser:false} ou listas permitidas no payload; autorização valida relaxamento de menções. |
+| `@fluxerjs/core#AllowedMentionsOptions` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#AllowedMentionType` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#APIAllowedMentions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#APIBulkMessageFetchRequest` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#APIBulkMessageFetchResponse` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#APIBulkMessageFetchResponseChannel` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#APIGuildMemberSearchResponse` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#APIInstance` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#APIInstanceEndpoints` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#APIWellKnownFluxer` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#AttachmentUploadCompleteItem` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#AttachmentUploadCompleteResponse` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#AttachmentUploadPlanItem` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#AttachmentUploadPlanResponse` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#AuditLogActionType` | enum | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/core#AuditLogChange` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#AuditLogEntryPayload` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#AuditLogFetchPayload` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#BETA_CLIENT_CLUSTER_WARNING` | variable | excluded | internal | Marcador/aviso do protocolo de supervisão nativa; sem operação de produto. |
+| `@fluxerjs/core#BulkFetchMessagesChannelResult` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#BulkFetchMessagesOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#BulkFetchMessagesRequest` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#BulkFetchMessagesResult` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#CacheSizeLimits` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#CacheStats` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#CDN_URL` | variable | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/core#cdnAvatarURL` | function | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/core#cdnBannerURL` | function | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/core#cdnDefaultAvatarURL` | function | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/core#cdnDisplayAvatarURL` | function | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/core#cdnEmojiURL` | function | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/core#cdnGuildAssetURL` | function | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/core#cdnMemberAvatarURL` | function | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/core#cdnMemberBannerURL` | function | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/core#cdnStickerURL` | function | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/core#CdnUrlOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#ChannelEditOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#ChannelInviteCreateOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#ChannelMemberCountsUpdatePayload` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#ChannelPinsUpdatePayload` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#ChannelRecipientPayload` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#ChannelSlowmodePayload` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#ChannelType` | enum | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/core#ClientClusterEventListener` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#ClientClusterEventMap` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#ClientClusterEventName` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#ClientClusterEvents` | variable | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/core#ClientClusterOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#ClientEventListener` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#ClientEventMethods` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#ClientEventName` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#ClientOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#ClientRuntime` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#ClientRuntimeStatus` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#CollectedReaction` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#ContentWarningLevel` | enum | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/core#createLogger` | function | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/core#DEFAULT_CACHE_LIMITS` | variable | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/core#DEFAULT_INSTANCE_ENDPOINTS` | variable | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/core#DefaultReactionEmojiInput` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#DiscoveryApplicationOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#DiscoveryApplicationPayload` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#DiscoveryOrigin` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#DiscoveryStatusPayload` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#ErrorCodes` | variable | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/core#Events` | variable | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/core#ExpressionCreateOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#ExpressionEditOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#fetchActiveThreads` | function | function | $activeThreads | Lista threads ativas pelo recurso threads.active. |
+| `@fluxerjs/core#FetchArchivedThreadsOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#FetchedThreads` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#FetchedUserWithProfile` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#FetchJoinedArchivedThreadsOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#FetchMessagesOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#FetchPinnedMessagesOptions` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#FetchThreadMembersOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#FluxerError` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
+| `@fluxerjs/core#FluxerError.code` | property | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/core#FluxerError.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
+| `@fluxerjs/core#FluxerError.static:isFluxerError` | method | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/core#FluxerError.toJSON` | method | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/core#FluxerError.toString` | method | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/core#FluxerErrorOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#ForumAvailableTag` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#ForumLayout` | enum | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/core#ForumParentEditOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#ForumParentFields` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#ForumSortOrder` | enum | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/core#ForumTagOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#ForumTagSetting` | enum | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/core#ForumUnreadEntry` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#ForumUnreadsPayload` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#GatewayOpcodes` | enum | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/core#GroupDmEditOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#GuildChannelCreateOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#GuildCountsUpdatePayload` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#GuildEmojisUpdatePayload` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#GuildMemberEditOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#GuildMemberProfileFlags` | variable | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/core#GuildMembersChunkPayload` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#GuildMemberSearchHit` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#GuildMemberSearchOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#GuildMemberSearchPayload` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#GuildNSFWLevel` | enum | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/core#GuildOperations` | variable | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/core#GuildRoleDeletePayload` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#GuildRoleUpdatePayload` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#GuildStickersUpdatePayload` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#INSTANCE_DISCOVERY_PATH` | variable | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/core#instanceDiscoveryUrl` | function | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/core#InviteChannelSnapshot` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#InviteDeletePayload` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#InviteGuildSnapshot` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#InviteType` | enum | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/core#inviteUrl` | function | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/core#LogFields` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#Logger` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#LoggerOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#LogLevel` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#MessageAttachment` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#MessageAttachmentEdit` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#MessageAttachmentFlags` | variable | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/core#MessageCall` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#MessageCollectorEndReason` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#MessageCollectorOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#MessageDeleteBulkPayload` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#MessageEditOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#MessageEmbed` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#MessageEmbedAuthor` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#MessageEmbedField` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#MessageEmbedFooter` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#MessageEmbedMedia` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#MessageFlags` | variable | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/core#MessageFlagsBitField` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
+| `@fluxerjs/core#MessageFlagsBitField.static:Flags` | property | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/core#MessageFlagsBits` | variable | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/core#MessageFlagsResolvable` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#MessageFlagsString` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#MessagePayload.static:ContentMaxLength` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#MessagePrepareInput` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#MessageReactionAddManyEntry` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#MessageReactionAddManyPayload` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#MessageReactionPayload` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#MessageReactionRemoveAllPayload` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#MessageReactionRemoveEmojiPayload` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#MessageReference` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#MessageReferenceType` | enum | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/core#MessageReplyTarget` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#MessageSearchIndexing` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#MessageSearchOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#MessageSearchResponse` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#MessageSearchResults` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#MessageSendOptions` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#MessageSnapshot` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#MessageType` | enum | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/core#normalizeApiOrigin` | function | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/core#normalizeCacheLimit` | function | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/core#OverwriteType` | enum | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/core#parseInstanceDiscovery` | function | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/core#parsePrefixCommand` | function | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/core#parseUserMention` | function | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/core#PartialUserGuildPayload` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#PermissionFlags` | variable | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/core#PermissionOverwriteEditOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#PermissionResolvable` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#PermissionsBitField` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
+| `@fluxerjs/core#PermissionsBitField.any` | method | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/core#PermissionsBitField.has` | method | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/core#PermissionsBitField.missing` | method | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/core#PermissionsBitField.static:Flags` | property | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/core#PermissionString` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#PinnedMessagesPage` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#PresenceActivity` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#PresenceUpdateBulkPayload` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#PresenceUpdateOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#PresenceUpdatePayload` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#ProfilePayload` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#PublicUserFlags` | variable | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/core#ReactionCollectorEndReason` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#ReactionCollectorOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#ReactionEmojiPayload` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#RelationshipType` | enum | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/core#ReplyOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#resolveCacheLimits` | function | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/core#ResolvedCacheLimits` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#ResolvedInstance` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#resolveInstanceEndpoints` | function | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/core#resolveKlipyToImageUrl` | function | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/core#resolvePermissionsToBitfield` | function | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/core#RestartClientRuntimeOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#RoleCreateOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#RoleEditOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#RoleResolvable` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#Routes` | variable | excluded | raw-transport | Rotas REST autenticadas arbitrárias contornariam os ports e guards; usar operações tipadas. |
+| `@fluxerjs/core#RtcRegionPayload` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#serializeError` | function | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/core#SplashCardAlignment` | enum | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/core#StartForumThreadOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#StartThreadFromMessageOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#StartThreadOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#STATIC_CDN_URL` | variable | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/core#StickerCreateOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#StickerEditOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#SudoVerificationOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#SystemChannelFlags` | variable | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/core#TextBasedChannel` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#ThreadAutoArchiveDuration` | enum | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/core#ThreadEditOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#ThreadListSyncPayload` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#ThreadMemberFlags` | variable | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/core#ThreadMemberListEntry` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#ThreadMemberListUpdatePayload` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#ThreadMemberSettingsOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#ThreadMembersUpdatePayload` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#ThreadParentEditOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#ThreadSearchOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#ThreadSearchPage` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#TypingStartPayload` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#UploadFileForSend` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#UserFlagsBitField` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
+| `@fluxerjs/core#UserFlagsBitField.static:Flags` | property | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/core#UserFlagsBits` | variable | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/core#UserFlagsResolvable` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#UserFlagsString` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#VanityURLPayload` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#WebhookEditOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#WebhookMessageEditOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#WebhookSendOptions` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#WebhooksUpdatePayload` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/rest#FluxerAPIError` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
+| `@fluxerjs/rest#FluxerAPIError.code` | property | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/rest#FluxerAPIError.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
+| `@fluxerjs/rest#FluxerAPIError.errors` | property | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/rest#FluxerAPIError.isRetryable` | accessor | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/rest#FluxerAPIError.method` | property | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/rest#FluxerAPIError.path` | property | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/rest#FluxerAPIError.rawBody` | property | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/rest#FluxerAPIError.statusCode` | property | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/rest#HTTPError` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
+| `@fluxerjs/rest#HTTPError.body` | property | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/rest#HTTPError.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
+| `@fluxerjs/rest#HTTPError.isRetryable` | accessor | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/rest#HTTPError.method` | property | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/rest#HTTPError.path` | property | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/rest#HTTPError.statusCode` | property | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/rest#RateLimitError` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
+| `@fluxerjs/rest#RateLimitError.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
+| `@fluxerjs/rest#RateLimitError.global` | property | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/rest#RateLimitError.retryAfter` | property | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/types#AllowedMentionType` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIAllowedMentions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIApplicationMe` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIBan` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIBulkMessageFetchRequest` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIBulkMessageFetchRequestItem` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIBulkMessageFetchResponse` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIBulkMessageFetchResponseChannel` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIChannel` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIChannelOverwrite` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIChannelPartial` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIChannelPinItem` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIChannelPinsPage` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIChannelSlowmodeState` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIConnectedAccount` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIDefaultReactionEmoji` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIDiscoveryApplication` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIDiscoveryStatus` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIEmbed` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIEmbedAuthor` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIEmbedChild` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIEmbedField` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIEmbedFooter` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIEmbedMedia` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIEmoji` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIEmojiMetadata` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIEmojiWithUser` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIErrorBody` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIErrorCode` | enum | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/types#APIForumTag` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIForumTagUpdate` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIForumThreadMessageRequest` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIGatewayBotResponse` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIGroupDmInvite` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIGroupDmInviteMetadata` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIGuild` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIGuildAuditLog` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIGuildAuditLogEntry` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIGuildEmojiBulkCreateResponse` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIGuildFeatureToggle` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIGuildInvite` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIGuildInviteMetadata` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIGuildMember` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIGuildMemberSearchRequest` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIGuildMemberSearchResponse` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIGuildMemberSearchResult` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIGuildPartial` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIGuildStickerBulkCreateResponse` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIInstance` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIInstanceAgePolicy` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIInstanceAgePolicyGeo` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIInstanceAppPublic` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIInstanceCaptcha` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIInstanceCommunity` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIInstanceDomainMigration` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIInstanceEndpoints` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIInstanceFeatures` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIInstanceGif` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIInstanceLimitRule` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIInstanceLimits` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIInstancePush` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIInstanceRegistration` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIInstanceServices` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIInstanceSso` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIInvite` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIInviteMetadata` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIInviteResponse` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIMessage` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIMessageAttachment` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIMessageCall` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIMessageReaction` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIMessageReference` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIMessageSearchIndexing` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIMessageSearchRequest` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIMessageSearchResponse` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIMessageSearchResults` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIMessageSnapshot` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIMessageSticker` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIOAuthApplication` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIPreloadMessagesResponse` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIProfileResponse` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIReactionEmoji` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIRole` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIRtcRegion` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APISearchIndexNotReady` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIStartForumThreadRequest` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIStartThreadFromMessageRequest` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIStartThreadRequest` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APISticker` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIStickerMetadata` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIStickerWithUser` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APISudoVerification` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIThreadMember` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIThreadMemberMuteConfig` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIThreadMemberSettingsRequest` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIThreadMetadata` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIThreadSearchResponse` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIThreadsListing` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIUser` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIUserConnection` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIUserConnectionsUpdate` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIUserPartial` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIUserProfile` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIUserTagCheck` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIVanityURL` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIVoiceState` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIVoiceStateStub` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIWebAuthnCredential` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIWebhook` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIWebhookEditMessageRequest` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIWebhookTokenUpdateRequest` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIWebhookUpdateRequest` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#APIWellKnownFluxer` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#AuditLogActionType` | enum | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/types#ChannelCreateRequest` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#ChannelInviteCreateRequest` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#ChannelType` | enum | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/types#ContentWarningLevel` | enum | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/types#DefaultMessageNotifications` | enum | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/types#EmbedMediaFlags` | variable | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/types#EmbedType` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#FLUXER_EPOCH` | variable | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/types#ForumLayout` | enum | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/types#ForumSortOrder` | enum | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/types#ForumTagSetting` | enum | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/types#GatewayAuthSessionChangeDispatchData` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewayCallCreateDispatchData` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewayCallDeleteDispatchData` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewayCallUpdateDispatchData` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewayChannelCreateDispatchData` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewayChannelDeleteDispatchData` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewayChannelMemberCountEntry` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewayChannelMemberCountsUpdateDispatchData` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewayChannelPinsAckDispatchData` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewayChannelPinsUpdateDispatchData` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewayChannelRecipientAddDispatchData` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewayChannelRecipientRemoveDispatchData` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewayChannelUpdateBulkDispatchData` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewayChannelUpdateDispatchData` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewayCustomStatus` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewayDispatchEventName` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewayDispatchEvents` | variable | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/types#GatewayEntranceSoundPlayDispatchData` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewayErrorCode` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewayErrorCodes` | variable | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/types#GatewayFavoriteMemeCreateDispatchData` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewayFavoriteMemeDeleteDispatchData` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewayFavoriteMemePayload` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewayFavoriteMemeUpdateDispatchData` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewayForumUnreadEntry` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewayForumUnreadsDispatchData` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewayGuildAuditLogEntryCreateDispatchData` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewayGuildBanAddDispatchData` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewayGuildBanRemoveDispatchData` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewayGuildCountEntry` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewayGuildCountsUpdateDispatchData` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewayGuildCreateDispatchData` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewayGuildDeleteDispatchData` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewayGuildEmojisUpdateDispatchData` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewayGuildMemberAddDispatchData` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewayGuildMemberListItem` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewayGuildMemberListUpdateDispatchData` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewayGuildMemberRemoveDispatchData` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewayGuildMembersChunkDispatchData` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewayGuildMemberUpdateDispatchData` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewayGuildRoleCreateDispatchData` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewayGuildRoleDeleteDispatchData` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewayGuildRoleUpdateBulkDispatchData` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewayGuildRoleUpdateDispatchData` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewayGuildSnapshot` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewayGuildStickersUpdateDispatchData` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewayGuildSyncDispatchData` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewayGuildUpdateDispatchData` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewayHelloData` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewayIdentifyData` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewayIdentifyFlags` | variable | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/types#GatewayInviteCreateDispatchData` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewayInviteDeleteDispatchData` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewayLazyRequestData` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewayLazyRequestSubscription` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewayMessageAckDispatchData` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewayMessageCreateDispatchData` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewayMessageDeleteBulkDispatchData` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewayMessageDeleteDispatchData` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewayMessageReactionAddDispatchData` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewayMessageReactionAddManyDispatchData` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewayMessageReactionAddManyEntry` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewayMessageReactionRemoveAllDispatchData` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewayMessageReactionRemoveDispatchData` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewayMessageReactionRemoveEmojiDispatchData` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewayMessageUpdateDispatchData` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewayOpcodes` | enum | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/types#GatewayPassiveUpdatesDispatchData` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewayPresenceUpdateBulkDispatchData` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewayPresenceUpdateData` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewayPresenceUpdateDispatchData` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewayReactionEmoji` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewayReactionMemberSnapshot` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewayReadyDispatchData` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewayReceivePayload` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewayRecentMentionDeleteDispatchData` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewayRelationshipAddDispatchData` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewayRelationshipRemoveDispatchData` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewayRelationshipUpdateDispatchData` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewayRequestChannelMemberCountsData` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewayRequestForumUnreadsData` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewayRequestForumUnreadsThread` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewayRequestGuildCountsData` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewayRequestGuildMembersData` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewayResumeData` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewayResumedDispatchData` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewaySavedMessageCreateDispatchData` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewaySavedMessageDeleteDispatchData` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewaySendPayload` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewaySession` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewaySessionsReplaceDispatchData` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewayThreadCreateDispatchData` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewayThreadDeleteDispatchData` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewayThreadListSyncDispatchData` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewayThreadMemberListEntry` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewayThreadMemberListUpdateDispatchData` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewayThreadMembersUpdateDispatchData` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewayThreadMemberUpdateDispatchData` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewayThreadUpdateDispatchData` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewayTypingStartDispatchData` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewayUnavailableGuild` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewayUserConnectionsUpdateDispatchData` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewayUserGuildSettingsUpdateDispatchData` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewayUserNoteUpdateDispatchData` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewayUserPinnedDmsUpdateDispatchData` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewayUserSettingsUpdateDispatchData` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewayUserUpdateDispatchData` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewayVoiceServerUpdateDispatchData` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewayVoiceStateAckDispatchData` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewayVoiceStatesSyncData` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewayVoiceStateUpdateData` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewayVoiceStateUpdateDispatchData` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewayWebAuthnCredentialsUpdateDispatchData` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GatewayWebhooksUpdateDispatchData` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GuildAnnouncementChannelCreateRequest` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GuildCategoryChannelCreateRequest` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GuildExplicitContentFilter` | enum | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/types#GuildFeature` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GuildForumChannelCreateRequest` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GuildLinkChannelCreateRequest` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GuildMediaChannelCreateRequest` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GuildMemberProfileFlags` | variable | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/types#GuildMemberProfileFlagsValue` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GuildMFALevel` | enum | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/types#GuildNSFWLevel` | enum | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/types#GuildOperations` | variable | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/types#GuildOperationsValue` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GuildTextChannelCreateRequest` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#GuildVerificationLevel` | enum | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/types#GuildVoiceChannelCreateRequest` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#InviteType` | enum | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/types#isGroupDmInvite` | function | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/types#isGuildInvite` | function | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/types#isUploadedAttachment` | function | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/types#MessageAttachmentFlags` | variable | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/types#MessageFlags` | variable | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/types#MessageFlagsValue` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#MessageReferenceType` | enum | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/types#MessageSearchScope` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#MessageType` | enum | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/types#OverwriteType` | enum | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/types#PublicUserFlags` | variable | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/types#PublicUserFlagsValue` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#RateLimitErrorBody` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#RelationshipType` | enum | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/types#RESTCreateRoleBody` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#RESTPatchAPIGuildDiscoveryJSONBody` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#RESTPatchAPIGuildEmojiJSONBody` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#RESTPatchAPIGuildStickerJSONBody` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#RESTPostAPIChannelAttachmentCompleteItem` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#RESTPostAPIChannelAttachmentCompleteRequest` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#RESTPostAPIChannelAttachmentCompleteResponse` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#RESTPostAPIChannelAttachmentCompleteResult` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#RESTPostAPIChannelAttachmentUploadItem` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#RESTPostAPIChannelAttachmentUploadMultipart` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#RESTPostAPIChannelAttachmentUploadMultipartPart` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#RESTPostAPIChannelAttachmentUploadRequest` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#RESTPostAPIChannelAttachmentUploadResponse` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#RESTPostAPIChannelAttachmentUploadResponseItem` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#RESTPostAPIChannelAttachmentUploadSinglepart` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#RESTPostAPIEmbed` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#RESTPostAPIEmbedAuthor` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#RESTPostAPIEmbedFooter` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#RESTPostAPIEmbedMedia` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#RESTPostAPIGuildDiscoveryJSONBody` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#RESTPostAPIGuildEmojiJSONBody` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#RESTPostAPIGuildStickerJSONBody` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#RESTPostAPIMessageAttachment` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#RESTPostAPIMessageAttachmentMeta` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#RESTPostAPIMessageUploadedAttachment` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#RESTPostAPIPreloadMessagesJSONBody` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#RESTUpdateRoleBody` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#Routes` | variable | excluded | raw-transport | Rotas REST autenticadas arbitrárias contornariam os ports e guards; usar operações tipadas. |
+| `@fluxerjs/types#Snowflake` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#SplashCardAlignment` | enum | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/types#SystemChannelFlags` | variable | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/types#SystemChannelFlagsValue` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#ThreadAutoArchiveDuration` | enum | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/types#ThreadChannelType` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#ThreadMemberFlags` | variable | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/types#ThreadSearchSortBy` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#ThreadSearchSortOrder` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/types#WebhookType` | enum | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/util#ALL_PERMISSIONS_BIGINT` | variable | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/util#asRecord` | function | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/util#BitField` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
+| `@fluxerjs/util#BitField.[Symbol.iterator]` | method | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
+| `@fluxerjs/util#BitField.[Symbol.toStringTag]` | accessor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
+| `@fluxerjs/util#BitField.add` | method | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/util#BitField.any` | method | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/util#BitField.bitfield` | property | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/util#BitField.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
+| `@fluxerjs/util#BitField.equals` | method | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/util#BitField.freeze` | method | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/util#BitField.has` | method | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/util#BitField.missing` | method | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/util#BitField.remove` | method | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/util#BitField.serialize` | method | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/util#BitField.static:DefaultBit` | property | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/util#BitField.static:Flags` | property | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/util#BitField.static:resolve` | method | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/util#BitField.toArray` | method | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/util#BitField.toJSON` | method | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/util#BitField.toString` | method | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/util#BitField.valueOf` | method | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/util#BitFieldResolvable` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/util#createLogger` | function | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/util#DeconstructedSnowflake` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/util#ErrorCode` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/util#ErrorCodes` | variable | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/util#escapeMarkdown` | function | equivalent | $escapeMarkdown | Escape de Markdown com builtin limitado. |
+| `@fluxerjs/util#FLUXER_EPOCH` | variable | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/util#FluxerError` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
+| `@fluxerjs/util#FluxerError.code` | property | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/util#FluxerError.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
+| `@fluxerjs/util#FluxerError.static:isFluxerError` | method | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/util#FluxerError.toJSON` | method | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/util#FluxerError.toString` | method | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/util#FluxerErrorOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/util#formatColor` | function | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/util#formatEmoji` | function | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/util#formatTimestamp` | function | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/util#getUnicodeFromShortcode` | function | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/util#isRecord` | function | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/util#KlipyMediaResult` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/util#LogFields` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/util#Logger` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/util#LoggerOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/util#LoggerSink` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/util#LogLevel` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/util#MessageFlagsBitField` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
+| `@fluxerjs/util#MessageFlagsBitField.static:Flags` | property | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/util#MessageFlagsBits` | variable | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/util#MessageFlagsResolvable` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/util#MessageFlagsString` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/util#num` | function | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/util#ParsedEmoji` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/util#ParsedPrefixCommand` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/util#parseEmoji` | function | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/util#parsePrefixCommand` | function | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/util#parseRoleMention` | function | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/util#parseUserMention` | function | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/util#PermissionFlags` | variable | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/util#PermissionResolvable` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/util#PermissionsBitField` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
+| `@fluxerjs/util#PermissionsBitField.any` | method | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/util#PermissionsBitField.has` | method | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/util#PermissionsBitField.missing` | method | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/util#PermissionsBitField.static:Flags` | property | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/util#PermissionString` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/util#resolveColor` | function | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/util#resolveKlipyToImageUrl` | function | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/util#resolvePermissionsToBitfield` | function | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/util#serializeError` | function | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/util#SnowflakeUtil` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
+| `@fluxerjs/util#SnowflakeUtil.static:dateFromSnowflake` | method | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/util#SnowflakeUtil.static:deconstruct` | method | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/util#SnowflakeUtil.static:EPOCH` | property | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/util#SnowflakeUtil.static:isValid` | method | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/util#SnowflakeUtil.static:parse` | method | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/util#SnowflakeUtil.static:snowflakeFromTimestamp` | method | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/util#SnowflakeUtil.static:timestampFromSnowflake` | method | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/util#str` | function | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/util#TimestampStyle` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/util#truncate` | function | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/util#UserFlagsBitField` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
+| `@fluxerjs/util#UserFlagsBitField.static:Flags` | property | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/util#UserFlagsBits` | variable | pending |  | Helper/constante seguro: falta contrato de função limitada, sem objetos JS do SDK. |
+| `@fluxerjs/util#UserFlagsResolvable` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/util#UserFlagsString` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 
-Comparação entre `ClientEvents` do SDK e `scriptEventNames` do function mode. Todo evento do SDK pode ser recebido nativamente por `bot.on`/`bot.once`/`bot.event`/`bot.client.on` — a coluna Status marca só a cobertura do function mode.
+## resources
 
-| Evento | Function mode | Status |
-|---|---|---|
-| `channelCreate` | não | coberto-nativo |
-| `channelDelete` | não | coberto-nativo |
-| `channelMemberCountsUpdate` | não | coberto-nativo |
-| `channelPinsUpdate` | não | coberto-nativo |
-| `channelRecipientAdd` | não | coberto-nativo |
-| `channelRecipientRemove` | não | coberto-nativo |
-| `channelUpdate` | não | coberto-nativo |
-| `debug` | não | coberto-nativo |
-| `entranceSoundPlay` | não | coberto-nativo |
-| `error` | não | coberto-nativo |
-| `forumUnreads` | não | coberto-nativo |
-| `guildAuditLogEntryCreate` | não | coberto-nativo |
-| `guildAvailable` | não | coberto-nativo |
-| `guildBanAdd` | não | coberto-nativo |
-| `guildBanRemove` | não | coberto-nativo |
-| `guildCountsUpdate` | não | coberto-nativo |
-| `guildCreate` | não | coberto-nativo |
-| `guildDelete` | não | coberto-nativo |
-| `guildEmojisUpdate` | não | coberto-nativo |
-| `guildMemberAdd` | sim | coberto-recurso |
-| `guildMemberRemove` | sim | coberto-recurso |
-| `guildMemberUpdate` | não | coberto-nativo |
-| `guildMembersChunk` | não | coberto-nativo |
-| `guildRoleCreate` | não | coberto-nativo |
-| `guildRoleDelete` | não | coberto-nativo |
-| `guildRoleUpdate` | não | coberto-nativo |
-| `guildStickersUpdate` | não | coberto-nativo |
-| `guildUnavailable` | não | coberto-nativo |
-| `guildUpdate` | não | coberto-nativo |
-| `inviteCreate` | não | coberto-nativo |
-| `inviteDelete` | não | coberto-nativo |
-| `messageCreate` | não | coberto-nativo |
-| `messageDelete` | sim | coberto-recurso |
-| `messageDeleteBulk` | não | coberto-nativo |
-| `messageReactionAdd` | sim | coberto-recurso |
-| `messageReactionAddMany` | não | coberto-nativo |
-| `messageReactionRemove` | sim | coberto-recurso |
-| `messageReactionRemoveAll` | não | coberto-nativo |
-| `messageReactionRemoveEmoji` | não | coberto-nativo |
-| `messageUpdate` | sim | coberto-recurso |
-| `presenceUpdate` | não | coberto-nativo |
-| `presenceUpdateBulk` | não | coberto-nativo |
-| `ready` | não | coberto-nativo |
-| `resumed` | não | coberto-nativo |
-| `shardDisconnect` | não | coberto-nativo |
-| `shardError` | não | coberto-nativo |
-| `shardReady` | não | coberto-nativo |
-| `shardReconnecting` | não | coberto-nativo |
-| `shardResumed` | não | coberto-nativo |
-| `shardingRequired` | não | coberto-nativo |
-| `threadCreate` | não | coberto-nativo |
-| `threadDelete` | não | coberto-nativo |
-| `threadListSync` | não | coberto-nativo |
-| `threadMemberListUpdate` | não | coberto-nativo |
-| `threadMemberUpdate` | não | coberto-nativo |
-| `threadMembersUpdate` | não | coberto-nativo |
-| `threadUpdate` | não | coberto-nativo |
-| `typingStart` | não | coberto-nativo |
-| `userConnectionsUpdate` | não | coberto-nativo |
-| `userUpdate` | não | coberto-nativo |
-| `voiceServerUpdate` | não | coberto-nativo |
-| `voiceStateAck` | não | coberto-nativo |
-| `voiceStateUpdate` | não | coberto-nativo |
-| `voiceStatesSync` | não | coberto-nativo |
-| `webauthnCredentialsUpdate` | não | coberto-nativo |
-| `webhooksUpdate` | não | coberto-nativo |
+| ID | Tipo | Status | Funções / exclusão | Justificativa |
+|---|---|---|---|---|
+| `@fluxerjs/core#CacheController` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
+| `@fluxerjs/core#CacheController.cascadeChannel` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/core#CacheController.cascadeGuild` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/core#CacheController.cascading` | accessor | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/core#CacheController.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
+| `@fluxerjs/core#CacheController.limits` | property | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/core#CacheController.stats` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/core#CacheController.sweepChannels` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/core#CacheController.sweepGuilds` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/core#CacheController.sweepMembers` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/core#CacheController.sweepMessages` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/core#CacheController.sweepUsers` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/core#Channel.awaitMessages` | method | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Channel.createMessageCollector` | method | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Channel.fetchRtcRegions` | method | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Channel.fetchSlowmode` | method | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Channel.sendTyping` | method | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#ChannelManager.delete` | method | pending |  | Remove só do cache; deleteChannel apagaria via API e não é equivalente. Falta wrapper de cache. |
+| `@fluxerjs/core#Client` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
+| `@fluxerjs/core#Client._addMessageToCache` | method | excluded | internal | Helper interno, backing state ou patch de sessão; usar a operação pública autorizada. |
+| `@fluxerjs/core#Client._clearMessageCache` | method | excluded | internal | Helper interno, backing state ou patch de sessão; usar a operação pública autorizada. |
+| `@fluxerjs/core#Client._deferredGatewayDispatches` | property | excluded | internal | Helper interno, backing state ou patch de sessão; usar a operação pública autorizada. |
+| `@fluxerjs/core#Client._finalizeReady` | method | excluded | internal | Helper interno, backing state ou patch de sessão; usar a operação pública autorizada. |
+| `@fluxerjs/core#Client._getMessageCache` | method | excluded | internal | Helper interno, backing state ou patch de sessão; usar a operação pública autorizada. |
+| `@fluxerjs/core#Client._guildStreamSettleTimeout` | property | excluded | internal | Helper interno, backing state ou patch de sessão; usar a operação pública autorizada. |
+| `@fluxerjs/core#Client._messageCacheStats` | method | excluded | internal | Helper interno, backing state ou patch de sessão; usar a operação pública autorizada. |
+| `@fluxerjs/core#Client._onGuildReceived` | method | excluded | internal | Helper interno, backing state ou patch de sessão; usar a operação pública autorizada. |
+| `@fluxerjs/core#Client._pendingGuildIds` | property | excluded | internal | Helper interno, backing state ou patch de sessão; usar a operação pública autorizada. |
+| `@fluxerjs/core#Client._readyStubGuildIds` | property | excluded | internal | Helper interno, backing state ou patch de sessão; usar a operação pública autorizada. |
+| `@fluxerjs/core#Client._removeMessageFromCache` | method | excluded | internal | Helper interno, backing state ou patch de sessão; usar a operação pública autorizada. |
+| `@fluxerjs/core#Client._sendToAllShards` | method | excluded | internal | Helper interno, backing state ou patch de sessão; usar a operação pública autorizada. |
+| `@fluxerjs/core#Client._ws` | property | excluded | internal | Helper interno, backing state ou patch de sessão; usar a operação pública autorizada. |
+| `@fluxerjs/core#Client.assertReady` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/core#Client.bulkFetchMessages` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/core#Client.cache` | property | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/core#Client.channels` | property | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/core#Client.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
+| `@fluxerjs/core#Client.destroy` | method | excluded | lifecycle | Ciclo de vida, emissão ou coordenação de processos é controlado pela configuração nativa, não por scripts. |
+| `@fluxerjs/core#Client.emit` | method | excluded | lifecycle | Ciclo de vida, emissão ou coordenação de processos é controlado pela configuração nativa, não por scripts. |
+| `@fluxerjs/core#Client.events` | property | excluded | raw-transport | Objeto/transporte cru ou introspecção arbitrária pode contornar guards ou revelar estado da sessão. |
+| `@fluxerjs/core#Client.fetchApplication` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/core#Client.fetchEmojiMetadata` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/core#Client.fetchGatewayInfo` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/core#Client.fetchInstance` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/core#Client.fetchOAuthApplications` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/core#Client.fetchStickerMetadata` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/core#Client.getOrCreateUser` | method | excluded | internal | Helper interno, backing state ou patch de sessão; usar a operação pública autorizada. |
+| `@fluxerjs/core#Client.guilds` | property | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/core#Client.instance` | property | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/core#Client.isReady` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/core#Client.logger` | property | excluded | raw-transport | Objeto/transporte cru ou introspecção arbitrária pode contornar guards ou revelar estado da sessão. |
+| `@fluxerjs/core#Client.login` | method | excluded | lifecycle | Ciclo de vida, emissão ou coordenação de processos é controlado pela configuração nativa, não por scripts. |
+| `@fluxerjs/core#Client.off` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/core#Client.on` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/core#Client.once` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/core#Client.options` | property | excluded | credentials | Configuração do client pode conter token e estado de autenticação; não expor ao script. |
+| `@fluxerjs/core#Client.preloadMessages` | method | function | $preloadMessages | Operação por builtin e recurso/serviço compartilhado; ver contrato de argumentos na referência. |
+| `@fluxerjs/core#Client.preloadMessagesAlt` | method | excluded | internal | Helper interno, backing state ou patch de sessão; usar a operação pública autorizada. |
+| `@fluxerjs/core#Client.readyAt` | property | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/core#Client.requestChannelMemberCounts` | method | function | $channelCounts | Operação por builtin e recurso/serviço compartilhado; ver contrato de argumentos na referência. |
+| `@fluxerjs/core#Client.requestForumUnreads` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/core#Client.requestGuildCounts` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/core#Client.requestGuildMembers` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/core#Client.resolveEmoji` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/core#Client.rest` | property | excluded | raw-transport | Referência ao client/transporte SDK não é valor de script; usar recursos autorizados. |
+| `@fluxerjs/core#Client.searchMessages` | method | equivalent | $searchMessagesAdvanced | Acesso por builtin ao recurso autorizado correspondente; resolve/fetch usa busca normalizada, não instância SDK. |
+| `@fluxerjs/core#Client.sendToGateway` | method | excluded | raw-transport | Objeto/transporte cru ou introspecção arbitrária pode contornar guards ou revelar estado da sessão. |
+| `@fluxerjs/core#Client.static:fromDiscovery` | method | excluded | internal | Fábrica de instâncias/configuração nativa; script usa operações e valores normalizados. |
+| `@fluxerjs/core#Client.static:Routes` | accessor | excluded | raw-transport | Rotas REST autenticadas arbitrárias contornariam os ports e guards; usar operações tipadas. |
+| `@fluxerjs/core#Client.subscribeThreads` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/core#Client.sweepMembers` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/core#Client.sweepMessages` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/core#Client.uptime` | accessor | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/core#Client.user` | property | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/core#Client.users` | property | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/core#Client.ws` | accessor | excluded | raw-transport | Referência ao client/transporte SDK não é valor de script; usar recursos autorizados. |
+| `@fluxerjs/core#ClientCluster` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
+| `@fluxerjs/core#ClientCluster.add` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/core#ClientCluster.addAll` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/core#ClientCluster.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
+| `@fluxerjs/core#ClientCluster.destroy` | method | excluded | lifecycle | Ciclo de vida, emissão ou coordenação de processos é controlado pela configuração nativa, não por scripts. |
+| `@fluxerjs/core#ClientCluster.emit` | method | excluded | lifecycle | Ciclo de vida, emissão ou coordenação de processos é controlado pela configuração nativa, não por scripts. |
+| `@fluxerjs/core#ClientCluster.get` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/core#ClientCluster.has` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/core#ClientCluster.off` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/core#ClientCluster.on` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/core#ClientCluster.once` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/core#ClientCluster.remove` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/core#ClientCluster.restart` | method | excluded | lifecycle | Ciclo de vida, emissão ou coordenação de processos é controlado pela configuração nativa, não por scripts. |
+| `@fluxerjs/core#ClientCluster.runtimeValues` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/core#ClientCluster.size` | accessor | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/core#ClientCluster.values` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/core#ClientUser` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
+| `@fluxerjs/core#ClientUser.bulkDeleteMyMessagesInGuild` | method | excluded | credentials | Operação de conta autenticada com verificação sudo; segredos sudo não entram em scripts. |
+| `@fluxerjs/core#ClientUser.client` | property | excluded | raw-transport | Referência ao client/transporte SDK não é valor de script; usar recursos autorizados. |
+| `@fluxerjs/core#ClientUser.fetch` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/core#ClientUser.fetchGuilds` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/core#ClientUser.leaveGuild` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/core#ClientUser.setPresence` | method | function | $setPresence | Operação por builtin e recurso/serviço compartilhado; ver contrato de argumentos na referência. |
+| `@fluxerjs/core#Message.awaitReactions` | method | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Message.createReactionCollector` | method | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#MessageCollector` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
+| `@fluxerjs/core#MessageCollector.channelId` | property | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/core#MessageCollector.client` | property | excluded | raw-transport | Referência ao client/transporte SDK não é valor de script; usar recursos autorizados. |
+| `@fluxerjs/core#MessageCollector.collected` | property | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/core#MessageCollector.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
+| `@fluxerjs/core#MessageCollector.emit` | method | excluded | lifecycle | Ciclo de vida, emissão ou coordenação de processos é controlado pela configuração nativa, não por scripts. |
+| `@fluxerjs/core#MessageCollector.on` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/core#MessageCollector.options` | property | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/core#MessageCollector.static:awaitMessages` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/core#MessageCollector.stop` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/core#MessageManager.get` | method | pending |  | Consulta apenas cache e pode retornar undefined; fetchMessage faz rede e não preserva essa semântica. |
+| `@fluxerjs/core#ReactionCollector` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
+| `@fluxerjs/core#ReactionCollector.channelId` | property | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/core#ReactionCollector.client` | property | excluded | raw-transport | Referência ao client/transporte SDK não é valor de script; usar recursos autorizados. |
+| `@fluxerjs/core#ReactionCollector.collected` | property | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/core#ReactionCollector.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
+| `@fluxerjs/core#ReactionCollector.emit` | method | excluded | lifecycle | Ciclo de vida, emissão ou coordenação de processos é controlado pela configuração nativa, não por scripts. |
+| `@fluxerjs/core#ReactionCollector.messageId` | property | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/core#ReactionCollector.on` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/core#ReactionCollector.options` | property | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/core#ReactionCollector.static:awaitReactions` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/core#ReactionCollector.stop` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/core#Webhook.deleteMessage` | method | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Webhook.editMessage` | method | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Webhook.fetchMessage` | method | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/rest#AttachmentData` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/rest#AttachmentPayload` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/rest#buildFormData` | function | excluded | raw-transport | Helper de transporte HTTP cru; usar operações tipadas e políticas de anexos/HTTP. |
+| `@fluxerjs/rest#closeSharedFetch` | function | excluded | lifecycle | Ciclo de vida, emissão ou coordenação de processos é controlado pela configuração nativa, não por scripts. |
+| `@fluxerjs/rest#DEFAULT_API` | variable | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/rest#DEFAULT_LOCALE` | variable | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/rest#DEFAULT_USER_AGENT` | variable | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/rest#DEFAULT_VERSION` | variable | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/rest#RateLimitManager` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
+| `@fluxerjs/rest#RateLimitManager.getBucket` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/rest#RateLimitManager.getGlobalReset` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/rest#RateLimitManager.getWaitTime` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/rest#RateLimitManager.prune` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/rest#RateLimitManager.setBucket` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/rest#RateLimitManager.setGlobalReset` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/rest#RateLimitManager.size` | accessor | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/rest#RateLimitManager.updateFromHeaders` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/rest#RateLimitState` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/rest#RequestManager` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
+| `@fluxerjs/rest#RequestManager.baseUrl` | accessor | excluded | raw-transport | Requisição autenticada genérica contorna guards; scripts usam ports de operações autorizadas. |
+| `@fluxerjs/rest#RequestManager.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
+| `@fluxerjs/rest#RequestManager.getToken` | method | excluded | credentials | Credenciais, segredo ou sessão autenticada não são expostos a scripts. |
+| `@fluxerjs/rest#RequestManager.request` | method | excluded | raw-transport | Requisição autenticada genérica contorna guards; scripts usam ports de operações autorizadas. |
+| `@fluxerjs/rest#RequestManager.setToken` | method | excluded | credentials | Credenciais, segredo ou sessão autenticada não são expostos a scripts. |
+| `@fluxerjs/rest#RequestOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/rest#REST` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
+| `@fluxerjs/rest#REST.baseUrl` | accessor | excluded | raw-transport | Requisição autenticada genérica contorna guards; scripts usam ports de operações autorizadas. |
+| `@fluxerjs/rest#REST.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
+| `@fluxerjs/rest#REST.delete` | method | excluded | raw-transport | Requisição autenticada genérica contorna guards; scripts usam ports de operações autorizadas. |
+| `@fluxerjs/rest#REST.get` | method | excluded | raw-transport | Requisição autenticada genérica contorna guards; scripts usam ports de operações autorizadas. |
+| `@fluxerjs/rest#REST.patch` | method | excluded | raw-transport | Requisição autenticada genérica contorna guards; scripts usam ports de operações autorizadas. |
+| `@fluxerjs/rest#REST.post` | method | excluded | raw-transport | Requisição autenticada genérica contorna guards; scripts usam ports de operações autorizadas. |
+| `@fluxerjs/rest#REST.put` | method | excluded | raw-transport | Requisição autenticada genérica contorna guards; scripts usam ports de operações autorizadas. |
+| `@fluxerjs/rest#REST.setToken` | method | excluded | credentials | Credenciais, segredo ou sessão autenticada não são expostos a scripts. |
+| `@fluxerjs/rest#REST.static:Routes` | accessor | excluded | raw-transport | Rotas REST autenticadas arbitrárias contornariam os ports e guards; usar operações tipadas. |
+| `@fluxerjs/rest#REST.token` | accessor | excluded | credentials | Credenciais, segredo ou sessão autenticada não são expostos a scripts. |
+| `@fluxerjs/rest#RestOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/rest#RESTOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/rest#RetryPolicy` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/rest#RetryPolicyContext` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/rest#Routes` | variable | excluded | raw-transport | Rotas REST autenticadas arbitrárias contornariam os ports e guards; usar operações tipadas. |
+| `@fluxerjs/rest#sharedFetch` | function | excluded | raw-transport | Helper de transporte HTTP cru; usar operações tipadas e políticas de anexos/HTTP. |
+| `@fluxerjs/sharding#attachShardClientUtil` | function | excluded | lifecycle | Ciclo de vida, emissão ou coordenação de processos é controlado pela configuração nativa, não por scripts. |
+| `@fluxerjs/sharding#BETA_SHARDING_WARNING` | variable | excluded | internal | Marcador/aviso do protocolo de supervisão nativa; sem operação de produto. |
+| `@fluxerjs/sharding#ClusterManagerOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/sharding#createEnvelope` | function | excluded | internal | Envelope/nonce do IPC pertence ao supervisor, não à linguagem. |
+| `@fluxerjs/sharding#IBroker` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/sharding#IClusterCoordinator` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/sharding#IPC_MARKER` | variable | excluded | internal | Marcador/aviso do protocolo de supervisão nativa; sem operação de produto. |
+| `@fluxerjs/sharding#IpcEnvelope` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/sharding#IpcOp` | enum | excluded | internal | Marcador/aviso do protocolo de supervisão nativa; sem operação de produto. |
+| `@fluxerjs/sharding#isIpcEnvelope` | function | excluded | internal | Envelope/nonce do IPC pertence ao supervisor, não à linguagem. |
+| `@fluxerjs/sharding#nextNonce` | function | excluded | internal | Envelope/nonce do IPC pertence ao supervisor, não à linguagem. |
+| `@fluxerjs/sharding#ParentIdentifyThrottler` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
+| `@fluxerjs/sharding#ParentIdentifyThrottler.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
+| `@fluxerjs/sharding#ParentIdentifyThrottler.waitForIdentify` | method | excluded | lifecycle | Ciclo de vida, emissão ou coordenação de processos é controlado pela configuração nativa, não por scripts. |
+| `@fluxerjs/sharding#ReshardPlan` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/sharding#ShardClientUtil` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
+| `@fluxerjs/sharding#ShardClientUtil.broadcastEval` | method | excluded | eval | Executa JavaScript arbitrário; viola a linguagem sem eval. |
+| `@fluxerjs/sharding#ShardClientUtil.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
+| `@fluxerjs/sharding#ShardClientUtil.count` | property | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/sharding#ShardClientUtil.fetchClientValues` | method | excluded | raw-transport | Objeto/transporte cru ou introspecção arbitrária pode contornar guards ou revelar estado da sessão. |
+| `@fluxerjs/sharding#ShardClientUtil.id` | accessor | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/sharding#ShardClientUtil.ids` | property | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/sharding#ShardClientUtil.notifyReady` | method | excluded | lifecycle | Ciclo de vida, emissão ou coordenação de processos é controlado pela configuração nativa, não por scripts. |
+| `@fluxerjs/sharding#ShardClientUtil.requestSpawnToken` | method | excluded | credentials | Credenciais, segredo ou sessão autenticada não são expostos a scripts. |
+| `@fluxerjs/sharding#ShardClientUtil.respawn` | method | excluded | lifecycle | Ciclo de vida, emissão ou coordenação de processos é controlado pela configuração nativa, não por scripts. |
+| `@fluxerjs/sharding#ShardClientUtil.send` | method | excluded | raw-transport | Objeto/transporte cru ou introspecção arbitrária pode contornar guards ou revelar estado da sessão. |
+| `@fluxerjs/sharding#ShardClientUtil.shardIdForGuildId` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/sharding#ShardClientUtilOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/sharding#ShardingManager` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
+| `@fluxerjs/sharding#ShardingManager.broadcastEval` | method | excluded | eval | Executa JavaScript arbitrário; viola a linguagem sem eval. |
+| `@fluxerjs/sharding#ShardingManager.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
+| `@fluxerjs/sharding#ShardingManager.destroy` | method | excluded | lifecycle | Ciclo de vida, emissão ou coordenação de processos é controlado pela configuração nativa, não por scripts. |
+| `@fluxerjs/sharding#ShardingManager.fetchClientValues` | method | excluded | raw-transport | Objeto/transporte cru ou introspecção arbitrária pode contornar guards ou revelar estado da sessão. |
+| `@fluxerjs/sharding#ShardingManager.file` | property | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/sharding#ShardingManager.respawnAll` | method | excluded | lifecycle | Ciclo de vida, emissão ou coordenação de processos é controlado pela configuração nativa, não por scripts. |
+| `@fluxerjs/sharding#ShardingManager.respawnShard` | method | excluded | lifecycle | Ciclo de vida, emissão ou coordenação de processos é controlado pela configuração nativa, não por scripts. |
+| `@fluxerjs/sharding#ShardingManager.shardCount` | accessor | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/sharding#ShardingManager.shards` | property | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/sharding#ShardingManager.spawn` | method | excluded | lifecycle | Ciclo de vida, emissão ou coordenação de processos é controlado pela configuração nativa, não por scripts. |
+| `@fluxerjs/sharding#ShardingManager.token` | property | excluded | credentials | Credenciais, segredo ou sessão autenticada não são expostos a scripts. |
+| `@fluxerjs/sharding#ShardingManagerOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/sharding#ShardingMode` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/sharding#ShardLease` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/sharding#ShardProcess` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
+| `@fluxerjs/sharding#ShardProcess.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
+| `@fluxerjs/sharding#ShardProcess.eval` | method | excluded | eval | Executa JavaScript arbitrário; viola a linguagem sem eval. |
+| `@fluxerjs/sharding#ShardProcess.fetchClientValue` | method | excluded | raw-transport | Objeto/transporte cru ou introspecção arbitrária pode contornar guards ou revelar estado da sessão. |
+| `@fluxerjs/sharding#ShardProcess.id` | property | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/sharding#ShardProcess.kill` | method | excluded | lifecycle | Ciclo de vida, emissão ou coordenação de processos é controlado pela configuração nativa, não por scripts. |
+| `@fluxerjs/sharding#ShardProcess.readyAt` | accessor | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/sharding#ShardProcess.respawn` | method | excluded | lifecycle | Ciclo de vida, emissão ou coordenação de processos é controlado pela configuração nativa, não por scripts. |
+| `@fluxerjs/sharding#ShardProcess.send` | method | excluded | raw-transport | Objeto/transporte cru ou introspecção arbitrária pode contornar guards ou revelar estado da sessão. |
+| `@fluxerjs/sharding#ShardProcess.shardIds` | accessor | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/sharding#ShardProcess.spawn` | method | excluded | lifecycle | Ciclo de vida, emissão ou coordenação de processos é controlado pela configuração nativa, não por scripts. |
+| `@fluxerjs/sharding#ShardProcessOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/ws#BuildShardingStrategy` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/ws#BuildShardingStrategyFn` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/ws#DEFAULT_GUILDS_PER_SHARD` | variable | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/ws#DEFAULT_RESUME_TTL_MS` | variable | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/ws#GatewayCloseCodes` | variable | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/ws#getDefaultWebSocket` | function | excluded | raw-transport | Objeto/transporte cru ou introspecção arbitrária pode contornar guards ou revelar estado da sessão. |
+| `@fluxerjs/ws#getDefaultWebSocketSync` | function | excluded | raw-transport | Objeto/transporte cru ou introspecção arbitrária pode contornar guards ou revelar estado da sessão. |
+| `@fluxerjs/ws#guildMatchesShard` | function | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/ws#IIdentifyThrottler` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/ws#ISessionStore` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/ws#IShardingStrategy` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/ws#isSessionInfoFresh` | function | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/ws#MAX_GUILDS_PER_SHARD` | variable | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/ws#MAX_SHARD_COUNT` | variable | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/ws#MemorySessionStore` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
+| `@fluxerjs/ws#MemorySessionStore.clear` | method | excluded | credentials | Armazenamento de sessão/resume pertence ao gateway nativo e não ao script. |
+| `@fluxerjs/ws#MemorySessionStore.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
+| `@fluxerjs/ws#MemorySessionStore.retrieveSessionInfo` | method | excluded | credentials | Armazenamento de sessão/resume pertence ao gateway nativo e não ao script. |
+| `@fluxerjs/ws#MemorySessionStore.updateSessionInfo` | method | excluded | credentials | Armazenamento de sessão/resume pertence ao gateway nativo e não ao script. |
+| `@fluxerjs/ws#narrowGatewayPayload` | function | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/ws#recommendedShardCount` | function | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/ws#SessionInfo` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/ws#shardIdForGuild` | function | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/ws#ShardStatus` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/ws#shouldReconnectOnClose` | function | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/ws#SimpleIdentifyThrottler` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
+| `@fluxerjs/ws#SimpleIdentifyThrottler.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
+| `@fluxerjs/ws#SimpleIdentifyThrottler.destroy` | method | excluded | lifecycle | Ciclo de vida, emissão ou coordenação de processos é controlado pela configuração nativa, não por scripts. |
+| `@fluxerjs/ws#SimpleIdentifyThrottler.waitForIdentify` | method | excluded | lifecycle | Ciclo de vida, emissão ou coordenação de processos é controlado pela configuração nativa, não por scripts. |
+| `@fluxerjs/ws#SimpleIdentifyThrottlerOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/ws#SimpleShardingStrategy` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
+| `@fluxerjs/ws#SimpleShardingStrategy.connect` | method | excluded | lifecycle | Ciclo de vida, emissão ou coordenação de processos é controlado pela configuração nativa, não por scripts. |
+| `@fluxerjs/ws#SimpleShardingStrategy.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
+| `@fluxerjs/ws#SimpleShardingStrategy.destroy` | method | excluded | lifecycle | Ciclo de vida, emissão ou coordenação de processos é controlado pela configuração nativa, não por scripts. |
+| `@fluxerjs/ws#SimpleShardingStrategy.fetchStatus` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/ws#SimpleShardingStrategy.getPing` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/ws#SimpleShardingStrategy.getShard` | method | excluded | raw-transport | Objeto/transporte cru ou introspecção arbitrária pode contornar guards ou revelar estado da sessão. |
+| `@fluxerjs/ws#SimpleShardingStrategy.getShards` | method | excluded | raw-transport | Objeto/transporte cru ou introspecção arbitrária pode contornar guards ou revelar estado da sessão. |
+| `@fluxerjs/ws#SimpleShardingStrategy.send` | method | excluded | raw-transport | Objeto/transporte cru ou introspecção arbitrária pode contornar guards ou revelar estado da sessão. |
+| `@fluxerjs/ws#SimpleShardingStrategy.spawn` | method | excluded | lifecycle | Ciclo de vida, emissão ou coordenação de processos é controlado pela configuração nativa, não por scripts. |
+| `@fluxerjs/ws#SimpleShardingStrategyContext` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/ws#WebSocketConstructor` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/ws#WebSocketLike` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/ws#WebSocketManager` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
+| `@fluxerjs/ws#WebSocketManager.connect` | method | excluded | lifecycle | Ciclo de vida, emissão ou coordenação de processos é controlado pela configuração nativa, não por scripts. |
+| `@fluxerjs/ws#WebSocketManager.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
+| `@fluxerjs/ws#WebSocketManager.destroy` | method | excluded | lifecycle | Ciclo de vida, emissão ou coordenação de processos é controlado pela configuração nativa, não por scripts. |
+| `@fluxerjs/ws#WebSocketManager.fetchStatus` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/ws#WebSocketManager.getGatewayUrl` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/ws#WebSocketManager.getIdentifyThrottler` | method | excluded | raw-transport | Objeto/transporte cru ou introspecção arbitrária pode contornar guards ou revelar estado da sessão. |
+| `@fluxerjs/ws#WebSocketManager.getOptions` | method | excluded | raw-transport | Objeto/transporte cru ou introspecção arbitrária pode contornar guards ou revelar estado da sessão. |
+| `@fluxerjs/ws#WebSocketManager.getSessionStore` | method | excluded | raw-transport | Objeto/transporte cru ou introspecção arbitrária pode contornar guards ou revelar estado da sessão. |
+| `@fluxerjs/ws#WebSocketManager.getShard` | method | excluded | raw-transport | Objeto/transporte cru ou introspecção arbitrária pode contornar guards ou revelar estado da sessão. |
+| `@fluxerjs/ws#WebSocketManager.getShardCount` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/ws#WebSocketManager.getShards` | method | excluded | raw-transport | Objeto/transporte cru ou introspecção arbitrária pode contornar guards ou revelar estado da sessão. |
+| `@fluxerjs/ws#WebSocketManager.ping` | accessor | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/ws#WebSocketManager.send` | method | excluded | raw-transport | Objeto/transporte cru ou introspecção arbitrária pode contornar guards ou revelar estado da sessão. |
+| `@fluxerjs/ws#WebSocketManagerOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/ws#WebSocketManagerRest` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/ws#WebSocketShard` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
+| `@fluxerjs/ws#WebSocketShard.connect` | method | excluded | lifecycle | Ciclo de vida, emissão ou coordenação de processos é controlado pela configuração nativa, não por scripts. |
+| `@fluxerjs/ws#WebSocketShard.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
+| `@fluxerjs/ws#WebSocketShard.destroy` | method | excluded | lifecycle | Ciclo de vida, emissão ou coordenação de processos é controlado pela configuração nativa, não por scripts. |
+| `@fluxerjs/ws#WebSocketShard.handlePayload` | method | excluded | raw-transport | Objeto/transporte cru ou introspecção arbitrária pode contornar guards ou revelar estado da sessão. |
+| `@fluxerjs/ws#WebSocketShard.id` | accessor | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/ws#WebSocketShard.ping` | accessor | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/ws#WebSocketShard.send` | method | excluded | raw-transport | Objeto/transporte cru ou introspecção arbitrária pode contornar guards ou revelar estado da sessão. |
+| `@fluxerjs/ws#WebSocketShard.sequence` | accessor | excluded | internal | Sequência de resume do protocolo é mantida pelo gateway. |
+| `@fluxerjs/ws#WebSocketShard.session` | accessor | excluded | raw-transport | Objeto/transporte cru ou introspecção arbitrária pode contornar guards ou revelar estado da sessão. |
+| `@fluxerjs/ws#WebSocketShard.status` | accessor | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/ws#WebSocketShardOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/ws#WorkerShardingStrategy` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
+| `@fluxerjs/ws#WorkerShardingStrategy.connect` | method | excluded | lifecycle | Ciclo de vida, emissão ou coordenação de processos é controlado pela configuração nativa, não por scripts. |
+| `@fluxerjs/ws#WorkerShardingStrategy.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
+| `@fluxerjs/ws#WorkerShardingStrategy.destroy` | method | excluded | lifecycle | Ciclo de vida, emissão ou coordenação de processos é controlado pela configuração nativa, não por scripts. |
+| `@fluxerjs/ws#WorkerShardingStrategy.fetchStatus` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/ws#WorkerShardingStrategy.getPing` | method | pending |  | Operação nativa: expor por recurso autorizado ou fachada declarativa limitada. |
+| `@fluxerjs/ws#WorkerShardingStrategy.send` | method | excluded | raw-transport | Objeto/transporte cru ou introspecção arbitrária pode contornar guards ou revelar estado da sessão. |
+| `@fluxerjs/ws#WorkerShardingStrategy.spawn` | method | excluded | lifecycle | Ciclo de vida, emissão ou coordenação de processos é controlado pela configuração nativa, não por scripts. |
+| `@fluxerjs/ws#WorkerShardingStrategyOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
 
-Eventos do function mode que o SDK não declara: nenhum.
+## entities
 
-## Exceções intencionais (só SDK)
+| ID | Tipo | Status | Funções / exclusão | Justificativa |
+|---|---|---|---|---|
+| `@fluxerjs/builders#AttachmentBuilder` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
+| `@fluxerjs/builders#AttachmentBuilder.attachment` | property | equivalent | $fileBase64, $sendAttachments | Anexo declarativo carrega bytes, nome e descrição; envio faz upload pelo adaptador. |
+| `@fluxerjs/builders#AttachmentBuilder.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
+| `@fluxerjs/builders#AttachmentBuilder.description` | property | equivalent | $fileBase64, $sendAttachments | Anexo declarativo carrega bytes, nome e descrição; envio faz upload pelo adaptador. |
+| `@fluxerjs/builders#AttachmentBuilder.filename` | accessor | equivalent | $fileBase64, $sendAttachments | Anexo declarativo carrega bytes, nome e descrição; envio faz upload pelo adaptador. |
+| `@fluxerjs/builders#AttachmentBuilder.name` | property | equivalent | $fileBase64, $sendAttachments | Anexo declarativo carrega bytes, nome e descrição; envio faz upload pelo adaptador. |
+| `@fluxerjs/builders#AttachmentBuilder.setDescription` | method | equivalent | $fileBase64, $sendAttachments | Anexo declarativo carrega bytes, nome e descrição; envio faz upload pelo adaptador. |
+| `@fluxerjs/builders#AttachmentBuilder.setName` | method | equivalent | $fileBase64, $sendAttachments | Anexo declarativo carrega bytes, nome e descrição; envio faz upload pelo adaptador. |
+| `@fluxerjs/builders#AttachmentBuilder.setSpoiler` | method | pending |  | O port nativo aceita spoiler, mas os builtins de anexo não aceitam esse campo; falta contrato de função. |
+| `@fluxerjs/builders#AttachmentBuilder.spoiler` | property | pending |  | O port nativo aceita spoiler, mas os builtins de anexo não aceitam esse campo; falta contrato de função. |
+| `@fluxerjs/builders#AttachmentBuilder.toFileData` | method | equivalent | $fileBase64, $sendAttachments | Anexo declarativo enviado pelo port; conversão para FileData ocorre no adaptador. |
+| `@fluxerjs/builders#AttachmentBuilder.toJSON` | method | equivalent | $fileBase64, $sendAttachments | Anexo declarativo enviado pelo port; conversão para FileData ocorre no adaptador. |
+| `@fluxerjs/builders#AttachmentBuilder.url` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/builders#AttachmentMeta` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
+| `@fluxerjs/builders#AttachmentMeta.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
+| `@fluxerjs/builders#AttachmentMeta.description` | property | equivalent | $fileBase64, $sendAttachments | Anexo declarativo carrega bytes, nome e descrição; envio faz upload pelo adaptador. |
+| `@fluxerjs/builders#AttachmentMeta.filename` | property | equivalent | $fileBase64, $sendAttachments | Anexo declarativo carrega bytes, nome e descrição; envio faz upload pelo adaptador. |
+| `@fluxerjs/builders#AttachmentMeta.id` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/builders#AttachmentMeta.setDescription` | method | equivalent | $fileBase64, $sendAttachments | Anexo declarativo carrega bytes, nome e descrição; envio faz upload pelo adaptador. |
+| `@fluxerjs/builders#AttachmentMeta.setName` | method | equivalent | $fileBase64, $sendAttachments | Anexo declarativo carrega bytes, nome e descrição; envio faz upload pelo adaptador. |
+| `@fluxerjs/builders#AttachmentMeta.setSpoiler` | method | pending |  | O port nativo aceita spoiler, mas os builtins de anexo não aceitam esse campo; falta contrato de função. |
+| `@fluxerjs/builders#AttachmentMeta.spoiler` | property | pending |  | O port nativo aceita spoiler, mas os builtins de anexo não aceitam esse campo; falta contrato de função. |
+| `@fluxerjs/builders#AttachmentMeta.toJSON` | method | equivalent | $fileBase64, $sendAttachments | Anexo declarativo enviado pelo port; conversão para FileData ocorre no adaptador. |
+| `@fluxerjs/builders#EmbedBuilder` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
+| `@fluxerjs/builders#EmbedBuilder.addFields` | method | equivalent | $embed, $fields | Composição de partes tipadas em $embed; não requer builder mutável. |
+| `@fluxerjs/builders#EmbedBuilder.data` | property | equivalent | $embedFromObject | Conversão por objeto validado de embed; descarta campos somente de resposta. |
+| `@fluxerjs/builders#EmbedBuilder.setAuthor` | method | equivalent | $embed, $author | Composição de partes tipadas em $embed; não requer builder mutável. |
+| `@fluxerjs/builders#EmbedBuilder.setColor` | method | equivalent | $embed, $color | Composição de partes tipadas em $embed; não requer builder mutável. |
+| `@fluxerjs/builders#EmbedBuilder.setDescription` | method | equivalent | $embed, $description | Composição de partes tipadas em $embed; não requer builder mutável. |
+| `@fluxerjs/builders#EmbedBuilder.setFields` | method | equivalent | $embed, $fields | Composição de partes tipadas em $embed; não requer builder mutável. |
+| `@fluxerjs/builders#EmbedBuilder.setFooter` | method | equivalent | $embed, $footer | Composição de partes tipadas em $embed; não requer builder mutável. |
+| `@fluxerjs/builders#EmbedBuilder.setImage` | method | equivalent | $embed, $image | Composição de partes tipadas em $embed; não requer builder mutável. |
+| `@fluxerjs/builders#EmbedBuilder.setThumbnail` | method | equivalent | $embed, $thumbnail | Composição de partes tipadas em $embed; não requer builder mutável. |
+| `@fluxerjs/builders#EmbedBuilder.setTimestamp` | method | equivalent | $embed, $embedTimestamp | Composição de partes tipadas em $embed; não requer builder mutável. |
+| `@fluxerjs/builders#EmbedBuilder.setTitle` | method | equivalent | $embed, $title | Composição de partes tipadas em $embed; não requer builder mutável. |
+| `@fluxerjs/builders#EmbedBuilder.setURL` | method | equivalent | $embed, $url | Composição de partes tipadas em $embed; não requer builder mutável. |
+| `@fluxerjs/builders#EmbedBuilder.spliceFields` | method | equivalent | $embedFromObject, $prop, $arraySlice, $arrayConcat, $fields, $jsonMerge | Copiar campos, concatenar prefixo + novos campos + sufixo e validar com embedFromObject; não muta builder. |
+| `@fluxerjs/builders#EmbedBuilder.static:from` | method | equivalent | $embedFromObject | Conversão por objeto validado de embed; descarta campos somente de resposta. |
+| `@fluxerjs/builders#EmbedBuilder.toJSON` | method | equivalent | $embedFromObject | Conversão por objeto validado de embed; descarta campos somente de resposta. |
+| `@fluxerjs/builders#MessagePayload` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
+| `@fluxerjs/builders#MessagePayload.addEmbed` | method | equivalent | $embeds, $addEmbed, $jsonMerge, $reply | Lista de embeds validada composta no payload de envio. |
+| `@fluxerjs/builders#MessagePayload.data` | property | equivalent | $object, $jsonMerge, $reply | Payload declarativo validado no envio em vez de instância mutável. |
+| `@fluxerjs/builders#MessagePayload.setAllowedMentions` | method | equivalent | $object, $jsonMerge, $reply | Payload allowedMentions tipado; relaxar menções exige autorização. |
+| `@fluxerjs/builders#MessagePayload.setAttachments` | method | equivalent | $sendAttachments | Payload declarativo cobre o campo no envio, sem instância mutável do SDK. |
+| `@fluxerjs/builders#MessagePayload.setContent` | method | equivalent | $object, $reply, $sendMessage | Objeto com content enviado por $reply/$sendMessage; respeita limite e validação. |
+| `@fluxerjs/builders#MessagePayload.setEmbeds` | method | equivalent | $embeds, $addEmbed, $jsonMerge, $reply | Lista de embeds validada composta no payload de envio. |
+| `@fluxerjs/builders#MessagePayload.setFlags` | method | equivalent | $messageOptions | Payload declarativo cobre o campo no envio, sem instância mutável do SDK. |
+| `@fluxerjs/builders#MessagePayload.setReply` | method | equivalent | $reply | Payload declarativo cobre o campo no envio, sem instância mutável do SDK. |
+| `@fluxerjs/builders#MessagePayload.setTTS` | method | equivalent | $messageOptions | Payload declarativo cobre o campo no envio, sem instância mutável do SDK. |
+| `@fluxerjs/builders#MessagePayload.static:create` | method | excluded | internal | Fábrica de instância SDK; compor payload declarativo em vez de construir objeto SDK. |
+| `@fluxerjs/builders#MessagePayload.toJSON` | method | equivalent | $object, $jsonMerge, $reply | Payload declarativo validado no envio em vez de instância mutável. |
+| `@fluxerjs/core#AnnouncementChannel` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
+| `@fluxerjs/core#AttachmentBuilder` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
+| `@fluxerjs/core#AttachmentBuilder.attachment` | property | equivalent | $fileBase64, $sendAttachments | Anexo declarativo carrega bytes, nome e descrição; envio faz upload pelo adaptador. |
+| `@fluxerjs/core#AttachmentBuilder.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
+| `@fluxerjs/core#AttachmentBuilder.description` | property | equivalent | $fileBase64, $sendAttachments | Anexo declarativo carrega bytes, nome e descrição; envio faz upload pelo adaptador. |
+| `@fluxerjs/core#AttachmentBuilder.filename` | accessor | equivalent | $fileBase64, $sendAttachments | Anexo declarativo carrega bytes, nome e descrição; envio faz upload pelo adaptador. |
+| `@fluxerjs/core#AttachmentBuilder.name` | property | equivalent | $fileBase64, $sendAttachments | Anexo declarativo carrega bytes, nome e descrição; envio faz upload pelo adaptador. |
+| `@fluxerjs/core#AttachmentBuilder.setDescription` | method | equivalent | $fileBase64, $sendAttachments | Anexo declarativo carrega bytes, nome e descrição; envio faz upload pelo adaptador. |
+| `@fluxerjs/core#AttachmentBuilder.setName` | method | equivalent | $fileBase64, $sendAttachments | Anexo declarativo carrega bytes, nome e descrição; envio faz upload pelo adaptador. |
+| `@fluxerjs/core#AttachmentBuilder.setSpoiler` | method | pending |  | O port nativo aceita spoiler, mas os builtins de anexo não aceitam esse campo; falta contrato de função. |
+| `@fluxerjs/core#AttachmentBuilder.spoiler` | property | pending |  | O port nativo aceita spoiler, mas os builtins de anexo não aceitam esse campo; falta contrato de função. |
+| `@fluxerjs/core#AttachmentBuilder.toFileData` | method | equivalent | $fileBase64, $sendAttachments | Anexo declarativo enviado pelo port; conversão para FileData ocorre no adaptador. |
+| `@fluxerjs/core#AttachmentBuilder.toJSON` | method | equivalent | $fileBase64, $sendAttachments | Anexo declarativo enviado pelo port; conversão para FileData ocorre no adaptador. |
+| `@fluxerjs/core#AttachmentBuilder.url` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#AttachmentMeta` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
+| `@fluxerjs/core#AttachmentMeta.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
+| `@fluxerjs/core#AttachmentMeta.description` | property | equivalent | $fileBase64, $sendAttachments | Anexo declarativo carrega bytes, nome e descrição; envio faz upload pelo adaptador. |
+| `@fluxerjs/core#AttachmentMeta.filename` | property | equivalent | $fileBase64, $sendAttachments | Anexo declarativo carrega bytes, nome e descrição; envio faz upload pelo adaptador. |
+| `@fluxerjs/core#AttachmentMeta.id` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#AttachmentMeta.setDescription` | method | equivalent | $fileBase64, $sendAttachments | Anexo declarativo carrega bytes, nome e descrição; envio faz upload pelo adaptador. |
+| `@fluxerjs/core#AttachmentMeta.setName` | method | equivalent | $fileBase64, $sendAttachments | Anexo declarativo carrega bytes, nome e descrição; envio faz upload pelo adaptador. |
+| `@fluxerjs/core#AttachmentMeta.setSpoiler` | method | pending |  | O port nativo aceita spoiler, mas os builtins de anexo não aceitam esse campo; falta contrato de função. |
+| `@fluxerjs/core#AttachmentMeta.spoiler` | property | pending |  | O port nativo aceita spoiler, mas os builtins de anexo não aceitam esse campo; falta contrato de função. |
+| `@fluxerjs/core#AttachmentMeta.toJSON` | method | equivalent | $fileBase64, $sendAttachments | Anexo declarativo enviado pelo port; conversão para FileData ocorre no adaptador. |
+| `@fluxerjs/core#Base` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
+| `@fluxerjs/core#Base.client` | property | excluded | raw-transport | Referência ao client/transporte SDK não é valor de script; usar recursos autorizados. |
+| `@fluxerjs/core#CategoryChannel` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
+| `@fluxerjs/core#Channel` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
+| `@fluxerjs/core#Channel._patch` | method | excluded | internal | Helper interno, backing state ou patch de sessão; usar a operação pública autorizada. |
+| `@fluxerjs/core#Channel.acknowledgePins` | method | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Channel.bulkDelete` | method | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Channel.bulkDeleteMyMessages` | method | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Channel.canSendMessage` | method | pending |  | channelPermsOf retorna bitfield, mas falta composição declarativa que preserve todos os checks canSend do SDK; não inferir cobertura só por permissionsFor. |
+| `@fluxerjs/core#Channel.clearReadState` | method | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Channel.client` | property | excluded | raw-transport | Referência ao client/transporte SDK não é valor de script; usar recursos autorizados. |
+| `@fluxerjs/core#Channel.completeAttachmentUploads` | method | equivalent | $sendAttachments | Uploads são resolvidos dentro do envio de anexos declarativos, sem expor URLs de sessão. |
+| `@fluxerjs/core#Channel.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
+| `@fluxerjs/core#Channel.createdAt` | accessor | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Channel.createdTimestamp` | accessor | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Channel.delete` | method | function | $deleteChannel | Operação por builtin e recurso/serviço compartilhado; ver contrato de argumentos na referência. |
+| `@fluxerjs/core#Channel.icon` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Channel.id` | property | equivalent | $channel, $prop | Valor normalizado pelo recurso da entidade; $prop seleciona o campo (IDs usam sufixo ID). |
+| `@fluxerjs/core#Channel.isAnnouncement` | method | equivalent | $channel, $prop, $eq, $or | Comparar ChannelInfo.type com os valores públicos de ChannelType; guildID distingue canal de servidor. |
+| `@fluxerjs/core#Channel.isCategory` | method | equivalent | $channel, $prop, $eq, $or | Comparar ChannelInfo.type com os valores públicos de ChannelType; guildID distingue canal de servidor. |
+| `@fluxerjs/core#Channel.isDM` | method | equivalent | $channel, $prop, $eq, $or | Comparar ChannelInfo.type com os valores públicos de ChannelType; guildID distingue canal de servidor. |
+| `@fluxerjs/core#Channel.isForum` | method | equivalent | $channel, $prop, $eq, $or | Comparar ChannelInfo.type com os valores públicos de ChannelType; guildID distingue canal de servidor. |
+| `@fluxerjs/core#Channel.isGuild` | method | equivalent | $channel, $prop, $eq, $or | Comparar ChannelInfo.type com os valores públicos de ChannelType; guildID distingue canal de servidor. |
+| `@fluxerjs/core#Channel.isLink` | method | equivalent | $channel, $prop, $eq, $or | Comparar ChannelInfo.type com os valores públicos de ChannelType; guildID distingue canal de servidor. |
+| `@fluxerjs/core#Channel.isMedia` | method | equivalent | $channel, $prop, $eq, $or | Comparar ChannelInfo.type com os valores públicos de ChannelType; guildID distingue canal de servidor. |
+| `@fluxerjs/core#Channel.isPersonalNotes` | method | equivalent | $channel, $prop, $eq, $or | Comparar ChannelInfo.type com os valores públicos de ChannelType; guildID distingue canal de servidor. |
+| `@fluxerjs/core#Channel.isText` | method | equivalent | $channel, $prop, $eq, $or | Comparar ChannelInfo.type com os valores públicos de ChannelType; guildID distingue canal de servidor. |
+| `@fluxerjs/core#Channel.isTextBased` | method | equivalent | $channel, $prop, $eq, $or | Comparar ChannelInfo.type com os valores públicos de ChannelType; guildID distingue canal de servidor. |
+| `@fluxerjs/core#Channel.isThread` | method | equivalent | $channel, $prop, $eq, $or | Comparar ChannelInfo.type com os valores públicos de ChannelType; guildID distingue canal de servidor. |
+| `@fluxerjs/core#Channel.isVoice` | method | equivalent | $channel, $prop, $eq, $or | Comparar ChannelInfo.type com os valores públicos de ChannelType; guildID distingue canal de servidor. |
+| `@fluxerjs/core#Channel.lastPinTimestamp` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Channel.messages` | accessor | equivalent | $messages | Listar mensagens normalizadas do canal em vez de expor manager mutável. |
+| `@fluxerjs/core#Channel.name` | property | equivalent | $channel, $prop | Valor normalizado pelo recurso da entidade; $prop seleciona o campo (IDs usam sufixo ID). |
+| `@fluxerjs/core#Channel.requestAttachmentUploads` | method | equivalent | $sendAttachments | Uploads são resolvidos dentro do envio de anexos declarativos, sem expor URLs de sessão. |
+| `@fluxerjs/core#Channel.static:createDM` | method | excluded | internal | Fábrica de instâncias/configuração nativa; script usa operações e valores normalizados. |
+| `@fluxerjs/core#Channel.static:from` | method | excluded | internal | Fábrica de instâncias/configuração nativa; script usa operações e valores normalizados. |
+| `@fluxerjs/core#Channel.static:fromOrCreate` | method | excluded | internal | Helper interno, backing state ou patch de sessão; usar a operação pública autorizada. |
+| `@fluxerjs/core#Channel.toString` | method | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Channel.type` | property | equivalent | $channel, $prop | Valor normalizado pelo recurso da entidade; $prop seleciona o campo (IDs usam sufixo ID). |
+| `@fluxerjs/core#Channel.uploadAttachmentsForSend` | method | equivalent | $sendAttachments | Uploads são resolvidos dentro do envio de anexos declarativos, sem expor URLs de sessão. |
+| `@fluxerjs/core#ChannelManager` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
+| `@fluxerjs/core#ChannelManager.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
+| `@fluxerjs/core#ChannelManager.fetch` | method | function | $channel | Busca um canal por ID pelo recurso channels.get; não confundir com listagem $channels. |
+| `@fluxerjs/core#ChannelManager.fetchMessage` | method | equivalent | $fetchMessage | Acesso por builtin ao recurso autorizado correspondente; resolve/fetch usa busca normalizada, não instância SDK. |
+| `@fluxerjs/core#ChannelManager.resolve` | method | equivalent | $channel | Resolver canal por ID através de busca normalizada; sem referência mutável. |
+| `@fluxerjs/core#ChannelManager.send` | method | excluded | raw-transport | Objeto/transporte cru ou introspecção arbitrária pode contornar guards ou revelar estado da sessão. |
+| `@fluxerjs/core#DMChannel` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
+| `@fluxerjs/core#DMChannel._patch` | method | excluded | internal | Helper interno, backing state ou patch de sessão; usar a operação pública autorizada. |
+| `@fluxerjs/core#DMChannel.addRecipient` | method | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#DMChannel.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
+| `@fluxerjs/core#DMChannel.edit` | method | equivalent | $editChannel | Acesso por builtin ao recurso autorizado correspondente; resolve/fetch usa busca normalizada, não instância SDK. |
+| `@fluxerjs/core#DMChannel.lastMessageId` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#DMChannel.nicks` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#DMChannel.ownerId` | property | equivalent | $channel, $prop | Valor normalizado pelo recurso da entidade; $prop seleciona o campo (IDs usam sufixo ID). |
+| `@fluxerjs/core#DMChannel.pinInList` | method | excluded | internal | Helper interno, backing state ou patch de sessão; usar a operação pública autorizada. |
+| `@fluxerjs/core#DMChannel.purgeMessages` | method | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#DMChannel.recipients` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#DMChannel.removeRecipient` | method | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#DMChannel.unpinFromList` | method | excluded | internal | Helper interno, backing state ou patch de sessão; usar a operação pública autorizada. |
+| `@fluxerjs/core#EmbedBuilder` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
+| `@fluxerjs/core#EmbedBuilder.addFields` | method | equivalent | $embed, $fields | Composição de partes tipadas em $embed; não requer builder mutável. |
+| `@fluxerjs/core#EmbedBuilder.data` | property | equivalent | $embedFromObject | Conversão por objeto validado de embed; descarta campos somente de resposta. |
+| `@fluxerjs/core#EmbedBuilder.setAuthor` | method | equivalent | $embed, $author | Composição de partes tipadas em $embed; não requer builder mutável. |
+| `@fluxerjs/core#EmbedBuilder.setColor` | method | equivalent | $embed, $color | Composição de partes tipadas em $embed; não requer builder mutável. |
+| `@fluxerjs/core#EmbedBuilder.setDescription` | method | equivalent | $embed, $description | Composição de partes tipadas em $embed; não requer builder mutável. |
+| `@fluxerjs/core#EmbedBuilder.setFields` | method | equivalent | $embed, $fields | Composição de partes tipadas em $embed; não requer builder mutável. |
+| `@fluxerjs/core#EmbedBuilder.setFooter` | method | equivalent | $embed, $footer | Composição de partes tipadas em $embed; não requer builder mutável. |
+| `@fluxerjs/core#EmbedBuilder.setImage` | method | equivalent | $embed, $image | Composição de partes tipadas em $embed; não requer builder mutável. |
+| `@fluxerjs/core#EmbedBuilder.setThumbnail` | method | equivalent | $embed, $thumbnail | Composição de partes tipadas em $embed; não requer builder mutável. |
+| `@fluxerjs/core#EmbedBuilder.setTimestamp` | method | equivalent | $embed, $embedTimestamp | Composição de partes tipadas em $embed; não requer builder mutável. |
+| `@fluxerjs/core#EmbedBuilder.setTitle` | method | equivalent | $embed, $title | Composição de partes tipadas em $embed; não requer builder mutável. |
+| `@fluxerjs/core#EmbedBuilder.setURL` | method | equivalent | $embed, $url | Composição de partes tipadas em $embed; não requer builder mutável. |
+| `@fluxerjs/core#EmbedBuilder.spliceFields` | method | equivalent | $embedFromObject, $prop, $arraySlice, $arrayConcat, $fields, $jsonMerge | Copiar campos, concatenar prefixo + novos campos + sufixo e validar com embedFromObject; não muta builder. |
+| `@fluxerjs/core#EmbedBuilder.static:from` | method | equivalent | $embedFromObject | Conversão por objeto validado de embed; descarta campos somente de resposta. |
+| `@fluxerjs/core#EmbedBuilder.toJSON` | method | equivalent | $embedFromObject | Conversão por objeto validado de embed; descarta campos somente de resposta. |
+| `@fluxerjs/core#ForumChannel` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
+| `@fluxerjs/core#ForumChannel._patch` | method | excluded | internal | Helper interno, backing state ou patch de sessão; usar a operação pública autorizada. |
+| `@fluxerjs/core#ForumChannel.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
+| `@fluxerjs/core#ForumChannel.defaultForumLayout` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#ForumChannel.setDefaultForumLayout` | method | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Guild` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
+| `@fluxerjs/core#Guild._patch` | method | excluded | internal | Helper interno, backing state ou patch de sessão; usar a operação pública autorizada. |
+| `@fluxerjs/core#Guild.adjustMemberCount` | method | excluded | internal | Helper interno, backing state ou patch de sessão; usar a operação pública autorizada. |
+| `@fluxerjs/core#Guild.afkChannelId` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Guild.afkTimeout` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Guild.applyForDiscovery` | method | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Guild.available` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Guild.ban` | method | function | $ban | Moderação autorizada por $ban; guards compartilhados. |
+| `@fluxerjs/core#Guild.banner` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Guild.bannerHeight` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Guild.bannerURL` | method | function | $guildBanner | Operação por builtin e recurso/serviço compartilhado; ver contrato de argumentos na referência. |
+| `@fluxerjs/core#Guild.bannerWidth` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Guild.channels` | property | equivalent | $channels | Listar canais normalizados em vez do manager mutável. |
+| `@fluxerjs/core#Guild.client` | property | excluded | raw-transport | Referência ao client/transporte SDK não é valor de script; usar recursos autorizados. |
+| `@fluxerjs/core#Guild.cloneEmoji` | method | function | $cloneEmoji | Operação por builtin e recurso/serviço compartilhado; ver contrato de argumentos na referência. |
+| `@fluxerjs/core#Guild.cloneSticker` | method | function | $cloneSticker | Operação por builtin e recurso/serviço compartilhado; ver contrato de argumentos na referência. |
+| `@fluxerjs/core#Guild.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
+| `@fluxerjs/core#Guild.contentWarningLevel` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Guild.contentWarningText` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Guild.createChannel` | method | equivalent | $createChannel | Acesso por builtin ao recurso autorizado correspondente; resolve/fetch usa busca normalizada, não instância SDK. |
+| `@fluxerjs/core#Guild.createdAt` | accessor | equivalent | $guild, $prop, $date | Derivar data de GuildInfo.createdTimestamp. |
+| `@fluxerjs/core#Guild.createdTimestamp` | accessor | equivalent | $guild, $prop | Valor normalizado pelo recurso da entidade; $prop seleciona o campo (IDs usam sufixo ID). |
+| `@fluxerjs/core#Guild.createEmoji` | method | function | $createEmoji | Operação por builtin e recurso/serviço compartilhado; ver contrato de argumentos na referência. |
+| `@fluxerjs/core#Guild.createEmojisBulk` | method | function | $createEmojisBulk | Operação por builtin e recurso/serviço compartilhado; ver contrato de argumentos na referência. |
+| `@fluxerjs/core#Guild.createRole` | method | equivalent | $createRole | Acesso por builtin ao recurso autorizado correspondente; resolve/fetch usa busca normalizada, não instância SDK. |
+| `@fluxerjs/core#Guild.createSticker` | method | function | $createSticker | Operação por builtin e recurso/serviço compartilhado; ver contrato de argumentos na referência. |
+| `@fluxerjs/core#Guild.createStickersBulk` | method | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Guild.defaultMessageNotifications` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Guild.delete` | method | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Guild.disabledOperations` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Guild.edit` | method | function | $editGuild | Operação por builtin e recurso/serviço compartilhado; ver contrato de argumentos na referência. |
+| `@fluxerjs/core#Guild.editDiscoveryApplication` | method | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Guild.editVanityURL` | method | equivalent | $setVanity | Acesso por builtin ao recurso autorizado correspondente; resolve/fetch usa busca normalizada, não instância SDK. |
+| `@fluxerjs/core#Guild.embedSplash` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Guild.emojis` | property | equivalent | $emojis | Listar emojis normalizados em vez do manager mutável. |
+| `@fluxerjs/core#Guild.explicitContentFilter` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Guild.features` | property | equivalent | $guild, $prop | Valor normalizado pelo recurso da entidade; $prop seleciona o campo (IDs usam sufixo ID). |
+| `@fluxerjs/core#Guild.fetchActiveThreads` | method | equivalent | $activeThreads | Acesso por builtin ao recurso autorizado correspondente; resolve/fetch usa busca normalizada, não instância SDK. |
+| `@fluxerjs/core#Guild.fetchAuditLogs` | method | equivalent | $auditLogs | Acesso por builtin ao recurso autorizado correspondente; resolve/fetch usa busca normalizada, não instância SDK. |
+| `@fluxerjs/core#Guild.fetchBans` | method | equivalent | $bans | Acesso por builtin ao recurso autorizado correspondente; resolve/fetch usa busca normalizada, não instância SDK. |
+| `@fluxerjs/core#Guild.fetchChannels` | method | function | $channels | Operação por builtin e recurso/serviço compartilhado; ver contrato de argumentos na referência. |
+| `@fluxerjs/core#Guild.fetchDiscoveryStatus` | method | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Guild.fetchEmoji` | method | equivalent | $emoji | Acesso por builtin ao recurso autorizado correspondente; resolve/fetch usa busca normalizada, não instância SDK. |
+| `@fluxerjs/core#Guild.fetchEmojis` | method | equivalent | $emojis | Acesso por builtin ao recurso autorizado correspondente; resolve/fetch usa busca normalizada, não instância SDK. |
+| `@fluxerjs/core#Guild.fetchInvite` | method | function | $invite | Operação por builtin e recurso/serviço compartilhado; ver contrato de argumentos na referência. |
+| `@fluxerjs/core#Guild.fetchInvites` | method | function | $invites | Operação por builtin e recurso/serviço compartilhado; ver contrato de argumentos na referência. |
+| `@fluxerjs/core#Guild.fetchMe` | method | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Guild.fetchMember` | method | equivalent | $member | Acesso por builtin ao recurso autorizado correspondente; resolve/fetch usa busca normalizada, não instância SDK. |
+| `@fluxerjs/core#Guild.fetchRole` | method | equivalent | $role | Acesso por builtin ao recurso autorizado correspondente; resolve/fetch usa busca normalizada, não instância SDK. |
+| `@fluxerjs/core#Guild.fetchRoles` | method | equivalent | $roles | Acesso por builtin ao recurso autorizado correspondente; resolve/fetch usa busca normalizada, não instância SDK. |
+| `@fluxerjs/core#Guild.fetchSticker` | method | equivalent | $sticker | Acesso por builtin ao recurso autorizado correspondente; resolve/fetch usa busca normalizada, não instância SDK. |
+| `@fluxerjs/core#Guild.fetchStickers` | method | equivalent | $stickers | Acesso por builtin ao recurso autorizado correspondente; resolve/fetch usa busca normalizada, não instância SDK. |
+| `@fluxerjs/core#Guild.fetchVanityURL` | method | function | $vanity | Operação por builtin e recurso/serviço compartilhado; ver contrato de argumentos na referência. |
+| `@fluxerjs/core#Guild.fetchWebhooks` | method | equivalent | $webhooks | Acesso por builtin ao recurso autorizado correspondente; resolve/fetch usa busca normalizada, não instância SDK. |
+| `@fluxerjs/core#Guild.icon` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Guild.iconURL` | method | function | $guildIcon | Operação por builtin e recurso/serviço compartilhado; ver contrato de argumentos na referência. |
+| `@fluxerjs/core#Guild.id` | property | equivalent | $guild, $prop | Valor normalizado pelo recurso da entidade; $prop seleciona o campo (IDs usam sufixo ID). |
+| `@fluxerjs/core#Guild.kick` | method | function | $kick | Operação por builtin e recurso/serviço compartilhado; ver contrato de argumentos na referência. |
+| `@fluxerjs/core#Guild.memberCount` | property | equivalent | $guild, $prop | Valor normalizado pelo recurso da entidade; $prop seleciona o campo (IDs usam sufixo ID). |
+| `@fluxerjs/core#Guild.members` | property | equivalent | $members | Listar membros normalizados em vez do manager mutável. |
+| `@fluxerjs/core#Guild.messageHistoryCutoff` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Guild.mfaLevel` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Guild.name` | property | equivalent | $guild, $prop | Valor normalizado pelo recurso da entidade; $prop seleciona o campo (IDs usam sufixo ID). |
+| `@fluxerjs/core#Guild.nsfw` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Guild.nsfwLevel` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Guild.onlineCount` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Guild.ownerId` | property | equivalent | $guild, $prop | Valor normalizado pelo recurso da entidade; $prop seleciona o campo (IDs usam sufixo ID). |
+| `@fluxerjs/core#Guild.permissions` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Guild.resetRoleHoistPositions` | method | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Guild.resolveRoleId` | method | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Guild.roles` | property | equivalent | $roles | Listar cargos normalizados em vez do manager mutável. |
+| `@fluxerjs/core#Guild.rulesChannelId` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Guild.setChannelPositions` | method | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Guild.setRoleHoistPositions` | method | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Guild.setRolePositions` | method | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Guild.splash` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Guild.splashCardAlignment` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Guild.splashHeight` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Guild.splashURL` | method | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Guild.splashWidth` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Guild.stickers` | property | equivalent | $stickers | Listar stickers normalizados em vez do manager mutável. |
+| `@fluxerjs/core#Guild.systemChannelFlags` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Guild.systemChannelId` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Guild.toString` | method | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Guild.transferOwnership` | method | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Guild.unban` | method | function | $unban | Operação por builtin e recurso/serviço compartilhado; ver contrato de argumentos na referência. |
+| `@fluxerjs/core#Guild.vanityURLCode` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Guild.verificationLevel` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Guild.withdrawDiscoveryApplication` | method | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#GuildBan` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
+| `@fluxerjs/core#GuildBan.client` | property | excluded | raw-transport | Referência ao client/transporte SDK não é valor de script; usar recursos autorizados. |
+| `@fluxerjs/core#GuildBan.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
+| `@fluxerjs/core#GuildBan.expiresAt` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#GuildBan.guildId` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#GuildBan.reason` | property | equivalent | $bans, $prop, $arrayFind | BanInfo.reason acessível na listagem de bans autorizada. |
+| `@fluxerjs/core#GuildBan.unban` | method | function | $unban | Operação por builtin e recurso/serviço compartilhado; ver contrato de argumentos na referência. |
+| `@fluxerjs/core#GuildBan.user` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#GuildChannel` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
+| `@fluxerjs/core#GuildChannel._patch` | method | excluded | internal | Helper interno, backing state ou patch de sessão; usar a operação pública autorizada. |
+| `@fluxerjs/core#GuildChannel.applyEditPatch` | method | excluded | internal | Helper interno, backing state ou patch de sessão; usar a operação pública autorizada. |
+| `@fluxerjs/core#GuildChannel.canSend` | method | pending |  | channelPermsOf retorna bitfield, mas falta composição declarativa que preserve todos os checks canSend do SDK; não inferir cobertura só por permissionsFor. |
+| `@fluxerjs/core#GuildChannel.canSendMessage` | method | pending |  | channelPermsOf retorna bitfield, mas falta composição declarativa que preserve todos os checks canSend do SDK; não inferir cobertura só por permissionsFor. |
+| `@fluxerjs/core#GuildChannel.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
+| `@fluxerjs/core#GuildChannel.createInvite` | method | equivalent | $createInvite | Acesso por builtin ao recurso autorizado correspondente; resolve/fetch usa busca normalizada, não instância SDK. |
+| `@fluxerjs/core#GuildChannel.createWebhook` | method | equivalent | $createWebhook | Acesso por builtin ao recurso autorizado correspondente; resolve/fetch usa busca normalizada, não instância SDK. |
+| `@fluxerjs/core#GuildChannel.edit` | method | function | $editChannel | Operação por builtin e recurso/serviço compartilhado; ver contrato de argumentos na referência. |
+| `@fluxerjs/core#GuildChannel.fetchInvites` | method | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#GuildChannel.fetchWebhooks` | method | equivalent | $webhooks | Acesso por builtin ao recurso autorizado correspondente; resolve/fetch usa busca normalizada, não instância SDK. |
+| `@fluxerjs/core#GuildChannel.guildId` | property | equivalent | $channel, $prop | Valor normalizado pelo recurso da entidade; $prop seleciona o campo (IDs usam sufixo ID). |
+| `@fluxerjs/core#GuildChannel.name` | property | equivalent | $channel, $prop | Valor normalizado pelo recurso da entidade; $prop seleciona o campo (IDs usam sufixo ID). |
+| `@fluxerjs/core#GuildChannel.parentId` | property | equivalent | $channel, $prop | Valor normalizado pelo recurso da entidade; $prop seleciona o campo (IDs usam sufixo ID). |
+| `@fluxerjs/core#GuildChannel.permissionOverwrites` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#GuildChannel.position` | property | equivalent | $channel, $prop | Valor normalizado pelo recurso da entidade; $prop seleciona o campo (IDs usam sufixo ID). |
+| `@fluxerjs/core#GuildEmoji` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
+| `@fluxerjs/core#GuildEmoji._patch` | method | excluded | internal | Helper interno, backing state ou patch de sessão; usar a operação pública autorizada. |
+| `@fluxerjs/core#GuildEmoji.animated` | property | equivalent | $emoji, $prop | Valor normalizado pelo recurso da entidade; $prop seleciona o campo (IDs usam sufixo ID). |
+| `@fluxerjs/core#GuildEmoji.client` | property | excluded | raw-transport | Referência ao client/transporte SDK não é valor de script; usar recursos autorizados. |
+| `@fluxerjs/core#GuildEmoji.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
+| `@fluxerjs/core#GuildEmoji.createdAt` | accessor | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#GuildEmoji.createdTimestamp` | accessor | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#GuildEmoji.delete` | method | function | $deleteEmoji | Operação por builtin e recurso/serviço compartilhado; ver contrato de argumentos na referência. |
+| `@fluxerjs/core#GuildEmoji.edit` | method | function | $editEmoji | Operação por builtin e recurso/serviço compartilhado; ver contrato de argumentos na referência. |
+| `@fluxerjs/core#GuildEmoji.guildId` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#GuildEmoji.id` | property | equivalent | $emoji, $prop | Valor normalizado pelo recurso da entidade; $prop seleciona o campo (IDs usam sufixo ID). |
+| `@fluxerjs/core#GuildEmoji.identifier` | accessor | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#GuildEmoji.name` | property | equivalent | $emoji, $prop | Valor normalizado pelo recurso da entidade; $prop seleciona o campo (IDs usam sufixo ID). |
+| `@fluxerjs/core#GuildEmoji.toString` | method | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#GuildEmoji.url` | accessor | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#GuildManager` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
+| `@fluxerjs/core#GuildManager.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
+| `@fluxerjs/core#GuildManager.delete` | method | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#GuildManager.fetch` | method | function | $guild | Operação por builtin e recurso/serviço compartilhado; ver contrato de argumentos na referência. |
+| `@fluxerjs/core#GuildManager.resolve` | method | equivalent | $guild | Resolver servidor por ID através de busca normalizada. |
+| `@fluxerjs/core#GuildMember` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
+| `@fluxerjs/core#GuildMember._clone` | method | excluded | internal | Helper interno, backing state ou patch de sessão; usar a operação pública autorizada. |
+| `@fluxerjs/core#GuildMember._patch` | method | excluded | internal | Helper interno, backing state ou patch de sessão; usar a operação pública autorizada. |
+| `@fluxerjs/core#GuildMember.accentColor` | property | equivalent | $userProfile, $prop | Perfil de servidor/global normalizado por $userProfile; propriedades nullable. |
+| `@fluxerjs/core#GuildMember.avatar` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#GuildMember.avatarURL` | method | function | $avatar | Avatar por usuário/servidor, sem expor a instância. |
+| `@fluxerjs/core#GuildMember.ban` | method | function | $ban | Operação por builtin e recurso/serviço compartilhado; ver contrato de argumentos na referência. |
+| `@fluxerjs/core#GuildMember.bannable` | accessor | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#GuildMember.banner` | property | equivalent | $userProfile, $prop | Perfil de servidor/global normalizado por $userProfile; propriedades nullable. |
+| `@fluxerjs/core#GuildMember.bannerURL` | method | function | $userBanner | Banner por usuário/servidor, com retorno nulo quando ausente. |
+| `@fluxerjs/core#GuildMember.bio` | property | equivalent | $userProfile, $prop | Perfil de servidor/global normalizado por $userProfile; propriedades nullable. |
+| `@fluxerjs/core#GuildMember.client` | property | excluded | raw-transport | Referência ao client/transporte SDK não é valor de script; usar recursos autorizados. |
+| `@fluxerjs/core#GuildMember.communicationDisabledUntil` | property | equivalent | $member, $prop | MemberInfo.timedOutUntil contém o timestamp do timeout ou null. |
+| `@fluxerjs/core#GuildMember.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
+| `@fluxerjs/core#GuildMember.deaf` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#GuildMember.displayAvatarURL` | method | function | $avatar | Avatar por usuário/servidor, sem expor a instância. |
+| `@fluxerjs/core#GuildMember.displayName` | accessor | equivalent | $member, $prop | MemberInfo.displayName preserva member.displayName, inclusive apelido. |
+| `@fluxerjs/core#GuildMember.edit` | method | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#GuildMember.guild` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#GuildMember.id` | property | equivalent | $member, $prop | Valor normalizado pelo recurso da entidade; $prop seleciona o campo (IDs usam sufixo ID). |
+| `@fluxerjs/core#GuildMember.joinedAt` | property | equivalent | $member, $prop, $date | Derivar data de MemberInfo.joinedTimestamp. |
+| `@fluxerjs/core#GuildMember.kick` | method | function | $kick | Operação por builtin e recurso/serviço compartilhado; ver contrato de argumentos na referência. |
+| `@fluxerjs/core#GuildMember.kickable` | accessor | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#GuildMember.mentionFlags` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#GuildMember.moderatable` | accessor | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#GuildMember.move` | method | function | $moveMember | Operação por builtin e recurso/serviço compartilhado; ver contrato de argumentos na referência. |
+| `@fluxerjs/core#GuildMember.mute` | property | function | $muteMember | Operação por builtin e recurso/serviço compartilhado; ver contrato de argumentos na referência. |
+| `@fluxerjs/core#GuildMember.nick` | property | equivalent | $member, $prop | MemberInfo.nickname contém o apelido; null sem apelido. |
+| `@fluxerjs/core#GuildMember.partial` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#GuildMember.permissions` | accessor | equivalent | $member, $prop | Valor normalizado pelo recurso da entidade; $prop seleciona o campo (IDs usam sufixo ID). |
+| `@fluxerjs/core#GuildMember.permissionsIn` | method | pending |  | Falta consulta de permissões de membro por canal com shape normalizado. |
+| `@fluxerjs/core#GuildMember.profileFlags` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#GuildMember.pronouns` | property | equivalent | $userProfile, $prop | Perfil de servidor/global normalizado por $userProfile; propriedades nullable. |
+| `@fluxerjs/core#GuildMember.roles` | property | equivalent | $member, $prop | MemberInfo.roles é a lista normalizada de IDs; objetos de cargo são resolvidos por $role. |
+| `@fluxerjs/core#GuildMember.timeout` | method | function | $timeout | Operação por builtin e recurso/serviço compartilhado; ver contrato de argumentos na referência. |
+| `@fluxerjs/core#GuildMember.toString` | method | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#GuildMember.user` | property | equivalent | $member, $prop, $user | Consultar UserInfo por ID do membro; não expor referência mutável. |
+| `@fluxerjs/core#GuildMemberManager` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
+| `@fluxerjs/core#GuildMemberManager.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
+| `@fluxerjs/core#GuildMemberManager.fetch` | method | function | $member | Operação por builtin e recurso/serviço compartilhado; ver contrato de argumentos na referência. |
+| `@fluxerjs/core#GuildMemberManager.fetchMe` | method | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#GuildMemberManager.me` | accessor | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#GuildMemberManager.resolve` | method | equivalent | $member | Acesso por builtin ao recurso autorizado correspondente; resolve/fetch usa busca normalizada, não instância SDK. |
+| `@fluxerjs/core#GuildMemberManager.search` | method | function | $searchMembers | Operação por builtin e recurso/serviço compartilhado; ver contrato de argumentos na referência. |
+| `@fluxerjs/core#GuildMemberRoleManager` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
+| `@fluxerjs/core#GuildMemberRoleManager._patch` | method | excluded | internal | Helper interno, backing state ou patch de sessão; usar a operação pública autorizada. |
+| `@fluxerjs/core#GuildMemberRoleManager.add` | method | function | $addRole | Operação por builtin e recurso/serviço compartilhado; ver contrato de argumentos na referência. |
+| `@fluxerjs/core#GuildMemberRoleManager.cache` | accessor | equivalent | $member, $prop, $roles, $arrayFilter, $arrayIncludes | Copiar IDs de MemberInfo.roles e filtrar os valores normalizados de $roles; não entregar cache mutável. |
+| `@fluxerjs/core#GuildMemberRoleManager.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
+| `@fluxerjs/core#GuildMemberRoleManager.has` | method | function | $hasRole | Consulta de cargo por serviço autorizado. |
+| `@fluxerjs/core#GuildMemberRoleManager.remove` | method | function | $removeRole | Operação por builtin e recurso/serviço compartilhado; ver contrato de argumentos na referência. |
+| `@fluxerjs/core#GuildMemberRoleManager.roleIds` | accessor | equivalent | $member, $prop | MemberInfo.roles é a lista normalizada de IDs; objetos de cargo são resolvidos por $role. |
+| `@fluxerjs/core#GuildMemberRoleManager.set` | method | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#GuildRoleManager` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
+| `@fluxerjs/core#GuildRoleManager.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
+| `@fluxerjs/core#GuildRoleManager.everyone` | accessor | equivalent | $roles, $arrayFind, $prop, $eq | Buscar em $roles o cargo cujo id é o guildID. |
+| `@fluxerjs/core#GuildSticker` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
+| `@fluxerjs/core#GuildSticker._patch` | method | excluded | internal | Helper interno, backing state ou patch de sessão; usar a operação pública autorizada. |
+| `@fluxerjs/core#GuildSticker.animated` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#GuildSticker.client` | property | excluded | raw-transport | Referência ao client/transporte SDK não é valor de script; usar recursos autorizados. |
+| `@fluxerjs/core#GuildSticker.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
+| `@fluxerjs/core#GuildSticker.createdAt` | accessor | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#GuildSticker.createdTimestamp` | accessor | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#GuildSticker.delete` | method | function | $deleteSticker | Operação por builtin e recurso/serviço compartilhado; ver contrato de argumentos na referência. |
+| `@fluxerjs/core#GuildSticker.description` | property | equivalent | $sticker, $prop | Valor normalizado pelo recurso da entidade; $prop seleciona o campo (IDs usam sufixo ID). |
+| `@fluxerjs/core#GuildSticker.edit` | method | function | $editSticker | Operação por builtin e recurso/serviço compartilhado; ver contrato de argumentos na referência. |
+| `@fluxerjs/core#GuildSticker.guildId` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#GuildSticker.id` | property | equivalent | $sticker, $prop | Valor normalizado pelo recurso da entidade; $prop seleciona o campo (IDs usam sufixo ID). |
+| `@fluxerjs/core#GuildSticker.name` | property | equivalent | $sticker, $prop | Valor normalizado pelo recurso da entidade; $prop seleciona o campo (IDs usam sufixo ID). |
+| `@fluxerjs/core#GuildSticker.nsfw` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#GuildSticker.tags` | property | equivalent | $sticker, $prop | Valor normalizado pelo recurso da entidade; $prop seleciona o campo (IDs usam sufixo ID). |
+| `@fluxerjs/core#GuildSticker.url` | accessor | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Invite` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
+| `@fluxerjs/core#Invite.channelSnapshot` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Invite.client` | property | excluded | raw-transport | Referência ao client/transporte SDK não é valor de script; usar recursos autorizados. |
+| `@fluxerjs/core#Invite.code` | property | equivalent | $invite, $prop | Valor normalizado pelo recurso da entidade; $prop seleciona o campo (IDs usam sufixo ID). |
+| `@fluxerjs/core#Invite.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
+| `@fluxerjs/core#Invite.createdAt` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Invite.delete` | method | function | $deleteInvite | Operação por builtin e recurso/serviço compartilhado; ver contrato de argumentos na referência. |
+| `@fluxerjs/core#Invite.expiresAt` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Invite.guildSnapshot` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Invite.inviter` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Invite.isGroupDM` | method | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Invite.isGuild` | method | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Invite.maxAge` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Invite.maxUses` | property | equivalent | $invite, $prop | Valor normalizado pelo recurso da entidade; $prop seleciona o campo (IDs usam sufixo ID). |
+| `@fluxerjs/core#Invite.memberCount` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Invite.presenceCount` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Invite.resolveChannel` | method | equivalent | $invite, $prop, $channel | channelID do convite resolve por $channel. |
+| `@fluxerjs/core#Invite.resolveGuild` | method | equivalent | $invite, $prop, $guild | guildID do convite resolve por $guild. |
+| `@fluxerjs/core#Invite.static:fetch` | method | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Invite.temporary` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Invite.type` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Invite.url` | accessor | equivalent | $invite, $prop | InviteInfo.url é calculada pelo adaptador. |
+| `@fluxerjs/core#Invite.uses` | property | equivalent | $invite, $prop | Valor normalizado pelo recurso da entidade; $prop seleciona o campo (IDs usam sufixo ID). |
+| `@fluxerjs/core#LinkChannel` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
+| `@fluxerjs/core#LinkChannel.applyEditPatch` | method | excluded | internal | Helper interno, backing state ou patch de sessão; usar a operação pública autorizada. |
+| `@fluxerjs/core#LinkChannel.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
+| `@fluxerjs/core#LinkChannel.url` | property | equivalent | $channel, $prop | Valor normalizado pelo recurso da entidade; $prop seleciona o campo (IDs usam sufixo ID). |
+| `@fluxerjs/core#MediaChannel` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
+| `@fluxerjs/core#Message` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
+| `@fluxerjs/core#Message._patch` | method | excluded | internal | Helper interno, backing state ou patch de sessão; usar a operação pública autorizada. |
+| `@fluxerjs/core#Message._send` | method | excluded | internal | Helper interno, backing state ou patch de sessão; usar a operação pública autorizada. |
+| `@fluxerjs/core#Message.attachments` | property | equivalent | $fetchMessage, $prop | Valor normalizado pelo recurso da entidade; $prop seleciona o campo (IDs usam sufixo ID). |
+| `@fluxerjs/core#Message.author` | property | pending |  | MessageInfo só fornece authorID/authorName; falta shape completo equivalente de autor. |
+| `@fluxerjs/core#Message.call` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Message.channel` | accessor | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Message.channelId` | property | equivalent | $fetchMessage, $prop | Valor normalizado pelo recurso da entidade; $prop seleciona o campo (IDs usam sufixo ID). |
+| `@fluxerjs/core#Message.client` | property | excluded | raw-transport | Referência ao client/transporte SDK não é valor de script; usar recursos autorizados. |
+| `@fluxerjs/core#Message.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
+| `@fluxerjs/core#Message.content` | property | equivalent | $fetchMessage, $prop | Valor normalizado pelo recurso da entidade; $prop seleciona o campo (IDs usam sufixo ID). |
+| `@fluxerjs/core#Message.createdAt` | property | equivalent | $fetchMessage, $prop, $date | Derivar data de MessageInfo.createdTimestamp. |
+| `@fluxerjs/core#Message.delete` | method | function | $deleteMessage | Operação por builtin e recurso/serviço compartilhado; ver contrato de argumentos na referência. |
+| `@fluxerjs/core#Message.deleteAttachment` | method | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Message.edit` | method | function | $editMessage | Operação por builtin e recurso/serviço compartilhado; ver contrato de argumentos na referência. |
+| `@fluxerjs/core#Message.editedAt` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Message.embeds` | property | equivalent | $fetchMessage, $prop | Valor normalizado pelo recurso da entidade; $prop seleciona o campo (IDs usam sufixo ID). |
+| `@fluxerjs/core#Message.fetch` | method | equivalent | $fetchMessage | Acesso por builtin ao recurso autorizado correspondente; resolve/fetch usa busca normalizada, não instância SDK. |
+| `@fluxerjs/core#Message.fetchReactionUsers` | method | equivalent | $reactionUsers | Acesso por builtin ao recurso autorizado correspondente; resolve/fetch usa busca normalizada, não instância SDK. |
+| `@fluxerjs/core#Message.fetchReactionUsersPage` | method | equivalent | $reactionUsersPage | Acesso por builtin ao recurso autorizado correspondente; resolve/fetch usa busca normalizada, não instância SDK. |
+| `@fluxerjs/core#Message.flags` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Message.guild` | accessor | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Message.guildId` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Message.id` | property | equivalent | $fetchMessage, $prop | Valor normalizado pelo recurso da entidade; $prop seleciona o campo (IDs usam sufixo ID). |
+| `@fluxerjs/core#Message.member` | accessor | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Message.mentionEveryone` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Message.mentionRoles` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Message.mentions` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Message.messageReference` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Message.messageSnapshots` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Message.nonce` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Message.nsfwEmojis` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Message.partial` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Message.pin` | method | function | $pin | Operação por builtin e recurso/serviço compartilhado; ver contrato de argumentos na referência. |
+| `@fluxerjs/core#Message.pinned` | property | equivalent | $fetchMessage, $prop | Valor normalizado pelo recurso da entidade; $prop seleciona o campo (IDs usam sufixo ID). |
+| `@fluxerjs/core#Message.react` | method | function | $react | Operação por builtin e recurso/serviço compartilhado; ver contrato de argumentos na referência. |
+| `@fluxerjs/core#Message.reactions` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Message.referencedMessage` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Message.removeAllReactions` | method | equivalent | $clearReactions | Acesso por builtin ao recurso autorizado correspondente; resolve/fetch usa busca normalizada, não instância SDK. |
+| `@fluxerjs/core#Message.removeReaction` | method | equivalent | $removeReaction | Acesso por builtin ao recurso autorizado correspondente; resolve/fetch usa busca normalizada, não instância SDK. |
+| `@fluxerjs/core#Message.removeReactionEmoji` | method | equivalent | $clearReactions | Acesso por builtin ao recurso autorizado correspondente; resolve/fetch usa busca normalizada, não instância SDK. |
+| `@fluxerjs/core#Message.reply` | method | function | $reply | Operação por builtin e recurso/serviço compartilhado; ver contrato de argumentos na referência. |
+| `@fluxerjs/core#Message.resolveChannel` | method | equivalent | $fetchMessage, $prop, $channel | channelID da mensagem resolve por $channel. |
+| `@fluxerjs/core#Message.resolveGuild` | method | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Message.send` | method | excluded | raw-transport | Objeto/transporte cru ou introspecção arbitrária pode contornar guards ou revelar estado da sessão. |
+| `@fluxerjs/core#Message.sendTo` | method | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Message.startThread` | method | equivalent | $createThread | Acesso por builtin ao recurso autorizado correspondente; resolve/fetch usa busca normalizada, não instância SDK. |
+| `@fluxerjs/core#Message.static:_createMessageBody` | method | excluded | internal | Helper interno, backing state ou patch de sessão; usar a operação pública autorizada. |
+| `@fluxerjs/core#Message.static:resolve` | method | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Message.stickers` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Message.thread` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Message.tts` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Message.type` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Message.unpin` | method | function | $unpin | Operação por builtin e recurso/serviço compartilhado; ver contrato de argumentos na referência. |
+| `@fluxerjs/core#Message.webhookId` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#MessageManager` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
+| `@fluxerjs/core#MessageManager.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
+| `@fluxerjs/core#MessageManager.fetch` | method | function | $fetchMessage, $messages | Overload por ID via fetchMessage; overload de consulta paginada via messages. |
+| `@fluxerjs/core#MessageManager.resolve` | method | equivalent | $fetchMessage | Acesso por builtin ao recurso autorizado correspondente; resolve/fetch usa busca normalizada, não instância SDK. |
+| `@fluxerjs/core#MessagePayload` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
+| `@fluxerjs/core#MessagePayload.addEmbed` | method | equivalent | $embeds, $addEmbed, $jsonMerge, $reply | Lista de embeds validada composta no payload de envio. |
+| `@fluxerjs/core#MessagePayload.data` | property | equivalent | $object, $jsonMerge, $reply | Payload declarativo validado no envio em vez de instância mutável. |
+| `@fluxerjs/core#MessagePayload.setAllowedMentions` | method | equivalent | $object, $jsonMerge, $reply | Payload allowedMentions tipado; relaxar menções exige autorização. |
+| `@fluxerjs/core#MessagePayload.setAttachments` | method | equivalent | $sendAttachments | Payload declarativo cobre o campo no envio, sem instância mutável do SDK. |
+| `@fluxerjs/core#MessagePayload.setContent` | method | equivalent | $object, $reply, $sendMessage | Objeto com content enviado por $reply/$sendMessage; respeita limite e validação. |
+| `@fluxerjs/core#MessagePayload.setEmbeds` | method | equivalent | $embeds, $addEmbed, $jsonMerge, $reply | Lista de embeds validada composta no payload de envio. |
+| `@fluxerjs/core#MessagePayload.setFlags` | method | equivalent | $messageOptions | Payload declarativo cobre o campo no envio, sem instância mutável do SDK. |
+| `@fluxerjs/core#MessagePayload.setReply` | method | equivalent | $reply | Payload declarativo cobre o campo no envio, sem instância mutável do SDK. |
+| `@fluxerjs/core#MessagePayload.setTTS` | method | equivalent | $messageOptions | Payload declarativo cobre o campo no envio, sem instância mutável do SDK. |
+| `@fluxerjs/core#MessagePayload.static:create` | method | excluded | internal | Fábrica de instância SDK; compor payload declarativo em vez de construir objeto SDK. |
+| `@fluxerjs/core#MessagePayload.toJSON` | method | equivalent | $object, $jsonMerge, $reply | Payload declarativo validado no envio em vez de instância mutável. |
+| `@fluxerjs/core#MessageReaction` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
+| `@fluxerjs/core#MessageReaction._data` | property | excluded | internal | Helper interno, backing state ou patch de sessão; usar a operação pública autorizada. |
+| `@fluxerjs/core#MessageReaction.channel` | accessor | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#MessageReaction.channelId` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#MessageReaction.client` | property | excluded | raw-transport | Referência ao client/transporte SDK não é valor de script; usar recursos autorizados. |
+| `@fluxerjs/core#MessageReaction.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
+| `@fluxerjs/core#MessageReaction.count` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#MessageReaction.emoji` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#MessageReaction.emojiIdentifier` | accessor | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#MessageReaction.fetchMessage` | method | equivalent | $fetchMessage | Acesso por builtin ao recurso autorizado correspondente; resolve/fetch usa busca normalizada, não instância SDK. |
+| `@fluxerjs/core#MessageReaction.guild` | accessor | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#MessageReaction.guildId` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#MessageReaction.me` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#MessageReaction.message` | accessor | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#MessageReaction.messageId` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#MessageReaction.static:fromMessage` | method | excluded | internal | Helper interno, backing state ou patch de sessão; usar a operação pública autorizada. |
+| `@fluxerjs/core#MessageReactionManager` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
+| `@fluxerjs/core#MessageReactionManager._patch` | method | excluded | internal | Helper interno, backing state ou patch de sessão; usar a operação pública autorizada. |
+| `@fluxerjs/core#MessageReactionManager.[Symbol.iterator]` | method | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
+| `@fluxerjs/core#MessageReactionManager.cache` | accessor | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#MessageReactionManager.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
+| `@fluxerjs/core#MessageReactionManager.size` | accessor | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#MessageSticker` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
+| `@fluxerjs/core#MessageSticker.animated` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#MessageSticker.client` | property | excluded | raw-transport | Referência ao client/transporte SDK não é valor de script; usar recursos autorizados. |
+| `@fluxerjs/core#MessageSticker.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
+| `@fluxerjs/core#MessageSticker.createdAt` | accessor | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#MessageSticker.createdTimestamp` | accessor | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#MessageSticker.description` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#MessageSticker.id` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#MessageSticker.name` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#MessageSticker.tags` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#MessageSticker.url` | accessor | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#PartialGuildMember` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
+| `@fluxerjs/core#PartialGuildMember.client` | property | excluded | raw-transport | Referência ao client/transporte SDK não é valor de script; usar recursos autorizados. |
+| `@fluxerjs/core#PartialGuildMember.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
+| `@fluxerjs/core#PartialGuildMember.fetch` | method | equivalent | $member | Acesso por builtin ao recurso autorizado correspondente; resolve/fetch usa busca normalizada, não instância SDK. |
+| `@fluxerjs/core#PartialGuildMember.guild` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#PartialGuildMember.guildId` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#PartialGuildMember.id` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#PartialGuildMember.partial` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#PartialGuildMember.user` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#PartialMessage` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
+| `@fluxerjs/core#PartialMessage.author` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#PartialMessage.authorId` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#PartialMessage.channel` | accessor | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#PartialMessage.channelId` | property | equivalent | $fetchMessage, $prop | Valor normalizado pelo recurso da entidade; $prop seleciona o campo (IDs usam sufixo ID). |
+| `@fluxerjs/core#PartialMessage.client` | property | excluded | raw-transport | Referência ao client/transporte SDK não é valor de script; usar recursos autorizados. |
+| `@fluxerjs/core#PartialMessage.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
+| `@fluxerjs/core#PartialMessage.content` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#PartialMessage.createdAt` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#PartialMessage.fetch` | method | function | $fetchMessage | Operação por builtin e recurso/serviço compartilhado; ver contrato de argumentos na referência. |
+| `@fluxerjs/core#PartialMessage.guildId` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#PartialMessage.id` | property | equivalent | $fetchMessage, $prop | Valor normalizado pelo recurso da entidade; $prop seleciona o campo (IDs usam sufixo ID). |
+| `@fluxerjs/core#PartialMessage.partial` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#PartialMessage.resolveChannel` | method | equivalent | $fetchMessage, $prop, $channel | channelID da mensagem resolve por $channel. |
+| `@fluxerjs/core#PermissionOverwrite` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
+| `@fluxerjs/core#PermissionOverwrite._allow` | property | excluded | internal | Helper interno, backing state ou patch de sessão; usar a operação pública autorizada. |
+| `@fluxerjs/core#PermissionOverwrite._deny` | property | excluded | internal | Helper interno, backing state ou patch de sessão; usar a operação pública autorizada. |
+| `@fluxerjs/core#PermissionOverwrite.allow` | accessor | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#PermissionOverwrite.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
+| `@fluxerjs/core#PermissionOverwrite.deny` | accessor | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#PermissionOverwrite.id` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#PermissionOverwrite.toJSON` | method | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#PermissionOverwrite.type` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#PermissionOverwriteManager` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
+| `@fluxerjs/core#PermissionOverwriteManager._patch` | method | excluded | internal | Helper interno, backing state ou patch de sessão; usar a operação pública autorizada. |
+| `@fluxerjs/core#PermissionOverwriteManager.[Symbol.iterator]` | method | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
+| `@fluxerjs/core#PermissionOverwriteManager.cache` | accessor | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#PermissionOverwriteManager.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
+| `@fluxerjs/core#PermissionOverwriteManager.delete` | method | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#PermissionOverwriteManager.edit` | method | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#PermissionOverwriteManager.size` | accessor | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#PermissionOverwriteManager.toJSON` | method | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Role` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
+| `@fluxerjs/core#Role._clone` | method | excluded | internal | Helper interno, backing state ou patch de sessão; usar a operação pública autorizada. |
+| `@fluxerjs/core#Role._patch` | method | excluded | internal | Helper interno, backing state ou patch de sessão; usar a operação pública autorizada. |
+| `@fluxerjs/core#Role._permissions` | property | excluded | internal | Helper interno, backing state ou patch de sessão; usar a operação pública autorizada. |
+| `@fluxerjs/core#Role.client` | property | excluded | raw-transport | Referência ao client/transporte SDK não é valor de script; usar recursos autorizados. |
+| `@fluxerjs/core#Role.color` | property | equivalent | $role, $prop | Valor normalizado pelo recurso da entidade; $prop seleciona o campo (IDs usam sufixo ID). |
+| `@fluxerjs/core#Role.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
+| `@fluxerjs/core#Role.createdAt` | accessor | pending |  | Falta timestamp normalizado de cargo ou helper Snowflake puro. |
+| `@fluxerjs/core#Role.createdTimestamp` | accessor | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Role.delete` | method | function | $deleteRole | Operação por builtin e recurso/serviço compartilhado; ver contrato de argumentos na referência. |
+| `@fluxerjs/core#Role.edit` | method | function | $editRole | Operação por builtin e recurso/serviço compartilhado; ver contrato de argumentos na referência. |
+| `@fluxerjs/core#Role.guildId` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Role.has` | method | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Role.hoist` | property | equivalent | $role, $prop | Valor normalizado pelo recurso da entidade; $prop seleciona o campo (IDs usam sufixo ID). |
+| `@fluxerjs/core#Role.hoistPosition` | property | equivalent | $role, $prop | RoleInfo.hoistPosition preserva posição de destaque normalizada. |
+| `@fluxerjs/core#Role.id` | property | equivalent | $role, $prop | Valor normalizado pelo recurso da entidade; $prop seleciona o campo (IDs usam sufixo ID). |
+| `@fluxerjs/core#Role.mentionable` | property | equivalent | $role, $prop | Valor normalizado pelo recurso da entidade; $prop seleciona o campo (IDs usam sufixo ID). |
+| `@fluxerjs/core#Role.name` | property | equivalent | $role, $prop | Valor normalizado pelo recurso da entidade; $prop seleciona o campo (IDs usam sufixo ID). |
+| `@fluxerjs/core#Role.permissions` | accessor | equivalent | $role, $prop | Valor normalizado pelo recurso da entidade; $prop seleciona o campo (IDs usam sufixo ID). |
+| `@fluxerjs/core#Role.position` | property | equivalent | $role, $prop | Valor normalizado pelo recurso da entidade; $prop seleciona o campo (IDs usam sufixo ID). |
+| `@fluxerjs/core#Role.toString` | method | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Role.unicodeEmoji` | property | equivalent | $role, $prop | Valor normalizado pelo recurso da entidade; $prop seleciona o campo (IDs usam sufixo ID). |
+| `@fluxerjs/core#TextChannel` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
+| `@fluxerjs/core#TextChannel.applyEditPatch` | method | excluded | internal | Helper interno, backing state ou patch de sessão; usar a operação pública autorizada. |
+| `@fluxerjs/core#TextChannel.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
+| `@fluxerjs/core#TextChannel.contentWarningLevel` | property | equivalent | $channel, $prop | Valor normalizado pelo recurso da entidade; $prop seleciona o campo (IDs usam sufixo ID). |
+| `@fluxerjs/core#TextChannel.contentWarningText` | property | equivalent | $channel, $prop | Valor normalizado pelo recurso da entidade; $prop seleciona o campo (IDs usam sufixo ID). |
+| `@fluxerjs/core#TextChannel.defaultAutoArchiveDuration` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#TextChannel.defaultThreadRateLimitPerUser` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#TextChannel.editThreadDefaults` | method | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#TextChannel.lastMessageId` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#TextChannel.nsfw` | property | equivalent | $channel, $prop | Valor normalizado pelo recurso da entidade; $prop seleciona o campo (IDs usam sufixo ID). |
+| `@fluxerjs/core#TextChannel.nsfwOverride` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#TextChannel.rateLimitPerUser` | property | equivalent | $channel, $prop | Valor normalizado pelo recurso da entidade; $prop seleciona o campo (IDs usam sufixo ID). |
+| `@fluxerjs/core#TextChannel.setSlowmode` | method | function | $slowmode | Operação por builtin e recurso/serviço compartilhado; ver contrato de argumentos na referência. |
+| `@fluxerjs/core#TextChannel.threads` | accessor | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#TextChannel.topic` | property | equivalent | $channel, $prop | Valor normalizado pelo recurso da entidade; $prop seleciona o campo (IDs usam sufixo ID). |
+| `@fluxerjs/core#ThreadChannel` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
+| `@fluxerjs/core#ThreadChannel._patch` | method | excluded | internal | Helper interno, backing state ou patch de sessão; usar a operação pública autorizada. |
+| `@fluxerjs/core#ThreadChannel.appliedTags` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#ThreadChannel.archived` | property | equivalent | $searchThreads, $prop | Valor normalizado pelo recurso da entidade; $prop seleciona o campo (IDs usam sufixo ID). |
+| `@fluxerjs/core#ThreadChannel.archiveTimestamp` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#ThreadChannel.autoArchiveDuration` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#ThreadChannel.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
+| `@fluxerjs/core#ThreadChannel.edit` | method | function | $editThread | Operação por builtin e recurso/serviço compartilhado; ver contrato de argumentos na referência. |
+| `@fluxerjs/core#ThreadChannel.editSelf` | method | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#ThreadChannel.flags` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#ThreadChannel.invitable` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#ThreadChannel.join` | method | function | $joinThread | Operação por builtin e recurso/serviço compartilhado; ver contrato de argumentos na referência. |
+| `@fluxerjs/core#ThreadChannel.lastMessageId` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#ThreadChannel.leave` | method | function | $leaveThread | Operação por builtin e recurso/serviço compartilhado; ver contrato de argumentos na referência. |
+| `@fluxerjs/core#ThreadChannel.locked` | property | equivalent | $searchThreads, $prop | Valor normalizado pelo recurso da entidade; $prop seleciona o campo (IDs usam sufixo ID). |
+| `@fluxerjs/core#ThreadChannel.member` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#ThreadChannel.memberCount` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#ThreadChannel.members` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#ThreadChannel.messageCount` | property | equivalent | $searchThreads, $prop | Valor normalizado pelo recurso da entidade; $prop seleciona o campo (IDs usam sufixo ID). |
+| `@fluxerjs/core#ThreadChannel.ownerId` | property | equivalent | $searchThreads, $prop | Valor normalizado pelo recurso da entidade; $prop seleciona o campo (IDs usam sufixo ID). |
+| `@fluxerjs/core#ThreadChannel.parentId` | property | equivalent | $searchThreads, $prop | Valor normalizado pelo recurso da entidade; $prop seleciona o campo (IDs usam sufixo ID). |
+| `@fluxerjs/core#ThreadChannel.rateLimitPerUser` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#ThreadChannel.setArchived` | method | function | $archiveThread | Operação por builtin e recurso/serviço compartilhado; ver contrato de argumentos na referência. |
+| `@fluxerjs/core#ThreadChannel.setLocked` | method | function | $editThread | Operação por builtin e recurso/serviço compartilhado; ver contrato de argumentos na referência. |
+| `@fluxerjs/core#ThreadChannel.totalMessageSent` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#ThreadManager` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
+| `@fluxerjs/core#ThreadManager.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
+| `@fluxerjs/core#ThreadManager.create` | method | function | $createThread | Operação por builtin e recurso/serviço compartilhado; ver contrato de argumentos na referência. |
+| `@fluxerjs/core#ThreadManager.createPost` | method | function | $forumPost | Operação por builtin e recurso/serviço compartilhado; ver contrato de argumentos na referência. |
+| `@fluxerjs/core#ThreadManager.editDefaults` | method | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#ThreadManager.fetchArchived` | method | function | $archivedThreads | Operação por builtin e recurso/serviço compartilhado; ver contrato de argumentos na referência. |
+| `@fluxerjs/core#ThreadManager.fetchJoinedPrivateArchived` | method | function | $archivedThreads | Operação por builtin e recurso/serviço compartilhado; ver contrato de argumentos na referência. |
+| `@fluxerjs/core#ThreadManager.search` | method | function | $searchThreads | Operação por builtin e recurso/serviço compartilhado; ver contrato de argumentos na referência. |
+| `@fluxerjs/core#ThreadMember` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
+| `@fluxerjs/core#ThreadMember.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
+| `@fluxerjs/core#ThreadMember.flags` | property | equivalent | $threadMember, $prop | Valor normalizado pelo recurso da entidade; $prop seleciona o campo (IDs usam sufixo ID). |
+| `@fluxerjs/core#ThreadMember.id` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#ThreadMember.joinedAt` | property | equivalent | $threadMember, $prop, $date | Derivar data de ThreadMemberDetails.joinedTimestamp. |
+| `@fluxerjs/core#ThreadMember.muted` | property | equivalent | $threadMember, $prop | Valor normalizado pelo recurso da entidade; $prop seleciona o campo (IDs usam sufixo ID). |
+| `@fluxerjs/core#ThreadMember.muteEndTime` | property | equivalent | $threadMember, $prop | Valor normalizado pelo recurso da entidade; $prop seleciona o campo (IDs usam sufixo ID). |
+| `@fluxerjs/core#ThreadMember.muteWindow` | property | equivalent | $threadMember, $prop | Valor normalizado pelo recurso da entidade; $prop seleciona o campo (IDs usam sufixo ID). |
+| `@fluxerjs/core#ThreadMember.userId` | property | equivalent | $threadMember, $prop | Valor normalizado pelo recurso da entidade; $prop seleciona o campo (IDs usam sufixo ID). |
+| `@fluxerjs/core#ThreadMemberManager` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
+| `@fluxerjs/core#ThreadMemberManager.add` | method | function | $addThreadMember | Operação por builtin e recurso/serviço compartilhado; ver contrato de argumentos na referência. |
+| `@fluxerjs/core#ThreadMemberManager.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
+| `@fluxerjs/core#ThreadMemberManager.fetch` | method | function | $threadMembers | Operação por builtin e recurso/serviço compartilhado; ver contrato de argumentos na referência. |
+| `@fluxerjs/core#ThreadMemberManager.fetchOne` | method | function | $threadMember | Operação por builtin e recurso/serviço compartilhado; ver contrato de argumentos na referência. |
+| `@fluxerjs/core#ThreadMemberManager.remove` | method | function | $removeThreadMember | Operação por builtin e recurso/serviço compartilhado; ver contrato de argumentos na referência. |
+| `@fluxerjs/core#User` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
+| `@fluxerjs/core#User._patch` | method | excluded | internal | Helper interno, backing state ou patch de sessão; usar a operação pública autorizada. |
+| `@fluxerjs/core#User.avatar` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#User.avatarColor` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#User.avatarURL` | method | function | $avatar | Operação por builtin e recurso/serviço compartilhado; ver contrato de argumentos na referência. |
+| `@fluxerjs/core#User.banner` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#User.bannerURL` | method | function | $userBanner | Operação por builtin e recurso/serviço compartilhado; ver contrato de argumentos na referência. |
+| `@fluxerjs/core#User.bot` | property | equivalent | $user, $prop | Valor normalizado pelo recurso da entidade; $prop seleciona o campo (IDs usam sufixo ID). |
+| `@fluxerjs/core#User.client` | property | excluded | raw-transport | Referência ao client/transporte SDK não é valor de script; usar recursos autorizados. |
+| `@fluxerjs/core#User.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
+| `@fluxerjs/core#User.createdAt` | accessor | equivalent | $user, $prop, $date | Derivar data de UserInfo.createdTimestamp. |
+| `@fluxerjs/core#User.createDM` | method | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#User.createdTimestamp` | accessor | equivalent | $user, $prop | Valor normalizado pelo recurso da entidade; $prop seleciona o campo (IDs usam sufixo ID). |
+| `@fluxerjs/core#User.discriminator` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#User.displayAvatarURL` | method | function | $avatar | Operação por builtin e recurso/serviço compartilhado; ver contrato de argumentos na referência. |
+| `@fluxerjs/core#User.flags` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#User.globalName` | property | pending |  | UserInfo.displayName aplica fallback de username; não preserva globalName nullable. Falta campo normalizado. |
+| `@fluxerjs/core#User.id` | property | equivalent | $user, $prop | Valor normalizado pelo recurso da entidade; $prop seleciona o campo (IDs usam sufixo ID). |
+| `@fluxerjs/core#User.send` | method | function | $dm | Operação por builtin e recurso/serviço compartilhado; ver contrato de argumentos na referência. |
+| `@fluxerjs/core#User.system` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#User.toString` | method | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#User.username` | property | equivalent | $user, $prop | Valor normalizado pelo recurso da entidade; $prop seleciona o campo (IDs usam sufixo ID). |
+| `@fluxerjs/core#UserManager` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
+| `@fluxerjs/core#UserManager.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
+| `@fluxerjs/core#UserManager.fetch` | method | function | $user | Operação por builtin e recurso/serviço compartilhado; ver contrato de argumentos na referência. |
+| `@fluxerjs/core#UserManager.fetchWithProfile` | method | function | $userProfile | Operação por builtin e recurso/serviço compartilhado; ver contrato de argumentos na referência. |
+| `@fluxerjs/core#UserManager.resolve` | method | equivalent | $user | Resolver usuário por ID através de busca normalizada. |
+| `@fluxerjs/core#UserManager.sweep` | method | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#VoiceChannel` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
+| `@fluxerjs/core#VoiceChannel.applyEditPatch` | method | excluded | internal | Helper interno, backing state ou patch de sessão; usar a operação pública autorizada. |
+| `@fluxerjs/core#VoiceChannel.bitrate` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#VoiceChannel.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
+| `@fluxerjs/core#VoiceChannel.contentWarningLevel` | property | equivalent | $channel, $prop | Valor normalizado pelo recurso da entidade; $prop seleciona o campo (IDs usam sufixo ID). |
+| `@fluxerjs/core#VoiceChannel.contentWarningText` | property | equivalent | $channel, $prop | Valor normalizado pelo recurso da entidade; $prop seleciona o campo (IDs usam sufixo ID). |
+| `@fluxerjs/core#VoiceChannel.guildId` | property | equivalent | $channel, $prop | Valor normalizado pelo recurso da entidade; $prop seleciona o campo (IDs usam sufixo ID). |
+| `@fluxerjs/core#VoiceChannel.lastMessageId` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#VoiceChannel.nsfw` | property | equivalent | $channel, $prop | Valor normalizado pelo recurso da entidade; $prop seleciona o campo (IDs usam sufixo ID). |
+| `@fluxerjs/core#VoiceChannel.nsfwOverride` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#VoiceChannel.rateLimitPerUser` | property | equivalent | $channel, $prop | Valor normalizado pelo recurso da entidade; $prop seleciona o campo (IDs usam sufixo ID). |
+| `@fluxerjs/core#VoiceChannel.rtcRegion` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#VoiceChannel.setSlowmode` | method | function | $slowmode | Operação por builtin e recurso/serviço compartilhado; ver contrato de argumentos na referência. |
+| `@fluxerjs/core#VoiceChannel.topic` | property | equivalent | $channel, $prop | Valor normalizado pelo recurso da entidade; $prop seleciona o campo (IDs usam sufixo ID). |
+| `@fluxerjs/core#VoiceChannel.userLimit` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#VoiceChannel.voiceConnectionLimit` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Webhook` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
+| `@fluxerjs/core#Webhook.avatar` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Webhook.avatarURL` | method | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Webhook.channelId` | property | equivalent | $webhooks, $prop | Valor normalizado pelo recurso da entidade; $prop seleciona o campo (IDs usam sufixo ID). |
+| `@fluxerjs/core#Webhook.client` | property | excluded | raw-transport | Referência ao client/transporte SDK não é valor de script; usar recursos autorizados. |
+| `@fluxerjs/core#Webhook.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
+| `@fluxerjs/core#Webhook.createdAt` | accessor | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Webhook.createdTimestamp` | accessor | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Webhook.delete` | method | function | $deleteWebhook | Operação por builtin e recurso/serviço compartilhado; ver contrato de argumentos na referência. |
+| `@fluxerjs/core#Webhook.edit` | method | function | $editWebhook | Operação por builtin e recurso/serviço compartilhado; ver contrato de argumentos na referência. |
+| `@fluxerjs/core#Webhook.guildId` | property | equivalent | $webhooks, $prop | Valor normalizado pelo recurso da entidade; $prop seleciona o campo (IDs usam sufixo ID). |
+| `@fluxerjs/core#Webhook.id` | property | equivalent | $webhooks, $prop | Valor normalizado pelo recurso da entidade; $prop seleciona o campo (IDs usam sufixo ID). |
+| `@fluxerjs/core#Webhook.name` | property | equivalent | $webhooks, $prop | Valor normalizado pelo recurso da entidade; $prop seleciona o campo (IDs usam sufixo ID). |
+| `@fluxerjs/core#Webhook.send` | method | excluded | credentials | O builtin sendWebhook exige token de webhook; este caminho com segredo no script não conta como operação segura. Envio sem segredo requer fachada nativa. |
+| `@fluxerjs/core#Webhook.static:fetch` | method | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Webhook.static:fromToken` | method | excluded | credentials | Credenciais, segredo ou sessão autenticada não são expostos a scripts. |
+| `@fluxerjs/core#Webhook.token` | property | excluded | credentials | Credenciais, segredo ou sessão autenticada não são expostos a scripts. |
+| `@fluxerjs/core#Webhook.type` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
+| `@fluxerjs/core#Webhook.user` | property | pending |  | Falta operação de entidade ou campo normalizado acessível ao script; preservar guards e contexto parcial. |
 
-- **Sharding e cluster** (`BETA_CLIENT_CLUSTER_WARNING`, `ClientCluster`, `ClientClusterEvents`): Fora deste lote. O Yuzuha expõe shardCount e shardIds em clientOptions; o wrapper yuzuha/sharding fica como seguimento.
-- **Constantes e bitfields puros** (`GuildMemberProfileFlags`, `GuildOperations`, `MessageAttachmentFlags`, `MessageFlags`, `MessageFlagsBitField`, `MessageFlagsBits`, `PublicUserFlags`, `Routes`, `SystemChannelFlags`, `ThreadMemberFlags`, `UserFlagsBitField`, `UserFlagsBits`, `resolvePermissionsToBitfield`, `ErrorCodes`): Disponível por `yuzuha/sdk` (e `SDK` na raiz); sem wrapper nativo por serem constantes, helpers puros ou classes de dados.
-- **Instância, cache e logs** (`DEFAULT_INSTANCE_ENDPOINTS`, `INSTANCE_DISCOVERY_PATH`, `instanceDiscoveryUrl`, `normalizeApiOrigin`, `parseInstanceDiscovery`, `resolveInstanceEndpoints`, `DEFAULT_CACHE_LIMITS`, `normalizeCacheLimit`, `resolveCacheLimits`, `createLogger`, `serializeError`): Disponível por `yuzuha/sdk` (e `SDK` na raiz); sem wrapper nativo por serem constantes, helpers puros ou classes de dados.
-- **Texto e parsing puros** (`parsePrefixCommand`, `parseUserMention`, `resolveKlipyToImageUrl`): Disponível por `yuzuha/sdk` (e `SDK` na raiz); sem wrapper nativo por serem constantes, helpers puros ou classes de dados.
-- **Classes de dados do SDK** (`AnnouncementChannel`, `CategoryChannel`, `ForumChannel`, `MediaChannel`, `GuildRoleManager`): Disponível por `yuzuha/sdk` (e `SDK` na raiz); sem wrapper nativo por serem constantes, helpers puros ou classes de dados.
-- **Tipos e flags do SDK** (`EmbedMediaFlags`, `GatewayDispatchEvents`, `GatewayErrorCodes`, `GatewayIdentifyFlags`, `isGroupDmInvite`, `isGuildInvite`, `isUploadedAttachment`): Disponível por `yuzuha/sdk/types`; sem wrapper nativo por serem constantes, enums e helpers puros.
-- **Internos do SDK** (membros): membro interno, helper estático ou helper de sessão do SDK; fora da superfície pública ou acessível por `bot.client`
-- **Helpers puros do SDK** (membros): helper puro do SDK (bitfield de permissões / URL de asset), acessível por `bot.client` e `yuzuha/sdk`
-- **Dados dos objetos do SDK** (membros): propriedade de dado do objeto do SDK, acessível por `bot.client` e pelos `*Info` do recurso quando normalizada
+## events
+
+| ID | Tipo | Status | Funções / exclusão | Justificativa |
+|---|---|---|---|---|
+| `@fluxerjs/core#ClientEvents` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/core#ClientEvents:channelCreate` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
+| `@fluxerjs/core#ClientEvents:channelDelete` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
+| `@fluxerjs/core#ClientEvents:channelMemberCountsUpdate` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
+| `@fluxerjs/core#ClientEvents:channelPinsUpdate` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
+| `@fluxerjs/core#ClientEvents:channelRecipientAdd` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
+| `@fluxerjs/core#ClientEvents:channelRecipientRemove` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
+| `@fluxerjs/core#ClientEvents:channelUpdate` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
+| `@fluxerjs/core#ClientEvents:debug` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
+| `@fluxerjs/core#ClientEvents:entranceSoundPlay` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
+| `@fluxerjs/core#ClientEvents:error` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
+| `@fluxerjs/core#ClientEvents:forumUnreads` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
+| `@fluxerjs/core#ClientEvents:guildAuditLogEntryCreate` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
+| `@fluxerjs/core#ClientEvents:guildAvailable` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
+| `@fluxerjs/core#ClientEvents:guildBanAdd` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
+| `@fluxerjs/core#ClientEvents:guildBanRemove` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
+| `@fluxerjs/core#ClientEvents:guildCountsUpdate` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
+| `@fluxerjs/core#ClientEvents:guildCreate` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
+| `@fluxerjs/core#ClientEvents:guildDelete` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
+| `@fluxerjs/core#ClientEvents:guildEmojisUpdate` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
+| `@fluxerjs/core#ClientEvents:guildMemberAdd` | event | function | $eventName | scriptEvent adapta este evento; $eventName e os seletores $event* leem seu contexto. |
+| `@fluxerjs/core#ClientEvents:guildMemberRemove` | event | function | $eventName | scriptEvent adapta este evento; $eventName e os seletores $event* leem seu contexto. |
+| `@fluxerjs/core#ClientEvents:guildMembersChunk` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
+| `@fluxerjs/core#ClientEvents:guildMemberUpdate` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
+| `@fluxerjs/core#ClientEvents:guildRoleCreate` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
+| `@fluxerjs/core#ClientEvents:guildRoleDelete` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
+| `@fluxerjs/core#ClientEvents:guildRoleUpdate` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
+| `@fluxerjs/core#ClientEvents:guildStickersUpdate` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
+| `@fluxerjs/core#ClientEvents:guildUnavailable` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
+| `@fluxerjs/core#ClientEvents:guildUpdate` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
+| `@fluxerjs/core#ClientEvents:inviteCreate` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
+| `@fluxerjs/core#ClientEvents:inviteDelete` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
+| `@fluxerjs/core#ClientEvents:messageCreate` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
+| `@fluxerjs/core#ClientEvents:messageDelete` | event | function | $eventName | scriptEvent adapta este evento; $eventName e os seletores $event* leem seu contexto. |
+| `@fluxerjs/core#ClientEvents:messageDeleteBulk` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
+| `@fluxerjs/core#ClientEvents:messageReactionAdd` | event | function | $eventName | scriptEvent adapta este evento; $eventName e os seletores $event* leem seu contexto. |
+| `@fluxerjs/core#ClientEvents:messageReactionAddMany` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
+| `@fluxerjs/core#ClientEvents:messageReactionRemove` | event | function | $eventName | scriptEvent adapta este evento; $eventName e os seletores $event* leem seu contexto. |
+| `@fluxerjs/core#ClientEvents:messageReactionRemoveAll` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
+| `@fluxerjs/core#ClientEvents:messageReactionRemoveEmoji` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
+| `@fluxerjs/core#ClientEvents:messageUpdate` | event | function | $eventName | scriptEvent adapta este evento; $eventName e os seletores $event* leem seu contexto. |
+| `@fluxerjs/core#ClientEvents:presenceUpdate` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
+| `@fluxerjs/core#ClientEvents:presenceUpdateBulk` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
+| `@fluxerjs/core#ClientEvents:ready` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
+| `@fluxerjs/core#ClientEvents:resumed` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
+| `@fluxerjs/core#ClientEvents:shardDisconnect` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
+| `@fluxerjs/core#ClientEvents:shardError` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
+| `@fluxerjs/core#ClientEvents:shardingRequired` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
+| `@fluxerjs/core#ClientEvents:shardReady` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
+| `@fluxerjs/core#ClientEvents:shardReconnecting` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
+| `@fluxerjs/core#ClientEvents:shardResumed` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
+| `@fluxerjs/core#ClientEvents:threadCreate` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
+| `@fluxerjs/core#ClientEvents:threadDelete` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
+| `@fluxerjs/core#ClientEvents:threadListSync` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
+| `@fluxerjs/core#ClientEvents:threadMemberListUpdate` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
+| `@fluxerjs/core#ClientEvents:threadMembersUpdate` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
+| `@fluxerjs/core#ClientEvents:threadMemberUpdate` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
+| `@fluxerjs/core#ClientEvents:threadUpdate` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
+| `@fluxerjs/core#ClientEvents:typingStart` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
+| `@fluxerjs/core#ClientEvents:userConnectionsUpdate` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
+| `@fluxerjs/core#ClientEvents:userUpdate` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
+| `@fluxerjs/core#ClientEvents:voiceServerUpdate` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
+| `@fluxerjs/core#ClientEvents:voiceStateAck` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
+| `@fluxerjs/core#ClientEvents:voiceStatesSync` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
+| `@fluxerjs/core#ClientEvents:voiceStateUpdate` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
+| `@fluxerjs/core#ClientEvents:webauthnCredentialsUpdate` | event | excluded | credentials | Evento contém material de autenticação WebAuthn; não deve ser encaminhado a scripts. |
+| `@fluxerjs/core#ClientEvents:webhooksUpdate` | event | pending |  | Falta adaptação de payload, ator e contexto de evento para script. |
+
+## voice
+
+| ID | Tipo | Status | Funções / exclusão | Justificativa |
+|---|---|---|---|---|
+| `@fluxerjs/voice#getVoiceManager` | function | pending |  | Falta contrato declarativo de voz/música com limites, cancelamento e política de mídia. |
+| `@fluxerjs/voice#joinVoiceChannel` | function | pending |  | Falta contrato declarativo de voz/música com limites, cancelamento e política de mídia. |
+| `@fluxerjs/voice#LiveKitAudioFrame` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/voice#LiveKitReceiveSubscription` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/voice#LiveKitRtcConnection` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
+| `@fluxerjs/voice#LiveKitRtcConnection.channel` | property | pending |  | Falta contrato declarativo de voz/música com limites, cancelamento e política de mídia. |
+| `@fluxerjs/voice#LiveKitRtcConnection.client` | property | excluded | raw-transport | Referência ao client/transporte SDK não é valor de script; usar recursos autorizados. |
+| `@fluxerjs/voice#LiveKitRtcConnection.connect` | method | excluded | lifecycle | Ciclo de vida, emissão ou coordenação de processos é controlado pela configuração nativa, não por scripts. |
+| `@fluxerjs/voice#LiveKitRtcConnection.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
+| `@fluxerjs/voice#LiveKitRtcConnection.destroy` | method | excluded | lifecycle | Ciclo de vida, emissão ou coordenação de processos é controlado pela configuração nativa, não por scripts. |
+| `@fluxerjs/voice#LiveKitRtcConnection.disconnect` | method | pending |  | Falta contrato declarativo de voz/música com limites, cancelamento e política de mídia. |
+| `@fluxerjs/voice#LiveKitRtcConnection.getVolume` | method | pending |  | Falta contrato declarativo de voz/música com limites, cancelamento e política de mídia. |
+| `@fluxerjs/voice#LiveKitRtcConnection.guildId` | property | pending |  | Falta contrato declarativo de voz/música com limites, cancelamento e política de mídia. |
+| `@fluxerjs/voice#LiveKitRtcConnection.isConnected` | method | pending |  | Falta contrato declarativo de voz/música com limites, cancelamento e política de mídia. |
+| `@fluxerjs/voice#LiveKitRtcConnection.isSameServer` | method | pending |  | Falta contrato declarativo de voz/música com limites, cancelamento e política de mídia. |
+| `@fluxerjs/voice#LiveKitRtcConnection.play` | method | pending |  | Falta contrato declarativo de voz/música com limites, cancelamento e política de mídia. |
+| `@fluxerjs/voice#LiveKitRtcConnection.playing` | accessor | pending |  | Falta contrato declarativo de voz/música com limites, cancelamento e política de mídia. |
+| `@fluxerjs/voice#LiveKitRtcConnection.playingVideo` | accessor | pending |  | Falta contrato declarativo de voz/música com limites, cancelamento e política de mídia. |
+| `@fluxerjs/voice#LiveKitRtcConnection.playOpus` | method | pending |  | Falta contrato declarativo de voz/música com limites, cancelamento e política de mídia. |
+| `@fluxerjs/voice#LiveKitRtcConnection.playVideo` | method | pending |  | Falta contrato declarativo de voz/música com limites, cancelamento e política de mídia. |
+| `@fluxerjs/voice#LiveKitRtcConnection.setVolume` | method | pending |  | Falta contrato declarativo de voz/música com limites, cancelamento e política de mídia. |
+| `@fluxerjs/voice#LiveKitRtcConnection.stop` | method | pending |  | Falta contrato declarativo de voz/música com limites, cancelamento e política de mídia. |
+| `@fluxerjs/voice#LiveKitRtcConnection.stopVideo` | method | pending |  | Falta contrato declarativo de voz/música com limites, cancelamento e política de mídia. |
+| `@fluxerjs/voice#LiveKitRtcConnection.subscribeParticipantAudio` | method | pending |  | Falta contrato declarativo de voz/música com limites, cancelamento e política de mídia. |
+| `@fluxerjs/voice#LiveKitRtcConnectionEvents` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/voice#LiveKitRtcConnectionEvents:audioFrame` | event | pending |  | Falta contrato declarativo de voz/música com limites, cancelamento e política de mídia. |
+| `@fluxerjs/voice#LiveKitRtcConnectionEvents:disconnect` | event | pending |  | Falta contrato declarativo de voz/música com limites, cancelamento e política de mídia. |
+| `@fluxerjs/voice#LiveKitRtcConnectionEvents:error` | event | pending |  | Falta contrato declarativo de voz/música com limites, cancelamento e política de mídia. |
+| `@fluxerjs/voice#LiveKitRtcConnectionEvents:ready` | event | pending |  | Falta contrato declarativo de voz/música com limites, cancelamento e política de mídia. |
+| `@fluxerjs/voice#LiveKitRtcConnectionEvents:requestVoiceStateSync` | event | pending |  | Falta contrato declarativo de voz/música com limites, cancelamento e política de mídia. |
+| `@fluxerjs/voice#LiveKitRtcConnectionEvents:serverLeave` | event | pending |  | Falta contrato declarativo de voz/música com limites, cancelamento e política de mídia. |
+| `@fluxerjs/voice#LiveKitRtcConnectionEvents:speakerStart` | event | pending |  | Falta contrato declarativo de voz/música com limites, cancelamento e política de mídia. |
+| `@fluxerjs/voice#LiveKitRtcConnectionEvents:speakerStop` | event | pending |  | Falta contrato declarativo de voz/música com limites, cancelamento e política de mídia. |
+| `@fluxerjs/voice#VideoPlayOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/voice#VoiceConnection` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
+| `@fluxerjs/voice#VoiceConnection.channel` | property | pending |  | Falta contrato declarativo de voz/música com limites, cancelamento e política de mídia. |
+| `@fluxerjs/voice#VoiceConnection.client` | property | excluded | raw-transport | Referência ao client/transporte SDK não é valor de script; usar recursos autorizados. |
+| `@fluxerjs/voice#VoiceConnection.connect` | method | excluded | lifecycle | Ciclo de vida, emissão ou coordenação de processos é controlado pela configuração nativa, não por scripts. |
+| `@fluxerjs/voice#VoiceConnection.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
+| `@fluxerjs/voice#VoiceConnection.destroy` | method | excluded | lifecycle | Ciclo de vida, emissão ou coordenação de processos é controlado pela configuração nativa, não por scripts. |
+| `@fluxerjs/voice#VoiceConnection.disconnect` | method | pending |  | Falta contrato declarativo de voz/música com limites, cancelamento e política de mídia. |
+| `@fluxerjs/voice#VoiceConnection.guildId` | property | pending |  | Falta contrato declarativo de voz/música com limites, cancelamento e política de mídia. |
+| `@fluxerjs/voice#VoiceConnection.play` | method | pending |  | Falta contrato declarativo de voz/música com limites, cancelamento e política de mídia. |
+| `@fluxerjs/voice#VoiceConnection.playing` | accessor | pending |  | Falta contrato declarativo de voz/música com limites, cancelamento e política de mídia. |
+| `@fluxerjs/voice#VoiceConnection.playOpus` | method | pending |  | Falta contrato declarativo de voz/música com limites, cancelamento e política de mídia. |
+| `@fluxerjs/voice#VoiceConnection.sessionId` | accessor | excluded | credentials | Credenciais, segredo ou sessão autenticada não são expostos a scripts. |
+| `@fluxerjs/voice#VoiceConnection.stop` | method | pending |  | Falta contrato declarativo de voz/música com limites, cancelamento e política de mídia. |
+| `@fluxerjs/voice#VoiceConnectionEvents` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/voice#VoiceConnectionEvents:disconnect` | event | pending |  | Falta contrato declarativo de voz/música com limites, cancelamento e política de mídia. |
+| `@fluxerjs/voice#VoiceConnectionEvents:error` | event | pending |  | Falta contrato declarativo de voz/música com limites, cancelamento e política de mídia. |
+| `@fluxerjs/voice#VoiceConnectionEvents:ready` | event | pending |  | Falta contrato declarativo de voz/música com limites, cancelamento e política de mídia. |
+| `@fluxerjs/voice#VoiceConnectionLike` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/voice#VoiceManager` | class | excluded | data-only | Identidade da classe não é operação de script; membros são classificados separadamente, sem construir instâncias SDK. |
+| `@fluxerjs/voice#VoiceManager.client` | property | excluded | raw-transport | Referência ao client/transporte SDK não é valor de script; usar recursos autorizados. |
+| `@fluxerjs/voice#VoiceManager.constructor` | constructor | excluded | internal | Construção/iteração de instâncias SDK pertence ao adaptador nativo; scripts recebem valores normalizados. |
+| `@fluxerjs/voice#VoiceManager.getConnection` | method | pending |  | Falta contrato declarativo de voz/música com limites, cancelamento e política de mídia. |
+| `@fluxerjs/voice#VoiceManager.getVoiceChannelId` | method | pending |  | Falta contrato declarativo de voz/música com limites, cancelamento e política de mídia. |
+| `@fluxerjs/voice#VoiceManager.join` | method | pending |  | Falta contrato declarativo de voz/música com limites, cancelamento e política de mídia. |
+| `@fluxerjs/voice#VoiceManager.leave` | method | pending |  | Falta contrato declarativo de voz/música com limites, cancelamento e política de mídia. |
+| `@fluxerjs/voice#VoiceManager.leaveChannel` | method | pending |  | Falta contrato declarativo de voz/música com limites, cancelamento e política de mídia. |
+| `@fluxerjs/voice#VoiceManager.listParticipantsInChannel` | method | pending |  | Falta contrato declarativo de voz/música com limites, cancelamento e política de mídia. |
+| `@fluxerjs/voice#VoiceManager.subscribeChannelParticipants` | method | pending |  | Falta contrato declarativo de voz/música com limites, cancelamento e política de mídia. |
+| `@fluxerjs/voice#VoiceManager.updateVoiceState` | method | pending |  | Falta contrato declarativo de voz/música com limites, cancelamento e política de mídia. |
+| `@fluxerjs/voice#VoiceManager.voiceStates` | property | pending |  | Falta contrato declarativo de voz/música com limites, cancelamento e política de mídia. |
+| `@fluxerjs/voice#VoiceManagerOptions` | interface | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
+| `@fluxerjs/voice#VoiceStateMap` | type | excluded | data-only | Contrato de tipos apagado em JavaScript; operações e eventos têm entradas próprias. |
