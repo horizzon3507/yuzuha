@@ -92,6 +92,7 @@ export interface ChannelsResources {
   move(channelID: string, position: number): Promise<void>;
   setCategory(channelID: string, parentID: string | null, reason?: string): Promise<ChannelInfo>;
   setChannelPositions(guildID: string, updates: { id: string; position: number }[]): Promise<void>;
+  deleteOverwrite(channelID: string, targetID: string, reason?: string): Promise<void>;
 }
 
 export interface RtcRegionInfo { id: string; name: string; emoji: string }

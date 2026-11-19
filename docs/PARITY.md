@@ -43,6 +43,15 @@ excluídos só porque falta normalização: ficam pending. Eventos com dados
 sensíveis precisam de redação explícita; autenticação WebAuthn é excluída.
 JS/TS confiável mantém o acesso ao SDK, sem ampliar a autoridade dos scripts.
 
+Nas entidades, `Guild.delete` e `GuildManager.delete` ficam excluídos por
+`lifecycle`: destruir um servidor é irreversível e excede a autoridade do script.
+`UserManager.sweep` fica em `internal`, como manutenção do cache nativo.
+`DMChannel.purgeMessages` fica em `credentials`: no SDK 3.3.0 só opera em
+anotações pessoais (tipo 999), dependentes de sessão de usuário. O recurso
+autorizado já recusa esse canal; não expomos sessão/sudo para contornar isso.
+`$bulkDeleteMyMessages` usa em vez disso exclusão limitada às mensagens do bot
+em janela de até 100 mensagens no servidor, com ManageMessages de autor e bot.
+
 `npm run check` rejeita ID sem classificação, duplicado ou obsoleto, status/área/
 motivo inválido, função inexistente e evento marcado coberto sem adaptação.
 Pending é permitido durante desenvolvimento. O gate obrigatório da release é
@@ -108,7 +117,7 @@ precisam de `overrides` para o core fixado, como no manifesto do Yuzuha.
 | Estado e casos | `ctx.data`, TTL, userFor, transaction entre chaves e stores | Variáveis, TTL, incrementos, listas, casos e dataTransaction com operações declarativas |
 | Agendamentos | `ctx.scheduler`, cron/fusos, concorrência limitada, histórico, heartbeat e controles | schedule, scheduleEvery, scheduleCron, controles, histórico, reexecução e retry com jitter |
 | HTTP | `request`, `requestBytes`, `stream`, `multipart`, `withPolicy` e cancelamento | `$http`, `$httpJson`, `$httpMultipart` e download de imagens com política de rede por comando |
-| CLI, plugins, comandos e middleware | Recursos próprios do Yuzuha; lint/catálogos/cenários e manutenção de dados | 353 funções canônicas; comandos e eventos de script |
+| CLI, plugins, comandos e middleware | Recursos próprios do Yuzuha; lint/catálogos/cenários e manutenção de dados | 373 funções canônicas; comandos e eventos de script |
 | Composição de cartões | `ctx.canvas`, `yuzuha/canvas` (napi em processo) e `yuzuha/canvas/card` (builder isolado), com peer opcional `@napi-rs/canvas`; envio pelo contexto | 12 funções `$canvas*` para cenas privadas por execução; envio sem retorno automático |
 
 A camada nativa do Yuzuha — o caminho principal — acrescenta schemas de argumentos

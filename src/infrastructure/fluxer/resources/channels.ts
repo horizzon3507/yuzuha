@@ -105,6 +105,14 @@ async function overwriteKind(client: Client, channel: GuildChannel, targetID: st
 
 export function createChannelsResources(client: Client): ChannelsResources {
   return {
+    async deleteOverwrite(channelID, targetID, reason) {
+      const channel = await guildChannel(client, channelID);
+      if (reason === undefined) await channel.permissionOverwrites.delete(targetID);
+      else {
+        await client.rest.delete(Routes.channelPermission(channelID, targetID), { auth: true, headers: { 'X-Audit-Log-Reason': reason } });
+        channel.permissionOverwrites.cache.delete(targetID);
+      }
+    },
     async setChannelPositions(guildID, updates) {
       await (await client.guilds.resolve(guildID)).setChannelPositions(updates);
     },

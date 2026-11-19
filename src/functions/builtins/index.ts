@@ -26,6 +26,9 @@ import { eventFunctions } from './events.js';
 import { canvasFunctions } from './canvas.js';
 import { entityInfoFunctions } from './entities-info.js';
 import { entityGuildFunctions } from './entities-guild.js';
+import { entityChannelFunctions } from './entities-channels.js';
+import { entityMessageFunctions } from './entities-messages.js';
+import { entityMemberFunctions } from './entities-members.js';
 
 export const builtinFunctions: FunctionDefinition[] = [
   ...contextFunctions, ...flowFunctions, ...guardFunctions, ...valueFunctions,
@@ -38,6 +41,9 @@ export const builtinFunctions: FunctionDefinition[] = [
   ...eventFunctions,
   ...entityInfoFunctions,
   ...entityGuildFunctions,
+  ...entityChannelFunctions,
+  ...entityMessageFunctions,
+  ...entityMemberFunctions,
 ];
 
 export function registerBuiltins(runtime: Runtime): Runtime {

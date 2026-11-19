@@ -48,3 +48,49 @@ export function positionBatch(input: unknown, hoist = false): { id: string; posi
     return { id, position };
   });
 }
+
+export function threadDefaultsInput(input: unknown) {
+  const value = entityOptions(input, ['autoArchiveDuration', 'slowmode', 'reason']);
+  if (value.autoArchiveDuration === undefined && value.slowmode === undefined) throw new YuzuhaError('ARGUMENT', 'Informe duração ou modo lento.');
+  if (value.autoArchiveDuration !== undefined && value.autoArchiveDuration !== null
+    && ![60, 1440, 4320, 10080].includes(value.autoArchiveDuration as number)) throw new YuzuhaError('ARGUMENT', 'Duração inválida de arquivamento.');
+  if (value.slowmode !== undefined && value.slowmode !== null
+    && (typeof value.slowmode !== 'number' || !Number.isSafeInteger(value.slowmode) || value.slowmode < 0 || value.slowmode > 21600)) {
+    throw new YuzuhaError('ARGUMENT', 'Modo lento deve ser inteiro de 0 a 21600 segundos.');
+  }
+  if (value.reason !== undefined && (typeof value.reason !== 'string' || value.reason.length > 512)) throw new YuzuhaError('ARGUMENT', 'Motivo deve ser texto de até 512 caracteres.');
+  return value as { autoArchiveDuration?: number | null; slowmode?: number | null; reason?: string };
+}
+
+export function threadSelfInput(input: unknown) {
+  const value = entityOptions(input, ['flags', 'muted', 'muteConfig']);
+  if (!Object.keys(value).length) throw new YuzuhaError('ARGUMENT', 'Informe ao menos uma configuração própria.');
+  if (value.flags !== undefined && (typeof value.flags !== 'number' || !Number.isSafeInteger(value.flags) || value.flags < 0 || value.flags > 0xffffffff)) {
+    throw new YuzuhaError('ARGUMENT', 'Flags devem ser um inteiro de 32 bits não negativo.');
+  }
+  if (value.muted !== undefined && typeof value.muted !== 'boolean') throw new YuzuhaError('ARGUMENT', 'muted deve ser booleano.');
+  if (value.muteConfig !== undefined && value.muteConfig !== null) {
+    const config = entityOptions(value.muteConfig, ['endTime', 'selectedTimeWindow']);
+    if (typeof config.selectedTimeWindow !== 'number' || !Number.isSafeInteger(config.selectedTimeWindow) || config.selectedTimeWindow < 0) {
+      throw new YuzuhaError('ARGUMENT', 'selectedTimeWindow deve ser inteiro não negativo.');
+    }
+    if (config.endTime !== undefined && config.endTime !== null && !(typeof config.endTime === 'string' && Number.isFinite(Date.parse(config.endTime)))
+      && !(typeof config.endTime === 'number' && Number.isFinite(config.endTime) && config.endTime >= 0)) throw new YuzuhaError('ARGUMENT', 'endTime deve ser data, timestamp ou null.');
+  }
+  return value as { flags?: number; muted?: boolean; muteConfig?: { endTime?: string | number | null; selectedTimeWindow: number } | null };
+}
+
+export function memberEditInput(input: unknown) {
+  const value = entityOptions(input, ['nickname', 'roles', 'reason']);
+  if (value.nickname === undefined && value.roles === undefined) throw new YuzuhaError('ARGUMENT', 'Informe apelido ou cargos.');
+  if (value.nickname !== undefined && value.nickname !== null && (typeof value.nickname !== 'string' || value.nickname.length > 32)) {
+    throw new YuzuhaError('ARGUMENT', 'Apelido deve ser texto de até 32 caracteres ou null.');
+  }
+  if (value.roles !== undefined && (!Array.isArray(value.roles) || value.roles.length > 100
+    || value.roles.some(id => typeof id !== 'string' || !/^\d{1,20}$/.test(id)) || new Set(value.roles).size !== value.roles.length)) {
+    throw new YuzuhaError('ARGUMENT', 'Cargos devem ser array de até 100 IDs numéricos únicos como textos.');
+  }
+  if (typeof value.reason !== 'string' || !value.reason.trim() || value.reason.length > 512) throw new YuzuhaError('ARGUMENT', 'Informe motivo de 1 a 512 caracteres.');
+  return { ...(value.nickname === undefined ? {} : { nickname: value.nickname === '' ? null : value.nickname as string | null }),
+    ...(value.roles === undefined ? {} : { roles: [...value.roles as string[]] }), reason: value.reason };
+}

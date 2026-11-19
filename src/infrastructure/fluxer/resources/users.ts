@@ -16,7 +16,7 @@ import type {
 } from '../../../ports/resources/users.js';
 import type { DiscoveryApplicationInfo } from '../../../ports/resources/users.js';
 import type { ChannelInfo } from '../../../ports/resources/channels.js';
-import { YuzuhaError } from '../../../errors.js';
+import { PartialModerationError, YuzuhaError } from '../../../errors.js';
 
 /** Época Fluxer (01/01/2015 UTC) para derivar timestamps de snowflakes. */
 const FLUXER_EPOCH = 1420070400000n;
@@ -359,6 +359,14 @@ export function createUsersResources(client: Client, cdn: import('../../../domai
       return { members: result.members.map(hit => ({ userID: hit.userId, username: hit.username,
         displayName: hit.nickname ?? hit.globalName ?? hit.username, nickname: hit.nickname })),
         total: result.total ?? null, hasMore: result.hasMore ?? false, indexing: result.indexing ?? false };
+    },
+    async editMember(guildID, userID, input) {
+      const guild = await client.guilds.resolve(guildID);
+      const member = await guild.members.fetch(userID, { force: true });
+      const edited = await member.edit({ ...(input.nickname === undefined ? {} : { nick: input.nickname }),
+        ...(input.roles === undefined ? {} : { roles: [...input.roles] }), reason: input.reason });
+      try { return toMemberInfo(edited); }
+      catch (error) { throw new PartialModerationError('editMember', userID, error); }
     },
     async setNickname(guildID, userID, nickname, reason) {
       const guild = await client.guilds.resolve(guildID);

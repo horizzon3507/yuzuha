@@ -99,6 +99,7 @@ export interface AuditLogInfo {
 }
 
 export interface UsersResources {
+  editMember(guildID: string, userID: string, input: MemberEditInput): Promise<MemberInfo>;
   profile(userID: string, guildID?: string): Promise<UserProfileInfo>;
   bannerURL(userID: string, guildID?: string, options?: { size?: number }): Promise<string | null>;
   guildCounts(guildID: string, input?: LiveCountsInput): Promise<GuildCountsInfo>;
@@ -200,4 +201,10 @@ export interface GuildEditInput {
   systemChannelID?: string | null;
   afkChannelID?: string | null;
   afkTimeout?: number;
+}
+
+export interface MemberEditInput {
+  nickname?: string | null;
+  roles?: string[];
+  reason: string;
 }

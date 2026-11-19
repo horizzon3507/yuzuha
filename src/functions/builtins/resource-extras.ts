@@ -36,11 +36,13 @@ function base64(raw: string): Uint8Array {
   return Buffer.from(raw, 'base64');
 }
 function attachment(value: unknown): AttachmentSpec | BinaryAttachmentSpec {
-  const file = object(value, ['url', 'base64', 'name', 'description']);
+  const file = object(value, ['url', 'base64', 'name', 'description', 'spoiler']);
   if (typeof file.name !== 'string' || !file.name.trim() || file.name.length > 255) throw new YuzuhaError('ATTACHMENT_NAME', 'Nome de anexo deve ter de 1 a 255 caracteres.');
   if (file.description !== undefined && typeof file.description !== 'string') throw new YuzuhaError('ATTACHMENT_DESCRIPTION', 'Descrição deve ser texto.');
+  if (file.spoiler !== undefined && typeof file.spoiler !== 'boolean') throw new YuzuhaError('ATTACHMENT', 'spoiler deve ser booleano.');
   if ((file.url === undefined) === (file.base64 === undefined)) throw new YuzuhaError('ATTACHMENT', 'Informe somente url ou base64 por anexo.');
-  const common = { name: file.name, description: file.description as string | undefined };
+  const common = { name: file.name, description: file.description as string | undefined,
+    ...(file.spoiler === undefined ? {} : { spoiler: file.spoiler as boolean }) };
   if (typeof file.base64 === 'string') return { ...common, data: base64(file.base64) };
   if (typeof file.url !== 'string' || !/^https?:\/\//i.test(file.url)) throw new YuzuhaError('ATTACHMENT_URL', 'URL deve ser HTTP/HTTPS.');
   return { ...common, url: file.url };
@@ -67,8 +69,11 @@ export const resourceExtras = defineFunctions(fn => {
     return c.ctx.resources.messages.search({ ...input, guildID: c.ctx.guildID || undefined,
       ...(!c.ctx.guildID && input.channelID === undefined ? { channelID: c.ctx.message.channelID } : {}) });
   });
-  fn('fileBase64', 'messages', 2, 3, '[base64;nome;descrição?]', 'Monta um anexo base64 para $sendAttachments, sem enviá-lo.', async c => {
-    const file = { base64: await c.text(0), name: await c.text(1), description: c.count > 2 ? await c.text(2) : undefined };
+  fn('fileBase64', 'messages', 2, 4, '[base64;nome;descrição?;spoiler?]', 'Monta anexo base64 para $sendAttachments; spoiler aceita true/false, sem enviar.', async c => {
+    const spoiler = c.count > 3 ? await c.text(3) : undefined;
+    if (spoiler !== undefined && spoiler !== 'true' && spoiler !== 'false') throw new YuzuhaError('ATTACHMENT', 'spoiler aceita true ou false.');
+    const file = { base64: await c.text(0), name: await c.text(1), description: c.count > 2 ? await c.text(2) : undefined,
+      ...(spoiler === undefined ? {} : { spoiler: spoiler === 'true' }) };
     attachment(file);
     return file;
   });

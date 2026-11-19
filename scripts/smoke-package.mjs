@@ -318,7 +318,7 @@ try {
   const editor = (await run(process.execPath, [cli, 'editor'], consumer)).trim();
   const metadata = JSON.parse(await readFile(join(editor, 'functions.json'), 'utf8'));
   assert.ok(metadata.some(fn => fn.name === 'searchMessages'));
-  assert.equal(metadata.length, 353);
+  assert.equal(metadata.length, 373);
   for (const name of newFunctions) assert.ok(metadata.some(fn => fn.name === name), name);
   assert.ok(metadata.some(fn => fn.name === 'modMuteMember'));
   const catalog = JSON.parse(await run(process.execPath, [cli, 'functions', '--catalog'], consumer));
