@@ -3,6 +3,7 @@ import type { State, Store } from '../../contracts.js';
 import { TransactionQueue } from './queue.js';
 import { assertSynchronous, emptyState } from './state.js';
 import type { JsonValue } from '../../domain/state.js';
+import type { StoredVariable } from '../../ports/store.js';
 import {
   applyPendingCommit,
   createCommitView,
@@ -45,6 +46,15 @@ export class MemoryStore implements Store {
       const expiry = this.state.variableExpirations?.[key];
       return Object.hasOwn(this.state.variables, key) && (expiry === undefined || expiry > now())
         ? cloneValue(this.state.variables[key]!) : undefined;
+    });
+  }
+
+  readVariableEntry(key: string, clock: () => number): Promise<StoredVariable | undefined> {
+    return this.queue.run(async () => {
+      await this.prepareAccess();
+      const now = clock(), expiry = this.state.variableExpirations?.[key];
+      return Object.hasOwn(this.state.variables, key) && (expiry === undefined || expiry > now)
+        ? { value: cloneValue(this.state.variables[key]!), expiresAt: expiry ?? null } : undefined;
     });
   }
 

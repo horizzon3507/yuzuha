@@ -9,6 +9,7 @@ export class CaseService {
   async ready(): Promise<void> { await this.store.read(() => undefined); }
 
   create(input: NewCase): Promise<CaseRecord> {
+    if (this.store.appendCase) return this.store.appendCase(input, new Date().toISOString());
     return this.store.update(state => {
       const cases = state.cases[input.guildID] ??= [];
       const record: CaseRecord = {

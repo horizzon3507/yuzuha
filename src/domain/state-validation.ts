@@ -68,6 +68,10 @@ function isCaseRecord(guildID: string, item: unknown, index: number): item is Ca
       && Number.isSafeInteger(item['duration']) && item['duration'] > 0));
 }
 
+export function validateCaseRecord(guildID: string, item: unknown, id: number): item is CaseRecord {
+  return json(item) && isCaseRecord(guildID, item, id - 1);
+}
+
 /** Validates a single guild's moderation case list without scanning other guilds. */
 export function validateCasesForGuild(guildID: string, list: unknown): list is CaseRecord[] {
   return Array.isArray(list) && json(list) && list.every((item, index) => isCaseRecord(guildID, item, index));
